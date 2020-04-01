@@ -32,6 +32,8 @@ RUN make CONTAINER=yes
 
 FROM scratch
 
+ENV INETMOCK_PLUGINS_DIRECTORY=/app/plugins/
+
 WORKDIR /app
 
 COPY --from=build /etc/passwd /etc/group /etc/

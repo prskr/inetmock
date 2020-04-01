@@ -6,7 +6,7 @@ GOARGS = GOOS=linux GOARCH=amd64
 GO_BUILD_ARGS = -buildmode=plugin -ldflags="-w -s"
 GO_CONTAINER_BUILD_ARGS = -buildmode=plugin -ldflags="-w -s" -a -installsuffix cgo
 GO_DEBUG_BUILD_ARGS = -buildmode=plugin -gcflags "all=-N -l"
-PLUGIN_NAME = tls_interceptor.so
+PLUGIN_NAME = $(shell basename $(DIR)).so
 OUT_DIR = $(DIR)../../../plugins
 DEBUG_PORT = 2345
 

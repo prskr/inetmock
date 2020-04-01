@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/baez90/inetmock/internal/config"
-	"github.com/baez90/inetmock/internal/plugins"
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/baez90/inetmock/pkg/path"
 	"go.uber.org/zap"
 	"net/http"
@@ -19,13 +16,13 @@ const (
 	name = "http_mock"
 )
 
-type httpPlugin struct {
+type httpHandler struct {
 	logger *zap.Logger
 	router *RegexpHandler
 	server *http.Server
 }
 
-func (p *httpPlugin) Run(config config.HandlerConfig) {
+func (p *httpHandler) Run(config config.HandlerConfig) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 	p.server = &http.Server{Addr: addr, Handler: p.router}
@@ -40,7 +37,7 @@ func (p *httpPlugin) Run(config config.HandlerConfig) {
 	go p.startServer()
 }
 
-func (p *httpPlugin) Shutdown(wg *sync.WaitGroup) {
+func (p *httpHandler) Shutdown(wg *sync.WaitGroup) {
 	if err := p.server.Close(); err != nil {
 		p.logger.Error(
 			"failed to shutdown HTTP server",
@@ -51,7 +48,7 @@ func (p *httpPlugin) Shutdown(wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func (p *httpPlugin) startServer() {
+func (p *httpHandler) startServer() {
 	if err := p.server.ListenAndServe(); err != nil {
 		p.logger.Error(
 			"failed to start http listener",
@@ -60,7 +57,7 @@ func (p *httpPlugin) startServer() {
 	}
 }
 
-func (p *httpPlugin) setupRoute(rule targetRule) {
+func (p *httpHandler) setupRoute(rule targetRule) {
 	var compiled *regexp.Regexp
 	var err error
 	if compiled, err = regexp.Compile(rule.pattern); err != nil {
@@ -99,18 +96,5 @@ func createHandlerForTarget(logger *zap.Logger, targetPath string) http.Handler 
 		)
 
 		http.ServeFile(writer, request, targetFilePath)
-	})
-}
-
-func init() {
-	logger, _ := logging.CreateLogger()
-	logger = logger.With(
-		zap.String("ProtocolHandler", name),
-	)
-	plugins.Registry().RegisterHandler(name, func() api.ProtocolHandler {
-		return &httpPlugin{
-			logger: logger,
-			router: &RegexpHandler{},
-		}
 	})
 }

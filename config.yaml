@@ -39,3 +39,37 @@ endpoints:
       target:
         ipAddress: 127.0.0.1
         port: 80
+  plainDns:
+    handler: dns_mock
+    listenAddress: 0.0.0.0
+    port: 53
+    options:
+      fallback:
+        strategy: incremental
+        args:
+          startIP: 10.0.0.0
+      rules:
+        - pattern: ".*\\.google\\.com"
+          response: 1.1.1.1
+        - pattern: ".*\\.reddit\\.com"
+          response: 2.2.2.2
+  dnsOverTlsDowngrade:
+    handler: tls_interceptor
+    listenAddress: 0.0.0.0
+    port: 853
+    options:
+      ecdsaCurve: P256
+      validity:
+        ca:
+          notBeforeRelative: 17520h
+          notAfterRelative: 17520h
+        domain:
+          notBeforeRelative: 168h
+          notAfterRelative: 168h
+      rootCaCert:
+        publicKey: ./ca.pem
+        privateKey: ./ca.key
+      certCachePath: /tmp/inetmock/
+      target:
+        ipAddress: 127.0.0.1
+        port: 53
