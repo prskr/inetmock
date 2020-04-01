@@ -1,0 +1,41 @@
+endpoints:
+  plainHttp:
+    handler: http_mock
+    listenAddress: 0.0.0.0
+    port: 80
+    options:
+      rules:
+        - pattern: ".*\\.(?i)exe"
+          target: ./assets/fakeFiles/sample.exe
+        - pattern: ".*\\.(?i)(jpg|jpeg)"
+          target: ./assets/fakeFiles/default.jpg
+        - pattern: ".*\\.(?i)png"
+          target: ./assets/fakeFiles/default.png
+        - pattern: ".*\\.(?i)gif"
+          target: ./assets/fakeFiles/default.gif
+        - pattern: ".*\\.(?i)ico"
+          target: ./assets/fakeFiles/default.ico
+        - pattern: ".*\\.(?i)txt"
+          target: ./assets/fakeFiles/default.txt
+        - pattern: ".*"
+          target: ./assets/fakeFiles/default.html
+  httpsDowngrade:
+    handler: tls_interceptor
+    listenAddress: 0.0.0.0
+    port: 443
+    options:
+      ecdsaCurve: P256
+      validity:
+        ca:
+          notBeforeRelative: 17520h
+          notAfterRelative: 17520h
+        domain:
+          notBeforeRelative: 168h
+          notAfterRelative: 168h
+      rootCaCert:
+        publicKey: ./ca.pem
+        privateKey: ./ca.key
+      certCachePath: /tmp/inetmock/
+      target:
+        ipAddress: 127.0.0.1
+        port: 80

@@ -1,0 +1,17 @@
+#########
+# files #
+#########
+
+**/cov.out
+**/cov-raw.out
+**/*.so
+*.key
+*.pem
+inetmock
+main
+
+###############
+# directories #
+###############
+
+.idea/

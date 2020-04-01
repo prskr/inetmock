@@ -1,0 +1,18 @@
+###############
+# Directories #
+###############
+
+.git/
+plugins/
+
+#########
+# Files #
+#########
+
+*.out
+main
+inetmock
+README.md
+.dockerignore
+.gitignore
+Dockerfile
