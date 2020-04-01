@@ -11,7 +11,7 @@ BINARY_NAME = inetmock
 PLUGINS = $(wildcard $(DIR)pkg/plugins/*/.)
 DEBUG_PORT = 2345
 DEBUG_ARGS?= --development-logs=true
-INETMOCK_PLUGINS_DIRECTORY = $(DIR)plugins
+INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 
 .PHONY: clean all format deps compile debug test cli-cover-report html-cover-report plugins $(PLUGINS)
 

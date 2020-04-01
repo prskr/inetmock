@@ -17,3 +17,11 @@ func FileExists(filename string) bool {
 	}
 	return !info.IsDir()
 }
+
+func DirExists(dirPath string) bool {
+	info, err := os.Stat(dirPath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return info.IsDir()
+}

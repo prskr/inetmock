@@ -12,7 +12,7 @@ DEBUG_PORT = 2345
 
 .PHONY: deps format compile test cli-cover-report html-cover-report
 
-all: compile test
+all: format compile test
 
 deps:
 	@go mod tidy
@@ -35,6 +35,7 @@ endif
 test:
 	@go test -coverprofile=./cov-raw.out -v $(TEST_PKGS)
 	@cat ./cov-raw.out | grep -v "generated" > ./cov.out
+	@rm -f $(DIR)$(PLUGIN_NAME)
 
 cli-cover-report:
 	@go tool cover -func=cov.out

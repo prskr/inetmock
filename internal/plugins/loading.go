@@ -3,13 +3,17 @@ package plugins
 import (
 	"fmt"
 	"github.com/baez90/inetmock/pkg/api"
+	"github.com/baez90/inetmock/pkg/path"
 	"github.com/spf13/cobra"
+	"os"
 	"path/filepath"
 	"plugin"
+	"regexp"
 )
 
 var (
-	registry HandlerRegistry
+	registry              HandlerRegistry
+	pluginFileNamePattern = regexp.MustCompile(`[\w\-]+\.so$`)
 )
 
 type HandlerRegistry interface {
@@ -52,15 +56,22 @@ func (h *handlerRegistry) RegisterHandler(handlerName string, handlerProvider ap
 }
 
 func (h *handlerRegistry) LoadPlugins(pluginsPath string) (err error) {
-	var plugins []string
-	if plugins, err = filepath.Glob(fmt.Sprintf("%s%c*.so", pluginsPath, filepath.Separator)); err != nil {
+
+	if !path.DirExists(pluginsPath) {
+		err = fmt.Errorf("plugins path %s does not exist or is not accessible", pluginsPath)
 		return
 	}
-
-	for _, pluginSo := range plugins {
-		if _, err = plugin.Open(pluginSo); err != nil {
-			return
+	err = filepath.Walk(pluginsPath, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && pluginFileNamePattern.MatchString(info.Name()) {
+			if _, err := plugin.Open(path); err != nil {
+				return err
+			}
 		}
+		return nil
+	})
+
+	if err != nil {
+		return
 	}
 
 	err = nil
