@@ -1,0 +1,10 @@
+[book]
+authors = ["Peter Kurfer"]
+language = "en"
+multilingual = false
+src = "src"
+title = "INetMock docs"
+
+[build]
+build-dir = "book"
+create-missing = true

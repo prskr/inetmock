@@ -6,19 +6,19 @@ endpoints:
     options:
       rules:
         - pattern: ".*\\.(?i)exe"
-          target: ./assets/fakeFiles/sample.exe
+          response: ./assets/fakeFiles/sample.exe
         - pattern: ".*\\.(?i)(jpg|jpeg)"
-          target: ./assets/fakeFiles/default.jpg
+          response: ./assets/fakeFiles/default.jpg
         - pattern: ".*\\.(?i)png"
-          target: ./assets/fakeFiles/default.png
+          response: ./assets/fakeFiles/default.png
         - pattern: ".*\\.(?i)gif"
-          target: ./assets/fakeFiles/default.gif
+          response: ./assets/fakeFiles/default.gif
         - pattern: ".*\\.(?i)ico"
-          target: ./assets/fakeFiles/default.ico
+          response: ./assets/fakeFiles/default.ico
         - pattern: ".*\\.(?i)txt"
-          target: ./assets/fakeFiles/default.txt
+          response: ./assets/fakeFiles/default.txt
         - pattern: ".*"
-          target: ./assets/fakeFiles/default.html
+          response: ./assets/fakeFiles/default.html
   httpsDowngrade:
     handler: tls_interceptor
     listenAddress: 0.0.0.0
@@ -44,15 +44,15 @@ endpoints:
     listenAddress: 0.0.0.0
     port: 53
     options:
-      fallback:
-        strategy: incremental
-        args:
-          startIP: 10.0.0.0
       rules:
         - pattern: ".*\\.google\\.com"
           response: 1.1.1.1
         - pattern: ".*\\.reddit\\.com"
           response: 2.2.2.2
+      fallback:
+        strategy: incremental
+        args:
+          startIP: 10.0.0.0
   dnsOverTlsDowngrade:
     handler: tls_interceptor
     listenAddress: 0.0.0.0

@@ -1,16 +1,27 @@
 package main
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+	"regexp"
+)
 
 const (
-	rulesConfigKey   = "rules"
-	patternConfigKey = "pattern"
-	targetConfigKey  = "target"
+	rulesConfigKey    = "rules"
+	patternConfigKey  = "pattern"
+	responseConfigKey = "response"
 )
 
 type targetRule struct {
-	pattern string
-	target  string
+	pattern  *regexp.Regexp
+	response string
+}
+
+func (tr targetRule) Pattern() *regexp.Regexp {
+	return tr.pattern
+}
+
+func (tr targetRule) Response() string {
+	return tr.response
 }
 
 type httpOptions struct {
@@ -23,10 +34,15 @@ func loadFromConfig(config *viper.Viper) httpOptions {
 
 	for _, i := range anonRules {
 		innerData := i.(map[interface{}]interface{})
-		options.Rules = append(options.Rules, targetRule{
-			pattern: innerData[patternConfigKey].(string),
-			target:  innerData[targetConfigKey].(string),
-		})
+
+		if rulePattern, err := regexp.Compile(innerData[patternConfigKey].(string)); err == nil {
+			options.Rules = append(options.Rules, targetRule{
+				pattern:  rulePattern,
+				response: innerData[responseConfigKey].(string),
+			})
+		} else {
+			panic(err)
+		}
 	}
 
 	return options

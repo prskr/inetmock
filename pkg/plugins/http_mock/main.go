@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"path/filepath"
-	"regexp"
 	"sync"
 )
 
@@ -58,23 +57,13 @@ func (p *httpHandler) startServer() {
 }
 
 func (p *httpHandler) setupRoute(rule targetRule) {
-	var compiled *regexp.Regexp
-	var err error
-	if compiled, err = regexp.Compile(rule.pattern); err != nil {
-		p.logger.Warn(
-			"failed to parse route - skipping",
-			zap.String("route", rule.pattern),
-			zap.Error(err),
-		)
-		return
-	}
 	p.logger.Info(
 		"setup routing",
-		zap.String("route", compiled.String()),
-		zap.String("target", rule.target),
+		zap.String("route", rule.Pattern().String()),
+		zap.String("response", rule.Response()),
 	)
 
-	p.router.Handler(compiled, createHandlerForTarget(p.logger, rule.target))
+	p.router.Handler(rule.Pattern(), createHandlerForTarget(p.logger, rule.response))
 }
 
 func createHandlerForTarget(logger *zap.Logger, targetPath string) http.Handler {
@@ -91,7 +80,7 @@ func createHandlerForTarget(logger *zap.Logger, targetPath string) http.Handler 
 			zap.String("method", request.Method),
 			zap.String("protocol", request.Proto),
 			zap.String("path", request.RequestURI),
-			zap.String("target", targetFilePath),
+			zap.String("response", targetFilePath),
 			zap.Reflect("headers", request.Header),
 		)
 
