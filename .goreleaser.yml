@@ -1,0 +1,35 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - make plugins
+builds:
+  - id: "default"
+    ldflags:
+      - -w -s
+    goos:
+    - linux
+    goarch:
+    - amd64
+archives:
+  - id: default
+    builds:
+    - default
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: x86_64
+    wrap_in_directory: true
+    files:
+      - config.yaml
+      - plugins/*.so
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
