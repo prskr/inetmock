@@ -2,7 +2,7 @@ VERSION = $(shell git describe --dirty --tags --always)
 DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILD_PATH = $(DIR)/main.go
 PKGS = $(shell go list ./...)
-TEST_PKGS = $(shell find . -type f -name "*_test.go" -printf '%h\n' | sort -u)
+TEST_PKGS = $(shell find . -type f -name "*_test.go" -not -path "./pkg/plugins/*" -printf '%h\n' | sort -u)
 GOARGS = GOOS=linux GOARCH=amd64
 GO_BUILD_ARGS = -ldflags="-w -s"
 GO_CONTAINER_BUILD_ARGS = -ldflags="-w -s" -a -installsuffix cgo
@@ -13,7 +13,7 @@ DEBUG_PORT = 2345
 DEBUG_ARGS?= --development-logs=true
 INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 
-.PHONY: clean all format deps compile debug test cli-cover-report html-cover-report plugins $(PLUGINS)
+.PHONY: clean all format deps compile debug snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS)
 
 all: clean format compile test plugins
 
@@ -49,6 +49,10 @@ debug:
 		--api-version=2 \
 		--accept-multiclient \
 		-- $(DEBUG_ARGS)
+
+snapshot-release:
+	@goreleaser release --snapshot --skip-publish --rm-dist
+
 test:
 	@go test -coverprofile=./cov-raw.out -v $(TEST_PKGS)
 	@cat ./cov-raw.out | grep -v "generated" > ./cov.out
