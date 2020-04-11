@@ -22,7 +22,7 @@ archives:
     wrap_in_directory: true
     files:
       - config.yaml
-      - plugins/*.so
+      - "*.so"
 checksum:
   name_template: 'checksums.txt'
 snapshot:

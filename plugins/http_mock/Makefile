@@ -7,7 +7,7 @@ GO_BUILD_ARGS = -buildmode=plugin -ldflags="-w -s"
 GO_CONTAINER_BUILD_ARGS = -buildmode=plugin -ldflags="-w -s" -a -installsuffix cgo
 GO_DEBUG_BUILD_ARGS = -buildmode=plugin -gcflags "all=-N -l"
 PLUGIN_NAME = $(shell basename $(DIR)).so
-OUT_DIR = $(DIR)../../../plugins
+OUT_DIR = $(DIR)../../
 DEBUG_PORT = 2345
 
 .PHONY: deps format compile test cli-cover-report html-cover-report
@@ -16,6 +16,7 @@ all: format compile test
 
 deps:
 	@go mod tidy
+	@go get -u
 	@go build -buildmode=plugin -v $(DIR)...
 
 format:
