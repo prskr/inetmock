@@ -3,7 +3,7 @@ module github.com/baez90/inetmock/pkg/plugins/dns_mock
 go 1.14
 
 require (
-	github.com/baez90/inetmock v0.0.0-20200411110422-813411044f8b
+	github.com/baez90/inetmock v0.0.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/miekg/dns v1.1.29
 	github.com/mitchellh/mapstructure v1.2.2 // indirect
@@ -18,3 +18,5 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
 )
+
+replace github.com/baez90/inetmock v0.0.1 => ../../../
