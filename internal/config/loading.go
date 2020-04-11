@@ -39,6 +39,10 @@ func (c config) InitConfig(flags *pflag.FlagSet) {
 
 func (c *config) ReadConfig(configFilePath string) (err error) {
 	if configFilePath != "" && path.FileExists(configFilePath) {
+		c.logger.Info(
+			"loading config from passed config file path",
+			zap.String("configFilePath", configFilePath),
+		)
 		viper.SetConfigFile(configFilePath)
 	}
 	if err = viper.ReadInConfig(); err != nil {

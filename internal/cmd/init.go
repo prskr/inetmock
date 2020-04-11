@@ -6,6 +6,7 @@ import (
 	"github.com/baez90/inetmock/pkg/path"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"os"
 )
 
 var (
@@ -24,6 +25,11 @@ func initApp() (err error) {
 	)
 	logger, _ = logging.CreateLogger()
 	registry := plugins.Registry()
+
+	if err = rootCmd.ParseFlags(os.Args); err != nil {
+		return
+	}
+
 	if err = appConfig.ReadConfig(configFilePath); err != nil {
 		logger.Error(
 			"unrecoverable error occurred during reading the config file",
@@ -36,6 +42,7 @@ func initApp() (err error) {
 	pluginDir := viperInst.GetString("plugins-directory")
 	if err = registry.LoadPlugins(pluginDir); err != nil {
 		logger.Error("Failed to load plugins",
+			zap.String("pluginsDirectory", pluginDir),
 			zap.Error(err),
 		)
 	}

@@ -2,11 +2,10 @@ package path
 
 import (
 	"os"
-	"path/filepath"
 )
 
 func WorkingDirectory() (cwd string) {
-	cwd, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	cwd, _ = os.Getwd()
 	return
 }
 

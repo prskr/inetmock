@@ -19,6 +19,26 @@ endpoints:
           response: ./assets/fakeFiles/default.txt
         - pattern: ".*"
           response: ./assets/fakeFiles/default.html
+  proxy:
+    handler: http_proxy
+    listenAddress: 0.0.0.0
+    port: 3128
+    options:
+      rules:
+        - pattern: ".*\\.(?i)exe"
+          response: ./assets/fakeFiles/sample.exe
+        - pattern: ".*\\.(?i)(jpg|jpeg)"
+          response: ./assets/fakeFiles/default.jpg
+        - pattern: ".*\\.(?i)png"
+          response: ./assets/fakeFiles/default.png
+        - pattern: ".*\\.(?i)gif"
+          response: ./assets/fakeFiles/default.gif
+        - pattern: ".*\\.(?i)ico"
+          response: ./assets/fakeFiles/default.ico
+        - pattern: ".*\\.(?i)txt"
+          response: ./assets/fakeFiles/default.txt
+        - pattern: ".*"
+          response: ./assets/fakeFiles/default.html
   httpsDowngrade:
     handler: tls_interceptor
     listenAddress: 0.0.0.0

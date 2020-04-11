@@ -56,7 +56,6 @@ func (h *handlerRegistry) RegisterHandler(handlerName string, handlerProvider ap
 }
 
 func (h *handlerRegistry) LoadPlugins(pluginsPath string) (err error) {
-
 	if !path.DirExists(pluginsPath) {
 		err = fmt.Errorf("plugins path %s does not exist or is not accessible", pluginsPath)
 		return

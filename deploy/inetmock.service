@@ -1,0 +1,15 @@
+[Unit]
+Description=INetMock is a simple service to simulate a valid internet connection
+
+[Service]
+Type=simple
+User=inetmock
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+MemoryMax=50M
+CPUQuota=20%
+EnvironmentFile=/etc/default/inetmock
+ExecStart=/usr/bin/inetmock $OPTIONS
+ WorkingDirectory=/var/lib/inetmock
+
+[Install]
+WantedBy=multi-user.target
