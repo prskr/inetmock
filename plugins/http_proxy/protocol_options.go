@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	rulesConfigKey    = "rules"
-	patternConfigKey  = "pattern"
-	responseConfigKey = "response"
+	rulesConfigKey            = "rules"
+	patternConfigKey          = "pattern"
+	responseConfigKey         = "response"
+	fallbackStrategyConfigKey = "fallback"
 )
 
 type targetRule struct {
@@ -24,11 +25,14 @@ func (tr targetRule) Response() string {
 	return tr.response
 }
 
-type httpOptions struct {
-	Rules []targetRule
+type httpProxyOptions struct {
+	Rules            []targetRule
+	FallbackStrategy ProxyFallbackStrategy
 }
 
-func loadFromConfig(config *viper.Viper) (options httpOptions) {
+func loadFromConfig(config *viper.Viper) (options httpProxyOptions) {
+	options.FallbackStrategy = StrategyForName(config.GetString(fallbackStrategyConfigKey))
+
 	anonRules := config.Get(rulesConfigKey).([]interface{})
 
 	for _, i := range anonRules {

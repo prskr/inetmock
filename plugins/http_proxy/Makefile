@@ -10,14 +10,16 @@ PLUGIN_NAME = $(shell basename $(DIR)).so
 OUT_DIR = $(DIR)../../
 DEBUG_PORT = 2345
 
-.PHONY: deps format compile test cli-cover-report html-cover-report
+.PHONY: deps update-deps format compile test cli-cover-report html-cover-report
 
 all: format compile test
 
 deps:
+	@go build -buildmode=plugin -v $(DIR)...
+
+update-deps:
 	@go mod tidy
 	@go get -u
-	@go build -buildmode=plugin -v $(DIR)...
 
 format:
 	@go fmt $(PKGS)

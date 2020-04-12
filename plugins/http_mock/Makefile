@@ -10,14 +10,16 @@ PLUGIN_NAME = $(shell basename $(DIR)).so
 OUT_DIR = $(DIR)../../
 DEBUG_PORT = 2345
 
-.PHONY: deps format compile test cli-cover-report html-cover-report
+.PHONY: deps update-deps format compile test cli-cover-report html-cover-report
 
 all: format compile test
 
 deps:
+	@go build -buildmode=plugin -v $(DIR)...
+
+update-deps:
 	@go mod tidy
 	@go get -u
-	@go build -buildmode=plugin -v $(DIR)...
 
 format:
 	@go fmt $(PKGS)
@@ -30,7 +32,7 @@ ifdef DEBUG
 else ifdef CONTAINER
 	@$(GOARGS) go build $(GO_CONTAINER_BUILD_ARGS) -o $(OUT_DIR)/$(PLUGIN_NAME) $(DIR)
 else
-	@$(GOARGS) go build $(GO_BUILD_ARGS) -o $(OUT_DIR)/$(PLUGIN_NAMEs) $(DIR)
+	@$(GOARGS) go build $(GO_BUILD_ARGS) -o $(OUT_DIR)/$(PLUGIN_NAME) $(DIR)
 endif
 
 test:

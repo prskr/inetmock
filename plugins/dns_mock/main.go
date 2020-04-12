@@ -63,6 +63,7 @@ func (d *dnsHandler) startServer(dnsServer *dns.Server) {
 }
 
 func (d *dnsHandler) Shutdown(wg *sync.WaitGroup) {
+	d.logger.Info("shutting down DNS mock")
 	for _, dnsServer := range d.dnsServer {
 		if err := dnsServer.Shutdown(); err != nil {
 			d.logger.Error(

@@ -68,6 +68,7 @@ func (t *tlsInterceptor) Run(config config.HandlerConfig) {
 }
 
 func (t *tlsInterceptor) Shutdown(wg *sync.WaitGroup) {
+	t.logger.Info("Shutting down TLS interceptor")
 	t.shutdownRequested = true
 	done := make(chan struct{})
 	go func() {

@@ -13,7 +13,7 @@ DEBUG_PORT = 2345
 DEBUG_ARGS?= --development-logs=true
 INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 
-.PHONY: clean all format deps compile debug snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS)
+.PHONY: clean all format deps update-deps compile debug snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS)
 
 all: clean format compile test plugins
 
@@ -26,9 +26,11 @@ format:
 	@go fmt $(PKGS)
 
 deps:
+	@go build -v $(BUILD_PATH)
+
+update-deps:
 	@go mod tidy
 	@go get -u
-	@go build -v $(BUILD_PATH)
 
 compile: deps
 ifdef DEBUG
@@ -44,7 +46,7 @@ endif
 
 debug:
 	@export INETMOCK_PLUGINS_DIRECTORY
-	@dlv exec $(DIR)$(BINARY_NAME) \
+	dlv exec $(DIR)$(BINARY_NAME) \
 		--headless \
 		--listen=:2345 \
 		--api-version=2 \

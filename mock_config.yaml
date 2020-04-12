@@ -1,61 +1,54 @@
+x-response-rules: &httpResponseRules
+  rules:
+    - pattern: ".*\\.(?i)exe"
+      response: ./assets/fakeFiles/sample.exe
+    - pattern: ".*\\.(?i)(jpg|jpeg)"
+      response: ./assets/fakeFiles/default.jpg
+    - pattern: ".*\\.(?i)png"
+      response: ./assets/fakeFiles/default.png
+    - pattern: ".*\\.(?i)gif"
+      response: ./assets/fakeFiles/default.gif
+    - pattern: ".*\\.(?i)ico"
+      response: ./assets/fakeFiles/default.ico
+    - pattern: ".*\\.(?i)txt"
+      response: ./assets/fakeFiles/default.txt
+    - pattern: ".*"
+      response: ./assets/fakeFiles/default.html
+
+x-tls-options: &tlsOptions
+  ecdsaCurve: P256
+  validity:
+    ca:
+      notBeforeRelative: 17520h
+      notAfterRelative: 17520h
+    domain:
+      notBeforeRelative: 168h
+      notAfterRelative: 168h
+  rootCaCert:
+    publicKey: ./ca.pem
+    privateKey: ./ca.key
+  certCachePath: /tmp/inetmock/
+
 endpoints:
   plainHttp:
     handler: http_mock
     listenAddress: 0.0.0.0
     port: 80
     options:
-      rules:
-        - pattern: ".*\\.(?i)exe"
-          response: ./assets/fakeFiles/sample.exe
-        - pattern: ".*\\.(?i)(jpg|jpeg)"
-          response: ./assets/fakeFiles/default.jpg
-        - pattern: ".*\\.(?i)png"
-          response: ./assets/fakeFiles/default.png
-        - pattern: ".*\\.(?i)gif"
-          response: ./assets/fakeFiles/default.gif
-        - pattern: ".*\\.(?i)ico"
-          response: ./assets/fakeFiles/default.ico
-        - pattern: ".*\\.(?i)txt"
-          response: ./assets/fakeFiles/default.txt
-        - pattern: ".*"
-          response: ./assets/fakeFiles/default.html
+      <<: *httpResponseRules
   proxy:
     handler: http_proxy
     listenAddress: 0.0.0.0
     port: 3128
     options:
-      rules:
-        - pattern: ".*\\.(?i)exe"
-          response: ./assets/fakeFiles/sample.exe
-        - pattern: ".*\\.(?i)(jpg|jpeg)"
-          response: ./assets/fakeFiles/default.jpg
-        - pattern: ".*\\.(?i)png"
-          response: ./assets/fakeFiles/default.png
-        - pattern: ".*\\.(?i)gif"
-          response: ./assets/fakeFiles/default.gif
-        - pattern: ".*\\.(?i)ico"
-          response: ./assets/fakeFiles/default.ico
-        - pattern: ".*\\.(?i)txt"
-          response: ./assets/fakeFiles/default.txt
-        - pattern: ".*"
-          response: ./assets/fakeFiles/default.html
+      fallback: notfound
+      <<: *httpResponseRules
   httpsDowngrade:
     handler: tls_interceptor
     listenAddress: 0.0.0.0
     port: 443
     options:
-      ecdsaCurve: P256
-      validity:
-        ca:
-          notBeforeRelative: 17520h
-          notAfterRelative: 17520h
-        domain:
-          notBeforeRelative: 168h
-          notAfterRelative: 168h
-      rootCaCert:
-        publicKey: ./ca.pem
-        privateKey: ./ca.key
-      certCachePath: /tmp/inetmock/
+      <<: *tlsOptions
       target:
         ipAddress: 127.0.0.1
         port: 80
@@ -78,18 +71,7 @@ endpoints:
     listenAddress: 0.0.0.0
     port: 853
     options:
-      ecdsaCurve: P256
-      validity:
-        ca:
-          notBeforeRelative: 17520h
-          notAfterRelative: 17520h
-        domain:
-          notBeforeRelative: 168h
-          notAfterRelative: 168h
-      rootCaCert:
-        publicKey: ./ca.pem
-        privateKey: ./ca.key
-      certCachePath: /tmp/inetmock/
+      <<: *tlsOptions
       target:
         ipAddress: 127.0.0.1
         port: 53
