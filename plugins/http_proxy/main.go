@@ -19,7 +19,7 @@ type httpProxy struct {
 	server *http.Server
 }
 
-func (h *httpProxy) Run(config config.HandlerConfig) {
+func (h *httpProxy) Start(config config.HandlerConfig) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 	h.server = &http.Server{Addr: addr, Handler: h.proxy}
@@ -32,7 +32,6 @@ func (h *httpProxy) Run(config config.HandlerConfig) {
 		logger:  h.logger,
 	}
 	h.proxy.OnRequest().Do(proxyHandler)
-	h.proxy.OnRequest().HandleConnect()
 	go h.startProxy()
 }
 

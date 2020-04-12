@@ -25,7 +25,7 @@ type tlsInterceptor struct {
 	currentConnections      []*proxyConn
 }
 
-func (t *tlsInterceptor) Run(config config.HandlerConfig) {
+func (t *tlsInterceptor) Start(config config.HandlerConfig) {
 	var err error
 	t.options = loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())

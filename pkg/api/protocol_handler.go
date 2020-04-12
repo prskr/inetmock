@@ -11,6 +11,6 @@ type PluginInstanceFactory func() ProtocolHandler
 type LoggingFactory func() (*zap.Logger, error)
 
 type ProtocolHandler interface {
-	Run(config config.HandlerConfig)
+	Start(config config.HandlerConfig)
 	Shutdown(wg *sync.WaitGroup)
 }

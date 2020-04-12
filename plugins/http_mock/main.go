@@ -18,7 +18,7 @@ type httpHandler struct {
 	server *http.Server
 }
 
-func (p *httpHandler) Run(config config.HandlerConfig) {
+func (p *httpHandler) Start(config config.HandlerConfig) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 	p.server = &http.Server{Addr: addr, Handler: p.router}

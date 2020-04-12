@@ -13,7 +13,7 @@ type dnsHandler struct {
 	dnsServer []*dns.Server
 }
 
-func (d *dnsHandler) Run(config config.HandlerConfig) {
+func (d *dnsHandler) Start(config config.HandlerConfig) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 

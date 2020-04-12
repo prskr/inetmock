@@ -16,7 +16,7 @@ var (
 
 func init() {
 	fallbackStrategies = map[string]ProxyFallbackStrategy{
-		passthroughStrategyName: &passthroughFallbackStrategy{},
+		passthroughStrategyName: &passThroughFallbackStrategy{},
 		notFoundStrategyName:    &notFoundFallbackStrategy{},
 	}
 }
@@ -32,10 +32,10 @@ type ProxyFallbackStrategy interface {
 	Apply(request *http.Request) (*http.Response, error)
 }
 
-type passthroughFallbackStrategy struct {
+type passThroughFallbackStrategy struct {
 }
 
-func (p passthroughFallbackStrategy) Apply(request *http.Request) (*http.Response, error) {
+func (p passThroughFallbackStrategy) Apply(request *http.Request) (*http.Response, error) {
 	return nil, nil
 }
 

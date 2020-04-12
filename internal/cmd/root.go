@@ -88,7 +88,7 @@ func startEndpoint(handler api.ProtocolHandler, config config.HandlerConfig, log
 			)
 		}
 	}()
-	handler.Run(config)
+	handler.Start(config)
 }
 
 func shutdownEndpoint(handler api.ProtocolHandler, wg *sync.WaitGroup, logger *zap.Logger) {
