@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"net/http"
-	"sync"
 )
 
 const (
@@ -13,12 +13,12 @@ const (
 )
 
 type httpHandler struct {
-	logger *zap.Logger
+	logger logging.Logger
 	router *RegexpHandler
 	server *http.Server
 }
 
-func (p *httpHandler) Start(config config.HandlerConfig) {
+func (p *httpHandler) Start(config config.HandlerConfig) (err error) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 	p.server = &http.Server{Addr: addr, Handler: p.router}
@@ -31,18 +31,22 @@ func (p *httpHandler) Start(config config.HandlerConfig) {
 	}
 
 	go p.startServer()
+	return
 }
 
-func (p *httpHandler) Shutdown(wg *sync.WaitGroup) {
+func (p *httpHandler) Shutdown() (err error) {
 	p.logger.Info("Shutting down HTTP mock")
-	if err := p.server.Close(); err != nil {
+	if err = p.server.Close(); err != nil {
 		p.logger.Error(
 			"failed to shutdown HTTP server",
 			zap.Error(err),
 		)
+		err = fmt.Errorf(
+			"failed to shutdown HTTP server: %w",
+			err,
+		)
 	}
-
-	wg.Done()
+	return
 }
 
 func (p *httpHandler) startServer() {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -16,7 +17,7 @@ func (p *httpHandler) setupRoute(rule targetRule) {
 	p.router.Handler(rule.Pattern(), createHandlerForTarget(p.logger, rule.response))
 }
 
-func createHandlerForTarget(logger *zap.Logger, targetPath string) http.Handler {
+func createHandlerForTarget(logger logging.Logger, targetPath string) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		headerWriter := &bytes.Buffer{}
 		request.Header.Write(headerWriter)

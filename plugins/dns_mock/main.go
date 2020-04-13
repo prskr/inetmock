@@ -3,17 +3,17 @@ package main
 import (
 	"fmt"
 	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/miekg/dns"
 	"go.uber.org/zap"
-	"sync"
 )
 
 type dnsHandler struct {
-	logger    *zap.Logger
+	logger    logging.Logger
 	dnsServer []*dns.Server
 }
 
-func (d *dnsHandler) Start(config config.HandlerConfig) {
+func (d *dnsHandler) Start(config config.HandlerConfig) (err error) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 
@@ -51,6 +51,7 @@ func (d *dnsHandler) Start(config config.HandlerConfig) {
 	for _, dnsServer := range d.dnsServer {
 		go d.startServer(dnsServer)
 	}
+	return
 }
 
 func (d *dnsHandler) startServer(dnsServer *dns.Server) {
@@ -62,7 +63,7 @@ func (d *dnsHandler) startServer(dnsServer *dns.Server) {
 	}
 }
 
-func (d *dnsHandler) Shutdown(wg *sync.WaitGroup) {
+func (d *dnsHandler) Shutdown() error {
 	d.logger.Info("shutting down DNS mock")
 	for _, dnsServer := range d.dnsServer {
 		if err := dnsServer.Shutdown(); err != nil {
@@ -72,5 +73,5 @@ func (d *dnsHandler) Shutdown(wg *sync.WaitGroup) {
 			)
 		}
 	}
-	wg.Done()
+	return nil
 }

@@ -3,6 +3,7 @@ DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILD_PATH = $(DIR)/main.go
 PKGS = $(shell go list ./...)
 TEST_PKGS = $(shell find . -type f -name "*_test.go" -not -path "./plugins/*" -printf '%h\n' | sort -u)
+GO_GEN_FILES = $(shell grep -rnwl --include="*.go" "go:generate" $(DIR))
 GOARGS = GOOS=linux GOARCH=amd64
 GO_BUILD_ARGS = -ldflags="-w -s"
 GO_CONTAINER_BUILD_ARGS = -ldflags="-w -s" -a -installsuffix cgo
@@ -11,10 +12,8 @@ BINARY_NAME = inetmock
 PLUGINS = $(wildcard $(DIR)plugins/*/.)
 DEBUG_PORT = 2345
 DEBUG_ARGS?= --development-logs=true
-INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 
-.PHONY: clean all format deps update-deps compile debug snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS)
-
+.PHONY: clean all format deps update-deps compile debug generate snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(.PHONY: clean all format deps update-deps compile debug generate snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
 all: clean format compile test plugins
 
 clean:
@@ -44,14 +43,19 @@ else
 	@$(GOARGS) go build $(GO_BUILD_ARGS) -o $(DIR)$(BINARY_NAME) $(BUILD_PATH)
 endif
 
+debug: export INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 debug:
-	@export INETMOCK_PLUGINS_DIRECTORY
 	dlv exec $(DIR)$(BINARY_NAME) \
 		--headless \
 		--listen=:2345 \
 		--api-version=2 \
 		--accept-multiclient \
 		-- $(DEBUG_ARGS)
+
+generate:
+	@for go_gen_target in $(GO_GEN_FILES); do \
+  		go generate $$go_gen_target; \
+  	done
 
 snapshot-release:
 	@goreleaser release --snapshot --skip-publish --rm-dist
@@ -63,7 +67,7 @@ test:
 cli-cover-report:
 	@go tool cover -func=cov.out
 
-html-cover-report:
+html-cover-report: test
 	@go tool cover -html=cov.out -o .coverage.html
 
 plugins: $(PLUGINS)

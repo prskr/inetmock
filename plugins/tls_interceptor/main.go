@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"net"
 	"sync"
@@ -16,7 +17,7 @@ const (
 )
 
 type tlsInterceptor struct {
-	logger                  *zap.Logger
+	logger                  logging.Logger
 	listener                net.Listener
 	certStore               *certStore
 	options                 *tlsOptions
@@ -25,8 +26,7 @@ type tlsInterceptor struct {
 	currentConnections      []*proxyConn
 }
 
-func (t *tlsInterceptor) Start(config config.HandlerConfig) {
-	var err error
+func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
 	t.options = loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 
@@ -46,6 +46,11 @@ func (t *tlsInterceptor) Start(config config.HandlerConfig) {
 			"failed to initialize CA cert",
 			zap.Error(err),
 		)
+		err = fmt.Errorf(
+			"failed to initialize CA cert: %w",
+			err,
+		)
+		return
 	}
 
 	rootCaPool := x509.NewCertPool()
@@ -61,13 +66,18 @@ func (t *tlsInterceptor) Start(config config.HandlerConfig) {
 			"failed to create tls listener",
 			zap.Error(err),
 		)
+		err = fmt.Errorf(
+			"failed to create tls listener: %w",
+			err,
+		)
 		return
 	}
 
 	go t.startListener()
+	return
 }
 
-func (t *tlsInterceptor) Shutdown(wg *sync.WaitGroup) {
+func (t *tlsInterceptor) Shutdown() (err error) {
 	t.logger.Info("Shutting down TLS interceptor")
 	t.shutdownRequested = true
 	done := make(chan struct{})
@@ -78,17 +88,21 @@ func (t *tlsInterceptor) Shutdown(wg *sync.WaitGroup) {
 
 	select {
 	case <-done:
-		wg.Done()
+		return
 	case <-time.After(5 * time.Second):
 		for _, proxyConn := range t.currentConnections {
-			if err := proxyConn.Close(); err != nil {
+			if err = proxyConn.Close(); err != nil {
 				t.logger.Error(
 					"error while closing remaining proxy connections",
 					zap.Error(err),
 				)
+				err = fmt.Errorf(
+					"error while closing remaining proxy connections: %w",
+					err,
+				)
 			}
 		}
-		wg.Done()
+		return
 	}
 }
 

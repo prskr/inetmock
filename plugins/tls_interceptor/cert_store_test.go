@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -85,7 +86,8 @@ func Test_generateDomainCert(t *testing.T) {
 		},
 	}
 
-	logger, _ := zap.NewDevelopment()
+	zapLogger, _ := zap.NewDevelopment()
+	logger := logging.NewLogger(zapLogger)
 
 	certStore := certStore{
 		options:      options,

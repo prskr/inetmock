@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"fmt"
+	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/baez90/inetmock/pkg/path"
 	"go.uber.org/zap"
 	"math/big"
@@ -22,7 +23,7 @@ type certStore struct {
 	caPrivateKey       interface{}
 	certCache          map[string]*tls.Certificate
 	timeSourceInstance timeSource
-	logger             *zap.Logger
+	logger             logging.Logger
 }
 
 func (cs *certStore) timeSource() timeSource {

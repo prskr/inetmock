@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/miekg/dns"
 	"go.uber.org/zap"
 )
@@ -8,7 +9,7 @@ import (
 type regexHandler struct {
 	routes   []resolverRule
 	fallback ResolverFallback
-	logger   *zap.Logger
+	logger   logging.Logger
 }
 
 func (r2 *regexHandler) AddRule(rule resolverRule) {
