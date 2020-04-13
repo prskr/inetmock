@@ -1,4 +1,4 @@
-//go:generate mockgen -source=loading.go -destination=./../../mock/plugins_mock.go -package=mock
+//go:generate mockgen -source=loading.go -destination=./../../internal/mock/handler_registry_mock.go -package=mock
 package plugins
 
 import (
