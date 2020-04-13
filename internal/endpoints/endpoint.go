@@ -1,4 +1,4 @@
-//go:generate mockgen -source=endpoint.go -destination=./../../mock/endpoint_mock.go -package=mock
+//go:generate mockgen -source=endpoint.go -destination=./../../internal/mock/endpoint_mock.go -package=mock
 package endpoints
 
 import (

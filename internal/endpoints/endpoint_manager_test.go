@@ -2,8 +2,8 @@ package endpoints
 
 import (
 	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/internal/mock"
 	"github.com/baez90/inetmock/internal/plugins"
-	"github.com/baez90/inetmock/mock"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/golang/mock/gomock"
 	"testing"

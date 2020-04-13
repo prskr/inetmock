@@ -1,4 +1,4 @@
-//go:generate mockgen -source=logger.go -destination=./../../mock/logger_mock.go -package=mock
+//go:generate mockgen -source=logger.go -destination=./../../internal/mock/logger_mock.go -package=mock
 package logging
 
 import "go.uber.org/zap"
