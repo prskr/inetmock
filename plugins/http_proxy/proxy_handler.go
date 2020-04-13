@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
 	"io"
@@ -12,7 +13,7 @@ import (
 
 type proxyHttpHandler struct {
 	options httpProxyOptions
-	logger  *zap.Logger
+	logger  logging.Logger
 }
 
 /*

@@ -33,7 +33,9 @@ endpoints:
   plainHttp:
     handler: http_mock
     listenAddress: 0.0.0.0
-    port: 80
+    ports:
+    - 80
+    - 8080
     options:
       <<: *httpResponseRules
   proxy:
@@ -46,7 +48,9 @@ endpoints:
   httpsDowngrade:
     handler: tls_interceptor
     listenAddress: 0.0.0.0
-    port: 443
+    ports:
+    - 443
+    - 8443
     options:
       <<: *tlsOptions
       target:

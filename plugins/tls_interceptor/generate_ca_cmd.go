@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"time"
@@ -14,7 +15,7 @@ const (
 	generateCANotAfterRelative  = "not-after"
 )
 
-func generateCACmd(logger *zap.Logger) *cobra.Command {
+func generateCACmd(logger logging.Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generate-ca",
 		Short: "Generate a new CA certificate and corresponding key",
@@ -31,7 +32,7 @@ func generateCACmd(logger *zap.Logger) *cobra.Command {
 	return cmd
 }
 
-func getDurationFlag(cmd *cobra.Command, flagName string, logger *zap.Logger) (val time.Duration, err error) {
+func getDurationFlag(cmd *cobra.Command, flagName string, logger logging.Logger) (val time.Duration, err error) {
 	if val, err = cmd.Flags().GetDuration(flagName); err != nil {
 		logger.Error(
 			"failed to parse parse flag",
@@ -42,7 +43,7 @@ func getDurationFlag(cmd *cobra.Command, flagName string, logger *zap.Logger) (v
 	return
 }
 
-func getStringFlag(cmd *cobra.Command, flagName string, logger *zap.Logger) (val string, err error) {
+func getStringFlag(cmd *cobra.Command, flagName string, logger logging.Logger) (val string, err error) {
 	if val, err = cmd.Flags().GetString(flagName); err != nil {
 		logger.Error(
 			"failed to parse parse flag",
@@ -53,7 +54,7 @@ func getStringFlag(cmd *cobra.Command, flagName string, logger *zap.Logger) (val
 	return
 }
 
-func runGenerateCA(logger *zap.Logger) func(cmd *cobra.Command, args []string) {
+func runGenerateCA(logger logging.Logger) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		var certOutPath, keyOutPath, curveName string
 		var notBefore, notAfter time.Duration

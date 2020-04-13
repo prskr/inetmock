@@ -17,7 +17,9 @@ func ConfigureLogging(
 ) {
 	loggingConfig.Level = level
 	loggingConfig.Development = developmentLogging
-	loggingConfig.InitialFields = initialFields
+	if initialFields != nil {
+		loggingConfig.InitialFields = initialFields
+	}
 }
 
 func ParseLevel(levelString string) zap.AtomicLevel {
@@ -37,6 +39,10 @@ func ParseLevel(levelString string) zap.AtomicLevel {
 	}
 }
 
-func CreateLogger() (*zap.Logger, error) {
-	return loggingConfig.Build()
+func CreateLogger() (Logger, error) {
+	if zapLogger, err := loggingConfig.Build(); err != nil {
+		return nil, err
+	} else {
+		return NewLogger(zapLogger), nil
+	}
 }

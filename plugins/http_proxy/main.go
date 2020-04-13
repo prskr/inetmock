@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
 	"net/http"
-	"sync"
 )
 
 const (
@@ -14,12 +14,12 @@ const (
 )
 
 type httpProxy struct {
-	logger *zap.Logger
+	logger logging.Logger
 	proxy  *goproxy.ProxyHttpServer
 	server *http.Server
 }
 
-func (h *httpProxy) Start(config config.HandlerConfig) {
+func (h *httpProxy) Start(config config.HandlerConfig) (err error) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 	h.server = &http.Server{Addr: addr, Handler: h.proxy}
@@ -33,6 +33,7 @@ func (h *httpProxy) Start(config config.HandlerConfig) {
 	}
 	h.proxy.OnRequest().Do(proxyHandler)
 	go h.startProxy()
+	return
 }
 
 func (h *httpProxy) startProxy() {
@@ -44,13 +45,18 @@ func (h *httpProxy) startProxy() {
 	}
 }
 
-func (h *httpProxy) Shutdown(wg *sync.WaitGroup) {
-	defer wg.Done()
+func (h *httpProxy) Shutdown() (err error) {
 	h.logger.Info("Shutting down HTTP proxy")
-	if err := h.server.Close(); err != nil {
+	if err = h.server.Close(); err != nil {
 		h.logger.Error(
 			"failed to shutdown proxy endpoint",
 			zap.Error(err),
 		)
+
+		err = fmt.Errorf(
+			"failed to shutdown proxy endpoint: %w",
+			err,
+		)
 	}
+	return
 }

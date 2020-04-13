@@ -22,7 +22,7 @@ type Config interface {
 }
 
 type config struct {
-	logger *zap.Logger
+	logger logging.Logger
 }
 
 func (c config) InitConfig(flags *pflag.FlagSet) {
