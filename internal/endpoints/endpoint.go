@@ -1,8 +1,7 @@
-//go:generate mockgen -source=endpoint.go -destination=./../../internal/mock/endpoint_mock.go -package=mock
+//go:generate mockgen -source=endpoint.go -destination=./../../internal/mock/endpoints/endpoint_mock.go -package=endpoints_mock
 package endpoints
 
 import (
-	"github.com/baez90/inetmock/internal/config"
 	"github.com/baez90/inetmock/pkg/api"
 )
 
@@ -15,7 +14,7 @@ type Endpoint interface {
 type endpoint struct {
 	name    string
 	handler api.ProtocolHandler
-	config  config.HandlerConfig
+	config  api.HandlerConfig
 }
 
 func (e endpoint) Name() string {

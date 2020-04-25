@@ -1,6 +1,15 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
+
+const (
+	pluginConfigKey        = "handler"
+	listenAddressConfigKey = "listenAddress"
+	portConfigKey          = "port"
+	portsConfigKey         = "ports"
+)
 
 func CreateMultiHandlerConfig(handlerConfig *viper.Viper) MultiHandlerConfig {
 	return NewMultiHandlerConfig(

@@ -1,13 +1,6 @@
-package config
+package api
 
 import "github.com/spf13/viper"
-
-const (
-	pluginConfigKey        = "handler"
-	listenAddressConfigKey = "listenAddress"
-	portConfigKey          = "port"
-	portsConfigKey         = "ports"
-)
 
 type HandlerConfig interface {
 	HandlerName() string

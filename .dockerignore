@@ -3,16 +3,22 @@
 ###############
 
 .git/
-plugins/
+.idea/
+.vscode/
+deploy/
+dist/
+doc/
 
 #########
 # Files #
 #########
 
+*.so
 *.out
 main
 inetmock
 README.md
+LICENSE
 .dockerignore
 .gitignore
 Dockerfile

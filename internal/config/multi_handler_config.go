@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/spf13/viper"
 )
 
@@ -9,7 +10,7 @@ type MultiHandlerConfig interface {
 	ListenAddress() string
 	Ports() []uint16
 	Options() *viper.Viper
-	HandlerConfigs() []HandlerConfig
+	HandlerConfigs() []api.HandlerConfig
 }
 
 type multiHandlerConfig struct {
@@ -39,10 +40,10 @@ func (m multiHandlerConfig) Options() *viper.Viper {
 	return m.options
 }
 
-func (m multiHandlerConfig) HandlerConfigs() []HandlerConfig {
-	configs := make([]HandlerConfig, 0)
+func (m multiHandlerConfig) HandlerConfigs() []api.HandlerConfig {
+	configs := make([]api.HandlerConfig, 0)
 	for _, port := range m.ports {
-		configs = append(configs, NewHandlerConfig(m.handlerName, port, m.listenAddress, m.options))
+		configs = append(configs, api.NewHandlerConfig(m.handlerName, port, m.listenAddress, m.options))
 	}
 	return configs
 }

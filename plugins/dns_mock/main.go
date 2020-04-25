@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/miekg/dns"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ type dnsHandler struct {
 	dnsServer []*dns.Server
 }
 
-func (d *dnsHandler) Start(config config.HandlerConfig) (err error) {
+func (d *dnsHandler) Start(config api.HandlerConfig) (err error) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 

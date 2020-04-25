@@ -1,52 +1,42 @@
 package main
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
-	"regexp"
 )
 
 const (
-	rulesConfigKey            = "rules"
-	patternConfigKey          = "pattern"
-	responseConfigKey         = "response"
-	fallbackStrategyConfigKey = "fallback"
+	targetSchemeConfigKey    = "target.scheme"
+	targetIpAddressConfigKey = "target.ipAddress"
+	targetPortConfigKey      = "target.port"
 )
 
-type targetRule struct {
-	pattern  *regexp.Regexp
-	response string
+type redirectionTarget struct {
+	scheme    string
+	ipAddress string
+	port      uint16
 }
 
-func (tr targetRule) Pattern() *regexp.Regexp {
-	return tr.pattern
-}
-
-func (tr targetRule) Response() string {
-	return tr.response
+func (rt redirectionTarget) host() string {
+	return fmt.Sprintf("%s:%d", rt.ipAddress, rt.port)
 }
 
 type httpProxyOptions struct {
-	Rules            []targetRule
-	FallbackStrategy ProxyFallbackStrategy
+	redirectionTarget redirectionTarget
 }
 
 func loadFromConfig(config *viper.Viper) (options httpProxyOptions) {
-	options.FallbackStrategy = StrategyForName(config.GetString(fallbackStrategyConfigKey))
 
-	anonRules := config.Get(rulesConfigKey).([]interface{})
+	config.SetDefault(targetSchemeConfigKey, "http")
+	config.SetDefault(targetIpAddressConfigKey, "127.0.0.1")
+	config.SetDefault(targetPortConfigKey, "80")
 
-	for _, i := range anonRules {
-		innerData := i.(map[interface{}]interface{})
-
-		if rulePattern, err := regexp.Compile(innerData[patternConfigKey].(string)); err == nil {
-			options.Rules = append(options.Rules, targetRule{
-				pattern:  rulePattern,
-				response: innerData[responseConfigKey].(string),
-			})
-		} else {
-			panic(err)
-		}
+	options = httpProxyOptions{
+		redirectionTarget{
+			scheme:    config.GetString(targetSchemeConfigKey),
+			ipAddress: config.GetString(targetIpAddressConfigKey),
+			port:      uint16(config.GetInt(targetPortConfigKey)),
+		},
 	}
-
 	return
 }

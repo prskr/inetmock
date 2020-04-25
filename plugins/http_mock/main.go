@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"net/http"
@@ -18,7 +18,7 @@ type httpHandler struct {
 	server *http.Server
 }
 
-func (p *httpHandler) Start(config config.HandlerConfig) (err error) {
+func (p *httpHandler) Start(config api.HandlerConfig) (err error) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 	p.server = &http.Server{Addr: addr, Handler: p.router}

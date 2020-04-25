@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/spf13/viper"
 	"reflect"
 	"testing"
@@ -16,12 +17,12 @@ func Test_multiHandlerConfig_HandlerConfigs(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   []HandlerConfig
+		want   []api.HandlerConfig
 	}{
 		{
 			name:   "Get empty array if no ports are set",
 			fields: fields{},
-			want:   make([]HandlerConfig, 0),
+			want:   make([]api.HandlerConfig, 0),
 		},
 		{
 			name: "Get a single handler config if only one port is set",
@@ -31,13 +32,8 @@ func Test_multiHandlerConfig_HandlerConfigs(t *testing.T) {
 				listenAddress: "0.0.0.0",
 				options:       nil,
 			},
-			want: []HandlerConfig{
-				&handlerConfig{
-					handlerName:   "sampleHandler",
-					port:          80,
-					listenAddress: "0.0.0.0",
-					options:       nil,
-				},
+			want: []api.HandlerConfig{
+				api.NewHandlerConfig("sampleHandler", 80, "0.0.0.0", nil),
 			},
 		},
 		{
@@ -48,19 +44,9 @@ func Test_multiHandlerConfig_HandlerConfigs(t *testing.T) {
 				listenAddress: "0.0.0.0",
 				options:       nil,
 			},
-			want: []HandlerConfig{
-				&handlerConfig{
-					handlerName:   "sampleHandler",
-					port:          80,
-					listenAddress: "0.0.0.0",
-					options:       nil,
-				},
-				&handlerConfig{
-					handlerName:   "sampleHandler",
-					port:          8080,
-					listenAddress: "0.0.0.0",
-					options:       nil,
-				},
+			want: []api.HandlerConfig{
+				api.NewHandlerConfig("sampleHandler", 80, "0.0.0.0", nil),
+				api.NewHandlerConfig("sampleHandler", 8080, "0.0.0.0", nil),
 			},
 		},
 	}

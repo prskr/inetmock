@@ -19,5 +19,5 @@ func init() {
 			logger:                  logger,
 			currentConnectionsCount: &sync.WaitGroup{},
 		}
-	}, generateCACmd(logger))
+	})
 }

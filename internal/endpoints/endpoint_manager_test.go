@@ -2,7 +2,9 @@ package endpoints
 
 import (
 	"github.com/baez90/inetmock/internal/config"
-	"github.com/baez90/inetmock/internal/mock"
+	api_mock "github.com/baez90/inetmock/internal/mock/api"
+	logging_mock "github.com/baez90/inetmock/internal/mock/logging"
+	plugins_mock "github.com/baez90/inetmock/internal/mock/plugins"
 	"github.com/baez90/inetmock/internal/plugins"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/golang/mock/gomock"
@@ -33,18 +35,18 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 			wantEndpoints: 1,
 			fields: fields{
 				logger: func() logging.Logger {
-					return mock.NewMockLogger(gomock.NewController(t))
+					return logging_mock.NewMockLogger(gomock.NewController(t))
 				}(),
 				registeredEndpoints:      nil,
 				properlyStartedEndpoints: nil,
 				registry: func() plugins.HandlerRegistry {
-					registry := mock.NewMockHandlerRegistry(gomock.NewController(t))
+					registry := plugins_mock.NewMockHandlerRegistry(gomock.NewController(t))
 					registry.
 						EXPECT().
 						HandlerForName("sampleHandler").
 						MinTimes(1).
 						MaxTimes(1).
-						Return(mock.NewMockProtocolHandler(gomock.NewController(t)), true)
+						Return(api_mock.NewMockProtocolHandler(gomock.NewController(t)), true)
 					return registry
 				}(),
 			},
@@ -64,12 +66,12 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 			wantEndpoints: 0,
 			fields: fields{
 				logger: func() logging.Logger {
-					return mock.NewMockLogger(gomock.NewController(t))
+					return logging_mock.NewMockLogger(gomock.NewController(t))
 				}(),
 				registeredEndpoints:      nil,
 				properlyStartedEndpoints: nil,
 				registry: func() plugins.HandlerRegistry {
-					registry := mock.NewMockHandlerRegistry(gomock.NewController(t))
+					registry := plugins_mock.NewMockHandlerRegistry(gomock.NewController(t))
 					registry.
 						EXPECT().
 						HandlerForName("sampleHandler").
