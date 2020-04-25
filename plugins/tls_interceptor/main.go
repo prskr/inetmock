@@ -6,6 +6,7 @@ import (
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/cert"
 	"github.com/baez90/inetmock/pkg/logging"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"net"
 	"sync"
@@ -23,7 +24,7 @@ type tlsInterceptor struct {
 	certStore               cert.Store
 	shutdownRequested       bool
 	currentConnectionsCount *sync.WaitGroup
-	currentConnections      []*proxyConn
+	currentConnections      map[uuid.UUID]*proxyConn
 }
 
 func (t *tlsInterceptor) Start(config api.HandlerConfig) (err error) {
@@ -98,6 +99,7 @@ func (t *tlsInterceptor) startListener() {
 
 func (t *tlsInterceptor) proxyConn(conn net.Conn) {
 	defer conn.Close()
+	defer t.currentConnectionsCount.Done()
 
 	rAddr, err := net.ResolveTCPAddr("tcp", t.options.redirectionTarget.address())
 	if err != nil {
@@ -117,14 +119,16 @@ func (t *tlsInterceptor) proxyConn(conn net.Conn) {
 	}
 	defer targetConn.Close()
 
-	t.currentConnections = append(t.currentConnections, &proxyConn{
+	proxyCon := &proxyConn{
 		source: conn,
 		target: targetConn,
-	})
+	}
 
+	conUID := uuid.New()
+	t.currentConnections[conUID] = proxyCon
 	Pipe(conn, targetConn)
+	delete(t.currentConnections, conUID)
 
-	t.currentConnectionsCount.Done()
 	t.logger.Info(
 		"connection closed",
 		zap.String("remoteAddr", conn.RemoteAddr().String()),
