@@ -3,7 +3,7 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
-    - make handlers
+    - make plugins
 builds:
   - id: "default"
     ldflags:

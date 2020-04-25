@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
@@ -19,7 +19,7 @@ type httpProxy struct {
 	server *http.Server
 }
 
-func (h *httpProxy) Start(config config.HandlerConfig) (err error) {
+func (h *httpProxy) Start(config api.HandlerConfig) (err error) {
 	options := loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 	h.server = &http.Server{Addr: addr, Handler: h.proxy}
@@ -27,11 +27,20 @@ func (h *httpProxy) Start(config config.HandlerConfig) (err error) {
 		zap.String("address", addr),
 	)
 
+	tlsConfig := api.ServicesInstance().CertStore().TLSConfig()
+
 	proxyHandler := &proxyHttpHandler{
 		options: options,
 		logger:  h.logger,
 	}
+
+	proxyHttpsHandler := &proxyHttpsHandler{
+		tlsConfig: tlsConfig,
+		logger:    h.logger,
+	}
+
 	h.proxy.OnRequest().Do(proxyHandler)
+	h.proxy.OnRequest().HandleConnect(proxyHttpsHandler)
 	go h.startProxy()
 	return
 }

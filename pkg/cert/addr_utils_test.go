@@ -1,4 +1,4 @@
-package main
+package cert
 
 import "testing"
 

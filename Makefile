@@ -1,9 +1,8 @@
-VERSst/pluginsION = $(shell git describe --dirty --tags --always)
+VERSION = $(shell git describe --dirty --tags --always)
 DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILD_PATH = $(DIR)/main.go
 PKGS = $(shell go list ./...)
-TEST_PKGS = $(shell find . -type f -name "*_test.go" -not -path "./plugins/*" -printf '%h\n' | sort -u)
-GO_GEN_FILES = $(shell grep -rnwl --include="*.go" "go:generate" $(DIR))
+TEST_PKGS = $(shell find . -type f -name "*_test.go" -not -path "./plugins/*" -not -path "*/mock/*" -printf '%h\n' | sort -u)
 GOARGS = GOOS=linux GOARCH=amd64
 GO_BUILD_ARGS = -ldflags="-w -s"
 GO_CONTAINER_BUILD_ARGS = -ldflags="-w -s" -a -installsuffix cgo
@@ -12,8 +11,10 @@ BINARY_NAME = inetmock
 PLUGINS = $(wildcard $(DIR)plugins/*/.)
 DEBUG_PORT = 2345
 DEBUG_ARGS?= --development-logs=true
+CONTAINER_BUILDER ?= podman
+DOCKER_IMAGE ?= inetmock
 
-.PHONY: clean all format deps update-deps compile debug generate snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(.PHONY: clean all format deps update-deps compile debug generate snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
+.PHONY: clean all format deps update-deps compile debug generate snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
 all: clean format compile test plugins
 
 clean:
@@ -45,26 +46,26 @@ endif
 
 debug: export INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 debug:
-	dlv exec $(DIR)$(BINARY_NAME) \
+	dlv debug $(DIR) \
 		--headless \
 		--listen=:2345 \
 		--api-version=2 \
-		--accept-multiclient \
 		-- $(DEBUG_ARGS)
 
 generate:
-	@for go_gen_target in $(GO_GEN_FILES); do \
-  		go generate $$go_gen_target; \
-  	done
+	@go generate ./...
 
 snapshot-release:
 	@goreleaser release --snapshot --skip-publish --rm-dist
+
+container:
+	@$(CONTAINER_BUILDER) build -t $(DOCKER_IMAGE):latest -f $(DIR)Dockerfile $(DIR)
 
 test:
 	@go test -coverprofile=./cov-raw.out -v $(TEST_PKGS)
 	@cat ./cov-raw.out | grep -v "generated" > ./cov.out
 
-cli-cover-report:
+cli-cover-report: test
 	@go tool cover -func=cov.out
 
 html-cover-report: test

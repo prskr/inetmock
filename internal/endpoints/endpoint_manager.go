@@ -40,19 +40,20 @@ func (e endpointManager) StartedEndpoints() []Endpoint {
 	return e.properlyStartedEndpoints
 }
 
-func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) (err error) {
-	if handler, ok := e.registry.HandlerForName(multiHandlerConfig.HandlerName()); ok {
-		for _, handlerConfig := range multiHandlerConfig.HandlerConfigs() {
+func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) error {
+	for _, handlerConfig := range multiHandlerConfig.HandlerConfigs() {
+		if handler, ok := e.registry.HandlerForName(multiHandlerConfig.HandlerName()); ok {
 			e.registeredEndpoints = append(e.registeredEndpoints, &endpoint{
 				name:    name,
 				handler: handler,
 				config:  handlerConfig,
 			})
+		} else {
+			return fmt.Errorf("no matching handler registered for names %s", multiHandlerConfig.HandlerName())
 		}
-	} else {
-		err = fmt.Errorf("no matching handler registered for name %s", multiHandlerConfig.HandlerName())
 	}
-	return
+
+	return nil
 }
 
 func (e *endpointManager) StartEndpoints() {

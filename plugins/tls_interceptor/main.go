@@ -2,9 +2,9 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"github.com/baez90/inetmock/internal/config"
+	"github.com/baez90/inetmock/pkg/api"
+	"github.com/baez90/inetmock/pkg/cert"
 	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"net"
@@ -17,16 +17,16 @@ const (
 )
 
 type tlsInterceptor struct {
+	options                 tlsOptions
 	logger                  logging.Logger
 	listener                net.Listener
-	certStore               *certStore
-	options                 *tlsOptions
+	certStore               cert.Store
 	shutdownRequested       bool
 	currentConnectionsCount *sync.WaitGroup
 	currentConnections      []*proxyConn
 }
 
-func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
+func (t *tlsInterceptor) Start(config api.HandlerConfig) (err error) {
 	t.options = loadFromConfig(config.Options())
 	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
 
@@ -35,33 +35,7 @@ func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
 		zap.String("target", t.options.redirectionTarget.address()),
 	)
 
-	t.certStore = &certStore{
-		options:   t.options,
-		certCache: make(map[string]*tls.Certificate),
-		logger:    t.logger,
-	}
-
-	if err = t.certStore.initCaCert(); err != nil {
-		t.logger.Error(
-			"failed to initialize CA cert",
-			zap.Error(err),
-		)
-		err = fmt.Errorf(
-			"failed to initialize CA cert: %w",
-			err,
-		)
-		return
-	}
-
-	rootCaPool := x509.NewCertPool()
-	rootCaPool.AddCert(t.certStore.caCert)
-
-	tlsConfig := &tls.Config{
-		GetCertificate: t.getCert,
-		RootCAs:        rootCaPool,
-	}
-
-	if t.listener, err = tls.Listen("tcp", addr, tlsConfig); err != nil {
+	if t.listener, err = tls.Listen("tcp", addr, api.ServicesInstance().CertStore().TLSConfig()); err != nil {
 		t.logger.Fatal(
 			"failed to create tls listener",
 			zap.Error(err),
@@ -120,23 +94,6 @@ func (t *tlsInterceptor) startListener() {
 		t.currentConnectionsCount.Add(1)
 		go t.proxyConn(conn)
 	}
-}
-
-func (t *tlsInterceptor) getCert(info *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
-	var localIp string
-	if localIp, err = extractIPFromAddress(info.Conn.LocalAddr().String()); err != nil {
-		localIp = "127.0.0.1"
-	}
-	if cert, err = t.certStore.getCertificate(info.ServerName, localIp); err != nil {
-		t.logger.Error(
-			"error while resolving certificate",
-			zap.String("serverName", info.ServerName),
-			zap.String("localAddr", localIp),
-			zap.Error(err),
-		)
-	}
-
-	return
 }
 
 func (t *tlsInterceptor) proxyConn(conn net.Conn) {

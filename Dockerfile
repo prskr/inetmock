@@ -38,7 +38,7 @@ WORKDIR /app
 
 COPY --from=build /etc/passwd /etc/group /etc/
 COPY --from=build --chown=$USER /work/inetmock ./
-COPY --from=build --chown=$USER /work/plugins/ ./plugins/
+COPY --from=build --chown=$USER /work/*.so ./plugins/
 
 USER $USER:$USER
 

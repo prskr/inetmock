@@ -15,15 +15,15 @@ x-response-rules: &httpResponseRules
     - pattern: ".*"
       response: ./assets/fakeFiles/default.html
 
-x-tls-options: &tlsOptions
+tls:
   ecdsaCurve: P256
   validity:
     ca:
       notBeforeRelative: 17520h
       notAfterRelative: 17520h
-    domain:
-      notBeforeRelative: 168h
-      notAfterRelative: 168h
+    server:
+      NotBeforeRelative: 168h
+      NotAfterRelative: 168h
   rootCaCert:
     publicKey: ./ca.pem
     privateKey: ./ca.key
@@ -43,8 +43,9 @@ endpoints:
     listenAddress: 0.0.0.0
     port: 3128
     options:
-      fallback: notfound
-      <<: *httpResponseRules
+      target:
+        ipAddress: 127.0.0.1
+        port: 80
   httpsDowngrade:
     handler: tls_interceptor
     listenAddress: 0.0.0.0
@@ -52,7 +53,6 @@ endpoints:
     - 443
     - 8443
     options:
-      <<: *tlsOptions
       target:
         ipAddress: 127.0.0.1
         port: 80
@@ -75,7 +75,6 @@ endpoints:
     listenAddress: 0.0.0.0
     port: 853
     options:
-      <<: *tlsOptions
       target:
         ipAddress: 127.0.0.1
         port: 53
