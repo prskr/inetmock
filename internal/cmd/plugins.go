@@ -18,5 +18,5 @@ The easiest way to explore what commands are available is to start with 'inetmoc
 This help page contains a list of available sub-commands starting with the name of the plugin as a prefix.
 `,
 	}
-	rootCmd.AddCommand(pluginsCmd)
+	rootCmd.AddCommand(pluginsCmd, generateCaCmd)
 }

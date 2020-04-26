@@ -1,3 +1,4 @@
+//go:generate mockgen -source=loading.go -destination=./../../internal/mock/plugins/handler_registry_mock.go -package=plugins_mock
 package plugins
 
 import (
@@ -42,7 +43,7 @@ func (h *handlerRegistry) HandlerForName(handlerName string) (instance api.Proto
 
 func (h *handlerRegistry) RegisterHandler(handlerName string, handlerProvider api.PluginInstanceFactory, subCommands ...*cobra.Command) {
 	if _, exists := h.handlers[handlerName]; exists {
-		panic(fmt.Sprintf("plugin %s already registered - there's something strange...in the neighborhood"))
+		panic(fmt.Sprintf("handler with name %s is already registered - there's something strange...in the neighborhood", handlerName))
 	}
 	h.handlers[handlerName] = handlerProvider
 
@@ -56,7 +57,6 @@ func (h *handlerRegistry) RegisterHandler(handlerName string, handlerProvider ap
 }
 
 func (h *handlerRegistry) LoadPlugins(pluginsPath string) (err error) {
-
 	if !path.DirExists(pluginsPath) {
 		err = fmt.Errorf("plugins path %s does not exist or is not accessible", pluginsPath)
 		return
