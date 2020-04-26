@@ -1,6 +1,7 @@
 # INetMock
 
 ![Go](https://github.com/baez90/inetmock/workflows/Go/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/baez90/inetmock)](https://goreportcard.com/report/github.com/baez90/inetmock)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=baez90_inetmock&metric=alert_status)](https://sonarcloud.io/dashboard?id=baez90_inetmock)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=baez90_inetmock&metric=ncloc)](https://sonarcloud.io/dashboard?id=baez90_inetmock)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=baez90_inetmock&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=baez90_inetmock)
