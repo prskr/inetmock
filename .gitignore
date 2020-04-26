@@ -15,5 +15,6 @@ main
 ###############
 
 .idea/
+.vscode/
 dist/
 out/
