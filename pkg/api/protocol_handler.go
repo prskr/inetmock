@@ -2,6 +2,7 @@
 package api
 
 import (
+	"github.com/baez90/inetmock/pkg/config"
 	"go.uber.org/zap"
 )
 
@@ -10,6 +11,6 @@ type PluginInstanceFactory func() ProtocolHandler
 type LoggingFactory func() (*zap.Logger, error)
 
 type ProtocolHandler interface {
-	Start(config HandlerConfig) error
+	Start(config config.HandlerConfig) error
 	Shutdown() error
 }

@@ -1,4 +1,4 @@
-package api
+package config
 
 import (
 	"github.com/spf13/viper"
@@ -19,12 +19,12 @@ func Test_handlerConfig_HandlerName(t *testing.T) {
 		want   string
 	}{
 		{
-			name:   "Get empty HandlerName for uninitialized struct",
+			name:   "Get empty Handler for uninitialized struct",
 			fields: fields{},
 			want:   "",
 		},
 		{
-			name: "Get expected HandlerName for initialized struct",
+			name: "Get expected Handler for initialized struct",
 			fields: fields{
 				handlerName: "sampleHandler",
 			},
@@ -33,14 +33,14 @@ func Test_handlerConfig_HandlerName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := handlerConfig{
-				handlerName:   tt.fields.handlerName,
-				port:          tt.fields.port,
-				listenAddress: tt.fields.listenAddress,
-				options:       tt.fields.options,
+			h := HandlerConfig{
+				HandlerName:   tt.fields.handlerName,
+				Port:          tt.fields.port,
+				ListenAddress: tt.fields.listenAddress,
+				Options:       tt.fields.options,
 			}
-			if got := h.HandlerName(); got != tt.want {
-				t.Errorf("HandlerName() = %v, want %v", got, tt.want)
+			if got := h.HandlerName; got != tt.want {
+				t.Errorf("Handler() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -73,13 +73,13 @@ func Test_handlerConfig_ListenAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := handlerConfig{
-				handlerName:   tt.fields.handlerName,
-				port:          tt.fields.port,
-				listenAddress: tt.fields.listenAddress,
-				options:       tt.fields.options,
+			h := HandlerConfig{
+				HandlerName:   tt.fields.handlerName,
+				Port:          tt.fields.port,
+				ListenAddress: tt.fields.listenAddress,
+				Options:       tt.fields.options,
 			}
-			if got := h.ListenAddress(); got != tt.want {
+			if got := h.ListenAddress; got != tt.want {
 				t.Errorf("ListenAddress() = %v, want %v", got, tt.want)
 			}
 		})
@@ -113,13 +113,13 @@ func Test_handlerConfig_Options(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := handlerConfig{
-				handlerName:   tt.fields.handlerName,
-				port:          tt.fields.port,
-				listenAddress: tt.fields.listenAddress,
-				options:       tt.fields.options,
+			h := HandlerConfig{
+				HandlerName:   tt.fields.handlerName,
+				Port:          tt.fields.port,
+				ListenAddress: tt.fields.listenAddress,
+				Options:       tt.fields.options,
 			}
-			if got := h.Options(); !reflect.DeepEqual(got, tt.want) {
+			if got := h.Options; !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Options() = %v, want %v", got, tt.want)
 			}
 		})
@@ -153,13 +153,13 @@ func Test_handlerConfig_Port(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := handlerConfig{
-				handlerName:   tt.fields.handlerName,
-				port:          tt.fields.port,
-				listenAddress: tt.fields.listenAddress,
-				options:       tt.fields.options,
+			h := HandlerConfig{
+				HandlerName:   tt.fields.handlerName,
+				Port:          tt.fields.port,
+				ListenAddress: tt.fields.listenAddress,
+				Options:       tt.fields.options,
 			}
-			if got := h.Port(); got != tt.want {
+			if got := h.Port; got != tt.want {
 				t.Errorf("Port() = %v, want %v", got, tt.want)
 			}
 		})

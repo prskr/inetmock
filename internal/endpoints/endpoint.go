@@ -3,6 +3,7 @@ package endpoints
 
 import (
 	"github.com/baez90/inetmock/pkg/api"
+	"github.com/baez90/inetmock/pkg/config"
 )
 
 type Endpoint interface {
@@ -14,7 +15,7 @@ type Endpoint interface {
 type endpoint struct {
 	name    string
 	handler api.ProtocolHandler
-	config  api.HandlerConfig
+	config  config.HandlerConfig
 }
 
 func (e endpoint) Name() string {

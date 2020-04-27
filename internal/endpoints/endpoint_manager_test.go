@@ -1,11 +1,11 @@
 package endpoints
 
 import (
-	"github.com/baez90/inetmock/internal/config"
 	api_mock "github.com/baez90/inetmock/internal/mock/api"
 	logging_mock "github.com/baez90/inetmock/internal/mock/logging"
 	plugins_mock "github.com/baez90/inetmock/internal/mock/plugins"
 	"github.com/baez90/inetmock/internal/plugins"
+	config2 "github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -20,7 +20,7 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 	}
 	type args struct {
 		name               string
-		multiHandlerConfig config.MultiHandlerConfig
+		multiHandlerConfig config2.MultiHandlerConfig
 	}
 	tests := []struct {
 		name          string
@@ -52,12 +52,11 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 			},
 			args: args{
 				name: "sampleEndpoint",
-				multiHandlerConfig: config.NewMultiHandlerConfig(
-					"sampleHandler",
-					[]uint16{80},
-					"0.0.0.0",
-					nil,
-				),
+				multiHandlerConfig: config2.MultiHandlerConfig{
+					Handler:       "sampleHandler",
+					Ports:         []uint16{80},
+					ListenAddress: "0.0.0.0",
+				},
 			},
 		},
 		{
@@ -83,12 +82,11 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 			},
 			args: args{
 				name: "sampleEndpoint",
-				multiHandlerConfig: config.NewMultiHandlerConfig(
-					"sampleHandler",
-					[]uint16{80},
-					"0.0.0.0",
-					nil,
-				),
+				multiHandlerConfig: config2.MultiHandlerConfig{
+					Handler:       "sampleHandler",
+					Ports:         []uint16{80},
+					ListenAddress: "0.0.0.0",
+				},
 			},
 		},
 	}

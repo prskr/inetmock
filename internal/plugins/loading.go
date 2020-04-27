@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"plugin"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 
 type HandlerRegistry interface {
 	LoadPlugins(pluginsPath string) error
+	AvailableHandlers() []string
 	RegisterHandler(handlerName string, handlerProvider api.PluginInstanceFactory, subCommands ...*cobra.Command)
 	HandlerForName(handlerName string) (api.ProtocolHandler, bool)
 	PluginCommands() []*cobra.Command
@@ -29,11 +31,19 @@ type handlerRegistry struct {
 	pluginCommands []*cobra.Command
 }
 
+func (h handlerRegistry) AvailableHandlers() (availableHandlers []string) {
+	for s := range h.handlers {
+		availableHandlers = append(availableHandlers, s)
+	}
+	return
+}
+
 func (h handlerRegistry) PluginCommands() []*cobra.Command {
 	return h.pluginCommands
 }
 
 func (h *handlerRegistry) HandlerForName(handlerName string) (instance api.ProtocolHandler, ok bool) {
+	handlerName = strings.ToLower(handlerName)
 	var provider api.PluginInstanceFactory
 	if provider, ok = h.handlers[handlerName]; ok {
 		instance = provider()
@@ -42,6 +52,7 @@ func (h *handlerRegistry) HandlerForName(handlerName string) (instance api.Proto
 }
 
 func (h *handlerRegistry) RegisterHandler(handlerName string, handlerProvider api.PluginInstanceFactory, subCommands ...*cobra.Command) {
+	handlerName = strings.ToLower(handlerName)
 	if _, exists := h.handlers[handlerName]; exists {
 		panic(fmt.Sprintf("handler with name %s is already registered - there's something strange...in the neighborhood", handlerName))
 	}

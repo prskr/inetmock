@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/cert"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -27,9 +28,9 @@ type tlsInterceptor struct {
 	currentConnections      map[uuid.UUID]*proxyConn
 }
 
-func (t *tlsInterceptor) Start(config api.HandlerConfig) (err error) {
-	t.options = loadFromConfig(config.Options())
-	addr := fmt.Sprintf("%s:%d", config.ListenAddress(), config.Port())
+func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
+	t.options = loadFromConfig(config.Options)
+	addr := fmt.Sprintf("%s:%d", config.ListenAddress, config.Port)
 
 	t.logger = t.logger.With(
 		zap.String("address", addr),

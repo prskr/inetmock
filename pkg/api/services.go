@@ -2,8 +2,8 @@ package api
 
 import (
 	"github.com/baez90/inetmock/pkg/cert"
+	config2 "github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -19,7 +19,7 @@ type services struct {
 }
 
 func InitServices(
-	config *viper.Viper,
+	config config2.Config,
 	logger logging.Logger,
 ) error {
 	certStore, err := cert.NewDefaultStore(config, logger)

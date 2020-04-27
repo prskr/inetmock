@@ -2,8 +2,8 @@ package endpoints
 
 import (
 	"fmt"
-	"github.com/baez90/inetmock/internal/config"
 	"github.com/baez90/inetmock/internal/plugins"
+	config2 "github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"sync"
@@ -13,7 +13,7 @@ import (
 type EndpointManager interface {
 	RegisteredEndpoints() []Endpoint
 	StartedEndpoints() []Endpoint
-	CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) error
+	CreateEndpoint(name string, multiHandlerConfig config2.MultiHandlerConfig) error
 	StartEndpoints()
 	ShutdownEndpoints()
 }
@@ -40,16 +40,16 @@ func (e endpointManager) StartedEndpoints() []Endpoint {
 	return e.properlyStartedEndpoints
 }
 
-func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) error {
+func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config2.MultiHandlerConfig) error {
 	for _, handlerConfig := range multiHandlerConfig.HandlerConfigs() {
-		if handler, ok := e.registry.HandlerForName(multiHandlerConfig.HandlerName()); ok {
+		if handler, ok := e.registry.HandlerForName(multiHandlerConfig.Handler); ok {
 			e.registeredEndpoints = append(e.registeredEndpoints, &endpoint{
 				name:    name,
 				handler: handler,
 				config:  handlerConfig,
 			})
 		} else {
-			return fmt.Errorf("no matching handler registered for names %s", multiHandlerConfig.HandlerName())
+			return fmt.Errorf("no matching handler registered for names %s", multiHandlerConfig.Handler)
 		}
 	}
 
