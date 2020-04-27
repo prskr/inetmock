@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/baez90/inetmock/pkg/cert"
+	config2 "github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -77,11 +78,11 @@ func runGenerateCA(cmd *cobra.Command, args []string) {
 		zap.String(generateCACertOutPath, certOutPath),
 	)
 
-	generator := cert.NewDefaultGenerator(cert.Options{
+	generator := cert.NewDefaultGenerator(config2.CertOptions{
 		CertCachePath: certOutPath,
-		Curve:         cert.CurveType(curveName),
-		Validity: cert.ValidityByPurpose{
-			CA: cert.ValidityDuration{
+		Curve:         config2.CurveType(curveName),
+		Validity: config2.ValidityByPurpose{
+			CA: config2.ValidityDuration{
 				NotAfterRelative:  notAfter,
 				NotBeforeRelative: notBefore,
 			},

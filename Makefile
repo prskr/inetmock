@@ -2,7 +2,8 @@ VERSION = $(shell git describe --dirty --tags --always)
 DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILD_PATH = $(DIR)/main.go
 PKGS = $(shell go list ./...)
-TEST_PKGS = $(shell find . -type f -name "*_test.go" -not -path "./plugins/*" -not -path "*/mock/*" -printf '%h\n' | sort -u)
+TEST_PKGS = $(shell go list ./...)
+PROTO_FILES = $(shell find $(DIR)api/ -type f -name "*.proto")
 GOARGS = GOOS=linux GOARCH=amd64
 GO_BUILD_ARGS = -ldflags="-w -s"
 GO_CONTAINER_BUILD_ARGS = -ldflags="-w -s" -a -installsuffix cgo
@@ -14,7 +15,7 @@ DEBUG_ARGS?= --development-logs=true
 CONTAINER_BUILDER ?= podman
 DOCKER_IMAGE ?= inetmock
 
-.PHONY: clean all format deps update-deps compile debug generate snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
+.PHONY: clean all format deps update-deps compile debug generate protoc snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
 all: clean format compile test plugins
 
 clean:
@@ -54,6 +55,9 @@ debug:
 
 generate:
 	@go generate ./...
+
+protoc:
+	@protoc --proto_path $(DIR)api/ --go_out=plugins=grpc:internal/grpc --go_opt=paths=source_relative $(shell find $(DIR)api/ -type f -name "*.proto")
 
 snapshot-release:
 	@goreleaser release --snapshot --skip-publish --rm-dist

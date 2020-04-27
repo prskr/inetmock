@@ -7,8 +7,8 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"net"
 )
@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	defaultKeyProvider = func(options Options) func() (key interface{}, err error) {
+	defaultKeyProvider = func(options config.CertOptions) func() (key interface{}, err error) {
 		return func() (key interface{}, err error) {
 			return privateKeyForCurve(options)
 		}
@@ -34,24 +34,20 @@ type Store interface {
 }
 
 func NewDefaultStore(
-	config *viper.Viper,
+	config config.Config,
 	logger logging.Logger,
 ) (Store, error) {
-	options, err := loadFromConfig(config)
-	if err != nil {
-		return nil, err
-	}
 	timeSource := NewTimeSource()
 	return NewStore(
-		options,
-		NewFileSystemCache(options.CertCachePath, timeSource),
-		NewDefaultGenerator(options),
+		config.TLSConfig(),
+		NewFileSystemCache(config.TLSConfig().CertCachePath, timeSource),
+		NewDefaultGenerator(config.TLSConfig()),
 		logger,
 	)
 }
 
 func NewStore(
-	options Options,
+	options config.CertOptions,
 	cache Cache,
 	generator Generator,
 	logger logging.Logger,
@@ -71,7 +67,7 @@ func NewStore(
 }
 
 type store struct {
-	options    Options
+	options    config.CertOptions
 	caCert     *tls.Certificate
 	cache      Cache
 	timeSource TimeSource
@@ -135,15 +131,15 @@ func (s *store) GetCertificate(serverName string, ip string) (cert *tls.Certific
 	return
 }
 
-func privateKeyForCurve(options Options) (privateKey interface{}, err error) {
+func privateKeyForCurve(options config.CertOptions) (privateKey interface{}, err error) {
 	switch options.Curve {
-	case CurveTypeP224:
+	case config.CurveTypeP224:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
-	case CurveTypeP256:
+	case config.CurveTypeP256:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	case CurveTypeP384:
+	case config.CurveTypeP384:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	case CurveTypeP521:
+	case config.CurveTypeP521:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
 		_, privateKey, err = ed25519.GenerateKey(rand.Reader)

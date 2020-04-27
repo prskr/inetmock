@@ -1,77 +1,91 @@
 package cmd
 
 import (
-	"github.com/baez90/inetmock/internal/config"
-	"github.com/baez90/inetmock/internal/endpoints"
+	"github.com/baez90/inetmock/internal/plugins"
 	"github.com/baez90/inetmock/pkg/api"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
+	"github.com/baez90/inetmock/pkg/path"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
+	"time"
 )
 
 var (
 	logger  logging.Logger
-	rootCmd = cobra.Command{
-		Use:   "",
-		Short: "INetMock is lightweight internet mock",
-		Run:   startInetMock,
-	}
+	rootCmd *cobra.Command
 
-	configFilePath  string
-	logLevel        string
-	developmentLogs bool
-	handlers        []api.ProtocolHandler
-	appConfig       = config.CreateConfig()
-	endpointManager endpoints.EndpointManager
+	pluginsDirectory string
+	configFilePath   string
+	logLevel         string
+	developmentLogs  bool
 )
 
 func init() {
-	rootCmd.PersistentFlags().String("plugins-directory", "", "Directory where plugins should be loaded from")
+	cobra.OnInitialize(onInit)
+	rootCmd = &cobra.Command{
+		Use:   "",
+		Short: "INetMock is lightweight internet mock",
+	}
+
+	rootCmd.PersistentFlags().StringVar(&pluginsDirectory, "plugins-directory", "", "Directory where plugins should be loaded from")
 	rootCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "Path to config file that should be used")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "logging level to use")
 	rootCmd.PersistentFlags().BoolVar(&developmentLogs, "development-logs", false, "Enable development mode logs")
 
-	appConfig.InitConfig(rootCmd.PersistentFlags())
+	rootCmd.AddCommand(
+		serveCmd,
+		generateCaCmd,
+		pluginsCmd,
+	)
 }
 
-func startInetMock(cmd *cobra.Command, args []string) {
-	for endpointName := range viper.GetStringMap(config.EndpointsKey) {
-		handlerSubConfig := viper.Sub(strings.Join([]string{config.EndpointsKey, endpointName}, "."))
-		handlerConfig := config.CreateMultiHandlerConfig(handlerSubConfig)
-		if err := endpointManager.CreateEndpoint(endpointName, handlerConfig); err != nil {
-			logger.Warn(
-				"error occurred while creating endpoint",
-				zap.String("endpointName", endpointName),
-				zap.String("handlerName", handlerConfig.HandlerName()),
-				zap.Error(err),
-			)
-		}
-	}
-
-	endpointManager.StartEndpoints()
-
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	// block until canceled
-	s := <-signalChannel
-
-	logger.Info(
-		"got signal to quit",
-		zap.String("signal", s.String()),
+func onInit() {
+	logging.ConfigureLogging(
+		logging.ParseLevel(logLevel),
+		developmentLogs,
+		map[string]interface{}{"cwd": path.WorkingDirectory()},
 	)
 
-	endpointManager.ShutdownEndpoints()
+	logger, _ = logging.CreateLogger()
+	config.CreateConfig(rootCmd.Flags())
+	appConfig := config.Instance()
+
+	if err := appConfig.ReadConfig(configFilePath); err != nil {
+		logger.Error(
+			"failed to read config file",
+			zap.Error(err),
+		)
+	}
+
+	if err := api.InitServices(appConfig, logger); err != nil {
+		logger.Error(
+			"failed to initialize app services",
+			zap.Error(err),
+		)
+	}
+
+	registry := plugins.Registry()
+
+	cfg := config.Instance()
+
+	pluginLoadStartTime := time.Now()
+	if err := registry.LoadPlugins(cfg.PluginsDir()); err != nil {
+		logger.Error("Failed to load plugins",
+			zap.String("pluginsDirectory", cfg.PluginsDir()),
+			zap.Error(err),
+		)
+	}
+	pluginLoadDuration := time.Since(pluginLoadStartTime)
+	logger.Info(
+		"loading plugins completed",
+		zap.Duration("pluginLoadDuration", pluginLoadDuration),
+	)
+
+	pluginsCmd.AddCommand(registry.PluginCommands()...)
+
 }
 
 func ExecuteRootCommand() error {
-	if err := initApp(); err != nil {
-		return err
-	}
 	return rootCmd.Execute()
 }

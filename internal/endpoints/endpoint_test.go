@@ -4,6 +4,7 @@ import (
 	"fmt"
 	api_mock "github.com/baez90/inetmock/internal/mock/api"
 	"github.com/baez90/inetmock/pkg/api"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/golang/mock/gomock"
 	"testing"
 )
@@ -12,7 +13,7 @@ func Test_endpoint_Name(t *testing.T) {
 	type fields struct {
 		name    string
 		handler api.ProtocolHandler
-		config  api.HandlerConfig
+		config  config.HandlerConfig
 	}
 	tests := []struct {
 		name   string
@@ -50,7 +51,7 @@ func Test_endpoint_Shutdown(t *testing.T) {
 	type fields struct {
 		name    string
 		handler api.ProtocolHandler
-		config  api.HandlerConfig
+		config  config.HandlerConfig
 	}
 	tests := []struct {
 		name    string
@@ -102,17 +103,16 @@ func Test_endpoint_Shutdown(t *testing.T) {
 
 func Test_endpoint_Start(t *testing.T) {
 
-	demoHandlerConfig := api.NewHandlerConfig(
-		"sampleHandler",
-		80,
-		"0.0.0.0",
-		nil,
-	)
+	demoHandlerConfig := config.HandlerConfig{
+		HandlerName:   "sampleHandler",
+		Port:          80,
+		ListenAddress: "0.0.0.0",
+	}
 
 	type fields struct {
 		name    string
 		handler api.ProtocolHandler
-		config  api.HandlerConfig
+		config  config.HandlerConfig
 	}
 	tests := []struct {
 		name    string
@@ -125,7 +125,7 @@ func Test_endpoint_Start(t *testing.T) {
 				handler: func() api.ProtocolHandler {
 					handler := api_mock.NewMockProtocolHandler(gomock.NewController(t))
 					handler.EXPECT().
-						Start(nil).
+						Start(gomock.Any()).
 						MaxTimes(1).
 						Return(nil)
 					return handler
@@ -139,7 +139,7 @@ func Test_endpoint_Start(t *testing.T) {
 				handler: func() api.ProtocolHandler {
 					handler := api_mock.NewMockProtocolHandler(gomock.NewController(t))
 					handler.EXPECT().
-						Start(nil).
+						Start(gomock.Any()).
 						MaxTimes(1).
 						Return(fmt.Errorf(""))
 					return handler
