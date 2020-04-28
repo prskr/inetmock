@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/path"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"plugin"
@@ -21,14 +20,12 @@ var (
 type HandlerRegistry interface {
 	LoadPlugins(pluginsPath string) error
 	AvailableHandlers() []string
-	RegisterHandler(handlerName string, handlerProvider api.PluginInstanceFactory, subCommands ...*cobra.Command)
+	RegisterHandler(handlerName string, handlerProvider api.PluginInstanceFactory)
 	HandlerForName(handlerName string) (api.ProtocolHandler, bool)
-	PluginCommands() []*cobra.Command
 }
 
 type handlerRegistry struct {
-	handlers       map[string]api.PluginInstanceFactory
-	pluginCommands []*cobra.Command
+	handlers map[string]api.PluginInstanceFactory
 }
 
 func (h handlerRegistry) AvailableHandlers() (availableHandlers []string) {
@@ -36,10 +33,6 @@ func (h handlerRegistry) AvailableHandlers() (availableHandlers []string) {
 		availableHandlers = append(availableHandlers, s)
 	}
 	return
-}
-
-func (h handlerRegistry) PluginCommands() []*cobra.Command {
-	return h.pluginCommands
 }
 
 func (h *handlerRegistry) HandlerForName(handlerName string) (instance api.ProtocolHandler, ok bool) {
@@ -51,20 +44,12 @@ func (h *handlerRegistry) HandlerForName(handlerName string) (instance api.Proto
 	return
 }
 
-func (h *handlerRegistry) RegisterHandler(handlerName string, handlerProvider api.PluginInstanceFactory, subCommands ...*cobra.Command) {
+func (h *handlerRegistry) RegisterHandler(handlerName string, handlerProvider api.PluginInstanceFactory) {
 	handlerName = strings.ToLower(handlerName)
 	if _, exists := h.handlers[handlerName]; exists {
 		panic(fmt.Sprintf("handler with name %s is already registered - there's something strange...in the neighborhood", handlerName))
 	}
 	h.handlers[handlerName] = handlerProvider
-
-	if len(subCommands) > 0 {
-		pluginCmds := &cobra.Command{
-			Use: handlerName,
-		}
-		pluginCmds.AddCommand(subCommands...)
-		h.pluginCommands = append(h.pluginCommands, pluginCmds)
-	}
 }
 
 func (h *handlerRegistry) LoadPlugins(pluginsPath string) (err error) {

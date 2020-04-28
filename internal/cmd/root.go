@@ -36,7 +36,6 @@ func init() {
 	rootCmd.AddCommand(
 		serveCmd,
 		generateCaCmd,
-		pluginsCmd,
 	)
 }
 
@@ -81,9 +80,6 @@ func onInit() {
 		"loading plugins completed",
 		zap.Duration("pluginLoadDuration", pluginLoadDuration),
 	)
-
-	pluginsCmd.AddCommand(registry.PluginCommands()...)
-
 }
 
 func ExecuteRootCommand() error {
