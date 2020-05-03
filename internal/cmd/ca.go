@@ -53,7 +53,7 @@ func init() {
 	generateCaCmd.Flags().Duration(generateCANotAfterRelative, 17520*time.Hour, "Relative time value until when in the future the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
 }
 
-func runGenerateCA(cmd *cobra.Command, args []string) {
+func runGenerateCA(_ *cobra.Command, _ []string) {
 	var certOutPath, curveName string
 	var notBefore, notAfter time.Duration
 	var err error

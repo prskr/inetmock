@@ -1,49 +1,56 @@
 VERSION = $(shell git describe --dirty --tags --always)
 DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-BUILD_PATH = $(DIR)/main.go
+SERVER_BUILD_PATH = github.com/baez90/inetmock/cmd/inetmock
+CLI_BUILD_PATH = github.com/baez90/inetmock/cmd/imctl
 PKGS = $(shell go list ./...)
 TEST_PKGS = $(shell go list ./...)
 PROTO_FILES = $(shell find $(DIR)api/ -type f -name "*.proto")
 GOARGS = GOOS=linux GOARCH=amd64
-GO_BUILD_ARGS = -ldflags="-w -s"
-GO_CONTAINER_BUILD_ARGS = -ldflags="-w -s" -a -installsuffix cgo
+GO_BUILD_ARGS = -ldflags='-w -s'
+GO_CONTAINER_BUILD_ARGS = -ldflags='-w -s' -a -installsuffix cgo
 GO_DEBUG_BUILD_ARGS = -gcflags "all=-N -l"
-BINARY_NAME = inetmock
+SERVER_BINARY_NAME = inetmock
+CLI_BINARY_NAME = imctl
 PLUGINS = $(wildcard $(DIR)plugins/*/.)
 DEBUG_PORT = 2345
 DEBUG_ARGS?= --development-logs=true
 CONTAINER_BUILDER ?= podman
 DOCKER_IMAGE ?= inetmock
 
-.PHONY: clean all format deps update-deps compile debug generate protoc snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
+.PHONY: clean all format deps update-deps compile compile-server compile-cli debug generate protoc snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
 all: clean format compile test plugins
 
 clean:
 	@find $(DIR) -type f \( -name "*.out" -or -name "*.so" \) -exec rm -f {} \;
 	@rm -rf $(DIR)*.so
-	@rm -f $(DIR)$(BINARY_NAME) $(DIR)main
+	@rm -f $(DIR)$(SERVER_BINARY_NAME) $(DIR)$(CLI_BINARY_NAME) $(DIR)main
 
 format:
 	@go fmt $(PKGS)
 
 deps:
-	@go build -v $(BUILD_PATH)
+	@go build -v $(SERVER_BUILD_PATH)
 
 update-deps:
 	@go mod tidy
 	@go get -u
 
-compile: deps
+compile-server: deps
 ifdef DEBUG
 	@echo 'Compiling for debugging...'
-	@$(GOARGS) go build $(GO_DEBUG_BUILD_ARGS) -o $(DIR)$(BINARY_NAME) $(BUILD_PATH)
+	@$(GOARGS) go build $(GO_DEBUG_BUILD_ARGS) -o $(DIR)$(SERVER_BINARY_NAME) $(SERVER_BUILD_PATH)
 else ifdef CONTAINER
 	@echo 'Compiling for container usage...'
-	@$(GOARGS) go build $(GO_CONTAINER_BUILD_ARGS) -o $(DIR)$(BINARY_NAME) $(BUILD_PATH)
+	@$(GOARGS) go build $(GO_CONTAINER_BUILD_ARGS) -o $(DIR)$(SERVER_BINARY_NAME) $(SERVER_BUILD_PATH)
 else
 	@echo 'Compiling for normal Linux env...'
-	@$(GOARGS) go build $(GO_BUILD_ARGS) -o $(DIR)$(BINARY_NAME) $(BUILD_PATH)
+	@$(GOARGS) go build $(GO_BUILD_ARGS) -o $(DIR)$(SERVER_BINARY_NAME) $(SERVER_BUILD_PATH)
 endif
+
+compile-cli: deps
+	@$(GOARGS) go build $(GO_BUILD_ARGS) -o $(CLI_BINARY_NAME) $(CLI_BUILD_PATH)
+
+compile: compile-server compile-cli
 
 debug: export INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 debug:

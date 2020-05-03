@@ -7,8 +7,9 @@
 **/*.so
 *.key
 *.pem
-inetmock
-main
+/inetmock
+/imctl
+./main
 
 ###############
 # directories #

@@ -10,7 +10,7 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
-	if err := cmd.ExecuteRootCommand(); err != nil {
+	if err := cmd.ExecuteServerCommand(); err != nil {
 		logger.Error("Failed to run inetmock",
 			zap.Error(err),
 		)
