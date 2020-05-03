@@ -55,9 +55,7 @@ debug:
 
 generate:
 	@go generate ./...
-
-protoc:
-	@protoc --proto_path $(DIR)api/ --go_out=plugins=grpc:internal/grpc --go_opt=paths=source_relative $(shell find $(DIR)api/ -type f -name "*.proto")
+	@protoc --proto_path $(DIR)api/ --go_out=plugins=grpc:internal/rpc --go_opt=paths=source_relative $(shell find $(DIR)api/ -type f -name "*.proto")
 
 snapshot-release:
 	@goreleaser release --snapshot --skip-publish --rm-dist

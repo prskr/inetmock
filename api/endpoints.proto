@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "github.com/baez90/inetmock/internal/rpc";
+option java_multiple_files = true;
+option java_package = "com.github.baez90.inetmock.rpc";
+option java_outer_classname = "EndpointsProto";
+
+package inetmock;
+
+service Endpoints {
+    rpc GetEndpoints (GetEndpointsRequest) returns (GetEndpointsResponse) {
+    }
+}
+
+message GetEndpointsRequest {
+}
+
+message GetEndpointsResponse {
+    repeated Endpoint endpoints = 1;
+}
+
+message Endpoint {
+    string id = 1;
+    string name = 2;
+    string handler = 3;
+    string listenAddress = 4;
+    int32 port = 5;
+}
