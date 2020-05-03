@@ -50,6 +50,7 @@ type Config interface {
 	ReadConfigString(config, format string) error
 	Viper() *viper.Viper
 	TLSConfig() CertOptions
+	APIConfig() RPC
 	PluginsDir() string
 	EndpointConfigs() map[string]MultiHandlerConfig
 }
@@ -60,6 +61,11 @@ type config struct {
 	TLS              CertOptions
 	PluginsDirectory string
 	Endpoints        map[string]MultiHandlerConfig
+	API              RPC
+}
+
+func (c *config) APIConfig() RPC {
+	return c.API
 }
 
 func (c *config) ReadConfigString(config, format string) (err error) {

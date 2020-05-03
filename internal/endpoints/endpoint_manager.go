@@ -5,6 +5,7 @@ import (
 	"github.com/baez90/inetmock/internal/plugins"
 	config2 "github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -44,6 +45,7 @@ func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config2
 	for _, handlerConfig := range multiHandlerConfig.HandlerConfigs() {
 		if handler, ok := e.registry.HandlerForName(multiHandlerConfig.Handler); ok {
 			e.registeredEndpoints = append(e.registeredEndpoints, &endpoint{
+				id:      uuid.New(),
 				name:    name,
 				handler: handler,
 				config:  handlerConfig,
