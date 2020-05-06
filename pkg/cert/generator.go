@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	config2 "github.com/baez90/inetmock/pkg/config"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/defaulting"
 	"math/big"
 	"net"
@@ -36,11 +36,11 @@ type Generator interface {
 	ServerCert(options GenerationOptions, ca *tls.Certificate) (*tls.Certificate, error)
 }
 
-func NewDefaultGenerator(options config2.CertOptions) Generator {
+func NewDefaultGenerator(options config.CertOptions) Generator {
 	return NewGenerator(options, NewTimeSource(), defaultKeyProvider(options))
 }
 
-func NewGenerator(options config2.CertOptions, source TimeSource, provider KeyProvider) Generator {
+func NewGenerator(options config.CertOptions, source TimeSource, provider KeyProvider) Generator {
 	return &generator{
 		options:    options,
 		provider:   provider,
@@ -49,7 +49,7 @@ func NewGenerator(options config2.CertOptions, source TimeSource, provider KeyPr
 }
 
 type generator struct {
-	options    config2.CertOptions
+	options    config.CertOptions
 	provider   KeyProvider
 	timeSource TimeSource
 	outDir     string

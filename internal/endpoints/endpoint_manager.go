@@ -3,7 +3,7 @@ package endpoints
 import (
 	"fmt"
 	"github.com/baez90/inetmock/internal/plugins"
-	config2 "github.com/baez90/inetmock/pkg/config"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -14,7 +14,7 @@ import (
 type EndpointManager interface {
 	RegisteredEndpoints() []Endpoint
 	StartedEndpoints() []Endpoint
-	CreateEndpoint(name string, multiHandlerConfig config2.MultiHandlerConfig) error
+	CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) error
 	StartEndpoints()
 	ShutdownEndpoints()
 }
@@ -41,7 +41,7 @@ func (e endpointManager) StartedEndpoints() []Endpoint {
 	return e.properlyStartedEndpoints
 }
 
-func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config2.MultiHandlerConfig) error {
+func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) error {
 	for _, handlerConfig := range multiHandlerConfig.HandlerConfigs() {
 		if handler, ok := e.registry.HandlerForName(multiHandlerConfig.Handler); ok {
 			e.registeredEndpoints = append(e.registeredEndpoints, &endpoint{

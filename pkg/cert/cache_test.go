@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	certmock "github.com/baez90/inetmock/internal/mock/cert"
-	config2 "github.com/baez90/inetmock/pkg/config"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/golang/mock/gomock"
 	"os"
 	"path"
@@ -285,13 +285,13 @@ func Test_fileSystemCache_Put(t *testing.T) {
 }
 
 func setupCertGen() Generator {
-	return NewDefaultGenerator(config2.CertOptions{
-		Validity: config2.ValidityByPurpose{
-			Server: config2.ValidityDuration{
+	return NewDefaultGenerator(config.CertOptions{
+		Validity: config.ValidityByPurpose{
+			Server: config.ValidityDuration{
 				NotBeforeRelative: serverRelativeValidity,
 				NotAfterRelative:  serverRelativeValidity,
 			},
-			CA: config2.ValidityDuration{
+			CA: config.ValidityDuration{
 				NotBeforeRelative: caRelativeValidity,
 				NotAfterRelative:  caRelativeValidity,
 			},

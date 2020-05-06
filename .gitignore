@@ -10,6 +10,8 @@
 /inetmock
 /imctl
 ./main
+**/*.mock.go
+**/*.pb.go
 
 ###############
 # directories #

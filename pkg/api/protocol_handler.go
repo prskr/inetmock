@@ -1,4 +1,4 @@
-//go:generate mockgen -source=protocol_handler.go -destination=./../../internal/mock/api/protocol_handler_mock.go -package=api_mock
+//go:generate mockgen -source=protocol_handler.go -destination=./../../internal/mock/api/protocol_handler.mock.go -package=api_mock
 package api
 
 import (

@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/baez90/inetmock/pkg/cert"
-	config2 "github.com/baez90/inetmock/pkg/config"
+	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 )
 
@@ -19,7 +19,7 @@ type services struct {
 }
 
 func InitServices(
-	config config2.Config,
+	config config.Config,
 	logger logging.Logger,
 ) error {
 	certStore, err := cert.NewDefaultStore(config, logger)

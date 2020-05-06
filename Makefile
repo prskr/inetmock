@@ -18,11 +18,13 @@ CONTAINER_BUILDER ?= podman
 DOCKER_IMAGE ?= inetmock
 
 .PHONY: clean all format deps update-deps compile compile-server compile-cli debug generate protoc snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
-all: clean format compile test plugins
+all: clean format generate compile test plugins
 
 clean:
 	@find $(DIR) -type f \( -name "*.out" -or -name "*.so" \) -exec rm -f {} \;
 	@rm -rf $(DIR)*.so
+	@find $(DIR) -type f -name "*.pb.go" -exec rm -f {} \;
+	@find $(DIR) -type f -name "*.mock.go" -exec rm -f {} \;
 	@rm -f $(DIR)$(SERVER_BINARY_NAME) $(DIR)$(CLI_BINARY_NAME) $(DIR)main
 
 format:
@@ -33,7 +35,7 @@ deps:
 
 update-deps:
 	@go mod tidy
-	@go get -u
+	@go get -u $(DIR)/...
 
 compile-server: deps
 ifdef DEBUG
