@@ -3,7 +3,7 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
-    - make plugins
+    - make generate plugins
 builds:
   - id: "inetmock"
     binary: inetmock

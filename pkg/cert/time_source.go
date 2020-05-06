@@ -1,4 +1,4 @@
-//go:generate mockgen -source=time_source.go -destination=./../../internal/mock/cert/time_source_mock.go -package=cert_mock
+//go:generate mockgen -source=time_source.go -destination=./../../internal/mock/cert/time_source.mock.go -package=cert_mock
 
 package cert
 
