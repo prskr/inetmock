@@ -23,6 +23,7 @@ type inetmockAPI struct {
 	endpointManager endpoints.EndpointManager
 	registry        plugins.HandlerRegistry
 	logger          logging.Logger
+	serverRunning   bool
 }
 
 func NewINetMockAPI(
@@ -56,6 +57,12 @@ func (i *inetmockAPI) StartServer() (err error) {
 }
 
 func (i *inetmockAPI) StopServer() {
+	if !i.serverRunning {
+		i.logger.Info(
+			"Skipping API server shutdown because server is not running",
+		)
+		return
+	}
 	gracefulStopChan := make(chan struct{})
 	go func() {
 		i.server.GracefulStop()
@@ -70,7 +77,9 @@ func (i *inetmockAPI) StopServer() {
 }
 
 func (i *inetmockAPI) startServerAsync(listener net.Listener) {
+	i.serverRunning = true
 	if err := i.server.Serve(listener); err != nil {
+		i.serverRunning = false
 		i.logger.Error(
 			"failed to start INetMock API",
 			zap.Error(err),
