@@ -1,4 +1,4 @@
-FROM golang:1.14-buster as build
+FROM golang:1.14-alpine as build
 
 # Create appuser.
 ARG USER=inetmock
@@ -8,8 +8,8 @@ ENV CGO_ENABLED=0
 
 # Prepare build stage - can be cached
 WORKDIR /work
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends make gcc && \
+RUN apk add -U --no-cache \
+        make protoc gcc musl-dev && \
     adduser \
         --disabled-password \
         --gecos "" \
@@ -21,7 +21,9 @@ RUN apt-get update && \
 
 # Fetch dependencies
 COPY Makefile go.mod go.sum ./
-RUN go mod download
+RUN go mod download && \
+    go get -u github.com/golang/mock/mockgen@latest && \
+    go install github.com/golang/protobuf/protoc-gen-go
 
 COPY ./ ./
 
