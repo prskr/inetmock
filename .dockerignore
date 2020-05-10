@@ -6,7 +6,6 @@
 .github/
 .idea/
 .vscode/
-api/
 deploy/
 dist/
 doc/

@@ -1,8 +1,8 @@
 VERSION = $(shell git describe --dirty --tags --always)
 DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 PKGS = $(shell go list ./...)
-TEST_PKGS = $(shell find . -type f -name "*_test.go" -printf '%h\n' | sort -u)
-GOARGS = GOOS=linux GOARCH=amd64
+TEST_PKGS = $(shell go list ./...)
+GOARGS = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 GO_BUILD_ARGS = -buildmode=plugin -ldflags="-w -s"
 GO_CONTAINER_BUILD_ARGS = -buildmode=plugin -ldflags="-w -s" -a -installsuffix cgo
 GO_DEBUG_BUILD_ARGS = -buildmode=plugin -gcflags "all=-N -l"
