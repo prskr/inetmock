@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"github.com/baez90/inetmock/internal/endpoints"
-	"github.com/baez90/inetmock/internal/plugins"
 	"github.com/baez90/inetmock/internal/rpc"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
+	"github.com/baez90/inetmock/pkg/health"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/baez90/inetmock/pkg/path"
 	"github.com/spf13/cobra"
@@ -14,7 +14,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 )
 
 var (
@@ -27,7 +26,7 @@ var (
 	}
 )
 
-func onServerInit() {
+func onServerInit() (err error) {
 	logging.ConfigureLogging(
 		logging.ParseLevel(logLevel),
 		developmentLogs,
@@ -38,45 +37,34 @@ func onServerInit() {
 	config.CreateConfig(serverCmd.Flags())
 	appConfig := config.Instance()
 
-	if err := appConfig.ReadConfig(configFilePath); err != nil {
+	if err = appConfig.ReadConfig(configFilePath); err != nil {
 		logger.Error(
 			"failed to read config file",
 			zap.Error(err),
 		)
+		return
 	}
 
-	if err := api.InitServices(appConfig, logger); err != nil {
+	if err = api.InitServices(appConfig, logger); err != nil {
 		logger.Error(
 			"failed to initialize app services",
 			zap.Error(err),
 		)
+		return
 	}
-
-	registry := plugins.Registry()
-	cfg := config.Instance()
-
-	pluginLoadStartTime := time.Now()
-	if err := registry.LoadPlugins(cfg.PluginsDir()); err != nil {
-		logger.Error("Failed to load plugins",
-			zap.String("pluginsDirectory", cfg.PluginsDir()),
-			zap.Error(err),
-		)
-	}
-	pluginLoadDuration := time.Since(pluginLoadStartTime)
-	logger.Info(
-		"loading plugins completed",
-		zap.Duration("pluginLoadDuration", pluginLoadDuration),
-	)
+	return nil
 }
 
 func startINetMock(_ *cobra.Command, _ []string) {
-	onServerInit()
-	endpointManager = endpoints.NewEndpointManager(logger)
+	if err := onServerInit(); err != nil {
+		panic(err)
+	}
+	endpointManager = endpoints.NewEndpointManager(health.CheckerInstance(), logger)
 	cfg := config.Instance()
 	rpcAPI := rpc.NewINetMockAPI(
 		cfg,
 		endpointManager,
-		plugins.Registry(),
+		api.Registry(),
 	)
 
 	for endpointName, endpointHandler := range cfg.EndpointConfigs() {

@@ -21,7 +21,8 @@ func init() {
 	cliCmd.PersistentFlags().StringVarP(&outputFormat, "format", "f", "table", "Output format to use. Possible values: table, json, yaml")
 	cliCmd.PersistentFlags().DurationVar(&grpcTimeout, "grpc-timeout", 5*time.Second, "Timeout to connect to the gRPC API")
 
-	cliCmd.AddCommand(endpointsCmd, handlerCmd)
+	cliCmd.AddCommand(endpointsCmd, handlerCmd, healthCmd)
 	endpointsCmd.AddCommand(getEndpoints)
 	handlerCmd.AddCommand(getHandlersCmd)
+	healthCmd.AddCommand(containerHealthCmd)
 }

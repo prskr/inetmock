@@ -1,4 +1,4 @@
-package main
+package http_mock
 
 import (
 	"github.com/spf13/viper"

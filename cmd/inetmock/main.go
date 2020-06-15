@@ -4,6 +4,11 @@ import (
 	"github.com/baez90/inetmock/internal/cmd"
 	"go.uber.org/zap"
 	"os"
+
+	_ "github.com/baez90/inetmock/plugins/dns_mock"
+	_ "github.com/baez90/inetmock/plugins/http_mock"
+	_ "github.com/baez90/inetmock/plugins/http_proxy"
+	_ "github.com/baez90/inetmock/plugins/tls_interceptor"
 )
 
 func main() {

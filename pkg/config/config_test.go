@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/spf13/pflag"
-	"os"
 	"testing"
 )
 
@@ -47,25 +46,6 @@ endpoints:
 					return false
 				}
 
-				return true
-			},
-			wantErr: false,
-		},
-		{
-			name: "Test loading of flags by adding",
-			args: args{
-				flags: func() *pflag.FlagSet {
-					flags := pflag.NewFlagSet("", pflag.ContinueOnError)
-					flags.String("plugins-directory", os.TempDir(), "")
-
-					return flags
-				}(),
-				config: ``,
-			},
-			matcher: func(c Config) bool {
-				if c.PluginsDir() != os.TempDir() {
-					t.Errorf("PluginsDir() Expected = %s, Got = %s", os.TempDir(), c.PluginsDir())
-				}
 				return true
 			},
 			wantErr: false,

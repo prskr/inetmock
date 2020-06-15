@@ -1,4 +1,4 @@
-package main
+package tls_interceptor
 
 import (
 	"fmt"

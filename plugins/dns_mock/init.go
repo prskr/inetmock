@@ -1,7 +1,6 @@
-package main
+package dns_mock
 
 import (
-	"github.com/baez90/inetmock/internal/plugins"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
@@ -17,7 +16,7 @@ func init() {
 		zap.String("ProtocolHandler", name),
 	)
 
-	plugins.Registry().RegisterHandler(name, func() api.ProtocolHandler {
+	api.Registry().RegisterHandler(name, func() api.ProtocolHandler {
 		return &dnsHandler{
 			logger: logger,
 		}

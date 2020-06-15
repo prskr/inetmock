@@ -3,9 +3,7 @@ package config
 var (
 	registeredDefaults = make(map[string]interface{})
 	// default aliases
-	registeredAliases = map[string]string{
-		"PluginsDirectory": "plugins-directory",
-	}
+	registeredAliases = map[string]string{}
 )
 
 func AddDefaultValue(key string, val interface{}) {

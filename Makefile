@@ -11,14 +11,13 @@ GO_CONTAINER_BUILD_ARGS = -ldflags='-w -s' -a -installsuffix cgo
 GO_DEBUG_BUILD_ARGS = -gcflags "all=-N -l"
 SERVER_BINARY_NAME = inetmock
 CLI_BINARY_NAME = imctl
-PLUGINS = $(wildcard $(DIR)plugins/*/.)
 DEBUG_PORT = 2345
 DEBUG_ARGS?= --development-logs=true
 CONTAINER_BUILDER ?= podman
 DOCKER_IMAGE ?= inetmock
 
-.PHONY: clean all format deps update-deps compile compile-server compile-cli debug generate protoc snapshot-release test cli-cover-report html-cover-report plugins $(PLUGINS) $(GO_GEN_FILES)
-all: clean format generate compile test plugins
+.PHONY: clean all format deps update-deps compile compile-server compile-cli debug generate protoc snapshot-release test cli-cover-report html-cover-report $(GO_GEN_FILES)
+all: clean format generate compile test
 
 clean:
 	@find $(DIR) -type f \( -name "*.out" -or -name "*.so" \) -exec rm -f {} \;
@@ -54,7 +53,6 @@ compile-cli: deps
 
 compile: compile-server compile-cli
 
-debug: export INETMOCK_PLUGINS_DIRECTORY = $(DIR)
 debug:
 	dlv debug $(DIR) \
 		--headless \
@@ -81,7 +79,3 @@ cli-cover-report: test
 
 html-cover-report: test
 	@go tool cover -html=cov.out -o .coverage.html
-
-plugins: $(PLUGINS)
-$(PLUGINS):
-	$(MAKE) -C $@

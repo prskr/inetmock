@@ -2,13 +2,18 @@ package endpoints
 
 import (
 	"fmt"
-	"github.com/baez90/inetmock/internal/plugins"
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
+	"github.com/baez90/inetmock/pkg/health"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"sync"
 	"time"
+)
+
+const (
+	startupTimeoutDuration = 100 * time.Millisecond
 )
 
 type EndpointManager interface {
@@ -19,18 +24,20 @@ type EndpointManager interface {
 	ShutdownEndpoints()
 }
 
-func NewEndpointManager(logger logging.Logger) EndpointManager {
+func NewEndpointManager(checker health.Checker, logger logging.Logger) EndpointManager {
 	return &endpointManager{
 		logger:   logger,
-		registry: plugins.Registry(),
+		checker:  checker,
+		registry: api.Registry(),
 	}
 }
 
 type endpointManager struct {
 	logger                   logging.Logger
+	checker                  health.Checker
 	registeredEndpoints      []Endpoint
 	properlyStartedEndpoints []Endpoint
-	registry                 plugins.HandlerRegistry
+	registry                 api.HandlerRegistry
 }
 
 func (e endpointManager) RegisteredEndpoints() []Endpoint {
@@ -66,9 +73,17 @@ func (e *endpointManager) StartEndpoints() {
 		)
 		endpointLogger.Info("Starting endpoint")
 		if ok := startEndpoint(endpoint, endpointLogger); ok {
+			_ = e.checker.RegisterCheck(
+				endpointComponentName(endpoint),
+				health.StaticResultCheckWithMessage(health.HEALTHY, "Successfully started"),
+			)
 			e.properlyStartedEndpoints = append(e.properlyStartedEndpoints, endpoint)
 			endpointLogger.Info("successfully started endpoint")
 		} else {
+			_ = e.checker.RegisterCheck(
+				endpointComponentName(endpoint),
+				health.StaticResultCheckWithMessage(health.UNHEALTHY, "failed to start"),
+			)
 			endpointLogger.Error("error occurred during endpoint startup - will be skipped for now")
 		}
 	}
@@ -103,14 +118,27 @@ func startEndpoint(ep Endpoint, logger logging.Logger) (success bool) {
 			)
 		}
 	}()
-	if err := ep.Start(); err != nil {
-		logger.Error(
-			"failed to start endpoint",
-			zap.Error(err),
-		)
-	} else {
-		success = true
+
+	startSuccessful := make(chan bool)
+
+	go func() {
+		if err := ep.Start(); err != nil {
+			logger.Error(
+				"failed to start endpoint",
+				zap.Error(err),
+			)
+			startSuccessful <- false
+		} else {
+			startSuccessful <- true
+		}
+	}()
+
+	select {
+	case success = <-startSuccessful:
+	case <-time.After(startupTimeoutDuration):
+		success = false
 	}
+
 	return
 }
 
@@ -130,4 +158,8 @@ func shutdownEndpoint(ep Endpoint, logger logging.Logger, wg *sync.WaitGroup) {
 			zap.Error(err),
 		)
 	}
+}
+
+func endpointComponentName(ep Endpoint) string {
+	return fmt.Sprintf("endpoint_%s", ep.Name())
 }

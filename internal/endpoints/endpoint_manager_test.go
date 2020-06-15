@@ -4,10 +4,11 @@ import (
 	api_mock "github.com/baez90/inetmock/internal/mock/api"
 	logging_mock "github.com/baez90/inetmock/internal/mock/logging"
 	plugins_mock "github.com/baez90/inetmock/internal/mock/plugins"
-	"github.com/baez90/inetmock/internal/plugins"
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/golang/mock/gomock"
+	"reflect"
 	"testing"
 )
 
@@ -16,7 +17,7 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 		logger                   logging.Logger
 		registeredEndpoints      []Endpoint
 		properlyStartedEndpoints []Endpoint
-		registry                 plugins.HandlerRegistry
+		registry                 api.HandlerRegistry
 	}
 	type args struct {
 		name               string
@@ -39,7 +40,7 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 				}(),
 				registeredEndpoints:      nil,
 				properlyStartedEndpoints: nil,
-				registry: func() plugins.HandlerRegistry {
+				registry: func() api.HandlerRegistry {
 					registry := plugins_mock.NewMockHandlerRegistry(gomock.NewController(t))
 					registry.
 						EXPECT().
@@ -69,7 +70,7 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 				}(),
 				registeredEndpoints:      nil,
 				properlyStartedEndpoints: nil,
-				registry: func() plugins.HandlerRegistry {
+				registry: func() api.HandlerRegistry {
 					registry := plugins_mock.NewMockHandlerRegistry(gomock.NewController(t))
 					registry.
 						EXPECT().
@@ -110,6 +111,39 @@ func Test_endpointManager_CreateEndpoint(t *testing.T) {
 
 			if len(e.RegisteredEndpoints()) > 0 && e.RegisteredEndpoints()[0].Name() != tt.args.name {
 				t.Errorf("Name() = %s, want = %s", e.RegisteredEndpoints()[0].Name(), tt.args.name)
+			}
+		})
+	}
+}
+
+func Test_endpointManager_StartedEndpoints(t *testing.T) {
+	type fields struct {
+		logger                   logging.Logger
+		registeredEndpoints      []Endpoint
+		properlyStartedEndpoints []Endpoint
+		registry                 api.HandlerRegistry
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []Endpoint
+	}{
+		{
+			name:   "",
+			fields: fields{},
+			want:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e := endpointManager{
+				logger:                   tt.fields.logger,
+				registeredEndpoints:      tt.fields.registeredEndpoints,
+				properlyStartedEndpoints: tt.fields.properlyStartedEndpoints,
+				registry:                 tt.fields.registry,
+			}
+			if got := e.StartedEndpoints(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("StartedEndpoints() = %v, want %v", got, tt.want)
 			}
 		})
 	}

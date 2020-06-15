@@ -1,4 +1,4 @@
-package main
+package dns_mock
 
 import (
 	"encoding/binary"

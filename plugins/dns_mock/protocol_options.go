@@ -1,4 +1,4 @@
-package main
+package dns_mock
 
 import (
 	"github.com/spf13/viper"
