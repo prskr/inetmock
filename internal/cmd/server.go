@@ -21,7 +21,6 @@ func init() {
 		Short: "INetMock is lightweight internet mock",
 	}
 
-	serverCmd.PersistentFlags().StringVar(&pluginsDirectory, "plugins-directory", "", "Directory where plugins should be loaded from")
 	serverCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "Path to config file that should be used")
 	serverCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "logging level to use")
 	serverCmd.PersistentFlags().BoolVar(&developmentLogs, "development-logs", false, "Enable development mode logs")

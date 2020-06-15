@@ -1,2 +1,1 @@
-INETMOCK_PLUGINS_DIRECTORY=/usr/lib/inetmock/plugins
 OPTIONS="--config=/etc/inetmock/config.yaml"

@@ -1,14 +1,13 @@
-package plugins
+package api
 
 import (
-	"github.com/baez90/inetmock/pkg/api"
 	"reflect"
 	"testing"
 )
 
 func Test_handlerRegistry_HandlerForName(t *testing.T) {
 	type fields struct {
-		handlers map[string]api.PluginInstanceFactory
+		handlers map[string]PluginInstanceFactory
 	}
 	type args struct {
 		handlerName string
@@ -17,7 +16,7 @@ func Test_handlerRegistry_HandlerForName(t *testing.T) {
 		name         string
 		fields       fields
 		args         args
-		wantInstance api.ProtocolHandler
+		wantInstance ProtocolHandler
 		wantOk       bool
 	}{
 		{
@@ -30,8 +29,8 @@ func Test_handlerRegistry_HandlerForName(t *testing.T) {
 		{
 			name: "Nil instance from pseudo factory",
 			fields: fields{
-				handlers: map[string]api.PluginInstanceFactory{
-					"pseudo": func() api.ProtocolHandler {
+				handlers: map[string]PluginInstanceFactory{
+					"pseudo": func() ProtocolHandler {
 						return nil
 					},
 				},

@@ -28,8 +28,8 @@ tls:
       NotBeforeRelative: 168h
       NotAfterRelative: 168h
   rootCaCert:
-    publicKeyPath: ./ca.pem
-    privateKeyPath: ./ca.key
+    publicKeyPath: ./assets/demoCA/ca.pem
+    privateKeyPath: ./assets/demoCA/ca.key
   certCachePath: /tmp/inetmock/
 
 endpoints:

@@ -14,12 +14,15 @@ doc/
 # Files #
 #########
 
-*.so
+.gitattributes
+.gitignore
+.dockerignore
+.goreleaser.yml
 *.out
 main
 inetmock
+imctl
 README.md
 LICENSE
-.dockerignore
-.gitignore
 Dockerfile
+config.yaml

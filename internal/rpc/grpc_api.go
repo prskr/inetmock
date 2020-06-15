@@ -2,7 +2,7 @@ package rpc
 
 import (
 	"github.com/baez90/inetmock/internal/endpoints"
-	"github.com/baez90/inetmock/internal/plugins"
+	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"go.uber.org/zap"
@@ -21,7 +21,7 @@ type inetmockAPI struct {
 	url             *url.URL
 	server          *grpc.Server
 	endpointManager endpoints.EndpointManager
-	registry        plugins.HandlerRegistry
+	registry        api.HandlerRegistry
 	logger          logging.Logger
 	serverRunning   bool
 }
@@ -29,7 +29,7 @@ type inetmockAPI struct {
 func NewINetMockAPI(
 	config config.Config,
 	epMgr endpoints.EndpointManager,
-	registry plugins.HandlerRegistry,
+	registry api.HandlerRegistry,
 ) INetMockAPI {
 	return &inetmockAPI{
 		url:             config.APIConfig().ListenURL(),
