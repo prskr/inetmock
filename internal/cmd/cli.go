@@ -24,5 +24,10 @@ func init() {
 	cliCmd.AddCommand(endpointsCmd, handlerCmd, healthCmd)
 	endpointsCmd.AddCommand(getEndpoints)
 	handlerCmd.AddCommand(getHandlersCmd)
+	healthCmd.AddCommand(generalHealthCmd)
 	healthCmd.AddCommand(containerHealthCmd)
+}
+
+func ExecuteClientCommand() error {
+	return cliCmd.Execute()
 }

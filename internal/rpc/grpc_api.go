@@ -52,6 +52,8 @@ func (i *inetmockAPI) StartServer() (err error) {
 		endpointsManager: i.endpointManager,
 	})
 
+	RegisterHealthServer(i.server, &healthServer{})
+
 	go i.startServerAsync(lis)
 	return
 }

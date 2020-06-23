@@ -37,32 +37,58 @@ The output contains information about each component and it's health state.
 )
 
 type printableHealthInfo struct {
+	Component string
+	State     string
+	Message   string
 }
 
-func runGeneralHealth(_ *cobra.Command, _ []string) {
-	var err error
+func fromComponentsHealth(componentsHealth map[string]*rpc.ComponentHealth) (componentsInfo []printableHealthInfo) {
+	for componentName, component := range componentsHealth {
+		componentsInfo = append(componentsInfo, printableHealthInfo{
+			Component: componentName,
+			State:     component.State.String(),
+			Message:   component.Message,
+		})
+	}
+	return
+}
+
+func getHealthResult() (healthResp *rpc.HealthResponse, err error) {
 	var conn *grpc.ClientConn
 
 	if conn, err = grpc.Dial(inetMockSocketPath, grpc.WithInsecure()); err != nil {
-		fmt.Printf("Failed to connecto INetMock socket: %v\n", err)
-		os.Exit(10)
+		return
 	}
 
 	var healthClient = rpc.NewHealthClient(conn)
 	ctx, _ := context.WithTimeout(context.Background(), grpcTimeout)
-	var healthResp *rpc.HealthResponse
+	healthResp, err = healthClient.GetHealth(ctx, &rpc.HealthRequest{})
+	return
+}
 
-	if healthResp, err = healthClient.GetHealth(ctx, &rpc.HealthRequest{}); err != nil {
+func runGeneralHealth(_ *cobra.Command, _ []string) {
+	var healthResp *rpc.HealthResponse
+	var err error
+
+	if healthResp, err = getHealthResult(); err != nil {
 		fmt.Printf("Failed to get health information: %v", err)
 		os.Exit(1)
 	}
 
+	printable := fromComponentsHealth(healthResp.ComponentsHealth)
+
 	writer := format.Writer(outputFormat, os.Stdout)
-	if err = writer.Write(healthResp); err != nil {
+	if err = writer.Write(printable); err != nil {
 		fmt.Printf("Error occurred during writing response values: %v\n", err)
 	}
 }
 
 func runContainerHealth(_ *cobra.Command, _ []string) {
-
+	if healthResp, err := getHealthResult(); err != nil {
+		fmt.Printf("Failed to get health information: %v", err)
+		os.Exit(1)
+	} else if healthResp.OverallHealthState != rpc.HealthState_HEALTHY {
+		fmt.Println("Overall health state is not healthy")
+		os.Exit(1)
+	}
 }

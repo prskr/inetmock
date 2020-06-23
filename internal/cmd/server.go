@@ -34,7 +34,3 @@ func init() {
 func ExecuteServerCommand() error {
 	return serverCmd.Execute()
 }
-
-func ExecuteClientCommand() error {
-	return cliCmd.Execute()
-}
