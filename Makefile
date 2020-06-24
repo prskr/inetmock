@@ -12,7 +12,7 @@ GO_DEBUG_BUILD_ARGS = -gcflags "all=-N -l"
 SERVER_BINARY_NAME = inetmock
 CLI_BINARY_NAME = imctl
 DEBUG_PORT = 2345
-DEBUG_ARGS?= --development-logs=true
+DEBUG_ARGS?= serve --development-logs=true
 CONTAINER_BUILDER ?= podman
 DOCKER_IMAGE ?= inetmock
 
@@ -54,7 +54,7 @@ compile-cli: deps
 compile: compile-server compile-cli
 
 debug:
-	dlv debug $(DIR) \
+	dlv debug $(SERVER_BUILD_PATH) \
 		--headless \
 		--listen=:2345 \
 		--api-version=2 \

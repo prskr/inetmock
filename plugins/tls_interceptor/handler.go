@@ -26,6 +26,7 @@ type tlsInterceptor struct {
 	shutdownRequested       bool
 	currentConnectionsCount *sync.WaitGroup
 	currentConnections      map[uuid.UUID]*proxyConn
+	connectionsMutex        *sync.Mutex
 }
 
 func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
@@ -126,12 +127,36 @@ func (t *tlsInterceptor) proxyConn(conn net.Conn) {
 	}
 
 	conUID := uuid.New()
-	t.currentConnections[conUID] = proxyCon
+	t.storeConnection(conUID, proxyCon)
 	Pipe(conn, targetConn)
-	delete(t.currentConnections, conUID)
+	t.cleanConnection(conUID)
+
+	switch tlsConn := conn.(type) {
+	case *tls.Conn:
+		if tlsConn.Handshake() != nil {
+			t.logger.Error(
+				"error occurred during TLS handshake",
+				zap.Error(tlsConn.Handshake()),
+			)
+		}
+	}
 
 	t.logger.Info(
 		"connection closed",
 		zap.String("remoteAddr", conn.RemoteAddr().String()),
 	)
+}
+
+func (t *tlsInterceptor) storeConnection(connUUID uuid.UUID, conn *proxyConn) {
+	t.connectionsMutex.Lock()
+	defer t.connectionsMutex.Unlock()
+	t.currentConnections[connUUID] = conn
+}
+
+func (t *tlsInterceptor) cleanConnection(connUUID uuid.UUID) {
+	t.connectionsMutex.Lock()
+	defer t.connectionsMutex.Unlock()
+	if _, ok := t.currentConnections[connUUID]; ok {
+		delete(t.currentConnections, connUUID)
+	}
 }

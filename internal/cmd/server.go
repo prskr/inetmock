@@ -9,10 +9,9 @@ var (
 	logger    logging.Logger
 	serverCmd *cobra.Command
 
-	pluginsDirectory string
-	configFilePath   string
-	logLevel         string
-	developmentLogs  bool
+	configFilePath  string
+	logLevel        string
+	developmentLogs bool
 )
 
 func init() {

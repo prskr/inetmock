@@ -27,6 +27,7 @@ RUN apk add -U --no-cache \
 COPY Makefile go.mod go.sum ./
 RUN go mod download && \
     go get -u github.com/golang/mock/mockgen@latest && \
+    go get -u github.com/abice/go-enum && \
     go install github.com/golang/protobuf/protoc-gen-go
 
 COPY ./ ./

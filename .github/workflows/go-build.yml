@@ -28,6 +28,9 @@ jobs:
     - name: Install mockgen
       run: go get -u github.com/golang/mock/mockgen@latest
 
+    - name: Install go-enuum
+      run: go get -u github.com/abice/go-enum
+
     - name: Install protoc-gen-go
       run: go install github.com/golang/protobuf/protoc-gen-go
     

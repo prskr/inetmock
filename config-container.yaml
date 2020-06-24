@@ -19,7 +19,9 @@ api:
   listen: unix:///var/run/inetmock/inetmock.sock
 
 tls:
-  ecdsaCurve: P256
+  curve: P256
+  minTLSVersion: SSL3
+  includeInsecureCipherSuites: false
   validity:
     ca:
       notBeforeRelative: 17520h

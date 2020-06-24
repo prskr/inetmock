@@ -19,6 +19,7 @@ func init() {
 			logger:                  logger,
 			currentConnectionsCount: &sync.WaitGroup{},
 			currentConnections:      make(map[uuid.UUID]*proxyConn),
+			connectionsMutex:        &sync.Mutex{},
 		}
 	})
 }

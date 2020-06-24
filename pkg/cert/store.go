@@ -2,7 +2,6 @@ package cert
 
 import (
 	"crypto/ecdsa"
-	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/tls"
@@ -80,7 +79,23 @@ func (s *store) TLSConfig() *tls.Config {
 	rootCaPubKey, _ := x509.ParseCertificate(s.caCert.Certificate[0])
 	rootCaPool.AddCert(rootCaPubKey)
 
+	suites := make([]uint16, 0)
+
+	for _, suite := range tls.CipherSuites() {
+		suites = append(suites, suite.ID)
+	}
+
+	if s.options.IncludeInsecureCipherSuites {
+		for _, suite := range tls.InsecureCipherSuites() {
+			suites = append(suites, suite.ID)
+		}
+	}
+
 	return &tls.Config{
+		CipherSuites:             suites,
+		MinVersion:               s.options.MinTLSVersion.TLSVersion(),
+		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+		PreferServerCipherSuites: true,
 		GetCertificate: func(info *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
 			var localIp string
 			if localIp, err = extractIPFromAddress(info.Conn.LocalAddr().String()); err != nil {
@@ -142,7 +157,7 @@ func privateKeyForCurve(options config.CertOptions) (privateKey interface{}, err
 	case config.CurveTypeP521:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
-		_, privateKey, err = ed25519.GenerateKey(rand.Reader)
+		privateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	}
 
 	return
