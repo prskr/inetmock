@@ -7,11 +7,7 @@ import (
 )
 
 const (
-	rulesConfigKey            = "rules"
-	patternConfigKey          = "pattern"
-	responseConfigKey         = "response"
-	fallbackStrategyConfigKey = "fallback.strategy"
-	fallbackArgsConfigKey     = "fallback.args"
+	fallbackArgsConfigKey = "fallback.args"
 )
 
 type resolverRule struct {
@@ -24,33 +20,40 @@ type dnsOptions struct {
 	Fallback ResolverFallback
 }
 
-func loadFromConfig(config *viper.Viper) dnsOptions {
-	options := dnsOptions{}
+func loadFromConfig(config *viper.Viper) (options dnsOptions) {
+	type rule struct {
+		Pattern  string
+		Response string
+	}
 
-	anonRules := config.Get(rulesConfigKey).([]interface{})
-	for _, rule := range anonRules {
-		innerData := rule.(map[interface{}]interface{})
+	type fallback struct {
+		Strategy string
+	}
+
+	opts := struct {
+		Rules    []rule
+		Fallback fallback
+	}{}
+
+	_ = config.Unmarshal(&opts)
+
+	for _, rule := range opts.Rules {
 		var err error
-		var compiledPattern *regexp.Regexp
-		var response net.IP
-		if compiledPattern, err = regexp.Compile(innerData[patternConfigKey].(string)); err != nil {
+		var rr resolverRule
+		if rr.pattern, err = regexp.Compile(rule.Pattern); err != nil {
 			continue
 		}
 
-		if response = net.ParseIP(innerData[responseConfigKey].(string)); response == nil {
+		if rr.response = net.ParseIP(rule.Response); rr.response == nil {
 			continue
 		}
-
-		options.Rules = append(options.Rules, resolverRule{
-			pattern:  compiledPattern,
-			response: response,
-		})
+		options.Rules = append(options.Rules, rr)
 	}
 
 	options.Fallback = CreateResolverFallback(
-		config.GetString(fallbackStrategyConfigKey),
+		opts.Fallback.Strategy,
 		config.Sub(fallbackArgsConfigKey),
 	)
 
-	return options
+	return
 }

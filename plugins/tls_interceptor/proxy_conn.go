@@ -13,7 +13,7 @@ type proxyConn struct {
 func (p *proxyConn) Close() error {
 	var err error
 	if targetErr := p.target.Close(); targetErr != nil {
-		err = fmt.Errorf("error while closing target conn: %w", targetErr)
+		err = fmt.Errorf("error while closing Target conn: %w", targetErr)
 	}
 	if sourceErr := p.source.Close(); sourceErr != nil {
 		err = fmt.Errorf("error while closing source conn: %w", err)

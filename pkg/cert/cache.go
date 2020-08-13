@@ -1,4 +1,4 @@
-//go:generate mockgen -source=cache.go -destination=./../../internal/mock/cert/cert_cache.mock.go -package=cert_mock
+//go:generate mockgen -source=$GOFILE -destination=./../../internal/mock/cert/cert_cache.mock.go -package=cert_mock
 
 package cert
 

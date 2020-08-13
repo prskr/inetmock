@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"context"
 	"fmt"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
@@ -98,30 +99,36 @@ func (e *endpointManager) ShutdownEndpoints() {
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(len(e.properlyStartedEndpoints))
 
+	parentCtx, _ := context.WithTimeout(context.Background(), shutdownTimeout)
+
+	perHandlerTimeout := e.shutdownTimePerEndpoint()
+
 	for _, endpoint := range e.properlyStartedEndpoints {
+		ctx, _ := context.WithTimeout(parentCtx, perHandlerTimeout)
 		endpointLogger := e.logger.With(
 			zap.String("endpoint", endpoint.Name()),
 		)
 		endpointLogger.Info("Triggering shutdown of endpoint")
-		go shutdownEndpoint(endpoint, endpointLogger, &waitGroup)
+		go shutdownEndpoint(ctx, endpoint, endpointLogger, &waitGroup)
 	}
 
 	waitGroup.Wait()
 }
 
 func startEndpoint(ep Endpoint, logger logging.Logger) (success bool) {
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Fatal(
-				"recovered panic during startup of endpoint",
-				zap.Any("recovered", r),
-			)
-		}
-	}()
-
 	startSuccessful := make(chan bool)
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Fatal(
+					"recovered panic during startup of endpoint",
+					zap.Any("recovered", r),
+				)
+				startSuccessful <- false
+			}
+		}()
+
 		if err := ep.Start(); err != nil {
 			logger.Error(
 				"failed to start endpoint",
@@ -142,7 +149,7 @@ func startEndpoint(ep Endpoint, logger logging.Logger) (success bool) {
 	return
 }
 
-func shutdownEndpoint(ep Endpoint, logger logging.Logger, wg *sync.WaitGroup) {
+func shutdownEndpoint(ctx context.Context, ep Endpoint, logger logging.Logger, wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Fatal(
@@ -152,12 +159,16 @@ func shutdownEndpoint(ep Endpoint, logger logging.Logger, wg *sync.WaitGroup) {
 		}
 		wg.Done()
 	}()
-	if err := ep.Shutdown(); err != nil {
+	if err := ep.Shutdown(ctx); err != nil {
 		logger.Error(
 			"Failed to shutdown endpoint",
 			zap.Error(err),
 		)
 	}
+}
+
+func (e *endpointManager) shutdownTimePerEndpoint() time.Duration {
+	return time.Duration((float64(shutdownTimeout) * 0.9) / float64(len(e.properlyStartedEndpoints)))
 }
 
 func endpointComponentName(ep Endpoint) string {

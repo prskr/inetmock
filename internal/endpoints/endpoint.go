@@ -1,7 +1,8 @@
-//go:generate mockgen -source=endpoint.go -destination=./../../internal/mock/endpoints/endpoint.mock.go -package=endpoints_mock
+//go:generate mockgen -source=$GOFILE -destination=./../../internal/mock/endpoints/endpoint.mock.go -package=endpoints_mock
 package endpoints
 
 import (
+	"context"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
 	"github.com/google/uuid"
@@ -10,7 +11,7 @@ import (
 type Endpoint interface {
 	Id() uuid.UUID
 	Start() error
-	Shutdown() error
+	Shutdown(ctx context.Context) error
 	Name() string
 	Handler() string
 	Listen() string
@@ -48,6 +49,6 @@ func (e *endpoint) Start() (err error) {
 	return e.handler.Start(e.config)
 }
 
-func (e *endpoint) Shutdown() (err error) {
-	return e.handler.Shutdown()
+func (e *endpoint) Shutdown(ctx context.Context) (err error) {
+	return e.handler.Shutdown(ctx)
 }

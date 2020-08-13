@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"github.com/baez90/inetmock/pkg/logging"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
 	"net/http"
@@ -11,16 +12,19 @@ import (
 )
 
 type proxyHttpHandler struct {
-	options httpProxyOptions
-	logger  logging.Logger
+	handlerName string
+	options     httpProxyOptions
+	logger      logging.Logger
 }
 
 type proxyHttpsHandler struct {
-	tlsConfig *tls.Config
-	logger    logging.Logger
+	handlerName string
+	tlsConfig   *tls.Config
+	logger      logging.Logger
 }
 
 func (p *proxyHttpsHandler) HandleConnect(req string, _ *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+	totalHttpsRequestCounter.WithLabelValues(p.handlerName).Inc()
 	p.logger.Info(
 		"Intercepting HTTPS proxy request",
 		zap.String("request", req),
@@ -35,6 +39,10 @@ func (p *proxyHttpsHandler) HandleConnect(req string, _ *goproxy.ProxyCtx) (*gop
 }
 
 func (p *proxyHttpHandler) Handle(req *http.Request, ctx *goproxy.ProxyCtx) (retReq *http.Request, resp *http.Response) {
+	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(p.handlerName))
+	defer timer.ObserveDuration()
+	totalRequestCounter.WithLabelValues(p.handlerName).Inc()
+
 	retReq = req
 	p.logger.Info(
 		"Handling request",
@@ -62,8 +70,7 @@ func (p proxyHttpHandler) redirectHTTPRequest(originalRequest *http.Request) (re
 	redirectReq = &http.Request{
 		Method: originalRequest.Method,
 		URL: &url.URL{
-			Host:       p.options.redirectionTarget.host(),
-			Scheme:     p.options.redirectionTarget.scheme,
+			Host:       p.options.Target.host(),
 			Path:       originalRequest.URL.Path,
 			ForceQuery: originalRequest.URL.ForceQuery,
 			Fragment:   originalRequest.URL.Fragment,
