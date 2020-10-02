@@ -1,6 +1,7 @@
 package tls_interceptor
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"github.com/baez90/inetmock/pkg/api"
@@ -8,10 +9,10 @@ import (
 	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"net"
 	"sync"
-	"time"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 )
 
 type tlsInterceptor struct {
+	name                    string
 	options                 tlsOptions
 	logger                  logging.Logger
 	listener                net.Listener
@@ -30,15 +32,18 @@ type tlsInterceptor struct {
 }
 
 func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
-	t.options = loadFromConfig(config.Options)
-	addr := fmt.Sprintf("%s:%d", config.ListenAddress, config.Port)
+	t.name = config.HandlerName
+	if err = config.Options.Unmarshal(&config.Options); err != nil {
+		return
+	}
 
 	t.logger = t.logger.With(
-		zap.String("address", addr),
-		zap.String("target", t.options.redirectionTarget.address()),
+		zap.String("handler_name", config.HandlerName),
+		zap.String("address", config.ListenAddr()),
+		zap.String("Target", t.options.Target.address()),
 	)
 
-	if t.listener, err = tls.Listen("tcp", addr, api.ServicesInstance().CertStore().TLSConfig()); err != nil {
+	if t.listener, err = tls.Listen("tcp", config.ListenAddr(), api.ServicesInstance().CertStore().TLSConfig()); err != nil {
 		t.logger.Fatal(
 			"failed to create tls listener",
 			zap.Error(err),
@@ -54,7 +59,7 @@ func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
 	return
 }
 
-func (t *tlsInterceptor) Shutdown() (err error) {
+func (t *tlsInterceptor) Shutdown(ctx context.Context) (err error) {
 	t.logger.Info("Shutting down TLS interceptor")
 	t.shutdownRequested = true
 	done := make(chan struct{})
@@ -66,7 +71,7 @@ func (t *tlsInterceptor) Shutdown() (err error) {
 	select {
 	case <-done:
 		return
-	case <-time.After(5 * time.Second):
+	case <-ctx.Done():
 		for _, proxyConn := range t.currentConnections {
 			if err = proxyConn.Close(); err != nil {
 				t.logger.Error(
@@ -94,19 +99,26 @@ func (t *tlsInterceptor) startListener() {
 			continue
 		}
 
+		handledRequestCounter.WithLabelValues(t.name).Inc()
+		openConnectionsGauge.WithLabelValues(t.name).Inc()
 		t.currentConnectionsCount.Add(1)
 		go t.proxyConn(conn)
 	}
 }
 
 func (t *tlsInterceptor) proxyConn(conn net.Conn) {
-	defer conn.Close()
-	defer t.currentConnectionsCount.Done()
+	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(t.name))
+	defer func() {
+		_ = conn.Close()
+		t.currentConnectionsCount.Done()
+		openConnectionsGauge.WithLabelValues(t.name).Dec()
+		timer.ObserveDuration()
+	}()
 
-	rAddr, err := net.ResolveTCPAddr("tcp", t.options.redirectionTarget.address())
+	rAddr, err := net.ResolveTCPAddr("tcp", t.options.Target.address())
 	if err != nil {
 		t.logger.Error(
-			"failed to resolve proxy target",
+			"failed to resolve proxy Target",
 			zap.Error(err),
 		)
 	}
@@ -114,7 +126,7 @@ func (t *tlsInterceptor) proxyConn(conn net.Conn) {
 	targetConn, err := net.DialTCP("tcp", nil, rAddr)
 	if err != nil {
 		t.logger.Error(
-			"failed to connect to proxy target",
+			"failed to connect to proxy Target",
 			zap.Error(err),
 		)
 		return

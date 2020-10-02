@@ -1,12 +1,18 @@
 package endpoints
 
 import (
+	"context"
 	"fmt"
-	api_mock "github.com/baez90/inetmock/internal/mock/api"
+	apimock "github.com/baez90/inetmock/internal/mock/api"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
 	"github.com/golang/mock/gomock"
+	"reflect"
 	"testing"
+)
+
+var (
+	anyContext = context.Background()
 )
 
 func Test_endpoint_Name(t *testing.T) {
@@ -62,9 +68,9 @@ func Test_endpoint_Shutdown(t *testing.T) {
 			name: "Expect no error if mocked handler does not return one",
 			fields: fields{
 				handler: func() api.ProtocolHandler {
-					handler := api_mock.NewMockProtocolHandler(gomock.NewController(t))
+					handler := apimock.NewMockProtocolHandler(gomock.NewController(t))
 					handler.EXPECT().
-						Shutdown().
+						Shutdown(gomock.Any()).
 						MaxTimes(1).
 						Return(nil)
 					return handler
@@ -76,9 +82,9 @@ func Test_endpoint_Shutdown(t *testing.T) {
 			name: "Expect error if mocked handler returns one",
 			fields: fields{
 				handler: func() api.ProtocolHandler {
-					handler := api_mock.NewMockProtocolHandler(gomock.NewController(t))
+					handler := apimock.NewMockProtocolHandler(gomock.NewController(t))
 					handler.EXPECT().
-						Shutdown().
+						Shutdown(gomock.AssignableToTypeOf(reflect.TypeOf(context.Background()))).
 						MaxTimes(1).
 						Return(fmt.Errorf(""))
 					return handler
@@ -94,7 +100,7 @@ func Test_endpoint_Shutdown(t *testing.T) {
 				handler: tt.fields.handler,
 				config:  tt.fields.config,
 			}
-			if err := e.Shutdown(); (err != nil) != tt.wantErr {
+			if err := e.Shutdown(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Shutdown() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -123,7 +129,7 @@ func Test_endpoint_Start(t *testing.T) {
 			name: "Expect no error if mocked handler does not return one",
 			fields: fields{
 				handler: func() api.ProtocolHandler {
-					handler := api_mock.NewMockProtocolHandler(gomock.NewController(t))
+					handler := apimock.NewMockProtocolHandler(gomock.NewController(t))
 					handler.EXPECT().
 						Start(gomock.Any()).
 						MaxTimes(1).
@@ -137,7 +143,7 @@ func Test_endpoint_Start(t *testing.T) {
 			name: "Expect error if mocked handler returns one",
 			fields: fields{
 				handler: func() api.ProtocolHandler {
-					handler := api_mock.NewMockProtocolHandler(gomock.NewController(t))
+					handler := apimock.NewMockProtocolHandler(gomock.NewController(t))
 					handler.EXPECT().
 						Start(gomock.Any()).
 						MaxTimes(1).
@@ -152,7 +158,7 @@ func Test_endpoint_Start(t *testing.T) {
 			fields: fields{
 				config: demoHandlerConfig,
 				handler: func() api.ProtocolHandler {
-					handler := api_mock.NewMockProtocolHandler(gomock.NewController(t))
+					handler := apimock.NewMockProtocolHandler(gomock.NewController(t))
 					handler.EXPECT().
 						Start(demoHandlerConfig).
 						MaxTimes(1).

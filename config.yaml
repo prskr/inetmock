@@ -86,3 +86,10 @@ endpoints:
       target:
         ipAddress: 127.0.0.1
         port: 53
+  metrics:
+    handler: metrics_exporter
+    listenAddress: 0.0.0.0
+    ports:
+      - 9110
+    options:
+      route: /metrics

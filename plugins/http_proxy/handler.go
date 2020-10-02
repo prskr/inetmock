@@ -1,6 +1,8 @@
 package http_proxy
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/baez90/inetmock/pkg/api"
 	"github.com/baez90/inetmock/pkg/config"
@@ -21,23 +23,29 @@ type httpProxy struct {
 }
 
 func (h *httpProxy) Start(config config.HandlerConfig) (err error) {
-	options := loadFromConfig(config.Options)
-	addr := fmt.Sprintf("%s:%d", config.ListenAddress, config.Port)
-	h.server = &http.Server{Addr: addr, Handler: h.proxy}
+	var opts httpProxyOptions
+	if err = config.Options.Unmarshal(&opts); err != nil {
+		return
+	}
+	listenAddr := config.ListenAddr()
+	h.server = &http.Server{Addr: listenAddr, Handler: h.proxy}
 	h.logger = h.logger.With(
-		zap.String("address", addr),
+		zap.String("handler_name", config.HandlerName),
+		zap.String("address", listenAddr),
 	)
 
 	tlsConfig := api.ServicesInstance().CertStore().TLSConfig()
 
 	proxyHandler := &proxyHttpHandler{
-		options: options,
-		logger:  h.logger,
+		handlerName: config.HandlerName,
+		options:     opts,
+		logger:      h.logger,
 	}
 
 	proxyHttpsHandler := &proxyHttpsHandler{
-		tlsConfig: tlsConfig,
-		logger:    h.logger,
+		handlerName: config.HandlerName,
+		tlsConfig:   tlsConfig,
+		logger:      h.logger,
 	}
 
 	h.proxy.OnRequest().Do(proxyHandler)
@@ -47,7 +55,7 @@ func (h *httpProxy) Start(config config.HandlerConfig) (err error) {
 }
 
 func (h *httpProxy) startProxy() {
-	if err := h.server.ListenAndServe(); err != nil {
+	if err := h.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		h.logger.Error(
 			"failed to start proxy server",
 			zap.Error(err),
@@ -55,9 +63,9 @@ func (h *httpProxy) startProxy() {
 	}
 }
 
-func (h *httpProxy) Shutdown() (err error) {
+func (h *httpProxy) Shutdown(ctx context.Context) (err error) {
 	h.logger.Info("Shutting down HTTP proxy")
-	if err = h.server.Close(); err != nil {
+	if err = h.server.Shutdown(ctx); err != nil {
 		h.logger.Error(
 			"failed to shutdown proxy endpoint",
 			zap.Error(err),

@@ -1,7 +1,7 @@
 package dns_mock
 
 import (
-	"fmt"
+	"context"
 	"github.com/baez90/inetmock/pkg/config"
 	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/miekg/dns"
@@ -14,12 +14,21 @@ type dnsHandler struct {
 }
 
 func (d *dnsHandler) Start(config config.HandlerConfig) (err error) {
-	options := loadFromConfig(config.Options)
-	addr := fmt.Sprintf("%s:%d", config.ListenAddress, config.Port)
+	var options dnsOptions
+	if options, err = loadFromConfig(config.Options); err != nil {
+		return
+	}
+
+	listenAddr := config.ListenAddr()
+	d.logger = d.logger.With(
+		zap.String("handler_name", config.HandlerName),
+		zap.String("address", listenAddr),
+	)
 
 	handler := &regexHandler{
-		fallback: options.Fallback,
-		logger:   d.logger,
+		handlerName: config.HandlerName,
+		fallback:    options.Fallback,
+		logger:      d.logger,
 	}
 
 	for _, rule := range options.Rules {
@@ -32,17 +41,17 @@ func (d *dnsHandler) Start(config config.HandlerConfig) (err error) {
 	}
 
 	d.logger = d.logger.With(
-		zap.String("address", addr),
+		zap.String("address", listenAddr),
 	)
 
 	d.dnsServer = []*dns.Server{
 		{
-			Addr:    addr,
+			Addr:    listenAddr,
 			Net:     "udp",
 			Handler: handler,
 		},
 		{
-			Addr:    addr,
+			Addr:    listenAddr,
 			Net:     "tcp",
 			Handler: handler,
 		},
@@ -63,10 +72,10 @@ func (d *dnsHandler) startServer(dnsServer *dns.Server) {
 	}
 }
 
-func (d *dnsHandler) Shutdown() error {
+func (d *dnsHandler) Shutdown(ctx context.Context) error {
 	d.logger.Info("shutting down DNS mock")
 	for _, dnsServer := range d.dnsServer {
-		if err := dnsServer.Shutdown(); err != nil {
+		if err := dnsServer.ShutdownContext(ctx); err != nil {
 			d.logger.Error(
 				"failed to shutdown server",
 				zap.Error(err),
