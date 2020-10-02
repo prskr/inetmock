@@ -14,11 +14,15 @@ type dnsHandler struct {
 }
 
 func (d *dnsHandler) Start(config config.HandlerConfig) (err error) {
-	options := loadFromConfig(config.Options)
+	var options dnsOptions
+	if options, err = loadFromConfig(config.Options); err != nil {
+		return
+	}
 
+	listenAddr := config.ListenAddr()
 	d.logger = d.logger.With(
 		zap.String("handler_name", config.HandlerName),
-		zap.String("address", config.ListenAddr()),
+		zap.String("address", listenAddr),
 	)
 
 	handler := &regexHandler{
@@ -37,17 +41,17 @@ func (d *dnsHandler) Start(config config.HandlerConfig) (err error) {
 	}
 
 	d.logger = d.logger.With(
-		zap.String("address", config.ListenAddr()),
+		zap.String("address", listenAddr),
 	)
 
 	d.dnsServer = []*dns.Server{
 		{
-			Addr:    config.ListenAddr(),
+			Addr:    listenAddr,
 			Net:     "udp",
 			Handler: handler,
 		},
 		{
-			Addr:    config.ListenAddr(),
+			Addr:    listenAddr,
 			Net:     "tcp",
 			Handler: handler,
 		},

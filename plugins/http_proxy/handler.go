@@ -27,10 +27,11 @@ func (h *httpProxy) Start(config config.HandlerConfig) (err error) {
 	if err = config.Options.Unmarshal(&opts); err != nil {
 		return
 	}
-	h.server = &http.Server{Addr: config.ListenAddr(), Handler: h.proxy}
+	listenAddr := config.ListenAddr()
+	h.server = &http.Server{Addr: listenAddr, Handler: h.proxy}
 	h.logger = h.logger.With(
 		zap.String("handler_name", config.HandlerName),
-		zap.String("address", config.ListenAddr()),
+		zap.String("address", listenAddr),
 	)
 
 	tlsConfig := api.ServicesInstance().CertStore().TLSConfig()

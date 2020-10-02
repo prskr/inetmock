@@ -20,7 +20,7 @@ type dnsOptions struct {
 	Fallback ResolverFallback
 }
 
-func loadFromConfig(config *viper.Viper) (options dnsOptions) {
+func loadFromConfig(config *viper.Viper) (options dnsOptions, err error) {
 	type rule struct {
 		Pattern  string
 		Response string
@@ -35,7 +35,7 @@ func loadFromConfig(config *viper.Viper) (options dnsOptions) {
 		Fallback fallback
 	}{}
 
-	_ = config.Unmarshal(&opts)
+	err = config.Unmarshal(&opts)
 
 	for _, rule := range opts.Rules {
 		var err error

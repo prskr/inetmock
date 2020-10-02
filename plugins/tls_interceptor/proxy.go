@@ -2,14 +2,22 @@ package tls_interceptor
 
 import (
 	"net"
+	"sync"
+)
+
+var (
+	bufferPool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 1024)
+		},
+	}
 )
 
 func chanFromConn(conn net.Conn) chan []byte {
 	c := make(chan []byte)
 
 	go func() {
-		b := make([]byte, 1024)
-
+		b := bufferPool.Get().([]byte)
 		for {
 			n, err := conn.Read(b)
 			if n > 0 {

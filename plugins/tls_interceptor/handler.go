@@ -13,7 +13,6 @@ import (
 	"go.uber.org/zap"
 	"net"
 	"sync"
-	"time"
 )
 
 const (
@@ -60,7 +59,7 @@ func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
 	return
 }
 
-func (t *tlsInterceptor) Shutdown(_ context.Context) (err error) {
+func (t *tlsInterceptor) Shutdown(ctx context.Context) (err error) {
 	t.logger.Info("Shutting down TLS interceptor")
 	t.shutdownRequested = true
 	done := make(chan struct{})
@@ -72,7 +71,7 @@ func (t *tlsInterceptor) Shutdown(_ context.Context) (err error) {
 	select {
 	case <-done:
 		return
-	case <-time.After(5 * time.Second):
+	case <-ctx.Done():
 		for _, proxyConn := range t.currentConnections {
 			if err = proxyConn.Close(); err != nil {
 				t.logger.Error(
