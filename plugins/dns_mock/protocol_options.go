@@ -1,9 +1,10 @@
 package dns_mock
 
 import (
-	"github.com/spf13/viper"
 	"net"
 	"regexp"
+
+	"github.com/spf13/viper"
 )
 
 const (

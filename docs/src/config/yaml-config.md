@@ -1,14 +1,15 @@
-
 # `config.yaml`
 
 ## Intro
 
-The configuration of _INetMock_ is mostly done in the `config.yaml`.
-It defines which endpoints should be started with which handler and a few more things.
+The configuration of _INetMock_ is mostly done in the `config.yaml`. It defines which endpoints should be started with
+which handler and a few more things.
 
-Every endpoint has a name that is used for logging and as already mentioned consists of listening IP and port, the handler and its options.
+Every endpoint has a name that is used for logging and as already mentioned consists of listening IP and port, the
+handler and its options.
 
-INetMock comes with _"Batteries included"_ and ships with a basic `config.yaml` that defines a basic set of endpoints for:
+INetMock comes with _"Batteries included"_ and ships with a basic `config.yaml` that defines a basic set of endpoints
+for:
 
 * HTTP
 * HTTPS

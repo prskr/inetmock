@@ -4,15 +4,15 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/cert"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 	"net"
 	"sync"
+
+	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
 )
 
 const (
@@ -24,16 +24,16 @@ type tlsInterceptor struct {
 	options                 tlsOptions
 	logger                  logging.Logger
 	listener                net.Listener
-	certStore               cert.Store
 	shutdownRequested       bool
 	currentConnectionsCount *sync.WaitGroup
 	currentConnections      map[uuid.UUID]*proxyConn
 	connectionsMutex        *sync.Mutex
 }
 
-func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
+func (t *tlsInterceptor) Start(ctx api.PluginContext, config config.HandlerConfig) (err error) {
 	t.name = config.HandlerName
-	if err = config.Options.Unmarshal(&config.Options); err != nil {
+
+	if err = config.Options.Unmarshal(&t.options); err != nil {
 		return
 	}
 
@@ -43,7 +43,7 @@ func (t *tlsInterceptor) Start(config config.HandlerConfig) (err error) {
 		zap.String("Target", t.options.Target.address()),
 	)
 
-	if t.listener, err = tls.Listen("tcp", config.ListenAddr(), api.ServicesInstance().CertStore().TLSConfig()); err != nil {
+	if t.listener, err = tls.Listen("tcp", config.ListenAddr(), ctx.CertStore().TLSConfig()); err != nil {
 		t.logger.Fatal(
 			"failed to create tls listener",
 			zap.Error(err),

@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
+	"net/http"
+
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
-	"net/http"
 )
 
 const (
@@ -22,28 +23,28 @@ type httpProxy struct {
 	server *http.Server
 }
 
-func (h *httpProxy) Start(config config.HandlerConfig) (err error) {
+func (h *httpProxy) Start(ctx api.PluginContext, cfg config.HandlerConfig) (err error) {
 	var opts httpProxyOptions
-	if err = config.Options.Unmarshal(&opts); err != nil {
+	if err = cfg.Options.Unmarshal(&opts); err != nil {
 		return
 	}
-	listenAddr := config.ListenAddr()
+	listenAddr := cfg.ListenAddr()
 	h.server = &http.Server{Addr: listenAddr, Handler: h.proxy}
 	h.logger = h.logger.With(
-		zap.String("handler_name", config.HandlerName),
+		zap.String("handler_name", cfg.HandlerName),
 		zap.String("address", listenAddr),
 	)
 
-	tlsConfig := api.ServicesInstance().CertStore().TLSConfig()
+	tlsConfig := ctx.CertStore().TLSConfig()
 
 	proxyHandler := &proxyHttpHandler{
-		handlerName: config.HandlerName,
+		handlerName: cfg.HandlerName,
 		options:     opts,
 		logger:      h.logger,
 	}
 
 	proxyHttpsHandler := &proxyHttpsHandler{
-		handlerName: config.HandlerName,
+		handlerName: cfg.HandlerName,
 		tlsConfig:   tlsConfig,
 		logger:      h.logger,
 	}

@@ -3,11 +3,13 @@ package metrics_exporter
 import (
 	"context"
 	"errors"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.uber.org/zap"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
 )
 
 const (
@@ -19,7 +21,7 @@ type metricsExporter struct {
 	server *http.Server
 }
 
-func (m *metricsExporter) Start(config config.HandlerConfig) (err error) {
+func (m *metricsExporter) Start(_ api.PluginContext, config config.HandlerConfig) (err error) {
 	exporterOptions := metricsExporterOptions{}
 	if err = config.Options.Unmarshal(&exporterOptions); err != nil {
 		return

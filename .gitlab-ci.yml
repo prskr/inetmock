@@ -1,0 +1,41 @@
+image: registry.gitlab.com/inetmock/ci-image
+
+stages:
+  - test
+  - build
+  - release
+
+test:
+  stage: test
+  script:
+    - task cli-cover-report
+
+lint:
+  stage: test
+  script:
+    - golangci-lint run
+  allow_failure: true
+
+snapshot-release:
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - task snapshot-release
+  except:
+    - tags
+
+release:
+  stage: release
+  services:
+    - docker:dind
+  only:
+    - tags
+  variables:
+    GITLAB_TOKEN: $CI_JOB_TOKEN
+    GIT_DEPTH: 0
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - goreleaser release --rm-dist

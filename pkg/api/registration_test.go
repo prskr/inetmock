@@ -7,7 +7,7 @@ import (
 
 func Test_handlerRegistry_HandlerForName(t *testing.T) {
 	type fields struct {
-		handlers map[string]PluginInstanceFactory
+		handlers map[string]func() ProtocolHandler
 	}
 	type args struct {
 		handlerName string
@@ -29,7 +29,7 @@ func Test_handlerRegistry_HandlerForName(t *testing.T) {
 		{
 			name: "Nil instance from pseudo factory",
 			fields: fields{
-				handlers: map[string]PluginInstanceFactory{
+				handlers: map[string]func() ProtocolHandler{
 					"pseudo": func() ProtocolHandler {
 						return nil
 					},

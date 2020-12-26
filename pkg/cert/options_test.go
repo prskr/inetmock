@@ -1,12 +1,13 @@
 package cert
 
 import (
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/spf13/viper"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/spf13/viper"
+	"gitlab.com/inetmock/inetmock/pkg/config"
 )
 
 func readViper(cfg string) *viper.Viper {

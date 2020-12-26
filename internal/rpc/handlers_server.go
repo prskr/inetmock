@@ -2,11 +2,16 @@ package rpc
 
 import (
 	"context"
-	"github.com/baez90/inetmock/pkg/api"
+
+	"gitlab.com/inetmock/inetmock/pkg/api"
 )
 
 type handlersServer struct {
+	UnimplementedHandlersServer
 	registry api.HandlerRegistry
+}
+
+func (h *handlersServer) mustEmbedUnimplementedHandlersServer() {
 }
 
 func (h *handlersServer) GetHandlers(_ context.Context, _ *GetHandlersRequest) (*GetHandlersResponse, error) {

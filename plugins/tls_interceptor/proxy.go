@@ -21,10 +21,10 @@ func chanFromConn(conn net.Conn) chan []byte {
 		for {
 			n, err := conn.Read(b)
 			if n > 0 {
-				res := make([]byte, n)
+				res := bufferPool.Get().([]byte)
 				// Copy the buffer so it doesn't get changed while read by the recipient.
 				copy(res, b[:n])
-				c <- res
+				c <- res[:n]
 			}
 			if err != nil {
 				c <- nil

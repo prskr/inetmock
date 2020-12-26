@@ -3,14 +3,15 @@ package endpoints
 
 import (
 	"context"
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/config"
+
 	"github.com/google/uuid"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/config"
 )
 
 type Endpoint interface {
 	Id() uuid.UUID
-	Start() error
+	Start(ctx api.PluginContext) error
 	Shutdown(ctx context.Context) error
 	Name() string
 	Handler() string
@@ -45,8 +46,8 @@ func (e endpoint) Port() uint16 {
 	return e.config.Port
 }
 
-func (e *endpoint) Start() (err error) {
-	return e.handler.Start(e.config)
+func (e *endpoint) Start(ctx api.PluginContext) (err error) {
+	return e.handler.Start(ctx, e.config)
 }
 
 func (e *endpoint) Shutdown(ctx context.Context) (err error) {

@@ -3,15 +3,18 @@ package api
 
 import (
 	"context"
-	"github.com/baez90/inetmock/pkg/config"
-	"go.uber.org/zap"
+
+	"gitlab.com/inetmock/inetmock/pkg/cert"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-type PluginInstanceFactory func() ProtocolHandler
-
-type LoggingFactory func() (*zap.Logger, error)
+type PluginContext interface {
+	Logger() logging.Logger
+	CertStore() cert.Store
+}
 
 type ProtocolHandler interface {
-	Start(config config.HandlerConfig) error
+	Start(ctx PluginContext, config config.HandlerConfig) error
 	Shutdown(ctx context.Context) error
 }

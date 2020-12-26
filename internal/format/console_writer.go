@@ -2,10 +2,11 @@ package format
 
 import (
 	"encoding/json"
-	"github.com/olekukonko/tablewriter"
-	"gopkg.in/yaml.v3"
 	"io"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
+	"gopkg.in/yaml.v3"
 )
 
 type consoleWriterFactory func(io.Writer) ConsoleWriter

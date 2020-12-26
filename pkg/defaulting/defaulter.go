@@ -27,9 +27,7 @@ func (r *registry) Register(t reflect.Type, defaulter ...Defaulter) {
 		given = r
 	}
 
-	for _, d := range defaulter {
-		given = append(given, d)
-	}
+	given = append(given, defaulter...)
 
 	r.defaulters[t] = given
 }

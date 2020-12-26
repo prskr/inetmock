@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/spf13/pflag"
 	"testing"
+
+	"github.com/spf13/pflag"
 )
 
 func Test_config_ReadConfig(t *testing.T) {
@@ -53,8 +54,7 @@ endpoints:
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			CreateConfig(tt.args.flags)
-			cfg := Instance()
+			cfg := CreateConfig(tt.args.flags)
 			if err := cfg.ReadConfigString(tt.args.config, "yaml"); (err != nil) != tt.wantErr {
 				t.Errorf("ReadConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

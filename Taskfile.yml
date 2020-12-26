@@ -1,0 +1,98 @@
+version: '3'
+
+vars:
+  OUT_DIR: ./out
+  INETMOCK_PKG: gitlab.com/inetmock/inetmock/cmd/inetmock
+  IMCTL_PKG: gitlab.com/inetmock/inetmock/cmd/imctl
+  PROTO_FILES:
+    sh: find ./api/ -type f -name "*.proto" -printf "%f "
+
+env:
+  GOOS: linux
+  GOARCH: amd64
+  CGO_ENABLED: 0
+
+tasks:
+  clean:
+    cmds:
+      - find . -type f \( -name "*.pb.go" -or -name "*.mock.go" \) -exec rm -f {} \;
+      - rm -rf ./main {{ .OUT_DIR }}
+
+  format:
+    cmds:
+      - go fmt ./...
+
+  protoc:
+    sources:
+      - "**/*.proto"
+    cmds:
+      - protoc --proto_path ./api/ --go_out=./internal/rpc --go_opt=paths=source_relative --go-grpc_out=./internal/rpc --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
+
+  go-generate:
+    sources:
+      - "**/*.go"
+    cmds:
+      - go generate -x ./...
+
+  generate:
+    deps:
+      - go-generate
+      - protoc
+
+  test:
+    sources:
+      - "**/*.go"
+    deps:
+      - generate
+    cmds:
+      - mkdir -p {{ .OUT_DIR }}
+      - go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -v ./...
+      - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
+      - rm -f {{ .OUT_DIR }}/cov-raw.out
+
+  cli-cover-report:
+    deps:
+      - test
+    cmds:
+      - go tool cover -func={{ .OUT_DIR }}/cov.out
+
+  html-cover-report:
+    deps:
+      - test
+    cmds:
+      - go tool cover -html={{ .OUT_DIR }}/cov.out -o {{ .OUT_DIR }}/coverage.html
+
+  build-inetmock:
+    deps:
+      - test
+    cmds:
+      - mkdir -p {{ .OUT_DIR }}
+      - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/inetmock {{ .INETMOCK_PKG }}
+
+  debug-inetmock:
+    cmds:
+      - dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient --output {{ .OUT_DIR }}/__debug_bin debug {{ .INETMOCK_PKG }} -- serve
+
+  build-imctl:
+    deps:
+      - test
+    cmds:
+      - mkdir -p {{ .OUT_DIR }}
+      - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/imctl {{ .IMCTL_PKG }}
+
+  build-all:
+    deps:
+      - build-inetmock
+      - build-imctl
+
+  snapshot-release:
+    deps:
+      - test
+    cmds:
+      - goreleaser release --snapshot --skip-publish --rm-dist
+
+  release:
+    deps:
+      - test
+    cmds:
+      - goreleaser release

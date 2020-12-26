@@ -13,7 +13,7 @@ type Checker interface {
 
 func (c *checker) RegisterCheck(component string, check Check) error {
 	if _, exists := c.componentChecks[component]; exists {
-		return fmt.Errorf("component: %s: %w", component, CheckForComponentAlreadyRegistered)
+		return fmt.Errorf("component: %s: %w", component, ErrCheckForComponentAlreadyRegistered)
 	}
 
 	c.componentChecks[component] = check
@@ -30,7 +30,7 @@ func (c *checker) IsHealthy() (r Result) {
 	return
 }
 
-func max(s1 Status, s2 Status) Status {
+func max(s1, s2 Status) Status {
 	var max Status
 	if s1 > s2 {
 		max = s1

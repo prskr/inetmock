@@ -2,16 +2,16 @@ package http_mock
 
 import (
 	"bytes"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 	"net/http"
-	"regexp"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
 )
 
 type route struct {
-	pattern *regexp.Regexp
+	rule    targetRule
 	handler http.Handler
 }
 
@@ -21,22 +21,23 @@ type RegexpHandler struct {
 	routes      []*route
 }
 
-func (h *RegexpHandler) Handler(pattern *regexp.Regexp, handler http.Handler) {
-	h.routes = append(h.routes, &route{pattern, handler})
+func (h *RegexpHandler) Handler(rule targetRule, handler http.Handler) {
+	h.routes = append(h.routes, &route{rule, handler})
 }
 
-func (h *RegexpHandler) HandleFunc(pattern *regexp.Regexp, handler func(http.ResponseWriter, *http.Request)) {
-	h.routes = append(h.routes, &route{pattern, http.HandlerFunc(handler)})
+func (h *RegexpHandler) HandleFunc(rule targetRule, handler func(http.ResponseWriter, *http.Request)) {
+	h.routes = append(h.routes, &route{rule, http.HandlerFunc(handler)})
 }
 
 func (h *RegexpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(h.handlerName))
 	defer timer.ObserveDuration()
 
-	for _, route := range h.routes {
-		if route.pattern.MatchString(r.URL.Path) {
+	for idx := range h.routes {
+		rule := h.routes[idx].rule
+		if h.routes[idx].rule.requestMatchTarget.Matches(r, rule.targetKey, rule.pattern) {
 			totalRequestCounter.WithLabelValues(h.handlerName, strconv.FormatBool(true)).Inc()
-			route.handler.ServeHTTP(w, r)
+			h.routes[idx].handler.ServeHTTP(w, r)
 			return
 		}
 	}
@@ -52,7 +53,7 @@ func (h *RegexpHandler) setupRoute(rule targetRule) {
 		zap.String("response", rule.Response()),
 	)
 
-	h.Handler(rule.Pattern(), createHandlerForTarget(h.logger, rule.response))
+	h.Handler(rule, createHandlerForTarget(h.logger, rule.response))
 }
 
 func createHandlerForTarget(logger logging.Logger, targetPath string) http.Handler {

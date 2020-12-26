@@ -1,19 +1,16 @@
 package config
 
 import (
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/baez90/inetmock/pkg/path"
+	"strings"
+
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/path"
 	"go.uber.org/zap"
-	"strings"
 )
 
-var (
-	appConfig Config
-)
-
-func CreateConfig(flags *pflag.FlagSet) {
+func CreateConfig(flags *pflag.FlagSet) Config {
 	logger, _ := logging.CreateLogger()
 	configInstance := &config{
 		logger: logger.Named("Config"),
@@ -38,11 +35,7 @@ func CreateConfig(flags *pflag.FlagSet) {
 		configInstance.cfg.RegisterAlias(k, v)
 	}
 
-	appConfig = configInstance
-}
-
-func Instance() Config {
-	return appConfig
+	return configInstance
 }
 
 type Config interface {
@@ -51,14 +44,14 @@ type Config interface {
 	Viper() *viper.Viper
 	TLSConfig() CertOptions
 	APIConfig() RPC
-	EndpointConfigs() map[string]MultiHandlerConfig
+	EndpointConfigs() map[string]EndpointConfig
 }
 
 type config struct {
 	cfg       *viper.Viper
 	logger    logging.Logger
 	TLS       CertOptions
-	Endpoints map[string]MultiHandlerConfig
+	Endpoints map[string]EndpointConfig
 	API       RPC
 }
 
@@ -76,7 +69,7 @@ func (c *config) ReadConfigString(config, format string) (err error) {
 	return
 }
 
-func (c *config) EndpointConfigs() map[string]MultiHandlerConfig {
+func (c *config) EndpointConfigs() map[string]EndpointConfig {
 	return c.Endpoints
 }
 

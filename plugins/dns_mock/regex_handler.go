@@ -1,9 +1,9 @@
 package dns_mock
 
 import (
-	"github.com/baez90/inetmock/pkg/logging"
 	"github.com/miekg/dns"
 	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
 

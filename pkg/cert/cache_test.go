@@ -4,14 +4,15 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	certmock "github.com/baez90/inetmock/internal/mock/cert"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/golang/mock/gomock"
 	"os"
 	"path"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/golang/mock/gomock"
+	certmock "gitlab.com/inetmock/inetmock/internal/mock/cert"
+	"gitlab.com/inetmock/inetmock/pkg/config"
 )
 
 const (

@@ -2,9 +2,11 @@ package dns_mock
 
 import (
 	"context"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
+
 	"github.com/miekg/dns"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
 
@@ -13,7 +15,7 @@ type dnsHandler struct {
 	dnsServer []*dns.Server
 }
 
-func (d *dnsHandler) Start(config config.HandlerConfig) (err error) {
+func (d *dnsHandler) Start(_ api.PluginContext, config config.HandlerConfig) (err error) {
 	var options dnsOptions
 	if options, err = loadFromConfig(config.Options); err != nil {
 		return

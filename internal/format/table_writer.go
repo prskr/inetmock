@@ -3,9 +3,10 @@ package format
 import (
 	"errors"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"reflect"
 	"strconv"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 type tblWriter struct {
@@ -59,7 +60,7 @@ func (t *tblWriter) Write(in interface{}) (err error) {
 	t.tableWriter.Render()
 	t.tableWriter.ClearRows()
 
-	return
+	return err
 }
 
 func (t *tblWriter) getData(val reflect.Value, numberOfFields int) (data []string) {

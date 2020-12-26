@@ -3,14 +3,15 @@ package endpoints
 import (
 	"context"
 	"fmt"
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/health"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/health"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
 )
 
 const (
@@ -20,25 +21,27 @@ const (
 type EndpointManager interface {
 	RegisteredEndpoints() []Endpoint
 	StartedEndpoints() []Endpoint
-	CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) error
+	CreateEndpoint(name string, multiHandlerConfig config.EndpointConfig) error
 	StartEndpoints()
 	ShutdownEndpoints()
 }
 
-func NewEndpointManager(checker health.Checker, logger logging.Logger) EndpointManager {
+func NewEndpointManager(registry api.HandlerRegistry, logging logging.Logger, checker health.Checker, pluginContext api.PluginContext) EndpointManager {
 	return &endpointManager{
-		logger:   logger,
-		checker:  checker,
-		registry: api.Registry(),
+		registry:      registry,
+		logger:        logging,
+		checker:       checker,
+		pluginContext: pluginContext,
 	}
 }
 
 type endpointManager struct {
+	registry                 api.HandlerRegistry
 	logger                   logging.Logger
 	checker                  health.Checker
+	pluginContext            api.PluginContext
 	registeredEndpoints      []Endpoint
 	properlyStartedEndpoints []Endpoint
-	registry                 api.HandlerRegistry
 }
 
 func (e endpointManager) RegisteredEndpoints() []Endpoint {
@@ -49,9 +52,9 @@ func (e endpointManager) StartedEndpoints() []Endpoint {
 	return e.properlyStartedEndpoints
 }
 
-func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config.MultiHandlerConfig) error {
-	for _, handlerConfig := range multiHandlerConfig.HandlerConfigs() {
-		if handler, ok := e.registry.HandlerForName(multiHandlerConfig.Handler); ok {
+func (e *endpointManager) CreateEndpoint(name string, endpointConfig config.EndpointConfig) error {
+	for _, handlerConfig := range endpointConfig.HandlerConfigs() {
+		if handler, ok := e.registry.HandlerForName(endpointConfig.Handler); ok {
 			e.registeredEndpoints = append(e.registeredEndpoints, &endpoint{
 				id:      uuid.New(),
 				name:    name,
@@ -59,7 +62,7 @@ func (e *endpointManager) CreateEndpoint(name string, multiHandlerConfig config.
 				config:  handlerConfig,
 			})
 		} else {
-			return fmt.Errorf("no matching handler registered for names %s", multiHandlerConfig.Handler)
+			return fmt.Errorf("no matching handler registered for names %s", endpointConfig.Handler)
 		}
 	}
 
@@ -73,7 +76,7 @@ func (e *endpointManager) StartEndpoints() {
 			zap.String("endpoint", endpoint.Name()),
 		)
 		endpointLogger.Info("Starting endpoint")
-		if ok := startEndpoint(endpoint, endpointLogger); ok {
+		if ok := startEndpoint(endpoint, e.pluginContext, endpointLogger); ok {
 			_ = e.checker.RegisterCheck(
 				endpointComponentName(endpoint),
 				health.StaticResultCheckWithMessage(health.HEALTHY, "Successfully started"),
@@ -115,7 +118,7 @@ func (e *endpointManager) ShutdownEndpoints() {
 	waitGroup.Wait()
 }
 
-func startEndpoint(ep Endpoint, logger logging.Logger) (success bool) {
+func startEndpoint(ep Endpoint, ctx api.PluginContext, logger logging.Logger) (success bool) {
 	startSuccessful := make(chan bool)
 
 	go func() {
@@ -129,7 +132,7 @@ func startEndpoint(ep Endpoint, logger logging.Logger) (success bool) {
 			}
 		}()
 
-		if err := ep.Start(); err != nil {
+		if err := ep.Start(ctx); err != nil {
 			logger.Error(
 				"failed to start endpoint",
 				zap.Error(err),
@@ -145,6 +148,8 @@ func startEndpoint(ep Endpoint, logger logging.Logger) (success bool) {
 	case <-time.After(startupTimeoutDuration):
 		success = false
 	}
+
+	close(startSuccessful)
 
 	return
 }

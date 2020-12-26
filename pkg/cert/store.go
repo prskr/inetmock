@@ -6,10 +6,11 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
-	"go.uber.org/zap"
 	"net"
+
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
 )
 
 const (

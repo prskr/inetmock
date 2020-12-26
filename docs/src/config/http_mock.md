@@ -2,10 +2,12 @@
 
 ## Intro
 
-The `http_mock` handler expects an array of rules how it should respond to different request paths.
-This allows to e.g. return an image if the request path contains something like _"asdf.jpg"_ but with binary if the request path contains something like _"malicous.exe"_.
+The `http_mock` handler expects an array of rules how it should respond to different request paths. This allows to e.g.
+return an image if the request path contains something like _"asdf.jpg"_ but with binary if the request path contains
+something like _"malicous.exe"_.
 
-A _"catch all"_ rule could return in any case an HTML page or if nothing is provided the handler returns an HTTP 404 status code.
+A _"catch all"_ rule could return in any case an HTML page or if nothing is provided the handler returns an HTTP 404
+status code.
 
 The rules are taken into account in the same order than they are defined in the `config.yaml`.
 
@@ -33,8 +35,8 @@ endpoints:
 
 ### Matching a file extensions
 
-While matching a static path might be nice as an example it's not very useful.
-Returning a given file for all kinds of of request paths based on the requested file extension is way more handy:
+While matching a static path might be nice as an example it's not very useful. Returning a given file for all kinds of
+of request paths based on the requested file extension is way more handy:
 
 ```yml
 endpoints:
@@ -62,7 +64,8 @@ endpoints:
           response: ./assets/fakeFiles/default.jpg
 ```
 
-This way the extension ignores any case and matches both `.jpg` and `.jpeg` (and of course also e.g. `.JpEg` and so on and so forth).
+This way the extension ignores any case and matches both `.jpg` and `.jpeg` (and of course also e.g. `.JpEg` and so on
+and so forth).
 
 The default `config.yaml` already ships with some basic rules to handle the most common file extensions.
 

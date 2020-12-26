@@ -3,7 +3,7 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
-    - make generate
+    - task generate
 builds:
   - id: "inetmock"
     binary: inetmock
@@ -11,12 +11,12 @@ builds:
     ldflags:
       - -w -s
     env:
-    - CGO_ENABLED=0
+      - CGO_ENABLED=0
     goos:
-    - linux
-    - darwin
+      - linux
+      - darwin
     goarch:
-    - amd64
+      - amd64
   - id: "imctl"
     binary: imctl
     main: ./cmd/imctl/main.go
@@ -32,7 +32,7 @@ builds:
 archives:
   - id: inetmock
     builds:
-    - inetmock
+      - inetmock
     name_template: "{{ .ProjectName }}_server_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     replacements:
       amd64: x86_64
@@ -47,7 +47,7 @@ archives:
     replacements:
       amd64: x86_64
     wrap_in_directory: true
-    files: []
+    files: [ ]
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -56,5 +56,29 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - '^docs:'
+      - '^test:'
+
+release:
+  gitlab:
+    owner: inetmock
+    name: inetmock
+
+dockers:
+  - binaries:
+      - inetmock
+      - imctl
+    image_templates:
+      - registry.gitlab.com/inetmock/inetmock:latest
+      - registry.gitlab.com/inetmock/inetmock:{{ .Tag }}
+      - registry.gitlab.com/inetmock/inetmock:{{ .Major }}
+
+    dockerfile: build/docker/inetmock.dockerfile
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    extra_files:
+      - config-container.yaml
+      - assets/fakeFiles/
