@@ -3,11 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/baez90/inetmock/internal/format"
-	"github.com/baez90/inetmock/internal/rpc"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 	"os"
+
+	"github.com/spf13/cobra"
+	"gitlab.com/inetmock/inetmock/internal/format"
+	"gitlab.com/inetmock/inetmock/internal/rpc"
+	"google.golang.org/grpc"
 )
 
 var (

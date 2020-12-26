@@ -26,16 +26,11 @@ type Result struct {
 type Check func() CheckResult
 
 var (
-	CheckForComponentAlreadyRegistered = errors.New("a check for the requested component is already registered")
-	checkerInstance                    *checker
+	ErrCheckForComponentAlreadyRegistered = errors.New("a check for the requested component is already registered")
 )
 
-func init() {
-	checkerInstance = &checker{
+func New() Checker {
+	return &checker{
 		componentChecks: map[string]Check{},
 	}
-}
-
-func CheckerInstance() Checker {
-	return checkerInstance
 }

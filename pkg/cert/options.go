@@ -1,8 +1,9 @@
 package cert
 
 import (
-	"github.com/baez90/inetmock/pkg/config"
 	"os"
+
+	"gitlab.com/inetmock/inetmock/pkg/config"
 )
 
 func init() {

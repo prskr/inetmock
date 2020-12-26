@@ -1,13 +1,14 @@
 package tls_interceptor
 
 import (
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/baez90/inetmock/pkg/metrics"
+	"sync"
+
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/metrics"
 	"go.uber.org/zap"
-	"sync"
 )
 
 var (
@@ -17,8 +18,7 @@ var (
 	requestDurationHistogram *prometheus.HistogramVec
 )
 
-func init() {
-	var err error
+func AddTLSInterceptor(registry api.HandlerRegistry) (err error) {
 	var logger logging.Logger
 	if logger, err = logging.CreateLogger(); err != nil {
 		panic(err)
@@ -28,16 +28,16 @@ func init() {
 	)
 
 	if handledRequestCounter, err = metrics.Counter(name, "handled_requests", "", labelNames...); err != nil {
-		panic(err)
+		return
 	}
 	if openConnectionsGauge, err = metrics.Gauge(name, "open_connections", "", labelNames...); err != nil {
-		panic(err)
+		return
 	}
 	if requestDurationHistogram, err = metrics.Histogram(name, "request_duration", "", nil, labelNames...); err != nil {
-		panic(err)
+
 	}
 
-	api.Registry().RegisterHandler(name, func() api.ProtocolHandler {
+	registry.RegisterHandler(name, func() api.ProtocolHandler {
 		return &tlsInterceptor{
 			logger:                  logger,
 			currentConnectionsCount: &sync.WaitGroup{},
@@ -45,4 +45,5 @@ func init() {
 			connectionsMutex:        &sync.Mutex{},
 		}
 	})
+	return
 }

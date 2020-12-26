@@ -4,14 +4,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type MultiHandlerConfig struct {
+type EndpointConfig struct {
 	Handler       string
 	Ports         []uint16
 	ListenAddress string
 	Options       *viper.Viper
 }
 
-func (m MultiHandlerConfig) HandlerConfigs() []HandlerConfig {
+func (m EndpointConfig) HandlerConfigs() []HandlerConfig {
 	configs := make([]HandlerConfig, 0)
 	for _, port := range m.Ports {
 		configs = append(configs, HandlerConfig{

@@ -2,10 +2,12 @@ package rpc
 
 import (
 	"context"
-	"github.com/baez90/inetmock/internal/endpoints"
+
+	"gitlab.com/inetmock/inetmock/internal/endpoints"
 )
 
 type endpointsServer struct {
+	UnimplementedEndpointsServer
 	endpointsManager endpoints.EndpointManager
 }
 

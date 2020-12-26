@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/baez90/inetmock/internal/rpc";
+option go_package = "gitlab.com/inetmock/inetmock/internal/rpc";
 option java_multiple_files = true;
 option java_package = "com.github.baez90.inetmock.rpc";
 option java_outer_classname = "EndpointsProto";

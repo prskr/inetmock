@@ -29,8 +29,7 @@ func Test_registry_Apply(t *testing.T) {
 			fields: fields{
 				defaulters: map[reflect.Type][]Defaulter{
 					reflect.TypeOf(&sample{}): {func(instance interface{}) {
-						switch i := instance.(type) {
-						case *sample:
+						if i, ok := instance.(*sample); ok {
 							i.i = 42
 						}
 					}},

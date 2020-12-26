@@ -1,25 +1,24 @@
 package main
 
 import (
-	"github.com/baez90/inetmock/internal/cmd"
-	"go.uber.org/zap"
-	"os"
+	"fmt"
 
-	_ "github.com/baez90/inetmock/plugins/dns_mock"
-	_ "github.com/baez90/inetmock/plugins/http_mock"
-	_ "github.com/baez90/inetmock/plugins/http_proxy"
-	_ "github.com/baez90/inetmock/plugins/metrics_exporter"
-	_ "github.com/baez90/inetmock/plugins/tls_interceptor"
+	"gitlab.com/inetmock/inetmock/internal/cmd"
+	_ "gitlab.com/inetmock/inetmock/plugins/dns_mock"
+	_ "gitlab.com/inetmock/inetmock/plugins/http_mock"
+	_ "gitlab.com/inetmock/inetmock/plugins/http_proxy"
+	_ "gitlab.com/inetmock/inetmock/plugins/metrics_exporter"
+	_ "gitlab.com/inetmock/inetmock/plugins/tls_interceptor"
+	"go.uber.org/zap"
 )
 
 func main() {
 	logger, _ := zap.NewProduction()
-	defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			fmt.Printf(err.Error())
+		}
+	}()
 
-	if err := cmd.ExecuteServerCommand(); err != nil {
-		logger.Error("Failed to run inetmock",
-			zap.Error(err),
-		)
-		os.Exit(1)
-	}
+	cmd.ExecuteServerCommand()
 }

@@ -1,35 +1,34 @@
 package cmd
 
 import (
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/spf13/cobra"
+	"fmt"
+	"os"
+
+	"gitlab.com/inetmock/inetmock/internal/app"
+	"gitlab.com/inetmock/inetmock/plugins/dns_mock"
+	"gitlab.com/inetmock/inetmock/plugins/http_mock"
+	"gitlab.com/inetmock/inetmock/plugins/http_proxy"
+	"gitlab.com/inetmock/inetmock/plugins/metrics_exporter"
+	"gitlab.com/inetmock/inetmock/plugins/tls_interceptor"
 )
 
 var (
-	logger    logging.Logger
-	serverCmd *cobra.Command
-
-	configFilePath  string
-	logLevel        string
-	developmentLogs bool
+	server app.App
 )
 
-func init() {
-	serverCmd = &cobra.Command{
-		Use:   "",
-		Short: "INetMock is lightweight internet mock",
+func ExecuteServerCommand() {
+	var err error
+	if server, err = app.NewApp(
+		http_mock.AddHTTPMock,
+		dns_mock.AddDNSMock,
+		tls_interceptor.AddTLSInterceptor,
+		http_proxy.AddHTTPProxy,
+		metrics_exporter.AddMetricsExporter,
+	); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
-
-	serverCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "Path to config file that should be used")
-	serverCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "logging level to use")
-	serverCmd.PersistentFlags().BoolVar(&developmentLogs, "development-logs", false, "Enable development mode logs")
-
-	serverCmd.AddCommand(
-		serveCmd,
-		generateCaCmd,
-	)
-}
-
-func ExecuteServerCommand() error {
-	return serverCmd.Execute()
+	server.
+		WithCommands(serveCmd, generateCaCmd).
+		MustRun()
 }

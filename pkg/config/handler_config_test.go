@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/spf13/viper"
 	"reflect"
 	"testing"
+
+	"github.com/spf13/viper"
 )
 
 func Test_handlerConfig_HandlerName(t *testing.T) {

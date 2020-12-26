@@ -1,9 +1,10 @@
 package logging
 
 import (
+	"strings"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"strings"
 )
 
 var (
@@ -44,5 +45,13 @@ func CreateLogger() (Logger, error) {
 		return nil, err
 	} else {
 		return NewLogger(zapLogger), nil
+	}
+}
+
+func MustCreateLogger() Logger {
+	if logger, err := CreateLogger(); err != nil {
+		panic(err)
+	} else {
+		return logger
 	}
 }

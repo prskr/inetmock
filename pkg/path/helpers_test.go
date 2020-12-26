@@ -10,7 +10,6 @@ import (
 )
 
 func TestFileExists(t *testing.T) {
-
 	tmpFile, err := ioutil.TempFile("", "inetmock")
 
 	if err != nil {

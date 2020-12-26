@@ -3,12 +3,13 @@ package http_proxy
 import (
 	"context"
 	"crypto/tls"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
-	"gopkg.in/elazarl/goproxy.v1"
 	"net/http"
 	"net/url"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
+	"gopkg.in/elazarl/goproxy.v1"
 )
 
 type proxyHttpHandler struct {

@@ -2,11 +2,12 @@ package dns_mock
 
 import (
 	"encoding/binary"
-	"github.com/spf13/viper"
 	"math"
 	"math/rand"
 	"net"
 	"unsafe"
+
+	"github.com/spf13/viper"
 )
 
 const (

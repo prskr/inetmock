@@ -11,6 +11,7 @@
 /imctl
 ./main
 **/*.mock.go
+**/*_enum.go
 **/*.pb.go
 
 ###############
@@ -21,3 +22,4 @@
 .vscode/
 dist/
 out/
+.task/

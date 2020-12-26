@@ -6,9 +6,10 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/baez90/inetmock/pkg/path"
 	"os"
 	"path/filepath"
+
+	"gitlab.com/inetmock/inetmock/pkg/path"
 )
 
 const (

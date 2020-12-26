@@ -1,15 +1,14 @@
 package rpc
 
 import (
-	"github.com/baez90/inetmock/internal/endpoints"
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"net"
 	"net/url"
 	"time"
+
+	app2 "gitlab.com/inetmock/inetmock/internal/app"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type INetMockAPI interface {
@@ -18,23 +17,20 @@ type INetMockAPI interface {
 }
 
 type inetmockAPI struct {
-	url             *url.URL
-	server          *grpc.Server
-	endpointManager endpoints.EndpointManager
-	registry        api.HandlerRegistry
-	logger          logging.Logger
-	serverRunning   bool
+	app           app2.App
+	url           *url.URL
+	server        *grpc.Server
+	logger        logging.Logger
+	serverRunning bool
 }
 
 func NewINetMockAPI(
-	config config.Config,
-	epMgr endpoints.EndpointManager,
-	registry api.HandlerRegistry,
+	app app2.App,
 ) INetMockAPI {
 	return &inetmockAPI{
-		url:             config.APIConfig().ListenURL(),
-		endpointManager: epMgr,
-		registry:        registry,
+		app:    app,
+		url:    app.Config().APIConfig().ListenURL(),
+		logger: app.Logger().Named("api"),
 	}
 }
 
@@ -46,13 +42,15 @@ func (i *inetmockAPI) StartServer() (err error) {
 	i.server = grpc.NewServer()
 
 	RegisterHandlersServer(i.server, &handlersServer{
-		registry: i.registry,
+		registry: i.app.HandlerRegistry(),
 	})
 	RegisterEndpointsServer(i.server, &endpointsServer{
-		endpointsManager: i.endpointManager,
+		endpointsManager: i.app.EndpointManager(),
 	})
 
-	RegisterHealthServer(i.server, &healthServer{})
+	RegisterHealthServer(i.server, &healthServer{
+		app: i.app,
+	})
 
 	go i.startServerAsync(lis)
 	return

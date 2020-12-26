@@ -3,12 +3,13 @@ package cmd
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/baez90/inetmock/pkg/cert"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 	"time"
+
+	"github.com/spf13/cobra"
+	"gitlab.com/inetmock/inetmock/pkg/cert"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
 )
 
 const (
@@ -58,6 +59,8 @@ func runGenerateCA(_ *cobra.Command, _ []string) {
 	var notBefore, notAfter time.Duration
 	var err error
 
+	logger := server.Logger().Named("generate-ca")
+
 	if certOutPath, err = getStringFlag(generateCaCmd, generateCACertOutPath, logger); err != nil {
 		return
 	}
@@ -70,8 +73,6 @@ func runGenerateCA(_ *cobra.Command, _ []string) {
 	if notAfter, err = getDurationFlag(generateCaCmd, generateCANotAfterRelative, logger); err != nil {
 		return
 	}
-
-	logger, _ := logging.CreateLogger()
 
 	logger = logger.With(
 		zap.String(generateCACurveName, curveName),

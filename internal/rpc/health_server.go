@@ -2,14 +2,17 @@ package rpc
 
 import (
 	"context"
-	"github.com/baez90/inetmock/pkg/health"
+
+	app2 "gitlab.com/inetmock/inetmock/internal/app"
 )
 
 type healthServer struct {
+	UnimplementedHealthServer
+	app app2.App
 }
 
 func (h healthServer) GetHealth(_ context.Context, _ *HealthRequest) (resp *HealthResponse, err error) {
-	checker := health.CheckerInstance()
+	checker := h.app.Checker()
 	result := checker.IsHealthy()
 
 	resp = &HealthResponse{

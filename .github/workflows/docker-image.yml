@@ -21,7 +21,7 @@ jobs:
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u baez90 --password-stdin
 
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME
+        run: docker build . --file inetmock.dockerfile --tag $IMAGE_NAME
 
       - name: Push image to GitHub packages
         run: |

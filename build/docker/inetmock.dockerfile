@@ -1,4 +1,5 @@
-FROM golang:1.15-alpine as build
+# Runtime layer
+FROM alpine:3.12
 
 # Create appuser and group.
 ARG USER=inetmock
@@ -6,13 +7,7 @@ ARG GROUP=inetmock
 ARG USER_ID=10001
 ARG GROUP_ID=10001
 
-ENV CGO_ENABLED=0
-
-# Prepare build stage - can be cached
-WORKDIR /work
-RUN apk add -U --no-cache \
-        make protoc gcc musl-dev && \
-    addgroup -S -g "${GROUP_ID}" "${GROUP}" && \
+RUN addgroup -S -g "${GROUP_ID}" "${GROUP}" && \
     adduser \
         --disabled-password \
         --gecos "" \
@@ -23,31 +18,8 @@ RUN apk add -U --no-cache \
         --uid "${USER_ID}" \
         "${USER}"
 
-# Fetch dependencies
-COPY Makefile go.mod go.sum ./
-RUN go mod download && \
-    go get -u github.com/golang/mock/mockgen@latest && \
-    go get -u github.com/abice/go-enum && \
-    go install github.com/golang/protobuf/protoc-gen-go
-
-COPY ./ ./
-
-# Build binaries
-RUN make CONTAINER=yes
-
-# Runtime layer
-
-FROM alpine:3.12
-
-# Create appuser and group.
-ARG USER=inetmock
-ARG GROUP=inetmock
-ARG USER_ID=10001
-ARG GROUP_ID=10001
-
-COPY --from=build /etc/group /etc/passwd /etc/
-COPY --from=build --chown=$USER:$GROUP /work/inetmock /work/imctl /usr/lib/inetmock/bin/
-COPY --chown=$USER:$GROUP ./assets/fakeFiles/ /var/lib/inetmock/fakeFiles/
+COPY --chown=$USER:$GROUP inetmock imctl /usr/lib/inetmock/bin/
+COPY --chown=$USER:$GROUP assets/fakeFiles /var/lib/inetmock/fakeFiles/
 COPY config-container.yaml /etc/inetmock/config.yaml
 
 RUN mkdir -p /var/run/inetmock /var/lib/inetmock/certs /usr/lib/inetmock && \

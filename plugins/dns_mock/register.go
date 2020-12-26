@@ -1,10 +1,10 @@
 package dns_mock
 
 import (
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/baez90/inetmock/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/metrics"
 	"go.uber.org/zap"
 )
 
@@ -19,11 +19,10 @@ var (
 	requestDurationHistogram    *prometheus.HistogramVec
 )
 
-func init() {
-	var err error
+func AddDNSMock(registry api.HandlerRegistry) (err error) {
 	var logger logging.Logger
 	if logger, err = logging.CreateLogger(); err != nil {
-		panic(err)
+		return
 	}
 	logger = logger.With(
 		zap.String("protocol_handler", name),
@@ -35,7 +34,7 @@ func init() {
 		"",
 		handlerNameLblName,
 	); err != nil {
-		panic(err)
+		return
 	}
 
 	if unhandledRequestsCounter, err = metrics.Counter(
@@ -44,7 +43,7 @@ func init() {
 		"",
 		handlerNameLblName,
 	); err != nil {
-		panic(err)
+		return
 	}
 
 	if requestDurationHistogram, err = metrics.Histogram(
@@ -54,12 +53,14 @@ func init() {
 		nil,
 		handlerNameLblName,
 	); err != nil {
-		panic(err)
+		return
 	}
 
-	api.Registry().RegisterHandler(name, func() api.ProtocolHandler {
+	registry.RegisterHandler(name, func() api.ProtocolHandler {
 		return &dnsHandler{
 			logger: logger,
 		}
 	})
+
+	return
 }

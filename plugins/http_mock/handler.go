@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/baez90/inetmock/pkg/config"
-	"github.com/baez90/inetmock/pkg/logging"
-	"go.uber.org/zap"
 	"net/http"
+
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"go.uber.org/zap"
 )
 
 const (
@@ -21,8 +23,16 @@ type httpHandler struct {
 	server *http.Server
 }
 
-func (p *httpHandler) Start(config config.HandlerConfig) (err error) {
-	options := loadFromConfig(config.Options)
+func (p *httpHandler) Start(ctx api.PluginContext, config config.HandlerConfig) (err error) {
+	p.logger = ctx.Logger().With(
+		zap.String("protocol_handler", name),
+	)
+
+	var options httpOptions
+	if options, err = loadFromConfig(config.Options); err != nil {
+		return
+	}
+
 	p.logger = p.logger.With(
 		zap.String("handler_name", config.HandlerName),
 		zap.String("address", config.ListenAddr()),

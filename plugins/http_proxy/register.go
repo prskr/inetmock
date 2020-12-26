@@ -1,10 +1,10 @@
 package http_proxy
 
 import (
-	"github.com/baez90/inetmock/pkg/api"
-	"github.com/baez90/inetmock/pkg/logging"
-	"github.com/baez90/inetmock/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/metrics"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
 )
@@ -16,32 +16,33 @@ var (
 	requestDurationHistogram *prometheus.HistogramVec
 )
 
-func init() {
-	var err error
+func AddHTTPProxy(registry api.HandlerRegistry) (err error) {
 	var logger logging.Logger
 	if logger, err = logging.CreateLogger(); err != nil {
-		panic(err)
+		return
 	}
 	logger = logger.With(
 		zap.String("protocol_handler", name),
 	)
 
 	if totalRequestCounter, err = metrics.Counter(name, "total_requests", "", handlerNameLblName); err != nil {
-		panic(err)
+		return
 	}
 
 	if requestDurationHistogram, err = metrics.Histogram(name, "request_duration", "", nil, handlerNameLblName); err != nil {
-		panic(err)
+		return
 	}
 
 	if totalHttpsRequestCounter, err = metrics.Counter(name, "total_https_requests", "", handlerNameLblName); err != nil {
-		panic(err)
+		return
 	}
 
-	api.Registry().RegisterHandler(name, func() api.ProtocolHandler {
+	registry.RegisterHandler(name, func() api.ProtocolHandler {
 		return &httpProxy{
 			logger: logger,
 			proxy:  goproxy.NewProxyHttpServer(),
 		}
 	})
+
+	return
 }

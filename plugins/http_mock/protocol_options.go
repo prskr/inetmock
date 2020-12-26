@@ -1,19 +1,44 @@
+//go:generate go-enum -f $GOFILE --lower --marshal --names
 package http_mock
 
 import (
-	"github.com/spf13/viper"
+	"net/http"
+	"path/filepath"
 	"regexp"
+
+	"github.com/spf13/viper"
 )
 
-const (
-	rulesConfigKey    = "rules"
-	patternConfigKey  = "pattern"
-	responseConfigKey = "response"
+var (
+	ruleValueSelectors = map[RequestMatchTarget]ruleValueSelector{
+		RequestMatchTargetHeader: func(req *http.Request, targetKey string) string {
+			return req.Header.Get(targetKey)
+		},
+		RequestMatchTargetPath: func(req *http.Request, _ string) string {
+			return req.URL.Path
+		},
+	}
 )
+
+/* ENUM(
+Path,
+Header
+)
+*/
+type RequestMatchTarget int
+
+func (x RequestMatchTarget) Matches(req *http.Request, targetKey string, regex *regexp.Regexp) bool {
+	val := ruleValueSelectors[x](req, targetKey)
+	return regex.MatchString(val)
+}
+
+type ruleValueSelector func(req *http.Request, targetKey string) string
 
 type targetRule struct {
-	pattern  *regexp.Regexp
-	response string
+	pattern            *regexp.Regexp
+	response           string
+	requestMatchTarget RequestMatchTarget
+	targetKey          string
 }
 
 func (tr targetRule) Pattern() *regexp.Regexp {
@@ -28,20 +53,44 @@ type httpOptions struct {
 	Rules []targetRule
 }
 
-func loadFromConfig(config *viper.Viper) (options httpOptions) {
-	anonRules := config.Get(rulesConfigKey).([]interface{})
+func loadFromConfig(config *viper.Viper) (options httpOptions, err error) {
+	type tmpCfg struct {
+		Pattern  string
+		Response string
+		Matcher  string
+		Target   string
+	}
 
-	for _, i := range anonRules {
-		innerData := i.(map[interface{}]interface{})
+	tmpRules := struct {
+		Rules []tmpCfg
+	}{}
 
-		if rulePattern, err := regexp.Compile(innerData[patternConfigKey].(string)); err == nil {
-			options.Rules = append(options.Rules, targetRule{
-				pattern:  rulePattern,
-				response: innerData[responseConfigKey].(string),
-			})
-		} else {
-			panic(err)
+	if err = config.Unmarshal(&tmpRules); err != nil {
+		return
+	}
+
+	for _, i := range tmpRules.Rules {
+		var rulePattern *regexp.Regexp
+		var matchTargetValue RequestMatchTarget
+		var absoluteResponsePath string
+		var parseErr error
+		if rulePattern, parseErr = regexp.Compile(i.Pattern); parseErr != nil {
+			continue
 		}
+		if matchTargetValue, parseErr = ParseRequestMatchTarget(i.Matcher); parseErr != nil {
+			matchTargetValue = RequestMatchTargetPath
+		}
+
+		if absoluteResponsePath, parseErr = filepath.Abs(i.Response); parseErr != nil {
+
+		}
+
+		options.Rules = append(options.Rules, targetRule{
+			pattern:            rulePattern,
+			response:           absoluteResponsePath,
+			requestMatchTarget: matchTargetValue,
+			targetKey:          i.Target,
+		})
 	}
 
 	return

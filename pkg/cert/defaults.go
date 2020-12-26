@@ -1,8 +1,9 @@
 package cert
 
 import (
-	"github.com/baez90/inetmock/pkg/defaulting"
 	"reflect"
+
+	"gitlab.com/inetmock/inetmock/pkg/defaulting"
 )
 
 var (

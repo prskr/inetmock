@@ -1,9 +1,10 @@
 package logging
 
 import (
-	"go.uber.org/zap"
 	"reflect"
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestParseLevel(t *testing.T) {
