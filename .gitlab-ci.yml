@@ -9,6 +9,10 @@ test:
   stage: test
   script:
     - task cli-cover-report
+  artifacts:
+    reports:
+      junit: out/report.xml
+      cobertura: out/coverage.xml
 
 lint:
   stage: test

@@ -46,8 +46,9 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -v ./...
+      - go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | go-junit-report > {{ .OUT_DIR }}/report.xml
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
+      - gocover-cobertura < {{ .OUT_DIR }}/cov.out > {{ .OUT_DIR }}/coverage.xml
       - rm -f {{ .OUT_DIR }}/cov-raw.out
 
   cli-cover-report:
