@@ -5,7 +5,7 @@ option java_multiple_files = true;
 option java_package = "com.github.baez90.inetmock.rpc";
 option java_outer_classname = "EndpointsProto";
 
-package inetmock;
+package inetmock.rpc;
 
 service Endpoints {
     rpc GetEndpoints (GetEndpointsRequest) returns (GetEndpointsResponse) {

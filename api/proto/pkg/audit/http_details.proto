@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option go_package = "gitlab.com/inetmock/inetmock/pkg/audit";
+option java_multiple_files = true;
+option java_package = "com.github.baez90.inetmock.audit";
+option java_outer_classname = "HandlerEventProto";
+
+package inetmock.audit;
+
+enum HTTPMethod {
+    GET = 0;
+    HEAD = 1;
+    POST = 2;
+    PUT = 3;
+    DELETE = 4;
+    CONNECT = 5;
+    OPTIONS = 6;
+    TRACE = 7;
+    PATCH = 8;
+}
+
+message HTTPHeaderValue {
+    repeated string values = 1;
+}
+
+message HTTPDetailsEntity {
+    HTTPMethod method = 1;
+    string host = 2;
+    string uri = 3;
+    string proto = 4;
+    map<string, HTTPHeaderValue> headers = 5;
+}
