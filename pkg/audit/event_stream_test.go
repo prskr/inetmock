@@ -1,18 +1,53 @@
 package audit_test
 
 import (
+	"crypto/tls"
 	"net"
+	"net/http"
 	"sync"
 	"testing"
 	"time"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
 	defaultSink = &testSink{
 		name: "test defaultSink",
+	}
+	testEvents = []audit.Event{
+		{
+			Transport:       audit.TransportProtocol_TCP,
+			Application:     audit.AppProtocol_HTTP,
+			SourceIP:        net.ParseIP("127.0.0.1"),
+			DestinationIP:   net.ParseIP("127.0.0.1"),
+			SourcePort:      32344,
+			DestinationPort: 80,
+			TLS: &audit.TLSDetails{
+				Version:     tls.VersionTLS13,
+				CipherSuite: tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				ServerName:  "localhost",
+			},
+			ProtocolDetails: mustMarshalToWireformat(audit.HTTPDetails{
+				Method: "GET",
+				Host:   "localhost",
+				URI:    "http://localhost/asdf",
+				Proto:  "HTTP 1.1",
+				Headers: http.Header{
+					"Accept": []string{"application/json"},
+				},
+			}),
+		},
+		{
+			Transport:       audit.TransportProtocol_TCP,
+			Application:     audit.AppProtocol_DNS,
+			SourceIP:        net.ParseIP("::1"),
+			DestinationIP:   net.ParseIP("::1"),
+			SourcePort:      32344,
+			DestinationPort: 80,
+		},
 	}
 )
 
@@ -45,17 +80,25 @@ func wgMockSink(t testing.TB, wg *sync.WaitGroup) audit.Sink {
 	}
 }
 
+func mustMarshalToWireformat(d audit.Details) *anypb.Any {
+	any, err := d.MarshalToWireFormat()
+	if err != nil {
+		panic(err)
+	}
+	return any
+}
+
 func Test_eventStream_RegisterSink(t *testing.T) {
 	type args struct {
 		s audit.Sink
 	}
-
-	tests := []struct {
+	type testCase struct {
 		name    string
 		args    args
 		setup   func(e audit.EventStream)
 		wantErr bool
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Register test defaultSink",
 			args: args{
@@ -74,8 +117,8 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			var err error
 			var e audit.EventStream
 			if e, err = audit.NewEventStream(logging.CreateTestLogger(t)); err != nil {
@@ -103,7 +146,11 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 			if !found {
 				t.Errorf("expected defaultSink name %s not found in registered sinks %v", tt.args.s.Name(), e.Sinks())
 			}
-		})
+		}
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 
@@ -112,26 +159,18 @@ func Test_eventStream_Emit(t *testing.T) {
 		evs  []audit.Event
 		opts []audit.EventStreamOption
 	}
-	tests := []struct {
+	type testCase struct {
 		name      string
 		args      args
 		subscribe bool
-	}{
+	}
+	tests := []testCase{
 		{
 			name:      "Expect to get a single event",
 			subscribe: true,
 			args: args{
 				opts: []audit.EventStreamOption{audit.WithBufferSize(10)},
-				evs: []audit.Event{
-					{
-						Transport:       audit.TransportProtocol_TCP,
-						Application:     audit.AppProtocol_HTTP,
-						SourceIP:        net.ParseIP("127.0.0.1"),
-						DestinationIP:   net.ParseIP("127.0.0.1"),
-						SourcePort:      32344,
-						DestinationPort: 80,
-					},
-				},
+				evs:  testEvents[:1],
 			},
 		},
 		{
@@ -139,46 +178,21 @@ func Test_eventStream_Emit(t *testing.T) {
 			subscribe: true,
 			args: args{
 				opts: []audit.EventStreamOption{audit.WithBufferSize(10)},
-				evs: []audit.Event{
-					{
-						Transport:       audit.TransportProtocol_TCP,
-						Application:     audit.AppProtocol_HTTP,
-						SourceIP:        net.ParseIP("127.0.0.1"),
-						DestinationIP:   net.ParseIP("127.0.0.1"),
-						SourcePort:      32344,
-						DestinationPort: 80,
-					},
-					{
-						Transport:       audit.TransportProtocol_TCP,
-						Application:     audit.AppProtocol_DNS,
-						SourceIP:        net.ParseIP("::1"),
-						DestinationIP:   net.ParseIP("::1"),
-						SourcePort:      32344,
-						DestinationPort: 80,
-					},
-				},
+				evs:  testEvents,
 			},
 		},
 		{
 			name: "Emit without subscribe sink",
 			args: args{
 				opts: []audit.EventStreamOption{audit.WithBufferSize(0)},
-				evs: []audit.Event{
-					{
-						Transport:       audit.TransportProtocol_TCP,
-						Application:     audit.AppProtocol_HTTP,
-						SourceIP:        net.ParseIP("127.0.0.1"),
-						DestinationIP:   net.ParseIP("127.0.0.1"),
-						SourcePort:      32344,
-						DestinationPort: 80,
-					},
-				},
+				evs:  testEvents[:1],
 			},
 			subscribe: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			var err error
 			var e audit.EventStream
 			if e, err = audit.NewEventStream(logging.CreateTestLogger(t), tt.args.opts...); err != nil {
@@ -189,8 +203,8 @@ func Test_eventStream_Emit(t *testing.T) {
 				_ = e.Close()
 			})
 
-			emittedWaitGroup := &sync.WaitGroup{}
-			receivedWaitGroup := &sync.WaitGroup{}
+			emittedWaitGroup := new(sync.WaitGroup)
+			receivedWaitGroup := new(sync.WaitGroup)
 
 			emittedWaitGroup.Add(len(tt.args.evs))
 
@@ -219,7 +233,11 @@ func Test_eventStream_Emit(t *testing.T) {
 			case <-time.After(5 * time.Second):
 				t.Errorf("did not get all expected events in time")
 			}
-		})
+		}
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 

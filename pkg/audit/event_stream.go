@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/imdario/mergo"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -56,10 +55,9 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (es Eve
 }
 
 func (e *eventStream) Emit(ev Event) {
-	defaultEvent := e.newDefaultEvent()
-	_ = mergo.Merge(defaultEvent, &ev)
+	ev.ApplyDefaults(e.idGenerator.Generate().Int64())
 	select {
-	case e.buffer <- defaultEvent:
+	case e.buffer <- &ev:
 		e.logger.Debug("pushed event to distribute loop")
 	default:
 		e.logger.Warn("buffer is full")
@@ -105,13 +103,5 @@ func (e *eventStream) distribute() {
 				e.logger.Warn("sink consummation timed out")
 			}
 		}
-	}
-}
-
-func (e *eventStream) newDefaultEvent() *Event {
-	id := e.idGenerator.Generate()
-	return &Event{
-		ID:        id.Int64(),
-		Timestamp: time.Now().UTC(),
 	}
 }

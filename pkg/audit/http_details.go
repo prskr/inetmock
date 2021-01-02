@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type HTTPDetails struct {
@@ -15,7 +15,7 @@ type HTTPDetails struct {
 	Headers http.Header
 }
 
-func (d HTTPDetails) ProtoMessage() proto.Message {
+func (d HTTPDetails) MarshalToWireFormat() (any *anypb.Any, err error) {
 	var method = HTTPMethod_GET
 	if methodValue, known := HTTPMethod_value[strings.ToUpper(d.Method)]; known {
 		method = HTTPMethod(methodValue)
@@ -29,11 +29,14 @@ func (d HTTPDetails) ProtoMessage() proto.Message {
 		}
 	}
 
-	return &HTTPDetailsEntity{
+	protoDetails := &HTTPDetailsEntity{
 		Method:  method,
 		Host:    d.Host,
 		Uri:     d.URI,
 		Proto:   d.Proto,
 		Headers: headers,
 	}
+
+	any, err = anypb.New(protoDetails)
+	return
 }

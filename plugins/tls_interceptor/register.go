@@ -40,7 +40,7 @@ func AddTLSInterceptor(registry api.HandlerRegistry) (err error) {
 	registry.RegisterHandler(name, func() api.ProtocolHandler {
 		return &tlsInterceptor{
 			logger:                  logger,
-			currentConnectionsCount: &sync.WaitGroup{},
+			currentConnectionsCount: new(sync.WaitGroup),
 			currentConnections:      make(map[uuid.UUID]*proxyConn),
 			connectionsMutex:        &sync.Mutex{},
 		}

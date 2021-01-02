@@ -99,7 +99,7 @@ func (e *endpointManager) StartEndpoints() {
 }
 
 func (e *endpointManager) ShutdownEndpoints() {
-	var waitGroup sync.WaitGroup
+	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(len(e.properlyStartedEndpoints))
 
 	parentCtx, _ := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -112,7 +112,7 @@ func (e *endpointManager) ShutdownEndpoints() {
 			zap.String("endpoint", endpoint.Name()),
 		)
 		endpointLogger.Info("Triggering shutdown of endpoint")
-		go shutdownEndpoint(ctx, endpoint, endpointLogger, &waitGroup)
+		go shutdownEndpoint(ctx, endpoint, endpointLogger, waitGroup)
 	}
 
 	waitGroup.Wait()

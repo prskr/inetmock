@@ -2,8 +2,31 @@ package audit
 
 import (
 	"crypto/tls"
+)
 
-	"google.golang.org/protobuf/proto"
+var (
+	tlsToEntity = map[uint16]TLSVersion{
+		tls.VersionSSL30: TLSVersion_SSLv30,
+		tls.VersionTLS10: TLSVersion_TLS10,
+		tls.VersionTLS11: TLSVersion_TLS11,
+		tls.VersionTLS12: TLSVersion_TLS12,
+		tls.VersionTLS13: TLSVersion_TLS13,
+	}
+	entityToTls = map[TLSVersion]uint16{
+		TLSVersion_SSLv30: tls.VersionSSL30,
+		TLSVersion_TLS10:  tls.VersionTLS10,
+		TLSVersion_TLS11:  tls.VersionTLS11,
+		TLSVersion_TLS12:  tls.VersionTLS12,
+		TLSVersion_TLS13:  tls.VersionTLS13,
+	}
+	cipherSuiteIDLookup = func(name string) uint16 {
+		for _, cs := range tls.CipherSuites() {
+			if cs.Name == name {
+				return cs.ID
+			}
+		}
+		return 0
+	}
 )
 
 type TLSDetails struct {
@@ -12,24 +35,21 @@ type TLSDetails struct {
 	ServerName  string
 }
 
-func (d TLSDetails) ProtoMessage() proto.Message {
-	var version TLSVersion
-
-	switch d.Version {
-	case tls.VersionTLS10:
-		version = TLSVersion_TLS10
-	case tls.VersionTLS11:
-		version = TLSVersion_TLS11
-	case tls.VersionTLS12:
-		version = TLSVersion_TLS12
-	case tls.VersionTLS13:
-		version = TLSVersion_TLS13
-	default:
-		version = TLSVersion_SSLv30
+func NewTLSDetailsFromProto(entity *TLSDetailsEntity) *TLSDetails {
+	if entity == nil {
+		return nil
 	}
 
+	return &TLSDetails{
+		Version:     entityToTls[entity.GetVersion()],
+		CipherSuite: cipherSuiteIDLookup(entity.GetCipherSuite()),
+		ServerName:  entity.GetServerName(),
+	}
+}
+
+func (d TLSDetails) ProtoMessage() *TLSDetailsEntity {
 	return &TLSDetailsEntity{
-		Version:     version,
+		Version:     tlsToEntity[d.Version],
 		CipherSuite: tls.CipherSuiteName(d.CipherSuite),
 		ServerName:  d.ServerName,
 	}
