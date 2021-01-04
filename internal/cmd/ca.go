@@ -28,8 +28,10 @@ const (
 )
 
 var (
-	generateCaCmd *cobra.Command
-	caCertOptions cert.GenerationOptions
+	generateCaCmd          *cobra.Command
+	caCertOptions          cert.GenerationOptions
+	notBefore, notAfter    time.Duration
+	certOutPath, curveName string
 )
 
 func init() {
@@ -48,31 +50,14 @@ func init() {
 	generateCaCmd.Flags().StringSliceVar(&caCertOptions.Locality, generateCaLocalityName, nil, "Locality information to append to certificate")
 	generateCaCmd.Flags().StringSliceVar(&caCertOptions.StreetAddress, generateCaStreetAddressName, nil, "Street address information to append to certificate")
 	generateCaCmd.Flags().StringSliceVar(&caCertOptions.PostalCode, generateCaPostalCodeName, nil, "Postal code information to append to certificate")
-	generateCaCmd.Flags().String(generateCACertOutPath, "", "Path where CA files should be stored")
-	generateCaCmd.Flags().String(generateCACurveName, "", "Name of the curve to use, if empty ED25519 is used, other valid values are [P224, P256,P384,P521]")
-	generateCaCmd.Flags().Duration(generateCANotBeforeRelative, 17520*time.Hour, "Relative time value since when in the past the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
-	generateCaCmd.Flags().Duration(generateCANotAfterRelative, 17520*time.Hour, "Relative time value until when in the future the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
+		generateCaCmd.Flags().StringVar(&certOutPath, generateCACertOutPath, "", "Path where CA files should be stored")
+	generateCaCmd.Flags().StringVar(&curveName, generateCACurveName, "", "Name of the curve to use, if empty ED25519 is used, other valid values are [P224, P256,P384,P521]")
+	generateCaCmd.Flags().DurationVar(&notBefore, generateCANotBeforeRelative, 17520*time.Hour, "Relative time value since when in the past the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
+	generateCaCmd.Flags().DurationVar(&notAfter, generateCANotAfterRelative, 17520*time.Hour, "Relative time value until when in the future the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
 }
 
 func runGenerateCA(_ *cobra.Command, _ []string) {
-	var certOutPath, curveName string
-	var notBefore, notAfter time.Duration
-	var err error
-
 	logger := server.Logger().Named("generate-ca")
-
-	if certOutPath, err = getStringFlag(generateCaCmd, generateCACertOutPath, logger); err != nil {
-		return
-	}
-	if curveName, err = getStringFlag(generateCaCmd, generateCACurveName, logger); err != nil {
-		return
-	}
-	if notBefore, err = getDurationFlag(generateCaCmd, generateCANotBeforeRelative, logger); err != nil {
-		return
-	}
-	if notAfter, err = getDurationFlag(generateCaCmd, generateCANotAfterRelative, logger); err != nil {
-		return
-	}
 
 	logger = logger.With(
 		zap.String(generateCACurveName, curveName),
@@ -90,6 +75,7 @@ func runGenerateCA(_ *cobra.Command, _ []string) {
 		},
 	})
 
+	var err error
 	var caCrt *tls.Certificate
 	if caCrt, err = generator.CACert(caCertOptions); err != nil {
 		logger.Error(
