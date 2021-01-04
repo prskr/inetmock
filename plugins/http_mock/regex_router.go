@@ -1,13 +1,16 @@
 package http_mock
 
 import (
-	"bytes"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type route struct {
@@ -19,14 +22,11 @@ type RegexpHandler struct {
 	handlerName string
 	logger      logging.Logger
 	routes      []*route
+	emitter     audit.Emitter
 }
 
 func (h *RegexpHandler) Handler(rule targetRule, handler http.Handler) {
 	h.routes = append(h.routes, &route{rule, handler})
-}
-
-func (h *RegexpHandler) HandleFunc(rule targetRule, handler func(http.ResponseWriter, *http.Request)) {
-	h.routes = append(h.routes, &route{rule, http.HandlerFunc(handler)})
 }
 
 func (h *RegexpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -53,25 +53,64 @@ func (h *RegexpHandler) setupRoute(rule targetRule) {
 		zap.String("response", rule.Response()),
 	)
 
-	h.Handler(rule, createHandlerForTarget(h.logger, rule.response))
+	h.Handler(rule, emittingFileHandler{
+		emitter:    h.emitter,
+		targetPath: rule.response,
+	})
 }
 
-func createHandlerForTarget(logger logging.Logger, targetPath string) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		headerWriter := &bytes.Buffer{}
-		request.Header.Write(headerWriter)
+type emittingFileHandler struct {
+	emitter    audit.Emitter
+	targetPath string
+}
 
-		logger.Info(
-			"Handling request",
-			zap.String("source", request.RemoteAddr),
-			zap.String("host", request.Host),
-			zap.String("method", request.Method),
-			zap.String("protocol", request.Proto),
-			zap.String("path", request.RequestURI),
-			zap.String("response", targetPath),
-			zap.Reflect("headers", request.Header),
-		)
+func (f emittingFileHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	f.emitter.Emit(eventFromRequest(request))
+	http.ServeFile(writer, request, f.targetPath)
+}
 
-		http.ServeFile(writer, request, targetPath)
-	})
+func eventFromRequest(request *http.Request) audit.Event {
+	details := audit.HTTPDetails{
+		Method:  request.Method,
+		Host:    request.Host,
+		URI:     request.RequestURI,
+		Proto:   request.Proto,
+		Headers: request.Header,
+	}
+	var wire *anypb.Any
+	if w, err := details.MarshalToWireFormat(); err == nil {
+		wire = w
+	}
+
+	localIP, localPort := ipPortFromAddr(LocalAddr(request.Context()))
+	remoteIP, remotePort := ipPortFromAddr(RemoteAddr(request.Context()))
+
+	return audit.Event{
+		Transport:       audit.TransportProtocol_TCP,
+		Application:     audit.AppProtocol_HTTP,
+		SourceIP:        remoteIP,
+		DestinationIP:   localIP,
+		SourcePort:      remotePort,
+		DestinationPort: localPort,
+		ProtocolDetails: wire,
+	}
+}
+
+func ipPortFromAddr(addr net.Addr) (ip net.IP, port uint16) {
+	if tcpAddr, isTCPAddr := addr.(*net.TCPAddr); isTCPAddr {
+		return tcpAddr.IP, uint16(tcpAddr.Port)
+	}
+
+	ipPortSplit := strings.Split(addr.String(), ":")
+	if len(ipPortSplit) != 2 {
+		return
+	}
+
+	ip = net.ParseIP(ipPortSplit[0])
+
+	if p, err := strconv.Atoi(ipPortSplit[1]); err == nil {
+		port = uint16(p)
+	}
+
+	return
 }

@@ -169,7 +169,7 @@ func Test_eventStream_Emit(t *testing.T) {
 			name:      "Expect to get a single event",
 			subscribe: true,
 			args: args{
-				opts: []audit.EventStreamOption{audit.WithBufferSize(10)},
+				opts: []audit.EventStreamOption{},
 				evs:  testEvents[:1],
 			},
 		},
@@ -177,7 +177,7 @@ func Test_eventStream_Emit(t *testing.T) {
 			name:      "Expect to get multiple events",
 			subscribe: true,
 			args: args{
-				opts: []audit.EventStreamOption{audit.WithBufferSize(10)},
+				opts: []audit.EventStreamOption{},
 				evs:  testEvents,
 			},
 		},

@@ -16,11 +16,16 @@ func init() {
 type eventStream struct {
 	logger                 logging.Logger
 	buffer                 chan *Event
-	sinks                  map[string]chan Event
+	sinks                  map[string]*registeredSink
 	lock                   sync.Locker
 	idGenerator            *snowflake.Node
 	sinkBufferSize         int
 	sinkConsumptionTimeout time.Duration
+}
+
+type registeredSink struct {
+	downstream chan Event
+	lock       sync.Locker
 }
 
 func NewEventStream(logger logging.Logger, options ...EventStreamOption) (es EventStream, err error) {
@@ -39,7 +44,7 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (es Eve
 	generatorIdx++
 	underlying := &eventStream{
 		logger:                 logger,
-		sinks:                  make(map[string]chan Event),
+		sinks:                  make(map[string]*registeredSink),
 		buffer:                 make(chan *Event, cfg.bufferSize),
 		sinkBufferSize:         cfg.sinkBuffersize,
 		sinkConsumptionTimeout: cfg.sinkConsumptionTimeout,
@@ -47,7 +52,10 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (es Eve
 		lock:                   &sync.Mutex{},
 	}
 
-	go underlying.distribute()
+	// start distribute workers
+	for i := 0; i < cfg.distributeParallelization; i++ {
+		go underlying.distribute()
+	}
 
 	es = underlying
 
@@ -71,9 +79,12 @@ func (e *eventStream) RegisterSink(s Sink) error {
 		return ErrSinkAlreadyRegistered
 	}
 
-	downstream := make(chan Event, e.sinkBufferSize)
-	s.OnSubscribe(downstream)
-	e.sinks[name] = downstream
+	rs := &registeredSink{
+		downstream: make(chan Event, e.sinkBufferSize),
+		lock:       new(sync.Mutex),
+	}
+	s.OnSubscribe(rs.downstream)
+	e.sinks[name] = rs
 	return nil
 }
 
@@ -86,22 +97,24 @@ func (e eventStream) Sinks() (sinks []string) {
 
 func (e *eventStream) Close() error {
 	close(e.buffer)
-	for _, downstream := range e.sinks {
-		close(downstream)
+	for _, rs := range e.sinks {
+		close(rs.downstream)
 	}
 	return nil
 }
 
 func (e *eventStream) distribute() {
 	for ev := range e.buffer {
-		for name, s := range e.sinks {
+		for name, rs := range e.sinks {
+			rs.lock.Lock()
 			e.logger.Debug("notify sink", zap.String("sink", name))
 			select {
-			case s <- *ev:
+			case rs.downstream <- *ev:
 				e.logger.Debug("pushed event to sink channel")
 			case <-time.After(e.sinkConsumptionTimeout):
 				e.logger.Warn("sink consummation timed out")
 			}
+			rs.lock.Unlock()
 		}
 	}
 }

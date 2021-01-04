@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/internal/endpoints"
 	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/health"
@@ -47,6 +48,7 @@ type app struct {
 	registry        api.HandlerRegistry
 	ctx             context.Context
 	cancel          context.CancelFunc
+	eventStream     audit.EventStream
 }
 
 func (a *app) MustRun() {
@@ -80,6 +82,10 @@ func (a app) Checker() health.Checker {
 
 func (a app) EndpointManager() endpoints.EndpointManager {
 	return a.endpointManager
+}
+
+func (a app) Audit() audit.Emitter {
+	return a.eventStream
 }
 
 func (a app) HandlerRegistry() api.HandlerRegistry {
@@ -137,15 +143,32 @@ func NewApp(registrations ...api.Registration) (inetmockApp App, err error) {
 			return
 		}
 
+		a.endpointManager = endpoints.NewEndpointManager(
+			a.registry,
+			a.Logger().Named("EndpointManager"),
+			a.checker,
+			a,
+		)
+
 		a.cfg = config.CreateConfig(cmd.Flags())
 
 		if err = a.cfg.ReadConfig(configFilePath); err != nil {
 			return
 		}
 
-		a.certStore, err = cert.NewDefaultStore(a.cfg, a.rootLogger)
-		a.endpointManager = endpoints.NewEndpointManager(a.registry, a.Logger().Named("EndpointManager"), a.checker, a)
+		if a.certStore, err = cert.NewDefaultStore(a.cfg, a.rootLogger); err != nil {
+			return
+		}
 
+		a.eventStream, err = audit.NewEventStream(
+			a.Logger().Named("EventStream"),
+			audit.WithSinkBufferSize(10),
+		)
+		if err != nil {
+			return
+		}
+
+		err = a.eventStream.RegisterSink(audit.NewLogSink(a.Logger().Named("LogSink")))
 		return
 	}
 

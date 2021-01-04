@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/viper"
 	api_mock "gitlab.com/inetmock/inetmock/internal/mock/api"
+	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/api"
 	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
@@ -72,10 +73,17 @@ func setupHandler(b *testing.B, ctrl *gomock.Controller, listenPort uint16) (api
 		b.Error("handler not registered")
 	}
 
+	emitter := audit_mock.NewMockEmitter(ctrl)
+	emitter.EXPECT().Emit(gomock.Any()).AnyTimes()
+
 	mockApp := api_mock.NewMockPluginContext(ctrl)
 	mockApp.EXPECT().
 		Logger().
 		Return(testLogger)
+
+	mockApp.EXPECT().
+		Audit().
+		Return(emitter)
 
 	v := viper.New()
 	v.Set("rules", []map[string]string{

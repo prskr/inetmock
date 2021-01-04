@@ -40,9 +40,14 @@ func (p *httpHandler) Start(ctx api.PluginContext, config config.HandlerConfig) 
 
 	router := &RegexpHandler{
 		logger:      p.logger,
+		emitter:     ctx.Audit(),
 		handlerName: config.HandlerName,
 	}
-	p.server = &http.Server{Addr: config.ListenAddr(), Handler: router}
+	p.server = &http.Server{
+		Addr:        config.ListenAddr(),
+		Handler:     router,
+		ConnContext: StoreConnPropertiesInContext,
+	}
 
 	for _, rule := range options.Rules {
 		router.setupRoute(rule)
