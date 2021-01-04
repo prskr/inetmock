@@ -1,0 +1,3 @@
+terminal:
+  image: registry.gitlab.com/inetmock/ci-image
+  script: sleep 60
