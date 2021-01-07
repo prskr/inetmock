@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-option go_package = "gitlab.com/inetmock/inetmock/pkg/audit";
+option go_package = "gitlab.com/inetmock/inetmock/pkg/audit/details";
 option java_multiple_files = true;
-option java_package = "com.github.baez90.inetmock.audit";
+option java_package = "com.github.baez90.inetmock.audit.details";
 option java_outer_classname = "HandlerEventProto";
 
 package inetmock.audit;

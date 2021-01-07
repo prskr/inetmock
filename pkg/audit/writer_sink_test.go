@@ -14,7 +14,7 @@ import (
 func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 	type testCase struct {
 		name   string
-		events []audit.Event
+		events []*audit.Event
 	}
 	tests := []testCase{
 		{
@@ -55,7 +55,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 			}
 
 			for _, ev := range tt.events {
-				evs.Emit(ev)
+				evs.Emit(*ev)
 			}
 
 			select {

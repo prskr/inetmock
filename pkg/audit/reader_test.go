@@ -5,10 +5,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"io"
+	"reflect"
 	"testing"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -36,7 +36,7 @@ func Test_eventReader_Read(t *testing.T) {
 	type testCase struct {
 		name    string
 		fields  fields
-		wantEv  audit.Event
+		wantEv  *audit.Event
 		wantErr bool
 	}
 	tests := []testCase{
@@ -86,7 +86,7 @@ func Test_eventReader_Read(t *testing.T) {
 				return
 			}
 
-			if err == nil && !proto.Equal(gotEv.ProtoMessage(), tt.wantEv.ProtoMessage()) {
+			if err == nil && !reflect.DeepEqual(gotEv, *tt.wantEv) {
 				t.Errorf("Read() gotEv = %v, want %v", gotEv, tt.wantEv)
 			}
 		}

@@ -23,7 +23,7 @@ func Test_eventWriter_Write(t *testing.T) {
 		order binary.ByteOrder
 	}
 	type args struct {
-		evs []audit.Event
+		evs []*audit.Event
 	}
 	type testCase struct {
 		name    string
@@ -104,7 +104,7 @@ func Test_eventWriter_Write(t *testing.T) {
 			e := audit.NewEventWriter(writerMock, audit.WithWriterByteOrder(tt.fields.order))
 
 			for _, ev := range tt.args.evs {
-				if err := e.Write(&ev); (err != nil) != tt.wantErr {
+				if err := e.Write(ev); (err != nil) != tt.wantErr {
 					t.Errorf("Write() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			}

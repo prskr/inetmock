@@ -1,11 +1,12 @@
 package audit
 
 import (
-	"encoding/binary"
-	"math/big"
 	"net"
+	"strconv"
+	"strings"
 	"time"
 
+	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -24,40 +25,35 @@ type Event struct {
 	DestinationIP   net.IP
 	SourcePort      uint16
 	DestinationPort uint16
-	ProtocolDetails *anypb.Any
+	ProtocolDetails Details
 	TLS             *TLSDetails
 }
 
 func (e *Event) ProtoMessage() proto.Message {
 	var sourceIP isEventEntity_SourceIP
 	if ipv4 := e.SourceIP.To4(); ipv4 != nil {
-		if len(ipv4) == 16 {
-			sourceIP = &EventEntity_SourceIPv4{SourceIPv4: binary.BigEndian.Uint32(ipv4[12:16])}
-		} else {
-			sourceIP = &EventEntity_SourceIPv4{SourceIPv4: binary.BigEndian.Uint32(ipv4)}
-		}
+		sourceIP = &EventEntity_SourceIPv4{SourceIPv4: ipv4ToUint32(ipv4)}
 	} else {
-		ipv6 := big.NewInt(0)
-		ipv6.SetBytes(e.SourceIP)
-		sourceIP = &EventEntity_SourceIPv6{SourceIPv6: ipv6.Uint64()}
+		sourceIP = &EventEntity_SourceIPv6{SourceIPv6: ipv6ToBytes(e.SourceIP)}
 	}
 
 	var destinationIP isEventEntity_DestinationIP
 	if ipv4 := e.DestinationIP.To4(); ipv4 != nil {
-		if len(ipv4) == 16 {
-			destinationIP = &EventEntity_DestinationIPv4{DestinationIPv4: binary.BigEndian.Uint32(ipv4[12:16])}
-		} else {
-			destinationIP = &EventEntity_DestinationIPv4{DestinationIPv4: binary.BigEndian.Uint32(ipv4)}
-		}
+		destinationIP = &EventEntity_DestinationIPv4{DestinationIPv4: ipv4ToUint32(ipv4)}
 	} else {
-		ipv6 := big.NewInt(0)
-		ipv6.SetBytes(e.SourceIP)
-		destinationIP = &EventEntity_DestinationIPv6{DestinationIPv6: ipv6.Uint64()}
+		destinationIP = &EventEntity_DestinationIPv6{DestinationIPv6: ipv6ToBytes(e.DestinationIP)}
 	}
 
 	var tlsDetails *TLSDetailsEntity = nil
 	if e.TLS != nil {
 		tlsDetails = e.TLS.ProtoMessage()
+	}
+
+	var detailsEntity *anypb.Any = nil
+	if e.ProtocolDetails != nil {
+		if any, err := e.ProtocolDetails.MarshalToWireFormat(); err == nil {
+			detailsEntity = any
+		}
 	}
 
 	return &EventEntity{
@@ -70,7 +66,7 @@ func (e *Event) ProtoMessage() proto.Message {
 		SourcePort:      uint32(e.SourcePort),
 		DestinationPort: uint32(e.DestinationPort),
 		Tls:             tlsDetails,
-		ProtocolDetails: e.ProtocolDetails,
+		ProtocolDetails: detailsEntity,
 	}
 }
 
@@ -82,27 +78,33 @@ func (e *Event) ApplyDefaults(id int64) {
 	}
 }
 
+func (e *Event) SetSourceIPFromAddr(remoteAddr net.Addr) {
+	ip, port := parseIPPortFromAddr(remoteAddr)
+	e.SourceIP = ip
+	e.SourcePort = port
+}
+
+func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) {
+	ip, port := parseIPPortFromAddr(localAddr)
+	e.DestinationIP = ip
+	e.DestinationPort = port
+}
+
 func NewEventFromProto(msg *EventEntity) (ev Event) {
 	var sourceIP net.IP
 	switch ip := msg.GetSourceIP().(type) {
 	case *EventEntity_SourceIPv4:
-		buf := make([]byte, 4)
-		binary.BigEndian.PutUint32(buf, ip.SourceIPv4)
-		sourceIP = buf
-		sourceIP = sourceIP.To4()
+		sourceIP = uint32ToIP(ip.SourceIPv4)
 	case *EventEntity_SourceIPv6:
-		sourceIP = big.NewInt(int64(ip.SourceIPv6)).Bytes()
+		sourceIP = uint64ToIP(ip.SourceIPv6)
 	}
 
 	var destinationIP net.IP
 	switch ip := msg.GetDestinationIP().(type) {
 	case *EventEntity_DestinationIPv4:
-		buf := make([]byte, 4)
-		binary.BigEndian.PutUint32(buf, ip.DestinationIPv4)
-		destinationIP = buf
-		destinationIP = destinationIP.To4()
+		destinationIP = uint32ToIP(ip.DestinationIPv4)
 	case *EventEntity_DestinationIPv6:
-		destinationIP = big.NewInt(int64(ip.DestinationIPv6)).Bytes()
+		destinationIP = uint64ToIP(ip.DestinationIPv6)
 	}
 
 	ev = Event{
@@ -114,8 +116,46 @@ func NewEventFromProto(msg *EventEntity) (ev Event) {
 		DestinationIP:   destinationIP,
 		SourcePort:      uint16(msg.GetSourcePort()),
 		DestinationPort: uint16(msg.GetDestinationPort()),
-		ProtocolDetails: msg.GetProtocolDetails(),
+		ProtocolDetails: guessDetailsFromApp(msg.GetProtocolDetails()),
 		TLS:             NewTLSDetailsFromProto(msg.GetTls()),
 	}
 	return
+}
+
+func parseIPPortFromAddr(addr net.Addr) (ip net.IP, port uint16) {
+	switch a := addr.(type) {
+	case *net.TCPAddr:
+		return a.IP, uint16(a.Port)
+	case *net.UDPAddr:
+		return a.IP, uint16(a.Port)
+	case *net.UnixAddr:
+		return
+	default:
+		ipPortSplit := strings.Split(addr.String(), ":")
+		if len(ipPortSplit) != 2 {
+			return
+		}
+
+		ip = net.ParseIP(ipPortSplit[0])
+		if p, err := strconv.Atoi(ipPortSplit[1]); err == nil {
+			port = uint16(p)
+		}
+		return
+	}
+}
+
+func guessDetailsFromApp(any *anypb.Any) Details {
+	var detailsProto proto.Message
+	var err error
+	if detailsProto, err = any.UnmarshalNew(); err != nil {
+		return nil
+	}
+	switch any.TypeUrl {
+	case "type.googleapis.com/inetmock.audit.HTTPDetailsEntity":
+		return details.NewHTTPFromWireFormat(detailsProto.(*details.HTTPDetailsEntity))
+	case "type.googleapis.com/inetmock.audit.DNSDetailsEntity":
+		return details.NewDNSFromWireFormat(detailsProto.(*details.DNSDetailsEntity))
+	default:
+		return nil
+	}
 }

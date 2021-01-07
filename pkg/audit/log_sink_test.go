@@ -20,7 +20,7 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 	type testCase struct {
 		name   string
 		fields fields
-		events []audit.Event
+		events []*audit.Event
 	}
 	tests := []testCase{
 		{
@@ -93,7 +93,7 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 			}
 
 			for _, ev := range tt.events {
-				evs.Emit(ev)
+				evs.Emit(*ev)
 			}
 
 			select {

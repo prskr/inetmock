@@ -9,20 +9,20 @@ import (
 	"time"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
 	defaultSink = &testSink{
 		name: "test defaultSink",
 	}
-	testEvents = []audit.Event{
+	testEvents = []*audit.Event{
 		{
 			Transport:       audit.TransportProtocol_TCP,
 			Application:     audit.AppProtocol_HTTP,
-			SourceIP:        net.ParseIP("127.0.0.1"),
-			DestinationIP:   net.ParseIP("127.0.0.1"),
+			SourceIP:        net.ParseIP("127.0.0.1").To4(),
+			DestinationIP:   net.ParseIP("127.0.0.1").To4(),
 			SourcePort:      32344,
 			DestinationPort: 80,
 			TLS: &audit.TLSDetails{
@@ -30,7 +30,7 @@ var (
 				CipherSuite: tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
 				ServerName:  "localhost",
 			},
-			ProtocolDetails: mustMarshalToWireformat(audit.HTTPDetails{
+			ProtocolDetails: details.HTTP{
 				Method: "GET",
 				Host:   "localhost",
 				URI:    "http://localhost/asdf",
@@ -38,13 +38,13 @@ var (
 				Headers: http.Header{
 					"Accept": []string{"application/json"},
 				},
-			}),
+			},
 		},
 		{
 			Transport:       audit.TransportProtocol_TCP,
 			Application:     audit.AppProtocol_DNS,
-			SourceIP:        net.ParseIP("::1"),
-			DestinationIP:   net.ParseIP("::1"),
+			SourceIP:        net.ParseIP("::1").To16(),
+			DestinationIP:   net.ParseIP("::1").To16(),
 			SourcePort:      32344,
 			DestinationPort: 80,
 		},
@@ -78,14 +78,6 @@ func wgMockSink(t testing.TB, wg *sync.WaitGroup) audit.Sink {
 			wg.Done()
 		},
 	}
-}
-
-func mustMarshalToWireformat(d audit.Details) *anypb.Any {
-	any, err := d.MarshalToWireFormat()
-	if err != nil {
-		panic(err)
-	}
-	return any
 }
 
 func Test_eventStream_RegisterSink(t *testing.T) {
@@ -156,7 +148,7 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 
 func Test_eventStream_Emit(t *testing.T) {
 	type args struct {
-		evs  []audit.Event
+		evs  []*audit.Event
 		opts []audit.EventStreamOption
 	}
 	type testCase struct {
@@ -215,9 +207,9 @@ func Test_eventStream_Emit(t *testing.T) {
 				}
 			}
 
-			go func(evs []audit.Event, wg *sync.WaitGroup) {
+			go func(evs []*audit.Event, wg *sync.WaitGroup) {
 				for _, ev := range evs {
-					e.Emit(ev)
+					e.Emit(*ev)
 					wg.Done()
 				}
 			}(tt.args.evs, emittedWaitGroup)

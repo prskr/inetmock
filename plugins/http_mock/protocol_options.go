@@ -82,7 +82,7 @@ func loadFromConfig(config *viper.Viper) (options httpOptions, err error) {
 		}
 
 		if absoluteResponsePath, parseErr = filepath.Abs(i.Response); parseErr != nil {
-
+			continue
 		}
 
 		options.Rules = append(options.Rules, targetRule{

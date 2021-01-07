@@ -46,6 +46,7 @@ func (l logSink) OnSubscribe(evs <-chan Event) {
 				zap.Uint16("source_port", ev.SourcePort),
 				zap.String("destination_ip", ev.DestinationIP.String()),
 				zap.Uint16("destination_port", ev.DestinationPort),
+				zap.Any("details", ev.ProtocolDetails),
 			)
 		}
 	}(l.logger, evs)

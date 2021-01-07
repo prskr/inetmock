@@ -3,9 +3,7 @@ package dns_mock
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"gitlab.com/inetmock/inetmock/pkg/api"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
-	"go.uber.org/zap"
 )
 
 const (
@@ -20,14 +18,6 @@ var (
 )
 
 func AddDNSMock(registry api.HandlerRegistry) (err error) {
-	var logger logging.Logger
-	if logger, err = logging.CreateLogger(); err != nil {
-		return
-	}
-	logger = logger.With(
-		zap.String("protocol_handler", name),
-	)
-
 	if totalHandledRequestsCounter, err = metrics.Counter(
 		name,
 		"handled_requests_total",
@@ -57,9 +47,7 @@ func AddDNSMock(registry api.HandlerRegistry) (err error) {
 	}
 
 	registry.RegisterHandler(name, func() api.ProtocolHandler {
-		return &dnsHandler{
-			logger: logger,
-		}
+		return &dnsHandler{}
 	})
 
 	return

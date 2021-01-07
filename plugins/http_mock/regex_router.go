@@ -1,16 +1,14 @@
 package http_mock
 
 import (
-	"net"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	details "gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type route struct {
@@ -70,47 +68,22 @@ func (f emittingFileHandler) ServeHTTP(writer http.ResponseWriter, request *http
 }
 
 func eventFromRequest(request *http.Request) audit.Event {
-	details := audit.HTTPDetails{
+	httpDetails := details.HTTP{
 		Method:  request.Method,
 		Host:    request.Host,
 		URI:     request.RequestURI,
 		Proto:   request.Proto,
 		Headers: request.Header,
 	}
-	var wire *anypb.Any
-	if w, err := details.MarshalToWireFormat(); err == nil {
-		wire = w
-	}
 
-	localIP, localPort := ipPortFromAddr(LocalAddr(request.Context()))
-	remoteIP, remotePort := ipPortFromAddr(RemoteAddr(request.Context()))
-
-	return audit.Event{
+	ev := audit.Event{
 		Transport:       audit.TransportProtocol_TCP,
 		Application:     audit.AppProtocol_HTTP,
-		SourceIP:        remoteIP,
-		DestinationIP:   localIP,
-		SourcePort:      remotePort,
-		DestinationPort: localPort,
-		ProtocolDetails: wire,
-	}
-}
-
-func ipPortFromAddr(addr net.Addr) (ip net.IP, port uint16) {
-	if tcpAddr, isTCPAddr := addr.(*net.TCPAddr); isTCPAddr {
-		return tcpAddr.IP, uint16(tcpAddr.Port)
+		ProtocolDetails: httpDetails,
 	}
 
-	ipPortSplit := strings.Split(addr.String(), ":")
-	if len(ipPortSplit) != 2 {
-		return
-	}
+	ev.SetDestinationIPFromAddr(LocalAddr(request.Context()))
+	ev.SetSourceIPFromAddr(RemoteAddr(request.Context()))
 
-	ip = net.ParseIP(ipPortSplit[0])
-
-	if p, err := strconv.Atoi(ipPortSplit[1]); err == nil {
-		port = uint16(p)
-	}
-
-	return
+	return ev
 }

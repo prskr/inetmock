@@ -1,4 +1,4 @@
-package audit
+package details
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type HTTPDetails struct {
+type HTTP struct {
 	Method  string
 	Host    string
 	URI     string
@@ -15,7 +15,24 @@ type HTTPDetails struct {
 	Headers http.Header
 }
 
-func (d HTTPDetails) MarshalToWireFormat() (any *anypb.Any, err error) {
+func NewHTTPFromWireFormat(entity *HTTPDetailsEntity) HTTP {
+	headers := http.Header{}
+	for name, values := range entity.Headers {
+		for idx := range values.Values {
+			headers.Add(name, values.Values[idx])
+		}
+	}
+
+	return HTTP{
+		Method:  entity.Method.String(),
+		Host:    entity.Host,
+		URI:     entity.Uri,
+		Proto:   entity.Proto,
+		Headers: headers,
+	}
+}
+
+func (d HTTP) MarshalToWireFormat() (any *anypb.Any, err error) {
 	var method = HTTPMethod_GET
 	if methodValue, known := HTTPMethod_value[strings.ToUpper(d.Method)]; known {
 		method = HTTPMethod(methodValue)

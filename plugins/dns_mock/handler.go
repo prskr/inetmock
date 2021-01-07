@@ -15,22 +15,23 @@ type dnsHandler struct {
 	dnsServer []*dns.Server
 }
 
-func (d *dnsHandler) Start(_ api.PluginContext, config config.HandlerConfig) (err error) {
+func (d *dnsHandler) Start(pluginCtx api.PluginContext, config config.HandlerConfig) (err error) {
 	var options dnsOptions
 	if options, err = loadFromConfig(config.Options); err != nil {
 		return
 	}
 
 	listenAddr := config.ListenAddr()
-	d.logger = d.logger.With(
+	d.logger = pluginCtx.Logger().With(
 		zap.String("handler_name", config.HandlerName),
 		zap.String("address", listenAddr),
 	)
 
 	handler := &regexHandler{
-		handlerName: config.HandlerName,
-		fallback:    options.Fallback,
-		logger:      d.logger,
+		handlerName:  config.HandlerName,
+		fallback:     options.Fallback,
+		logger:       pluginCtx.Logger(),
+		auditEmitter: pluginCtx.Audit(),
 	}
 
 	for _, rule := range options.Rules {
