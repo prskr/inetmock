@@ -61,7 +61,7 @@ func (t *testSink) Name() string {
 	return t.name
 }
 
-func (t *testSink) OnSubscribe(evs <-chan audit.Event) {
+func (t *testSink) OnSubscribe(evs <-chan audit.Event, _ audit.CloseHandle) {
 	go func() {
 		for ev := range evs {
 			if t.consumer != nil {

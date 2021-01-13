@@ -29,7 +29,7 @@ type Event struct {
 	TLS             *TLSDetails
 }
 
-func (e *Event) ProtoMessage() proto.Message {
+func (e *Event) ProtoMessage() *EventEntity {
 	var sourceIP isEventEntity_SourceIP
 	if ipv4 := e.SourceIP.To4(); ipv4 != nil {
 		sourceIP = &EventEntity_SourceIPv4{SourceIPv4: ipv4ToUint32(ipv4)}

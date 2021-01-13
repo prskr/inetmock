@@ -15,9 +15,11 @@ type Emitter interface {
 	Emit(ev Event)
 }
 
+type CloseHandle func()
+
 type Sink interface {
 	Name() string
-	OnSubscribe(evs <-chan Event)
+	OnSubscribe(evs <-chan Event, close CloseHandle)
 }
 
 type EventStream interface {
@@ -25,4 +27,5 @@ type EventStream interface {
 	Emitter
 	RegisterSink(s Sink) error
 	Sinks() []string
+	RemoveSink(name string)
 }

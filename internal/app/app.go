@@ -29,6 +29,7 @@ var (
 
 type App interface {
 	api.PluginContext
+	EventStream() audit.EventStream
 	Config() config.Config
 	Checker() health.Checker
 	EndpointManager() endpoint.EndpointManager
@@ -86,6 +87,10 @@ func (a app) EndpointManager() endpoint.EndpointManager {
 }
 
 func (a app) Audit() audit.Emitter {
+	return a.eventStream
+}
+
+func (a app) EventStream() audit.EventStream {
 	return a.eventStream
 }
 

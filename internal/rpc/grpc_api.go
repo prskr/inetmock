@@ -52,6 +52,10 @@ func (i *inetmockAPI) StartServer() (err error) {
 		app: i.app,
 	})
 
+	RegisterAuditServer(i.server, &auditServer{
+		app: i.app,
+	})
+
 	go i.startServerAsync(lis)
 	return
 }

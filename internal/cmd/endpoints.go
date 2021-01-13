@@ -15,7 +15,7 @@ var (
 	getEndpoints = &cobra.Command{
 		Use:   "get",
 		Short: "Get all running endpoints",
-		Run:   runGetEndpoints,
+		RunE:  runGetEndpoints,
 	}
 
 	endpointsCmd = &cobra.Command{
@@ -50,8 +50,7 @@ func fromEndpoints(eps []*rpc.Endpoint) (out []*printableEndpoint) {
 	return
 }
 
-func runGetEndpoints(_ *cobra.Command, _ []string) {
-	var err error
+func runGetEndpoints(_ *cobra.Command, _ []string) (err error) {
 	var conn *grpc.ClientConn
 
 	if conn, err = grpc.Dial(inetMockSocketPath, grpc.WithInsecure()); err != nil {
@@ -59,7 +58,8 @@ func runGetEndpoints(_ *cobra.Command, _ []string) {
 		os.Exit(10)
 	}
 	endpointsClient := rpc.NewEndpointsClient(conn)
-	ctx, _ := context.WithTimeout(context.Background(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
+	defer cancel()
 	var endpointsResp *rpc.GetEndpointsResponse
 	if endpointsResp, err = endpointsClient.GetEndpoints(ctx, &rpc.GetEndpointsRequest{}); err != nil {
 		fmt.Printf("Failed to get the endpoints: %v", err)
@@ -70,4 +70,5 @@ func runGetEndpoints(_ *cobra.Command, _ []string) {
 	if err = writer.Write(fromEndpoints(endpointsResp.Endpoints)); err != nil {
 		fmt.Printf("Error occurred during writing response values: %v\n", err)
 	}
+	return
 }

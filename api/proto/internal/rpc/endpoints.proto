@@ -7,11 +7,6 @@ option java_outer_classname = "EndpointsProto";
 
 package inetmock.rpc;
 
-service Endpoints {
-    rpc GetEndpoints (GetEndpointsRequest) returns (GetEndpointsResponse) {
-    }
-}
-
 message GetEndpointsRequest {
 }
 
@@ -25,4 +20,9 @@ message Endpoint {
     string handler = 3;
     string listenAddress = 4;
     int32 port = 5;
+}
+
+service Endpoints {
+    rpc GetEndpoints (GetEndpointsRequest) returns (GetEndpointsResponse) {
+    }
 }

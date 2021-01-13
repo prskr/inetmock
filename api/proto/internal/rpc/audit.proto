@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option go_package = "gitlab.com/inetmock/inetmock/internal/rpc";
+option java_multiple_files = true;
+option java_package = "com.github.baez90.inetmock.rpc";
+option java_outer_classname = "AuditProto";
+
+import 'pkg/audit/event_entity.proto';
+
+package inetmock.rpc;
+
+message WatchEventsRequest {
+    string watcherName = 1;
+}
+
+message RegisterFileSinkRequest {
+    string targetPath = 1;
+}
+
+message RegisterFileSinkResponse {
+
+}
+
+message RemoveFileSinkRequest {
+    string targetPath = 1;
+}
+
+message RemoveFileSinkResponse {
+
+}
+
+service Audit {
+    rpc WatchEvents (WatchEventsRequest) returns (stream inetmock.audit.EventEntity);
+    rpc RegisterFileSink (RegisterFileSinkRequest) returns (RegisterFileSinkResponse);
+    rpc RemoveFileSink (RemoveFileSinkRequest) returns (RemoveFileSinkResponse);
+}

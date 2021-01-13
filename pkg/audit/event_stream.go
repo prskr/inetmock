@@ -72,6 +72,20 @@ func (e *eventStream) Emit(ev Event) {
 	}
 }
 
+func (e *eventStream) RemoveSink(name string) {
+	e.lock.Lock()
+	defer e.lock.Unlock()
+
+	sink, exists := e.sinks[name]
+	if !exists {
+		return
+	}
+	sink.lock.Lock()
+	defer sink.lock.Unlock()
+	delete(e.sinks, name)
+	close(sink.downstream)
+}
+
 func (e *eventStream) RegisterSink(s Sink) error {
 	name := s.Name()
 
@@ -83,7 +97,11 @@ func (e *eventStream) RegisterSink(s Sink) error {
 		downstream: make(chan Event, e.sinkBufferSize),
 		lock:       new(sync.Mutex),
 	}
-	s.OnSubscribe(rs.downstream)
+
+	s.OnSubscribe(rs.downstream, func() {
+		e.RemoveSink(name)
+	})
+
 	e.sinks[name] = rs
 	return nil
 }
