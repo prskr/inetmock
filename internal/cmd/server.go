@@ -5,11 +5,11 @@ import (
 	"os"
 
 	"gitlab.com/inetmock/inetmock/internal/app"
-	"gitlab.com/inetmock/inetmock/plugins/dns_mock"
-	"gitlab.com/inetmock/inetmock/plugins/http_mock"
-	"gitlab.com/inetmock/inetmock/plugins/http_proxy"
-	"gitlab.com/inetmock/inetmock/plugins/metrics_exporter"
-	"gitlab.com/inetmock/inetmock/plugins/tls_interceptor"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
+	mock2 "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/tls/interceptor"
 )
 
 var (
@@ -19,11 +19,11 @@ var (
 func ExecuteServerCommand() {
 	var err error
 	if server, err = app.NewApp(
-		http_mock.AddHTTPMock,
-		dns_mock.AddDNSMock,
-		tls_interceptor.AddTLSInterceptor,
-		http_proxy.AddHTTPProxy,
-		metrics_exporter.AddMetricsExporter,
+		mock2.AddHTTPMock,
+		mock.AddDNSMock,
+		interceptor.AddTLSInterceptor,
+		proxy.AddHTTPProxy,
+		metrics.AddMetricsExporter,
 	); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

@@ -3,12 +3,12 @@ package rpc
 import (
 	"context"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoints"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 )
 
 type endpointsServer struct {
 	UnimplementedEndpointsServer
-	endpointsManager endpoints.EndpointManager
+	endpointsManager endpoint.EndpointManager
 }
 
 func (e endpointsServer) GetEndpoints(_ context.Context, _ *GetEndpointsRequest) (*GetEndpointsResponse, error) {
@@ -18,7 +18,7 @@ func (e endpointsServer) GetEndpoints(_ context.Context, _ *GetEndpointsRequest)
 	}, nil
 }
 
-func rpcEndpointsFromEndpoints(eps []endpoints.Endpoint) *[]*Endpoint {
+func rpcEndpointsFromEndpoints(eps []endpoint.Endpoint) *[]*Endpoint {
 	out := make([]*Endpoint, 0)
 	for _, ep := range eps {
 		out = append(out, rpcEndpointFromEndpoint(ep))
@@ -26,7 +26,7 @@ func rpcEndpointsFromEndpoints(eps []endpoints.Endpoint) *[]*Endpoint {
 	return &out
 }
 
-func rpcEndpointFromEndpoint(ep endpoints.Endpoint) *Endpoint {
+func rpcEndpointFromEndpoint(ep endpoint.Endpoint) *Endpoint {
 	return &Endpoint{
 		Id:            ep.Id().String(),
 		Name:          ep.Name(),

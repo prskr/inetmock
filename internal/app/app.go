@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
-	"gitlab.com/inetmock/inetmock/internal/endpoints"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/api"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
@@ -31,7 +31,7 @@ type App interface {
 	api.PluginContext
 	Config() config.Config
 	Checker() health.Checker
-	EndpointManager() endpoints.EndpointManager
+	EndpointManager() endpoint.EndpointManager
 	HandlerRegistry() api.HandlerRegistry
 	Context() context.Context
 	MustRun()
@@ -45,7 +45,7 @@ type app struct {
 	rootLogger      logging.Logger
 	certStore       cert.Store
 	checker         health.Checker
-	endpointManager endpoints.EndpointManager
+	endpointManager endpoint.EndpointManager
 	registry        api.HandlerRegistry
 	ctx             context.Context
 	cancel          context.CancelFunc
@@ -81,7 +81,7 @@ func (a app) Checker() health.Checker {
 	return a.checker
 }
 
-func (a app) EndpointManager() endpoints.EndpointManager {
+func (a app) EndpointManager() endpoint.EndpointManager {
 	return a.endpointManager
 }
 
@@ -144,7 +144,7 @@ func NewApp(registrations ...api.Registration) (inetmockApp App, err error) {
 			return
 		}
 
-		a.endpointManager = endpoints.NewEndpointManager(
+		a.endpointManager = endpoint.NewEndpointManager(
 			a.registry,
 			a.Logger().Named("EndpointManager"),
 			a.checker,
