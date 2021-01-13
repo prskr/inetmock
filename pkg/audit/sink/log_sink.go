@@ -1,8 +1,9 @@
-package audit
+package sink
 
 import (
 	"crypto/tls"
 
+	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -11,7 +12,7 @@ const (
 	logSinkName = "logging"
 )
 
-func NewLogSink(logger logging.Logger) Sink {
+func NewLogSink(logger logging.Logger) audit.Sink {
 	return &logSink{
 		logger: logger,
 	}
@@ -25,8 +26,8 @@ func (logSink) Name() string {
 	return logSinkName
 }
 
-func (l logSink) OnSubscribe(evs <-chan Event) {
-	go func(logger logging.Logger, evs <-chan Event) {
+func (l logSink) OnSubscribe(evs <-chan audit.Event) {
+	go func(logger logging.Logger, evs <-chan audit.Event) {
 		for ev := range evs {
 			eventLogger := logger
 

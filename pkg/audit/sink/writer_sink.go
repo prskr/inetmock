@@ -1,4 +1,6 @@
-package audit
+package sink
+
+import "gitlab.com/inetmock/inetmock/pkg/audit"
 
 type WriterSinkOption func(sink *writerCloserSink)
 
@@ -8,7 +10,7 @@ var (
 	}
 )
 
-func NewWriterSink(name string, target Writer, opts ...WriterSinkOption) Sink {
+func NewWriterSink(name string, target audit.Writer, opts ...WriterSinkOption) audit.Sink {
 	sink := &writerCloserSink{
 		name:   name,
 		target: target,
@@ -23,20 +25,16 @@ func NewWriterSink(name string, target Writer, opts ...WriterSinkOption) Sink {
 
 type writerCloserSink struct {
 	name        string
-	target      Writer
+	target      audit.Writer
 	closeOnExit bool
-}
-
-type syncer interface {
-	Sync() error
 }
 
 func (f writerCloserSink) Name() string {
 	return f.name
 }
 
-func (f writerCloserSink) OnSubscribe(evs <-chan Event) {
-	go func(target Writer, closeOnExit bool, evs <-chan Event) {
+func (f writerCloserSink) OnSubscribe(evs <-chan audit.Event) {
+	go func(target audit.Writer, closeOnExit bool, evs <-chan audit.Event) {
 		for ev := range evs {
 			_ = target.Write(&ev)
 		}

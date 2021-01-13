@@ -11,6 +11,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/wait"
 )
 
 var (
@@ -215,13 +216,13 @@ func Test_eventStream_Emit(t *testing.T) {
 			}(tt.args.evs, emittedWaitGroup)
 
 			select {
-			case <-waitGroupDone(emittedWaitGroup):
+			case <-wait.ForWaitGroupDone(emittedWaitGroup):
 			case <-time.After(100 * time.Millisecond):
 				t.Errorf("not all events emitted in time")
 			}
 
 			select {
-			case <-waitGroupDone(receivedWaitGroup):
+			case <-wait.ForWaitGroupDone(receivedWaitGroup):
 			case <-time.After(5 * time.Second):
 				t.Errorf("did not get all expected events in time")
 			}
@@ -231,15 +232,4 @@ func Test_eventStream_Emit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, scenario(tt))
 	}
-}
-
-func waitGroupDone(wg *sync.WaitGroup) <-chan struct{} {
-	done := make(chan struct{})
-
-	go func(wg *sync.WaitGroup) {
-		wg.Wait()
-		close(done)
-	}(wg)
-
-	return done
 }

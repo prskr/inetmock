@@ -52,6 +52,10 @@ type eventWriter struct {
 	byteOrder  binary.ByteOrder
 }
 
+type syncer interface {
+	Sync() error
+}
+
 func (e eventWriter) Write(ev *Event) (err error) {
 	if ev == nil {
 		return ErrValueMostNotBeNil

@@ -1,6 +1,9 @@
-package audit_test
+package sink_test
 
 import (
+	"crypto/tls"
+	"net"
+	"net/http"
 	"sync"
 	"testing"
 	"time"
@@ -8,7 +11,45 @@ import (
 	"github.com/golang/mock/gomock"
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/audit/details"
+	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/wait"
+)
+
+var (
+	testEvents = []*audit.Event{
+		{
+			Transport:       audit.TransportProtocol_TCP,
+			Application:     audit.AppProtocol_HTTP,
+			SourceIP:        net.ParseIP("127.0.0.1").To4(),
+			DestinationIP:   net.ParseIP("127.0.0.1").To4(),
+			SourcePort:      32344,
+			DestinationPort: 80,
+			TLS: &audit.TLSDetails{
+				Version:     tls.VersionTLS13,
+				CipherSuite: tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				ServerName:  "localhost",
+			},
+			ProtocolDetails: details.HTTP{
+				Method: "GET",
+				Host:   "localhost",
+				URI:    "http://localhost/asdf",
+				Proto:  "HTTP 1.1",
+				Headers: http.Header{
+					"Accept": []string{"application/json"},
+				},
+			},
+		},
+		{
+			Transport:       audit.TransportProtocol_TCP,
+			Application:     audit.AppProtocol_DNS,
+			SourceIP:        net.ParseIP("::1").To16(),
+			DestinationIP:   net.ParseIP("::1").To16(),
+			SourcePort:      32344,
+			DestinationPort: 80,
+		},
+	}
 )
 
 func Test_writerCloserSink_OnSubscribe(t *testing.T) {
@@ -42,7 +83,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 				}).
 				Times(len(tt.events))
 
-			writerCloserSink := audit.NewWriterSink("WriterMock", writerMock, audit.WithCloseOnExit)
+			writerCloserSink := sink.NewWriterSink("WriterMock", writerMock, sink.WithCloseOnExit)
 			var evs audit.EventStream
 			var err error
 
@@ -61,7 +102,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 			select {
 			case <-time.After(100 * time.Millisecond):
 				t.Errorf("not all events recorded in time")
-			case <-waitGroupDone(wg):
+			case <-wait.ForWaitGroupDone(wg):
 			}
 		}
 	}

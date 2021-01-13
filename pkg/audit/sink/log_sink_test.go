@@ -1,4 +1,4 @@
-package audit_test
+package sink_test
 
 import (
 	"sync"
@@ -8,7 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	logging_mock "gitlab.com/inetmock/inetmock/internal/mock/logging"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/wait"
 	"go.uber.org/zap"
 )
 
@@ -81,7 +83,7 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 			wg := new(sync.WaitGroup)
 			wg.Add(len(tt.events))
 
-			logSink := audit.NewLogSink(tt.fields.loggerSetup(t, wg))
+			logSink := sink.NewLogSink(tt.fields.loggerSetup(t, wg))
 			var evs audit.EventStream
 			var err error
 			if evs, err = audit.NewEventStream(logging.CreateTestLogger(t)); err != nil {
@@ -99,7 +101,7 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 			select {
 			case <-time.After(100 * time.Millisecond):
 				t.Errorf("not all events recorded in time")
-			case <-waitGroupDone(wg):
+			case <-wait.ForWaitGroupDone(wg):
 			}
 		}
 	}

@@ -12,6 +12,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/endpoints"
 	"gitlab.com/inetmock/inetmock/pkg/api"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/health"
@@ -168,7 +169,7 @@ func NewApp(registrations ...api.Registration) (inetmockApp App, err error) {
 			return
 		}
 
-		err = a.eventStream.RegisterSink(audit.NewLogSink(a.Logger().Named("LogSink")))
+		err = a.eventStream.RegisterSink(sink.NewLogSink(a.Logger().Named("LogSink")))
 		return
 	}
 
