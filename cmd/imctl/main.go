@@ -1,9 +1,8 @@
 package main
 
-import "gitlab.com/inetmock/inetmock/internal/cmd"
-
 func main() {
-	if err := cmd.ExecuteClientCommand(); err != nil {
+	defer appCancel()
+	if err := cliCmd.Execute(); err != nil {
 		panic(err)
 	}
 }

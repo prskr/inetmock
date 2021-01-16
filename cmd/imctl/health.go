@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/internal/format"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -55,15 +54,10 @@ func fromComponentsHealth(componentsHealth map[string]*rpc.ComponentHealth) (com
 }
 
 func getHealthResult() (healthResp *rpc.HealthResponse, err error) {
-	var conn *grpc.ClientConn
-
-	if conn, err = grpc.Dial(inetMockSocketPath, grpc.WithInsecure()); err != nil {
-		return
-	}
-
 	var healthClient = rpc.NewHealthClient(conn)
-	ctx, _ := context.WithTimeout(context.Background(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
 	healthResp, err = healthClient.GetHealth(ctx, &rpc.HealthRequest{})
+	cancel()
 	return
 }
 

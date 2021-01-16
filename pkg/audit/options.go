@@ -12,8 +12,8 @@ const (
 )
 
 var (
+	defaultDistributeParallelization int
 	generatorIdx                     int64 = 1
-	defaultDistributeParallelization       = runtime.NumCPU() / 2
 	WithBufferSize                         = func(bufferSize int) EventStreamOption {
 		return func(cfg *eventStreamCfg) {
 			cfg.bufferSize = bufferSize
@@ -43,6 +43,12 @@ var (
 		}
 	}
 )
+
+func init() {
+	if defaultDistributeParallelization = runtime.NumCPU() / 2; defaultDistributeParallelization < 2 {
+		defaultDistributeParallelization = 2
+	}
+}
 
 type EventStreamOption func(cfg *eventStreamCfg)
 

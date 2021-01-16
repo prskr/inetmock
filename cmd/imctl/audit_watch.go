@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"encoding/json"
@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -27,13 +26,6 @@ var (
 )
 
 func watchAuditEvents(_ *cobra.Command, _ []string) (err error) {
-	var conn *grpc.ClientConn
-
-	if conn, err = grpc.Dial(inetMockSocketPath, grpc.WithInsecure()); err != nil {
-		fmt.Printf("Failed to connecto INetMock socket: %v\n", err)
-		os.Exit(10)
-	}
-
 	auditClient := rpc.NewAuditClient(conn)
 
 	var watchClient rpc.Audit_WatchEventsClient

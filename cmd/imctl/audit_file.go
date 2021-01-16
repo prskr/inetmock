@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -43,13 +43,6 @@ func runAddFile(_ *cobra.Command, args []string) (err error) {
 }
 
 func runRemoveFile(_ *cobra.Command, args []string) (err error) {
-	var conn *grpc.ClientConn
-
-	if conn, err = grpc.Dial(inetMockSocketPath, grpc.WithInsecure()); err != nil {
-		fmt.Printf("Failed to connecto INetMock socket: %v\n", err)
-		os.Exit(10)
-	}
-
 	auditClient := rpc.NewAuditClient(conn)
 	ctx, cancel := context.WithTimeout(appCtx, grpcTimeout)
 	defer cancel()

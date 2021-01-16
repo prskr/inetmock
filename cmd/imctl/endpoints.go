@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/internal/format"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -51,12 +50,6 @@ func fromEndpoints(eps []*rpc.Endpoint) (out []*printableEndpoint) {
 }
 
 func runGetEndpoints(_ *cobra.Command, _ []string) (err error) {
-	var conn *grpc.ClientConn
-
-	if conn, err = grpc.Dial(inetMockSocketPath, grpc.WithInsecure()); err != nil {
-		fmt.Printf("Failed to connecto INetMock socket: %v\n", err)
-		os.Exit(10)
-	}
 	endpointsClient := rpc.NewEndpointsClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
 	defer cancel()

@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/internal/format"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -39,15 +38,11 @@ func fromHandlers(hs []string) (handlers []*printableHandler) {
 }
 
 func runGetHandlers(_ *cobra.Command, _ []string) {
-	var err error
-	var conn *grpc.ClientConn
-
-	if conn, err = grpc.Dial(inetMockSocketPath, grpc.WithInsecure()); err != nil {
-		fmt.Printf("Failed to connecto INetMock socket: %v\n", err)
-		os.Exit(10)
-	}
 	handlersClient := rpc.NewHandlersClient(conn)
-	ctx, _ := context.WithTimeout(context.Background(), grpcTimeout)
+
+	ctx, cancel := context.WithTimeout(appCtx, grpcTimeout)
+	defer cancel()
+	var err error
 	var handlersResp *rpc.GetHandlersResponse
 
 	if handlersResp, err = handlersClient.GetHandlers(ctx, &rpc.GetHandlersRequest{}); err != nil {
