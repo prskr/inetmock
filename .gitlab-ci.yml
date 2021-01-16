@@ -1,5 +1,11 @@
 image: registry.gitlab.com/inetmock/ci-image
 
+cache: &global_cache
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .task/
+  policy: pull-push
+
 stages:
   - test
   - build
@@ -7,6 +13,8 @@ stages:
 
 test:
   stage: test
+  cache:
+    <<: *global_cache
   script:
     - task cli-cover-report
   artifacts:
@@ -22,6 +30,8 @@ lint:
 
 snapshot-release:
   stage: build
+  cache:
+    <<: *global_cache
   services:
     - docker:dind
   before_script:
@@ -33,6 +43,8 @@ snapshot-release:
 
 release:
   stage: release
+  cache:
+    <<: *global_cache
   services:
     - docker:dind
   only:
