@@ -4,6 +4,7 @@ cache: &global_cache
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - .task/
+    - ./**/*.pb.go
   policy: pull-push
 
 stages:
