@@ -51,7 +51,7 @@ func fromEndpoints(eps []*rpc.Endpoint) (out []*printableEndpoint) {
 
 func runGetEndpoints(_ *cobra.Command, _ []string) (err error) {
 	endpointsClient := rpc.NewEndpointsClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(appCtx, grpcTimeout)
 	defer cancel()
 	var endpointsResp *rpc.GetEndpointsResponse
 	if endpointsResp, err = endpointsClient.GetEndpoints(ctx, &rpc.GetEndpointsRequest{}); err != nil {

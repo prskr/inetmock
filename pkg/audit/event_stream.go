@@ -72,11 +72,12 @@ func (e *eventStream) Emit(ev Event) {
 	}
 }
 
-func (e *eventStream) RemoveSink(name string) {
+func (e *eventStream) RemoveSink(name string) (exists bool) {
 	e.lock.Lock()
 	defer e.lock.Unlock()
 
-	sink, exists := e.sinks[name]
+	var sink *registeredSink
+	sink, exists = e.sinks[name]
 	if !exists {
 		return
 	}
@@ -84,6 +85,8 @@ func (e *eventStream) RemoveSink(name string) {
 	defer sink.lock.Unlock()
 	delete(e.sinks, name)
 	close(sink.downstream)
+
+	return
 }
 
 func (e *eventStream) RegisterSink(s Sink) error {

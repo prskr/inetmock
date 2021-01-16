@@ -27,5 +27,5 @@ type EventStream interface {
 	Emitter
 	RegisterSink(s Sink) error
 	Sinks() []string
-	RemoveSink(name string)
+	RemoveSink(name string) (exists bool)
 }

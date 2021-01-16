@@ -53,7 +53,8 @@ func (i *inetmockAPI) StartServer() (err error) {
 	})
 
 	RegisterAuditServer(i.server, &auditServer{
-		app: i.app,
+		logger:      i.app.Logger(),
+		eventStream: i.app.EventStream(),
 	})
 
 	go i.startServerAsync(lis)

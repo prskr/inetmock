@@ -26,7 +26,7 @@ message RemoveFileSinkRequest {
 }
 
 message RemoveFileSinkResponse {
-
+    bool SinkGotRemoved = 1;
 }
 
 service Audit {
