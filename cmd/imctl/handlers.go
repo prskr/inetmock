@@ -40,7 +40,7 @@ func fromHandlers(hs []string) (handlers []*printableHandler) {
 func runGetHandlers(_ *cobra.Command, _ []string) {
 	handlersClient := rpc.NewHandlersClient(conn)
 
-	ctx, cancel := context.WithTimeout(appCtx, grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 	var err error
 	var handlersResp *rpc.GetHandlersResponse

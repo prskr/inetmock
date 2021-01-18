@@ -29,7 +29,7 @@ func watchAuditEvents(_ *cobra.Command, _ []string) (err error) {
 	auditClient := rpc.NewAuditClient(conn)
 
 	var watchClient rpc.Audit_WatchEventsClient
-	if watchClient, err = auditClient.WatchEvents(appCtx, &rpc.WatchEventsRequest{WatcherName: listenerName}); err != nil {
+	if watchClient, err = auditClient.WatchEvents(cliApp.Context(), &rpc.WatchEventsRequest{WatcherName: listenerName}); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
@@ -47,7 +47,7 @@ func watchAuditEvents(_ *cobra.Command, _ []string) (err error) {
 		}
 	}()
 
-	<-appCtx.Done()
+	<-cliApp.Context().Done()
 	err = watchClient.CloseSend()
 
 	return

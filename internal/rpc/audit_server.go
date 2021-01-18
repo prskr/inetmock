@@ -36,7 +36,21 @@ func (a *auditServer) WatchEvents(req *WatchEventsRequest, srv Audit_WatchEvents
 
 func (a *auditServer) RegisterFileSink(_ context.Context, req *RegisterFileSinkRequest) (resp *RegisterFileSinkResponse, err error) {
 	var writer io.WriteCloser
-	if writer, err = os.OpenFile(req.TargetPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err != nil {
+	var flags int
+
+	switch req.OpenMode {
+	case FileOpenMode_APPEND:
+		flags = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	default:
+		flags = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	}
+
+	var permissions = os.FileMode(req.Permissions)
+	if permissions == 0 {
+		permissions = 644
+	}
+
+	if writer, err = os.OpenFile(req.TargetPath, flags, permissions); err != nil {
 		return
 	}
 	if err = a.eventStream.RegisterSink(sink.NewWriterSink(req.TargetPath, audit.NewEventWriter(writer))); err != nil {

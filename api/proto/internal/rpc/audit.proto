@@ -9,12 +9,19 @@ import 'pkg/audit/event_entity.proto';
 
 package inetmock.rpc;
 
+enum FileOpenMode {
+    TRUNCATE = 0;
+    APPEND = 1;
+}
+
 message WatchEventsRequest {
     string watcherName = 1;
 }
 
 message RegisterFileSinkRequest {
     string targetPath = 1;
+    FileOpenMode openMode = 2;
+    uint32 permissions = 3;
 }
 
 message RegisterFileSinkResponse {
