@@ -19,13 +19,13 @@ var (
 )
 
 func startINetMock(_ *cobra.Command, _ []string) {
-	rpcAPI := rpc.NewINetMockAPI(server)
-	logger := server.Logger().Named("inetmock").With(zap.String("command", "serve"))
+	rpcAPI := rpc.NewINetMockAPI(serverApp)
+	logger := serverApp.Logger().Named("inetmock").With(zap.String("command", "serve"))
 
-	for endpointName, endpointHandler := range server.Config().EndpointConfigs() {
-		handlerSubConfig := server.Config().Viper().Sub(strings.Join([]string{config.EndpointsKey, endpointName, config.OptionsKey}, "."))
+	for endpointName, endpointHandler := range serverApp.Config().EndpointConfigs() {
+		handlerSubConfig := serverApp.Config().Viper().Sub(strings.Join([]string{config.EndpointsKey, endpointName, config.OptionsKey}, "."))
 		endpointHandler.Options = handlerSubConfig
-		if err := server.EndpointManager().CreateEndpoint(endpointName, endpointHandler); err != nil {
+		if err := serverApp.EndpointManager().CreateEndpoint(endpointName, endpointHandler); err != nil {
 			logger.Warn(
 				"error occurred while creating endpoint",
 				zap.String("endpointName", endpointName),
@@ -35,7 +35,7 @@ func startINetMock(_ *cobra.Command, _ []string) {
 		}
 	}
 
-	server.EndpointManager().StartEndpoints()
+	serverApp.EndpointManager().StartEndpoints()
 	if err := rpcAPI.StartServer(); err != nil {
 		logger.Error(
 			"failed to start gRPC API",
@@ -43,12 +43,12 @@ func startINetMock(_ *cobra.Command, _ []string) {
 		)
 	}
 
-	<-server.Context().Done()
+	<-serverApp.Context().Done()
 
 	logger.Info(
 		"App context canceled - shutting down",
 	)
 
 	rpcAPI.StopServer()
-	server.EndpointManager().ShutdownEndpoints()
+	serverApp.EndpointManager().ShutdownEndpoints()
 }

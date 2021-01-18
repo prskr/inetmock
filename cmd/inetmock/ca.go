@@ -57,7 +57,7 @@ func init() {
 }
 
 func runGenerateCA(_ *cobra.Command, _ []string) {
-	logger := server.Logger().Named("generate-ca")
+	logger := serverApp.Logger().Named("generate-ca")
 
 	logger = logger.With(
 		zap.String(generateCACurveName, curveName),
