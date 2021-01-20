@@ -36,8 +36,17 @@ message RemoveFileSinkResponse {
     bool SinkGotRemoved = 1;
 }
 
+message ListSinksRequest {
+
+}
+
+message ListSinksResponse {
+    repeated string sinks = 1;
+}
+
 service Audit {
     rpc WatchEvents (WatchEventsRequest) returns (stream inetmock.audit.EventEntity);
     rpc RegisterFileSink (RegisterFileSinkRequest) returns (RegisterFileSinkResponse);
     rpc RemoveFileSink (RemoveFileSinkRequest) returns (RemoveFileSinkResponse);
+    rpc ListSinks(ListSinksRequest) returns (ListSinksResponse);
 }

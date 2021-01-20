@@ -17,6 +17,12 @@ type auditServer struct {
 	eventStream audit.EventStream
 }
 
+func (a *auditServer) ListSinks(context.Context, *ListSinksRequest) (*ListSinksResponse, error) {
+	return &ListSinksResponse{
+		Sinks: a.eventStream.Sinks(),
+	}, nil
+}
+
 func (a *auditServer) WatchEvents(req *WatchEventsRequest, srv Audit_WatchEventsServer) (err error) {
 	a.logger.Info("watcher attached", zap.String("name", req.WatcherName))
 	err = a.eventStream.RegisterSink(sink.NewGRPCSink(srv.Context(), req.WatcherName, func(ev audit.Event) {

@@ -25,7 +25,7 @@ var (
 )
 
 type printableEndpoint struct {
-	Id            string
+	ID            string
 	Name          string
 	Handler       string
 	ListenAddress string
@@ -34,7 +34,7 @@ type printableEndpoint struct {
 
 func fromEndpoint(ep *rpc.Endpoint) *printableEndpoint {
 	return &printableEndpoint{
-		Id:            ep.Id,
+		ID:            ep.Id,
 		Name:          ep.Name,
 		Handler:       ep.Handler,
 		ListenAddress: ep.ListenAddress,

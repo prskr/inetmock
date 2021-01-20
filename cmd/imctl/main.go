@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"os/user"
 	"time"
 
@@ -20,7 +22,6 @@ var (
 )
 
 func main() {
-
 	endpointsCmd.AddCommand(getEndpoints)
 	handlerCmd.AddCommand(getHandlersCmd)
 	healthCmd.AddCommand(generalHealthCmd, containerHealthCmd)
@@ -29,7 +30,8 @@ func main() {
 		WithCommands(endpointsCmd, handlerCmd, healthCmd, auditCmd).
 		WithInitTasks(func(_ *cobra.Command, _ []string) (err error) {
 			return initGRPCConnection()
-		})
+		}).
+		WithLogger()
 
 	cliApp.RootCommand().PersistentFlags().StringVar(&inetMockSocketPath, "socket-path", "unix:///var/run/inetmock.sock", "Path to the INetMock socket file")
 	cliApp.RootCommand().PersistentFlags().StringVarP(&outputFormat, "format", "f", "table", "Output format to use. Possible values: table, json, yaml")
@@ -42,16 +44,15 @@ func main() {
 		currentUser = uuid.New().String()
 	}
 
-	watchEventsCmd.PersistentFlags().StringVar(
-		&listenerName,
-		"listener-name",
-		currentUser,
-		"set listener name - defaults to the current username, if the user cannot be determined a random UUID will be used",
-	)
-	auditCmd.AddCommand(watchEventsCmd, addFileCmd, removeFileCmd)
+	hostname := "."
+	if hn, err := os.Hostname(); err == nil {
+		hostname = hn
+	}
+
+	watchEventsCmd.PersistentFlags().StringVar(&listenerName, "listener-name", fmt.Sprintf("%s\\%s is watching", hostname, currentUser), "set listener name - defaults to the current username, if the user cannot be determined a random UUID will be used")
+	auditCmd.AddCommand(listSinksCmd, watchEventsCmd, addFileCmd, removeFileCmd, readFileCmd)
 
 	cliApp.MustRun()
-
 }
 
 func initGRPCConnection() (err error) {
