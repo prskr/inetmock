@@ -93,6 +93,9 @@ func NewEventFromProto(msg *EventEntity) (ev Event) {
 }
 
 func parseIPPortFromAddr(addr net.Addr) (ip net.IP, port uint16) {
+	if addr == nil {
+		return
+	}
 	switch a := addr.(type) {
 	case *net.TCPAddr:
 		return a.IP, uint16(a.Port)

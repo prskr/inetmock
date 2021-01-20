@@ -1,12 +1,13 @@
 package proxy
 
 import (
-	"context"
 	"crypto/tls"
 	"net/http"
 	"net/url"
 
 	"github.com/prometheus/client_golang/prometheus"
+	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
@@ -16,12 +17,14 @@ type proxyHttpHandler struct {
 	handlerName string
 	options     httpProxyOptions
 	logger      logging.Logger
+	emitter     audit.Emitter
 }
 
 type proxyHttpsHandler struct {
 	handlerName string
 	tlsConfig   *tls.Config
 	logger      logging.Logger
+	emitter     audit.Emitter
 }
 
 func (p *proxyHttpsHandler) HandleConnect(req string, _ *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
@@ -45,15 +48,7 @@ func (p *proxyHttpHandler) Handle(req *http.Request, ctx *goproxy.ProxyCtx) (ret
 	totalRequestCounter.WithLabelValues(p.handlerName).Inc()
 
 	retReq = req
-	p.logger.Info(
-		"Handling request",
-		zap.String("source", req.RemoteAddr),
-		zap.String("host", req.Host),
-		zap.String("method", req.Method),
-		zap.String("protocol", req.Proto),
-		zap.String("path", req.RequestURI),
-		zap.Reflect("headers", req.Header),
-	)
+	p.emitter.Emit(imHttp.EventFromRequest(req, audit.AppProtocol_HTTP_PROXY))
 
 	var err error
 	if resp, err = ctx.RoundTrip(p.redirectHTTPRequest(req)); err != nil {
@@ -95,7 +90,7 @@ func (p proxyHttpHandler) redirectHTTPRequest(originalRequest *http.Request) (re
 		MultipartForm:    originalRequest.MultipartForm,
 		Trailer:          originalRequest.Trailer,
 	}
-	redirectReq = redirectReq.WithContext(context.Background())
+	redirectReq = redirectReq.WithContext(originalRequest.Context())
 
 	return
 }

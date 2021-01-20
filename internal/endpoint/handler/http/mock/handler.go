@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/api"
 	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
@@ -46,7 +47,7 @@ func (p *httpHandler) Start(ctx api.PluginContext, config config.HandlerConfig) 
 	p.server = &http.Server{
 		Addr:        config.ListenAddr(),
 		Handler:     router,
-		ConnContext: StoreConnPropertiesInContext,
+		ConnContext: imHttp.StoreConnPropertiesInContext,
 	}
 
 	for _, rule := range options.Rules {

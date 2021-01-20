@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/api"
 	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
@@ -29,7 +30,11 @@ func (h *httpProxy) Start(ctx api.PluginContext, cfg config.HandlerConfig) (err 
 		return
 	}
 	listenAddr := cfg.ListenAddr()
-	h.server = &http.Server{Addr: listenAddr, Handler: h.proxy}
+	h.server = &http.Server{
+		Addr:        listenAddr,
+		Handler:     h.proxy,
+		ConnContext: imHttp.StoreConnPropertiesInContext,
+	}
 	h.logger = h.logger.With(
 		zap.String("handler_name", cfg.HandlerName),
 		zap.String("address", listenAddr),
@@ -41,16 +46,18 @@ func (h *httpProxy) Start(ctx api.PluginContext, cfg config.HandlerConfig) (err 
 		handlerName: cfg.HandlerName,
 		options:     opts,
 		logger:      h.logger,
+		emitter:     ctx.Audit(),
 	}
 
-	proxyHttpsHandler := &proxyHttpsHandler{
+	proxyHTTPSHandler := &proxyHttpsHandler{
 		handlerName: cfg.HandlerName,
 		tlsConfig:   tlsConfig,
 		logger:      h.logger,
+		emitter:     ctx.Audit(),
 	}
 
 	h.proxy.OnRequest().Do(proxyHandler)
-	h.proxy.OnRequest().HandleConnect(proxyHttpsHandler)
+	h.proxy.OnRequest().HandleConnect(proxyHTTPSHandler)
 	go h.startProxy()
 	return
 }

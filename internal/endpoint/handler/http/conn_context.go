@@ -1,4 +1,4 @@
-package mock
+package http
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 type httpContextKey string
 
 const (
-	remoteAddrKey httpContextKey = "RemoteAddr"
-	localAddrKey  httpContextKey = "LocalAddr"
+	remoteAddrKey httpContextKey = "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/context/remoteAddr"
+	localAddrKey  httpContextKey = "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/context/localAddr"
 )
 
 func StoreConnPropertiesInContext(ctx context.Context, c net.Conn) context.Context {
@@ -18,7 +18,7 @@ func StoreConnPropertiesInContext(ctx context.Context, c net.Conn) context.Conte
 	return ctx
 }
 
-func LocalAddr(ctx context.Context) net.Addr {
+func localAddr(ctx context.Context) net.Addr {
 	val := ctx.Value(localAddrKey)
 	if val == nil {
 		return nil
@@ -26,7 +26,7 @@ func LocalAddr(ctx context.Context) net.Addr {
 	return val.(net.Addr)
 }
 
-func RemoteAddr(ctx context.Context) net.Addr {
+func remoteAddr(ctx context.Context) net.Addr {
 	val := ctx.Value(remoteAddrKey)
 	if val == nil {
 		return nil

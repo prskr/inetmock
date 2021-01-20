@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
+	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	details "gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -63,27 +63,6 @@ type emittingFileHandler struct {
 }
 
 func (f emittingFileHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	f.emitter.Emit(eventFromRequest(request))
+	f.emitter.Emit(imHttp.EventFromRequest(request, audit.AppProtocol_HTTP))
 	http.ServeFile(writer, request, f.targetPath)
-}
-
-func eventFromRequest(request *http.Request) audit.Event {
-	httpDetails := details.HTTP{
-		Method:  request.Method,
-		Host:    request.Host,
-		URI:     request.RequestURI,
-		Proto:   request.Proto,
-		Headers: request.Header,
-	}
-
-	ev := audit.Event{
-		Transport:       audit.TransportProtocol_TCP,
-		Application:     audit.AppProtocol_HTTP,
-		ProtocolDetails: httpDetails,
-	}
-
-	ev.SetDestinationIPFromAddr(LocalAddr(request.Context()))
-	ev.SetSourceIPFromAddr(RemoteAddr(request.Context()))
-
-	return ev
 }
