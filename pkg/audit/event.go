@@ -30,20 +30,6 @@ type Event struct {
 }
 
 func (e *Event) ProtoMessage() *EventEntity {
-	var sourceIP isEventEntity_SourceIP
-	if ipv4 := e.SourceIP.To4(); ipv4 != nil {
-		sourceIP = &EventEntity_SourceIPv4{SourceIPv4: ipv4ToUint32(ipv4)}
-	} else {
-		sourceIP = &EventEntity_SourceIPv6{SourceIPv6: ipv6ToBytes(e.SourceIP)}
-	}
-
-	var destinationIP isEventEntity_DestinationIP
-	if ipv4 := e.DestinationIP.To4(); ipv4 != nil {
-		destinationIP = &EventEntity_DestinationIPv4{DestinationIPv4: ipv4ToUint32(ipv4)}
-	} else {
-		destinationIP = &EventEntity_DestinationIPv6{DestinationIPv6: ipv6ToBytes(e.DestinationIP)}
-	}
-
 	var tlsDetails *TLSDetailsEntity = nil
 	if e.TLS != nil {
 		tlsDetails = e.TLS.ProtoMessage()
@@ -61,8 +47,8 @@ func (e *Event) ProtoMessage() *EventEntity {
 		Timestamp:       timestamppb.New(e.Timestamp),
 		Transport:       e.Transport,
 		Application:     e.Application,
-		SourceIP:        sourceIP,
-		DestinationIP:   destinationIP,
+		SourceIP:        e.SourceIP,
+		DestinationIP:   e.DestinationIP,
 		SourcePort:      uint32(e.SourcePort),
 		DestinationPort: uint32(e.DestinationPort),
 		Tls:             tlsDetails,
@@ -91,29 +77,13 @@ func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) {
 }
 
 func NewEventFromProto(msg *EventEntity) (ev Event) {
-	var sourceIP net.IP
-	switch ip := msg.GetSourceIP().(type) {
-	case *EventEntity_SourceIPv4:
-		sourceIP = uint32ToIP(ip.SourceIPv4)
-	case *EventEntity_SourceIPv6:
-		sourceIP = uint64ToIP(ip.SourceIPv6)
-	}
-
-	var destinationIP net.IP
-	switch ip := msg.GetDestinationIP().(type) {
-	case *EventEntity_DestinationIPv4:
-		destinationIP = uint32ToIP(ip.DestinationIPv4)
-	case *EventEntity_DestinationIPv6:
-		destinationIP = uint64ToIP(ip.DestinationIPv6)
-	}
-
 	ev = Event{
 		ID:              msg.GetId(),
 		Timestamp:       msg.GetTimestamp().AsTime(),
 		Transport:       msg.GetTransport(),
 		Application:     msg.GetApplication(),
-		SourceIP:        sourceIP,
-		DestinationIP:   destinationIP,
+		SourceIP:        msg.SourceIP,
+		DestinationIP:   msg.DestinationIP,
 		SourcePort:      uint16(msg.GetSourcePort()),
 		DestinationPort: uint16(msg.GetDestinationPort()),
 		ProtocolDetails: guessDetailsFromApp(msg.GetProtocolDetails()),

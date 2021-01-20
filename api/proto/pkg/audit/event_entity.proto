@@ -42,20 +42,10 @@ message EventEntity {
     google.protobuf.Timestamp timestamp = 2;
     TransportProtocol transport = 3;
     AppProtocol application = 4;
-
-    oneof sourceIP {
-        uint32 sourceIPv4 = 5;
-        uint64 sourceIPv6 = 6;
-    }
-
-    oneof destinationIP {
-        uint32 destinationIPv4 = 7;
-        uint64 destinationIPv6 = 8;
-    }
-
-    uint32 sourcePort = 9;
-    uint32 destinationPort = 10;
-
-    TLSDetailsEntity tls = 11;
-    google.protobuf.Any protocolDetails = 12;
+    bytes sourceIP = 5;
+    bytes destinationIP = 6;
+    uint32 sourcePort = 7;
+    uint32 destinationPort = 8;
+    TLSDetailsEntity tls = 9;
+    google.protobuf.Any protocolDetails = 10;
 }
