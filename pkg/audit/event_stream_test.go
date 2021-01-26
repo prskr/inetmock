@@ -1,6 +1,7 @@
 package audit_test
 
 import (
+	"context"
 	"crypto/tls"
 	"net"
 	"net/http"
@@ -61,7 +62,7 @@ func (t *testSink) Name() string {
 	return t.name
 }
 
-func (t *testSink) OnSubscribe(evs <-chan audit.Event, _ audit.CloseHandle) {
+func (t *testSink) OnSubscribe(evs <-chan audit.Event) {
 	go func() {
 		for ev := range evs {
 			if t.consumer != nil {
@@ -105,7 +106,7 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 				s: defaultSink,
 			},
 			setup: func(e audit.EventStream) {
-				_ = e.RegisterSink(defaultSink)
+				_ = e.RegisterSink(context.Background(), defaultSink)
 			},
 			wantErr: true,
 		},
@@ -126,7 +127,7 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 				tt.setup(e)
 			}
 
-			if err := e.RegisterSink(tt.args.s); (err != nil) != tt.wantErr {
+			if err := e.RegisterSink(context.Background(), tt.args.s); (err != nil) != tt.wantErr {
 				t.Errorf("RegisterSink() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -203,7 +204,7 @@ func Test_eventStream_Emit(t *testing.T) {
 
 			if tt.subscribe {
 				receivedWaitGroup.Add(len(tt.args.evs))
-				if err := e.RegisterSink(wgMockSink(t, receivedWaitGroup)); err != nil {
+				if err := e.RegisterSink(context.Background(), wgMockSink(t, receivedWaitGroup)); err != nil {
 					t.Errorf("RegisterSink() error = %v", err)
 				}
 			}

@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -89,7 +90,7 @@ func (e *eventStream) RemoveSink(name string) (exists bool) {
 	return
 }
 
-func (e *eventStream) RegisterSink(s Sink) error {
+func (e *eventStream) RegisterSink(ctx context.Context, s Sink) error {
 	name := s.Name()
 
 	if _, exists := e.sinks[name]; exists {
@@ -101,9 +102,12 @@ func (e *eventStream) RegisterSink(s Sink) error {
 		lock:       new(sync.Mutex),
 	}
 
-	s.OnSubscribe(rs.downstream, func() {
+	s.OnSubscribe(rs.downstream)
+
+	go func() {
+		<-ctx.Done()
 		e.RemoveSink(name)
-	})
+	}()
 
 	e.sinks[name] = rs
 	return nil

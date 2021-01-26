@@ -1,6 +1,7 @@
 package sink_test
 
 import (
+	"context"
 	"crypto/tls"
 	"net"
 	"net/http"
@@ -91,7 +92,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 				t.Errorf("NewEventStream() error = %v", err)
 			}
 
-			if err = evs.RegisterSink(writerCloserSink); err != nil {
+			if err = evs.RegisterSink(context.Background(), writerCloserSink); err != nil {
 				t.Errorf("RegisterSink() error = %v", err)
 			}
 

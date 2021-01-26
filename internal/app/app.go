@@ -286,7 +286,7 @@ func (a *app) WithEventStream() App {
 			return
 		}
 
-		if err = eventStream.RegisterSink(sink.NewLogSink(a.Logger().Named("LogSink"))); err != nil {
+		if err = eventStream.RegisterSink(a.ctx, sink.NewLogSink(a.Logger().Named("LogSink"))); err != nil {
 			return
 		}
 

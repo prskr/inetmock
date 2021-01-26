@@ -3,6 +3,7 @@
 package audit
 
 import (
+	"context"
 	"errors"
 	"io"
 )
@@ -15,17 +16,15 @@ type Emitter interface {
 	Emit(ev Event)
 }
 
-type CloseHandle func()
-
 type Sink interface {
 	Name() string
-	OnSubscribe(evs <-chan Event, close CloseHandle)
+	OnSubscribe(evs <-chan Event)
 }
 
 type EventStream interface {
 	io.Closer
 	Emitter
-	RegisterSink(s Sink) error
+	RegisterSink(ctx context.Context, s Sink) error
 	Sinks() []string
 	RemoveSink(name string) (exists bool)
 }

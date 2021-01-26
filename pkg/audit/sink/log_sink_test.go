@@ -1,6 +1,7 @@
 package sink_test
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -90,7 +91,7 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 				t.Errorf("NewEventStream() error = %v", err)
 			}
 
-			if err = evs.RegisterSink(logSink); err != nil {
+			if err = evs.RegisterSink(context.Background(), logSink); err != nil {
 				t.Errorf("RegisterSink() error = %v", err)
 			}
 

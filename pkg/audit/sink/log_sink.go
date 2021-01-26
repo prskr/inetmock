@@ -24,7 +24,7 @@ func (logSink) Name() string {
 	return logSinkName
 }
 
-func (l logSink) OnSubscribe(evs <-chan audit.Event, _ audit.CloseHandle) {
+func (l logSink) OnSubscribe(evs <-chan audit.Event) {
 	go func(logger logging.Logger, evs <-chan audit.Event) {
 		for ev := range evs {
 			eventLogger := logger
