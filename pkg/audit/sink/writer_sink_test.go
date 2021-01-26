@@ -27,8 +27,8 @@ var (
 			SourcePort:      32344,
 			DestinationPort: 80,
 			TLS: &audit.TLSDetails{
-				Version:     tls.VersionTLS13,
-				CipherSuite: tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				Version:     audit.TLSVersionToEntity(tls.VersionTLS13).String(),
+				CipherSuite: tls.CipherSuiteName(tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA),
 				ServerName:  "localhost",
 			},
 			ProtocolDetails: details.HTTP{

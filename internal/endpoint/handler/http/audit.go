@@ -1,6 +1,7 @@
 package http
 
 import (
+	"crypto/tls"
 	"net/http"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
@@ -24,8 +25,8 @@ func EventFromRequest(request *http.Request, app audit.AppProtocol) audit.Event 
 
 	if request.TLS != nil {
 		ev.TLS = &audit.TLSDetails{
-			Version:     request.TLS.Version,
-			CipherSuite: request.TLS.CipherSuite,
+			Version:     audit.TLSVersionToEntity(request.TLS.Version).String(),
+			CipherSuite: tls.CipherSuiteName(request.TLS.CipherSuite),
 			ServerName:  request.TLS.ServerName,
 		}
 	}

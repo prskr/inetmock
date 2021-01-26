@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/config"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
 
@@ -34,6 +33,7 @@ var (
 	certOutPath, curveName string
 )
 
+//nolint:lll
 func init() {
 	generateCaCmd = &cobra.Command{
 		Use:   "generate-ca",
@@ -50,7 +50,7 @@ func init() {
 	generateCaCmd.Flags().StringSliceVar(&caCertOptions.Locality, generateCaLocalityName, nil, "Locality information to append to certificate")
 	generateCaCmd.Flags().StringSliceVar(&caCertOptions.StreetAddress, generateCaStreetAddressName, nil, "Street address information to append to certificate")
 	generateCaCmd.Flags().StringSliceVar(&caCertOptions.PostalCode, generateCaPostalCodeName, nil, "Postal code information to append to certificate")
-		generateCaCmd.Flags().StringVar(&certOutPath, generateCACertOutPath, "", "Path where CA files should be stored")
+	generateCaCmd.Flags().StringVar(&certOutPath, generateCACertOutPath, "", "Path where CA files should be stored")
 	generateCaCmd.Flags().StringVar(&curveName, generateCACurveName, "", "Name of the curve to use, if empty ED25519 is used, other valid values are [P224, P256,P384,P521]")
 	generateCaCmd.Flags().DurationVar(&notBefore, generateCANotBeforeRelative, 17520*time.Hour, "Relative time value since when in the past the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
 	generateCaCmd.Flags().DurationVar(&notAfter, generateCANotAfterRelative, 17520*time.Hour, "Relative time value until when in the future the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
@@ -107,26 +107,4 @@ func runGenerateCA(_ *cobra.Command, _ []string) {
 		)
 	}
 	logger.Info("completed certificate generation")
-}
-
-func getDurationFlag(cmd *cobra.Command, flagName string, logger logging.Logger) (val time.Duration, err error) {
-	if val, err = cmd.Flags().GetDuration(flagName); err != nil {
-		logger.Error(
-			"failed to parse parse flag",
-			zap.String("flag", flagName),
-			zap.Error(err),
-		)
-	}
-	return
-}
-
-func getStringFlag(cmd *cobra.Command, flagName string, logger logging.Logger) (val string, err error) {
-	if val, err = cmd.Flags().GetString(flagName); err != nil {
-		logger.Error(
-			"failed to parse parse flag",
-			zap.String("flag", flagName),
-			zap.Error(err),
-		)
-	}
-	return
 }

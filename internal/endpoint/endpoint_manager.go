@@ -149,8 +149,6 @@ func startEndpoint(ep Endpoint, ctx api.PluginContext, logger logging.Logger) (s
 		success = false
 	}
 
-	close(startSuccessful)
-
 	return
 }
 

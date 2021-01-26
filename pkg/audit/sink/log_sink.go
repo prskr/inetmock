@@ -1,8 +1,6 @@
 package sink
 
 import (
-	"crypto/tls"
-
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
@@ -34,7 +32,8 @@ func (l logSink) OnSubscribe(evs <-chan audit.Event, _ audit.CloseHandle) {
 			if ev.TLS != nil {
 				eventLogger = eventLogger.With(
 					zap.String("tls_server_name", ev.TLS.ServerName),
-					zap.String("tls_cipher_suite", tls.CipherSuiteName(ev.TLS.CipherSuite)),
+					zap.String("tls_cipher_suite", ev.TLS.CipherSuite),
+					zap.String("tls_version", ev.TLS.Version),
 				)
 			}
 

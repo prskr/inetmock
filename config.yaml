@@ -69,21 +69,20 @@ endpoints:
       - 8080
     options:
       <<: *httpResponseRules
+  https:
+    handler: http_mock
+    listenAddress: 0.0.0.0
+    ports:
+      - 443
+      - 8443
+    options:
+      tls: true
+      <<: *httpResponseRules
   proxy:
     handler: http_proxy
     listenAddress: 0.0.0.0
     ports:
       - 3128
-    options:
-      target:
-        ipAddress: 127.0.0.1
-        port: 80
-  httpsDowngrade:
-    handler: tls_interceptor
-    listenAddress: 0.0.0.0
-    ports:
-      - 443
-      - 8443
     options:
       target:
         ipAddress: 127.0.0.1

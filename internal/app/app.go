@@ -108,35 +108,67 @@ func (a *app) MustRun() {
 }
 
 func (a *app) Logger() logging.Logger {
-	return a.ctx.Value(loggerKey).(logging.Logger)
+	val := a.ctx.Value(loggerKey)
+	if val == nil {
+		return nil
+	}
+	return val.(logging.Logger)
 }
 
 func (a *app) Config() config.Config {
-	return a.ctx.Value(configKey).(config.Config)
+	val := a.ctx.Value(configKey)
+	if val == nil {
+		return nil
+	}
+	return val.(config.Config)
 }
 
 func (a *app) CertStore() cert.Store {
-	return a.ctx.Value(certStoreKey).(cert.Store)
+	val := a.ctx.Value(certStoreKey)
+	if val == nil {
+		return nil
+	}
+	return val.(cert.Store)
 }
 
 func (a *app) Checker() health.Checker {
-	return a.ctx.Value(healthCheckerKey).(health.Checker)
+	val := a.ctx.Value(healthCheckerKey)
+	if val == nil {
+		return nil
+	}
+	return val.(health.Checker)
 }
 
 func (a *app) EndpointManager() endpoint.EndpointManager {
-	return a.ctx.Value(endpointManagerKey).(endpoint.EndpointManager)
+	val := a.ctx.Value(endpointManagerKey)
+	if val == nil {
+		return nil
+	}
+	return val.(endpoint.EndpointManager)
 }
 
 func (a *app) Audit() audit.Emitter {
-	return a.ctx.Value(eventStreamKey).(audit.Emitter)
+	val := a.ctx.Value(eventStreamKey)
+	if val == nil {
+		return nil
+	}
+	return val.(audit.Emitter)
 }
 
 func (a *app) EventStream() audit.EventStream {
-	return a.ctx.Value(eventStreamKey).(audit.EventStream)
+	val := a.ctx.Value(eventStreamKey)
+	if val == nil {
+		return nil
+	}
+	return val.(audit.EventStream)
 }
 
 func (a *app) HandlerRegistry() api.HandlerRegistry {
-	return a.ctx.Value(handlerRegistryKey).(api.HandlerRegistry)
+	val := a.ctx.Value(handlerRegistryKey)
+	if val == nil {
+		return nil
+	}
+	return val.(api.HandlerRegistry)
 }
 
 func (a *app) Context() context.Context {

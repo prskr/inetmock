@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -50,11 +51,16 @@ func (p *httpHandler) Start(ctx api.PluginContext, config config.HandlerConfig) 
 		ConnContext: imHttp.StoreConnPropertiesInContext,
 	}
 
+	if options.TLS {
+		p.server.TLSConfig = ctx.CertStore().TLSConfig()
+		p.server.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
+	}
+
 	for _, rule := range options.Rules {
 		router.setupRoute(rule)
 	}
 
-	go p.startServer()
+	go p.startServer(options.TLS)
 	return
 }
 
@@ -73,8 +79,17 @@ func (p *httpHandler) Shutdown(ctx context.Context) (err error) {
 	return
 }
 
-func (p *httpHandler) startServer() {
-	if err := p.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+func (p *httpHandler) startServer(tls bool) {
+	var listen func() error
+	if tls {
+		listen = func() error {
+			return p.server.ListenAndServeTLS("", "")
+		}
+	} else {
+		listen = p.server.ListenAndServe
+	}
+
+	if err := listen(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		p.logger.Error(
 			"failed to start http listener",
 			zap.Error(err),

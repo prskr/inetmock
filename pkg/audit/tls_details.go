@@ -1,8 +1,6 @@
 package audit
 
-import (
-	"crypto/tls"
-)
+import "crypto/tls"
 
 var (
 	tlsToEntity = map[uint16]TLSVersion{
@@ -12,27 +10,19 @@ var (
 		tls.VersionTLS12: TLSVersion_TLS12,
 		tls.VersionTLS13: TLSVersion_TLS13,
 	}
-	entityToTls = map[TLSVersion]uint16{
-		TLSVersion_SSLv30: tls.VersionSSL30,
-		TLSVersion_TLS10:  tls.VersionTLS10,
-		TLSVersion_TLS11:  tls.VersionTLS11,
-		TLSVersion_TLS12:  tls.VersionTLS12,
-		TLSVersion_TLS13:  tls.VersionTLS13,
-	}
-	cipherSuiteIDLookup = func(name string) uint16 {
-		for _, cs := range tls.CipherSuites() {
-			if cs.Name == name {
-				return cs.ID
-			}
-		}
-		return 0
-	}
 )
 
 type TLSDetails struct {
-	Version     uint16
-	CipherSuite uint16
+	Version     string
+	CipherSuite string
 	ServerName  string
+}
+
+func TLSVersionToEntity(version uint16) TLSVersion {
+	if v, known := tlsToEntity[version]; known {
+		return v
+	}
+	return TLSVersion_SSLv30
 }
 
 func NewTLSDetailsFromProto(entity *TLSDetailsEntity) *TLSDetails {
@@ -41,16 +31,16 @@ func NewTLSDetailsFromProto(entity *TLSDetailsEntity) *TLSDetails {
 	}
 
 	return &TLSDetails{
-		Version:     entityToTls[entity.GetVersion()],
-		CipherSuite: cipherSuiteIDLookup(entity.GetCipherSuite()),
+		Version:     entity.GetVersion().String(),
+		CipherSuite: entity.GetCipherSuite(),
 		ServerName:  entity.GetServerName(),
 	}
 }
 
 func (d TLSDetails) ProtoMessage() *TLSDetailsEntity {
 	return &TLSDetailsEntity{
-		Version:     tlsToEntity[d.Version],
-		CipherSuite: tls.CipherSuiteName(d.CipherSuite),
+		Version:     TLSVersion(TLSVersion_value[d.Version]),
+		CipherSuite: d.CipherSuite,
 		ServerName:  d.ServerName,
 	}
 }

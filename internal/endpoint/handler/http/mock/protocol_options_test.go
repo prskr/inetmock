@@ -95,6 +95,34 @@ rules:
 			},
 			wantErr: false,
 		},
+		{
+			name: "Parse config with header matcher and TLS true",
+			args: args{
+				config: `
+tls: true
+rules:
+- pattern: "^application/octet-stream$"
+  target: Content-Type
+  matcher: Header
+  response: ./assets/fakeFiles/sample.exe
+`,
+			},
+			wantOptions: httpOptions{
+				TLS: true,
+				Rules: []targetRule{
+					{
+						pattern: regexp.MustCompile("^application/octet-stream$"),
+						response: func() string {
+							p, _ := filepath.Abs("./assets/fakeFiles/sample.exe")
+							return p
+						}(),
+						requestMatchTarget: RequestMatchTargetHeader,
+						targetKey:          "Content-Type",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

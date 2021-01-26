@@ -50,6 +50,7 @@ func (tr targetRule) Response() string {
 }
 
 type httpOptions struct {
+	TLS   bool
 	Rules []targetRule
 }
 
@@ -62,12 +63,15 @@ func loadFromConfig(config *viper.Viper) (options httpOptions, err error) {
 	}
 
 	tmpRules := struct {
+		TLS   bool
 		Rules []tmpCfg
 	}{}
 
 	if err = config.Unmarshal(&tmpRules); err != nil {
 		return
 	}
+
+	options.TLS = tmpRules.TLS
 
 	for _, i := range tmpRules.Rules {
 		var rulePattern *regexp.Regexp
