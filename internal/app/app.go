@@ -290,6 +290,15 @@ func (a *app) WithEventStream() App {
 			return
 		}
 
+		var metricSink audit.Sink
+		if metricSink, err = sink.NewMetricSink(); err != nil {
+			return
+		}
+
+		if err = eventStream.RegisterSink(a.ctx, metricSink); err != nil {
+			return
+		}
+
 		a.ctx = context.WithValue(a.ctx, eventStreamKey, eventStream)
 		return
 	})
