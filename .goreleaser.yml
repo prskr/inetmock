@@ -81,4 +81,4 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
     extra_files:
       - config-container.yaml
-      - assets/fakeFiles/
+      - assets/

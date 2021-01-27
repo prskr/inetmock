@@ -1,5 +1,5 @@
 # Runtime layer
-FROM alpine:3.12
+FROM alpine:3.13
 
 # Create appuser and group.
 ARG USER=inetmock
@@ -20,6 +20,7 @@ RUN addgroup -S -g "${GROUP_ID}" "${GROUP}" && \
 
 COPY --chown=$USER:$GROUP inetmock imctl /usr/lib/inetmock/bin/
 COPY --chown=$USER:$GROUP assets/fakeFiles /var/lib/inetmock/fakeFiles/
+COPY --chown=$USER:$GROUP assets/demoCA /var/lib/inetmock/ca
 COPY config-container.yaml /etc/inetmock/config.yaml
 
 RUN mkdir -p /var/run/inetmock /var/lib/inetmock/certs /usr/lib/inetmock && \
