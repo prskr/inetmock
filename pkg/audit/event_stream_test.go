@@ -11,14 +11,13 @@ import (
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
+	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/wait"
 )
 
 var (
-	defaultSink = &testSink{
-		name: "test defaultSink",
-	}
+	noOpSink   = sink.NewNoOpSink("test defaultSink")
 	testEvents = []*audit.Event{
 		{
 			Transport:       audit.TransportProtocol_TCP,
@@ -53,33 +52,14 @@ var (
 	}
 )
 
-type testSink struct {
-	name     string
-	consumer func(event audit.Event)
-}
-
-func (t *testSink) Name() string {
-	return t.name
-}
-
-func (t *testSink) OnSubscribe(evs <-chan audit.Event) {
-	go func() {
-		for ev := range evs {
-			if t.consumer != nil {
-				t.consumer(ev)
-			}
-		}
-	}()
-}
-
 func wgMockSink(t testing.TB, wg *sync.WaitGroup) audit.Sink {
-	return &testSink{
-		name: "WG mock sink",
-		consumer: func(event audit.Event) {
+	return sink.NewGenericSink(
+		"WG mock sink",
+		func(event audit.Event) {
 			t.Logf("Got event = %v", event)
 			wg.Done()
 		},
-	}
+	)
 }
 
 func Test_eventStream_RegisterSink(t *testing.T) {
@@ -96,17 +76,17 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 		{
 			name: "Register test defaultSink",
 			args: args{
-				s: defaultSink,
+				s: noOpSink,
 			},
 			wantErr: false,
 		},
 		{
 			name: "Fail due to already registered defaultSink",
 			args: args{
-				s: defaultSink,
+				s: noOpSink,
 			},
 			setup: func(e audit.EventStream) {
-				_ = e.RegisterSink(context.Background(), defaultSink)
+				_ = e.RegisterSink(context.Background(), noOpSink)
 			},
 			wantErr: true,
 		},

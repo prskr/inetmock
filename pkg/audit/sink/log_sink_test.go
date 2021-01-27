@@ -91,7 +91,9 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 				t.Errorf("NewEventStream() error = %v", err)
 			}
 
-			if err = evs.RegisterSink(context.Background(), logSink); err != nil {
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+			if err = evs.RegisterSink(ctx, logSink); err != nil {
 				t.Errorf("RegisterSink() error = %v", err)
 			}
 

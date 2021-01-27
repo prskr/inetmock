@@ -75,6 +75,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			t.Cleanup(ctrl.Finish)
+
 			writerMock := audit_mock.NewMockWriter(ctrl)
 			writerMock.
 				EXPECT().
@@ -84,7 +85,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 				}).
 				Times(len(tt.events))
 
-			writerCloserSink := sink.NewWriterSink("WriterMock", writerMock, sink.WithCloseOnExit)
+			writerCloserSink := sink.NewWriterSink("WriterMock", writerMock)
 			var evs audit.EventStream
 			var err error
 
@@ -92,7 +93,10 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 				t.Errorf("NewEventStream() error = %v", err)
 			}
 
-			if err = evs.RegisterSink(context.Background(), writerCloserSink); err != nil {
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+
+			if err = evs.RegisterSink(ctx, writerCloserSink); err != nil {
 				t.Errorf("RegisterSink() error = %v", err)
 			}
 

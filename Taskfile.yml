@@ -46,7 +46,8 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
+      - cmd: go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
+        ignore_error: true
       - cat {{ .OUT_DIR }}/test_output | go-junit-report -set-exit-code > {{ .OUT_DIR }}/report.xml
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
       - gocover-cobertura < {{ .OUT_DIR }}/cov.out > {{ .OUT_DIR }}/coverage.xml
