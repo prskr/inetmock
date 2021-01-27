@@ -75,6 +75,15 @@ func (t *tblWriter) getData(val reflect.Value, numberOfFields int) (data []strin
 }
 
 func value(val reflect.Value) string {
+
+	if val.IsZero() {
+		return ""
+	}
+
+	if stringer, isStringer := val.Interface().(fmt.Stringer); isStringer {
+		return stringer.String()
+	}
+
 	switch val.Kind() {
 	case reflect.Ptr:
 		return value(val.Elem())
@@ -84,6 +93,8 @@ func value(val reflect.Value) string {
 		return strconv.FormatBool(val.Bool())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return strconv.FormatInt(val.Int(), 10)
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(val.Uint(), 10)
 	case reflect.Float32, reflect.Float64:
 		return strconv.FormatFloat(val.Float(), 'f', 6, 64)
 	default:

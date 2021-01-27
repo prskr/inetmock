@@ -4,6 +4,7 @@ package api
 import (
 	"context"
 
+	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
@@ -12,6 +13,7 @@ import (
 type PluginContext interface {
 	Logger() logging.Logger
 	CertStore() cert.Store
+	Audit() audit.Emitter
 }
 
 type ProtocolHandler interface {

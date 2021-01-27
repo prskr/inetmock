@@ -1,14 +1,33 @@
 package main
 
 import (
-	"gitlab.com/inetmock/inetmock/internal/cmd"
-	_ "gitlab.com/inetmock/inetmock/plugins/dns_mock"
-	_ "gitlab.com/inetmock/inetmock/plugins/http_mock"
-	_ "gitlab.com/inetmock/inetmock/plugins/http_proxy"
-	_ "gitlab.com/inetmock/inetmock/plugins/metrics_exporter"
-	_ "gitlab.com/inetmock/inetmock/plugins/tls_interceptor"
+	"gitlab.com/inetmock/inetmock/internal/app"
+	dns "gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
+	http "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/tls/interceptor"
+)
+
+var (
+	serverApp app.App
 )
 
 func main() {
-	cmd.ExecuteServerCommand()
+	serverApp = app.NewApp("inetmock", "INetMock is lightweight internet mock").
+		WithHandlerRegistry(
+			http.AddHTTPMock,
+			dns.AddDNSMock,
+			interceptor.AddTLSInterceptor,
+			proxy.AddHTTPProxy,
+			metrics.AddMetricsExporter).
+		WithCommands(serveCmd, generateCaCmd).
+		WithConfig().
+		WithLogger().
+		WithHealthChecker().
+		WithCertStore().
+		WithEventStream().
+		WithEndpointManager()
+
+	serverApp.MustRun()
 }

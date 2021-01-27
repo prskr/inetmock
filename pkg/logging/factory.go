@@ -2,6 +2,7 @@ package logging
 
 import (
 	"strings"
+	"testing"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -45,6 +46,13 @@ func CreateLogger() (Logger, error) {
 		return nil, err
 	} else {
 		return NewLogger(zapLogger), nil
+	}
+}
+
+func CreateTestLogger(tb testing.TB) Logger {
+	return &testLogger{
+		tb:      tb,
+		encoder: zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig()),
 	}
 }
 

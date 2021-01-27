@@ -9,6 +9,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type INetMockAPI interface {
@@ -51,6 +52,13 @@ func (i *inetmockAPI) StartServer() (err error) {
 	RegisterHealthServer(i.server, &healthServer{
 		app: i.app,
 	})
+
+	RegisterAuditServer(i.server, &auditServer{
+		logger:      i.app.Logger(),
+		eventStream: i.app.EventStream(),
+	})
+
+	reflection.Register(i.server)
 
 	go i.startServerAsync(lis)
 	return

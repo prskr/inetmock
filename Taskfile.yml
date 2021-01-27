@@ -5,7 +5,7 @@ vars:
   INETMOCK_PKG: gitlab.com/inetmock/inetmock/cmd/inetmock
   IMCTL_PKG: gitlab.com/inetmock/inetmock/cmd/imctl
   PROTO_FILES:
-    sh: find ./api/ -type f -name "*.proto" -printf "%f "
+    sh: find ./api/ -type f -name "*.proto" -printf "%p "
 
 env:
   GOOS: linux
@@ -26,7 +26,7 @@ tasks:
     sources:
       - "**/*.proto"
     cmds:
-      - protoc --proto_path ./api/ --go_out=./internal/rpc --go_opt=paths=source_relative --go-grpc_out=./internal/rpc --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
+      - protoc --proto_path ./api/proto/ --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
 
   go-generate:
     sources:
@@ -46,8 +46,11 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -v ./...
+      - cmd: go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
+        ignore_error: true
+      - cat {{ .OUT_DIR }}/test_output | go-junit-report -set-exit-code > {{ .OUT_DIR }}/report.xml
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
+      - gocover-cobertura < {{ .OUT_DIR }}/cov.out > {{ .OUT_DIR }}/coverage.xml
       - rm -f {{ .OUT_DIR }}/cov-raw.out
 
   cli-cover-report:
