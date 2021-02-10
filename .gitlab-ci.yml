@@ -4,6 +4,7 @@ stages:
   - test
   - build
   - release
+  - deploy
 
 test:
   stage: test
@@ -50,8 +51,8 @@ release:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - goreleaser release --rm-dist
 
-docs:
-  stage: release
+pages:
+  stage: deploy
   image: registry.gitlab.com/inetmock/ci-image/mdbook
   only:
     refs:
