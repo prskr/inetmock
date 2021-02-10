@@ -1,11 +1,8 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"gitlab.com/inetmock/inetmock/pkg/config"
 	"go.uber.org/zap"
 )
 
@@ -14,41 +11,48 @@ var (
 		Use:   "serve",
 		Short: "Starts the INetMock server",
 		Long:  ``,
-		Run:   startINetMock,
+		RunE:  startINetMock,
 	}
 )
 
-func startINetMock(_ *cobra.Command, _ []string) {
+func startINetMock(_ *cobra.Command, _ []string) (err error) {
 	rpcAPI := rpc.NewINetMockAPI(serverApp)
-	logger := serverApp.Logger().Named("inetmock").With(zap.String("command", "serve"))
+	logger := serverApp.Logger()
 
-	for endpointName, endpointHandler := range serverApp.Config().EndpointConfigs() {
-		handlerSubConfig := serverApp.Config().Viper().Sub(strings.Join([]string{config.EndpointsKey, endpointName, config.OptionsKey}, "."))
-		endpointHandler.Options = handlerSubConfig
-		if err := serverApp.EndpointManager().CreateEndpoint(endpointName, endpointHandler); err != nil {
-			logger.Warn(
-				"error occurred while creating endpoint",
-				zap.String("endpointName", endpointName),
-				zap.String("handlerName", endpointHandler.Handler),
-				zap.Error(err),
-			)
+	cfg := serverApp.Config()
+	endpointOrchestrator := serverApp.EndpointManager()
+
+	for name, spec := range cfg.ListenerSpecs() {
+		if spec.Name == "" {
+			spec.Name = name
+		}
+		if err = endpointOrchestrator.RegisterListener(spec); err != nil {
+			logger.Error("Failed to register listener", zap.Error(err))
+			return
 		}
 	}
 
-	serverApp.EndpointManager().StartEndpoints()
-	if err := rpcAPI.StartServer(); err != nil {
+	errChan := serverApp.EndpointManager().StartEndpoints()
+	if err = rpcAPI.StartServer(); err != nil {
+		serverApp.Shutdown()
 		logger.Error(
 			"failed to start gRPC API",
 			zap.Error(err),
 		)
 	}
 
-	<-serverApp.Context().Done()
+loop:
+	for {
+		select {
+		case err := <-errChan:
+			logger.Error("got error from endpoint", zap.Error(err))
+		case <-serverApp.Context().Done():
+			break loop
+		}
+	}
 
-	logger.Info(
-		"App context canceled - shutting down",
-	)
+	logger.Info("App context canceled - shutting down")
 
 	rpcAPI.StopServer()
-	serverApp.EndpointManager().ShutdownEndpoints()
+	return
 }

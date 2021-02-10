@@ -1,4 +1,4 @@
-image: registry.gitlab.com/inetmock/ci-image
+image: registry.gitlab.com/inetmock/ci-image/go
 
 stages:
   - test
@@ -13,6 +13,13 @@ test:
     reports:
       junit: out/report.xml
       cobertura: out/coverage.xml
+
+integration-test:
+  stage: test
+  services:
+    - docker:dind
+  script:
+    - task integration-test
 
 lint:
   stage: test
@@ -42,3 +49,16 @@ release:
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - goreleaser release --rm-dist
+
+docs:
+  stage: release
+  image: registry.gitlab.com/inetmock/ci-image/mdbook
+  only:
+    refs:
+      - master
+      - tags
+  script:
+    - mdbook build -d ./../public ./docs
+  artifacts:
+    paths:
+      - public

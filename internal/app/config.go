@@ -1,20 +1,17 @@
-package config
+package app
 
 import (
 	"strings"
 
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/path"
-	"go.uber.org/zap"
 )
 
-func CreateConfig(flags *pflag.FlagSet) Config {
-	logger, _ := logging.CreateLogger()
+func CreateConfig() Config {
 	configInstance := &config{
-		logger: logger.Named("Config"),
-		cfg:    viper.New(),
+		cfg: viper.New(),
 	}
 
 	configInstance.cfg.SetConfigName("config")
@@ -23,7 +20,6 @@ func CreateConfig(flags *pflag.FlagSet) Config {
 	configInstance.cfg.AddConfigPath("$HOME/.inetmock")
 	configInstance.cfg.AddConfigPath(".")
 	configInstance.cfg.SetEnvPrefix("INetMock")
-	_ = configInstance.cfg.BindPFlags(flags)
 	configInstance.cfg.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	configInstance.cfg.AutomaticEnv()
 
@@ -41,17 +37,15 @@ func CreateConfig(flags *pflag.FlagSet) Config {
 type Config interface {
 	ReadConfig(configFilePath string) error
 	ReadConfigString(config, format string) error
-	Viper() *viper.Viper
-	TLSConfig() CertOptions
+	TLSConfig() cert.CertOptions
 	APIConfig() RPC
-	EndpointConfigs() map[string]EndpointConfig
+	ListenerSpecs() map[string]endpoint.ListenerSpec
 }
 
 type config struct {
 	cfg       *viper.Viper
-	logger    logging.Logger
-	TLS       CertOptions
-	Endpoints map[string]EndpointConfig
+	TLS       cert.CertOptions
+	Listeners map[string]endpoint.ListenerSpec
 	API       RPC
 }
 
@@ -69,30 +63,23 @@ func (c *config) ReadConfigString(config, format string) (err error) {
 	return
 }
 
-func (c *config) EndpointConfigs() map[string]EndpointConfig {
-	return c.Endpoints
+func (c config) ListenerSpecs() map[string]endpoint.ListenerSpec {
+	return c.Listeners
 }
 
-func (c *config) TLSConfig() CertOptions {
+func (c config) TLSConfig() cert.CertOptions {
 	return c.TLS
-}
-
-func (c *config) Viper() *viper.Viper {
-	return c.cfg
 }
 
 func (c *config) ReadConfig(configFilePath string) (err error) {
 	if configFilePath != "" && path.FileExists(configFilePath) {
-		c.logger.Info(
-			"loading config from passed config file path",
-			zap.String("configFilePath", configFilePath),
-		)
 		c.cfg.SetConfigFile(configFilePath)
 	}
 	if err = c.cfg.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			err = nil
-			c.logger.Warn("failed to load config")
+		} else {
+			return
 		}
 	}
 

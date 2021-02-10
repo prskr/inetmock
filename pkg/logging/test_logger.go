@@ -19,17 +19,19 @@ type testLogger struct {
 
 func (t testLogger) Named(s string) Logger {
 	return testLogger{
-		name:   s,
-		tb:     t.tb,
-		fields: t.fields,
+		encoder: t.encoder,
+		name:    s,
+		tb:      t.tb,
+		fields:  t.fields,
 	}
 }
 
 func (t testLogger) With(fields ...zap.Field) Logger {
 	return &testLogger{
-		name:   t.name,
-		fields: append(t.fields, fields...),
-		tb:     t.tb,
+		encoder: t.encoder,
+		name:    t.name,
+		fields:  append(t.fields, fields...),
+		tb:      t.tb,
 	}
 }
 

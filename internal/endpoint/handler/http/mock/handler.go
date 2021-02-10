@@ -2,14 +2,13 @@ package mock
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
-	"fmt"
+	"net"
 	"net/http"
 
+	"github.com/soheilhy/cmux"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
-	"gitlab.com/inetmock/inetmock/pkg/api"
-	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -25,71 +24,62 @@ type httpHandler struct {
 	server *http.Server
 }
 
-func (p *httpHandler) Start(ctx api.PluginContext, config config.HandlerConfig) (err error) {
-	p.logger = ctx.Logger().With(
+func (p *httpHandler) Matchers() []cmux.Matcher {
+	return []cmux.Matcher{cmux.HTTP1()}
+}
+
+func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) (err error) {
+	p.logger = lifecycle.Logger().With(
 		zap.String("protocol_handler", name),
 	)
 
 	var options httpOptions
-	if options, err = loadFromConfig(config.Options); err != nil {
+	if options, err = loadFromConfig(lifecycle); err != nil {
 		return
 	}
 
 	p.logger = p.logger.With(
-		zap.String("handler_name", config.HandlerName),
-		zap.String("address", config.ListenAddr()),
+		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
 	router := &RegexpHandler{
 		logger:      p.logger,
-		emitter:     ctx.Audit(),
-		handlerName: config.HandlerName,
+		emitter:     lifecycle.Audit(),
+		handlerName: lifecycle.Name(),
 	}
 	p.server = &http.Server{
-		Addr:        config.ListenAddr(),
 		Handler:     router,
 		ConnContext: imHttp.StoreConnPropertiesInContext,
-	}
-
-	if options.TLS {
-		p.server.TLSConfig = ctx.CertStore().TLSConfig()
-		p.server.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
 	}
 
 	for _, rule := range options.Rules {
 		router.setupRoute(rule)
 	}
 
-	go p.startServer(options.TLS)
+	go p.startServer(lifecycle.Uplink().Listener)
+	go p.shutdownOnCancel(lifecycle.Context())
 	return
 }
 
-func (p *httpHandler) Shutdown(ctx context.Context) (err error) {
+func (p *httpHandler) shutdownOnCancel(ctx context.Context) {
+	<-ctx.Done()
 	p.logger.Info("Shutting down HTTP mock")
-	if err = p.server.Shutdown(ctx); err != nil {
+	if err := p.server.Close(); err != nil {
 		p.logger.Error(
 			"failed to shutdown HTTP server",
 			zap.Error(err),
 		)
-		err = fmt.Errorf(
-			"failed to shutdown HTTP server: %w",
-			err,
-		)
 	}
 	return
 }
 
-func (p *httpHandler) startServer(tls bool) {
-	var listen func() error
-	if tls {
-		listen = func() error {
-			return p.server.ListenAndServeTLS("", "")
+func (p *httpHandler) startServer(listener net.Listener) {
+	defer func() {
+		if err := listener.Close(); err != nil {
+			p.logger.Warn("failed to close listener", zap.Error(err))
 		}
-	} else {
-		listen = p.server.ListenAndServe
-	}
-
-	if err := listen(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	}()
+	if err := p.server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		p.logger.Error(
 			"failed to start http listener",
 			zap.Error(err),

@@ -1,4 +1,4 @@
-package config
+package app
 
 var (
 	registeredDefaults = make(map[string]interface{})

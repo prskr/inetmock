@@ -22,12 +22,10 @@ var (
 )
 
 func main() {
-	endpointsCmd.AddCommand(getEndpoints)
-	handlerCmd.AddCommand(getHandlersCmd)
 	healthCmd.AddCommand(generalHealthCmd, containerHealthCmd)
 
 	cliApp = app.NewApp("imctl", "IMCTL is the CLI app to interact with an INetMock server").
-		WithCommands(endpointsCmd, handlerCmd, healthCmd, auditCmd).
+		WithCommands(healthCmd, auditCmd).
 		WithInitTasks(func(_ *cobra.Command, _ []string) (err error) {
 			return initGRPCConnection()
 		}).

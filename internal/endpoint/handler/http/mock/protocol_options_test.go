@@ -4,15 +4,16 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
+	"github.com/golang/mock/gomock"
+	"github.com/mitchellh/mapstructure"
+	endpoint_mock "gitlab.com/inetmock/inetmock/internal/mock/endpoint"
 )
 
 func Test_loadFromConfig(t *testing.T) {
 	type args struct {
-		config string
+		config map[string]interface{}
 	}
 	tests := []struct {
 		name        string
@@ -23,11 +24,18 @@ func Test_loadFromConfig(t *testing.T) {
 		{
 			name: "Parse default config",
 			args: args{
-				config: `
-rules:
-- pattern: ".*\\.(?i)exe"
-  response: ./assets/fakeFiles/sample.exe
-`,
+				config: map[string]interface{}{
+					"rules": []struct {
+						Pattern  string
+						Matcher  string
+						Response string
+					}{
+						{
+							Pattern:  ".*\\.(?i)exe",
+							Response: "./assets/fakeFiles/sample.exe",
+						},
+					},
+				},
 			},
 			wantOptions: httpOptions{
 				Rules: []targetRule{
@@ -47,12 +55,19 @@ rules:
 		{
 			name: "Parse config with path matcher",
 			args: args{
-				config: `
-rules:
-- pattern: ".*\\.(?i)exe"
-  matcher: Path 
-  response: ./assets/fakeFiles/sample.exe
-`,
+				config: map[string]interface{}{
+					"rules": []struct {
+						Pattern  string
+						Matcher  string
+						Response string
+					}{
+						{
+							Pattern:  ".*\\.(?i)exe",
+							Response: "./assets/fakeFiles/sample.exe",
+							Matcher:  "Path",
+						},
+					},
+				},
 			},
 			wantOptions: httpOptions{
 				Rules: []targetRule{
@@ -72,13 +87,21 @@ rules:
 		{
 			name: "Parse config with header matcher",
 			args: args{
-				config: `
-rules:
-- pattern: "^application/octet-stream$"
-  target: Content-Type
-  matcher: Header
-  response: ./assets/fakeFiles/sample.exe
-`,
+				config: map[string]interface{}{
+					"rules": []struct {
+						Pattern  string
+						Matcher  string
+						Target   string
+						Response string
+					}{
+						{
+							Pattern:  "^application/octet-stream$",
+							Response: "./assets/fakeFiles/sample.exe",
+							Target:   "Content-Type",
+							Matcher:  "Header",
+						},
+					},
+				},
 			},
 			wantOptions: httpOptions{
 				Rules: []targetRule{
@@ -98,17 +121,24 @@ rules:
 		{
 			name: "Parse config with header matcher and TLS true",
 			args: args{
-				config: `
-tls: true
-rules:
-- pattern: "^application/octet-stream$"
-  target: Content-Type
-  matcher: Header
-  response: ./assets/fakeFiles/sample.exe
-`,
+				config: map[string]interface{}{
+					"tls": true,
+					"rules": []struct {
+						Pattern  string
+						Matcher  string
+						Target   string
+						Response string
+					}{
+						{
+							Pattern:  "^application/octet-stream$",
+							Response: "./assets/fakeFiles/sample.exe",
+							Target:   "Content-Type",
+							Matcher:  "Header",
+						},
+					},
+				},
 			},
 			wantOptions: httpOptions{
-				TLS: true,
 				Rules: []targetRule{
 					{
 						pattern: regexp.MustCompile("^application/octet-stream$"),
@@ -126,10 +156,15 @@ rules:
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := viper.New()
-			v.SetConfigType("yaml")
-			_ = v.ReadConfig(strings.NewReader(tt.args.config))
-			gotOptions, err := loadFromConfig(v)
+			ctrl := gomock.NewController(t)
+			t.Cleanup(ctrl.Finish)
+			lcMock := endpoint_mock.NewMockLifecycle(ctrl)
+
+			lcMock.EXPECT().UnmarshalOptions(gomock.Any()).Do(func(cfg interface{}) {
+				_ = mapstructure.Decode(tt.args.config, cfg)
+			})
+
+			gotOptions, err := loadFromConfig(lcMock)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("loadFromConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

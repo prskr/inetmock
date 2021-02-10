@@ -12,7 +12,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	certmock "gitlab.com/inetmock/inetmock/internal/mock/cert"
-	"gitlab.com/inetmock/inetmock/pkg/config"
 )
 
 const (
@@ -286,13 +285,13 @@ func Test_fileSystemCache_Put(t *testing.T) {
 }
 
 func setupCertGen() Generator {
-	return NewDefaultGenerator(config.CertOptions{
-		Validity: config.ValidityByPurpose{
-			Server: config.ValidityDuration{
+	return NewDefaultGenerator(CertOptions{
+		Validity: ValidityByPurpose{
+			Server: ValidityDuration{
 				NotBeforeRelative: serverRelativeValidity,
 				NotAfterRelative:  serverRelativeValidity,
 			},
-			CA: config.ValidityDuration{
+			CA: ValidityDuration{
 				NotBeforeRelative: caRelativeValidity,
 				NotAfterRelative:  caRelativeValidity,
 			},

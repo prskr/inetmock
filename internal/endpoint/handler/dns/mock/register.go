@@ -2,7 +2,7 @@ package mock
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 )
 
@@ -17,7 +17,7 @@ var (
 	requestDurationHistogram    *prometheus.HistogramVec
 )
 
-func AddDNSMock(registry api.HandlerRegistry) (err error) {
+func AddDNSMock(registry endpoint.HandlerRegistry) (err error) {
 	if totalHandledRequestsCounter, err = metrics.Counter(
 		name,
 		"handled_requests_total",
@@ -46,7 +46,7 @@ func AddDNSMock(registry api.HandlerRegistry) (err error) {
 		return
 	}
 
-	registry.RegisterHandler(name, func() api.ProtocolHandler {
+	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return &dnsHandler{}
 	})
 

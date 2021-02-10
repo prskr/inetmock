@@ -7,38 +7,45 @@ import (
 	"net"
 	"unsafe"
 
-	"github.com/spf13/viper"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
 	randomIPStrategyName      = "random"
 	incrementalIPStrategyName = "incremental"
-	startIPConfigKey          = "startIP"
 )
 
 var (
-	fallbackStrategies map[string]ResolverFactory
+	defaultStartIPIncrementalStrategy = net.ParseIP("10.10.0.1")
+	fallbackStrategies                = map[string]ResolverFactory{
+		incrementalIPStrategyName: func(args map[string]interface{}) ResolverFallback {
+			tmp := struct {
+				StartIP string
+			}{}
+			var startIp net.IP
+			if err := mapstructure.Decode(args, &tmp); err == nil {
+				startIp = net.ParseIP(tmp.StartIP)
+			}
+			if startIp == nil || len(startIp) == 0 {
+				startIp = defaultStartIPIncrementalStrategy
+			}
+			return &incrementalIPFallback{
+				latestIp: ipToInt32(startIp),
+			}
+		},
+		randomIPStrategyName: func(map[string]interface{}) ResolverFallback {
+			return &randomIPFallback{}
+		},
+	}
 )
 
-type ResolverFactory func(conf *viper.Viper) ResolverFallback
+type ResolverFactory func(args map[string]interface{}) ResolverFallback
 
-func init() {
-	fallbackStrategies = make(map[string]ResolverFactory)
-	fallbackStrategies[incrementalIPStrategyName] = func(conf *viper.Viper) ResolverFallback {
-		return &incrementalIPFallback{
-			latestIp: ipToInt32(net.ParseIP(conf.GetString(startIPConfigKey))),
-		}
-	}
-	fallbackStrategies[randomIPStrategyName] = func(conf *viper.Viper) ResolverFallback {
-		return &randomIPFallback{}
-	}
-}
-
-func CreateResolverFallback(name string, config *viper.Viper) ResolverFallback {
+func CreateResolverFallback(name string, args map[string]interface{}) ResolverFallback {
 	if factory, ok := fallbackStrategies[name]; ok {
-		return factory(config)
+		return factory(args)
 	} else {
-		return fallbackStrategies[randomIPStrategyName](config)
+		return fallbackStrategies[randomIPStrategyName](args)
 	}
 }
 

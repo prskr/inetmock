@@ -4,11 +4,7 @@ import (
 	"net"
 	"regexp"
 
-	"github.com/spf13/viper"
-)
-
-const (
-	fallbackArgsConfigKey = "fallback.args"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 )
 
 type resolverRule struct {
@@ -21,7 +17,7 @@ type dnsOptions struct {
 	Fallback ResolverFallback
 }
 
-func loadFromConfig(config *viper.Viper) (options dnsOptions, err error) {
+func loadFromConfig(lifecycle endpoint.Lifecycle) (options dnsOptions, err error) {
 	type rule struct {
 		Pattern  string
 		Response string
@@ -29,6 +25,7 @@ func loadFromConfig(config *viper.Viper) (options dnsOptions, err error) {
 
 	type fallback struct {
 		Strategy string
+		Args     map[string]interface{}
 	}
 
 	opts := struct {
@@ -36,7 +33,7 @@ func loadFromConfig(config *viper.Viper) (options dnsOptions, err error) {
 		Fallback fallback
 	}{}
 
-	err = config.Unmarshal(&opts)
+	err = lifecycle.UnmarshalOptions(&opts)
 
 	for _, rule := range opts.Rules {
 		var err error
@@ -53,7 +50,7 @@ func loadFromConfig(config *viper.Viper) (options dnsOptions, err error) {
 
 	options.Fallback = CreateResolverFallback(
 		opts.Fallback.Strategy,
-		config.Sub(fallbackArgsConfigKey),
+		opts.Fallback.Args,
 	)
 
 	return

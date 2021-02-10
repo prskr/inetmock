@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"net"
 
-	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -18,7 +17,7 @@ const (
 )
 
 var (
-	defaultKeyProvider = func(options config.CertOptions) func() (key interface{}, err error) {
+	defaultKeyProvider = func(options CertOptions) func() (key interface{}, err error) {
 		return func() (key interface{}, err error) {
 			return privateKeyForCurve(options)
 		}
@@ -34,20 +33,20 @@ type Store interface {
 }
 
 func NewDefaultStore(
-	config config.Config,
+	options CertOptions,
 	logger logging.Logger,
 ) (Store, error) {
 	timeSource := NewTimeSource()
 	return NewStore(
-		config.TLSConfig(),
-		NewFileSystemCache(config.TLSConfig().CertCachePath, timeSource),
-		NewDefaultGenerator(config.TLSConfig()),
+		options,
+		NewFileSystemCache(options.CertCachePath, timeSource),
+		NewDefaultGenerator(options),
 		logger,
 	)
 }
 
 func NewStore(
-	options config.CertOptions,
+	options CertOptions,
 	cache Cache,
 	generator Generator,
 	logger logging.Logger,
@@ -67,7 +66,7 @@ func NewStore(
 }
 
 type store struct {
-	options    config.CertOptions
+	options    CertOptions
 	caCert     *tls.Certificate
 	cache      Cache
 	timeSource TimeSource
@@ -147,15 +146,15 @@ func (s *store) GetCertificate(serverName string, ip string) (cert *tls.Certific
 	return
 }
 
-func privateKeyForCurve(options config.CertOptions) (privateKey interface{}, err error) {
+func privateKeyForCurve(options CertOptions) (privateKey interface{}, err error) {
 	switch options.Curve {
-	case config.CurveTypeP224:
+	case CurveTypeP224:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
-	case config.CurveTypeP256:
+	case CurveTypeP256:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	case config.CurveTypeP384:
+	case CurveTypeP384:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	case config.CurveTypeP521:
+	case CurveTypeP521:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

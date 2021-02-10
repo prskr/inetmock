@@ -42,7 +42,7 @@ func ParseLevel(levelString string) zap.AtomicLevel {
 }
 
 func CreateLogger() (Logger, error) {
-	if zapLogger, err := loggingConfig.Build(); err != nil {
+	if zapLogger, err := loggingConfig.Build(zap.AddCallerSkip(2)); err != nil {
 		return nil, err
 	} else {
 		return NewLogger(zapLogger), nil
@@ -53,13 +53,5 @@ func CreateTestLogger(tb testing.TB) Logger {
 	return &testLogger{
 		tb:      tb,
 		encoder: zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig()),
-	}
-}
-
-func MustCreateLogger() Logger {
-	if logger, err := CreateLogger(); err != nil {
-		panic(err)
-	} else {
-		return logger
 	}
 }

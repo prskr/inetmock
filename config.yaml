@@ -41,6 +41,19 @@ x-response-rules: &httpResponseRules
       matcher: Path
       response: ./assets/fakeFiles/default.html
 
+x-http-handlers: &httpHandlers
+  endpoints:
+    plainHttp:
+      handler: http_mock
+      tls: false
+      options:
+        <<: *httpResponseRules
+    https:
+      handler: http_mock
+      tls: true
+      options:
+        <<: *httpResponseRules
+
 api:
   listen: unix:///var/run/inetmock.sock
 
@@ -60,61 +73,94 @@ tls:
     privateKeyPath: ./assets/demoCA/ca.key
   certCachePath: /tmp/inetmock/
 
-endpoints:
-  plainHttp:
-    handler: http_mock
-    listenAddress: 0.0.0.0
-    ports:
-      - 80
-      - 8080
-    options:
-      <<: *httpResponseRules
-  https:
-    handler: http_mock
-    listenAddress: 0.0.0.0
-    ports:
-      - 443
-      - 8443
-    options:
-      tls: true
-      <<: *httpResponseRules
-  proxy:
-    handler: http_proxy
-    listenAddress: 0.0.0.0
-    ports:
-      - 3128
-    options:
-      target:
-        ipAddress: 127.0.0.1
-        port: 80
-  plainDns:
-    handler: dns_mock
-    listenAddress: 0.0.0.0
-    ports:
-      - 53
-    options:
-      rules:
-        - pattern: ".*\\.google\\.com"
-          response: 1.1.1.1
-        - pattern: ".*\\.reddit\\.com"
-          response: 2.2.2.2
-      fallback:
-        strategy: incremental
-        args:
-          startIP: 10.0.10.0
-  dnsOverTlsDowngrade:
-    handler: tls_interceptor
-    listenAddress: 0.0.0.0
-    ports:
-      - 853
-    options:
-      target:
-        ipAddress: 127.0.0.1
-        port: 53
-  metrics:
-    handler: metrics_exporter
-    listenAddress: 0.0.0.0
-    ports:
-      - 9110
-    options:
-      route: /metrics
+listeners:
+  udp_53:
+    name: ''
+    protocol: udp
+    listenAddress: ''
+    port: 1053
+    endpoints:
+      plainDns:
+        handler: dns_mock
+        options:
+          rules:
+            - pattern: ".*\\.google\\.com"
+              response: 1.1.1.1
+            - pattern: ".*\\.reddit\\.com"
+              response: 2.2.2.2
+          fallback:
+            strategy: incremental
+            args:
+              startIP: 10.0.10.0
+  tcp_80:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 80
+    <<: *httpHandlers
+  tcp_443:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 443
+    <<: *httpHandlers
+  tcp_853:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 853
+    endpoints:
+      DoT:
+        handler: dns_mock
+        tls: true
+        options:
+          rules:
+            - pattern: ".*\\.google\\.com"
+              response: 1.1.1.1
+            - pattern: ".*\\.reddit\\.com"
+              response: 2.2.2.2
+          fallback:
+            strategy: incremental
+            args:
+              startIP: 10.0.10.0
+  tcp_3128:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 3128
+    endpoints:
+      proxyPlain:
+        handler: http_proxy
+        options:
+          target:
+            ipAddress: 127.0.0.1
+            port: 80
+      proxyTls:
+        handler: http_proxy
+        tls: true
+        options:
+          target:
+            ipAddress: 127.0.0.1
+            port: 443
+  tcp_8080:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 8080
+    <<: *httpHandlers
+  tcp_8443:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 8443
+    <<: *httpHandlers
+  tcp_9110:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 9110
+    endpoints:
+      metrics:
+        handler: metrics_exporter
+        options:
+          route: /metrics

@@ -6,6 +6,8 @@ vars:
   IMCTL_PKG: gitlab.com/inetmock/inetmock/cmd/imctl
   PROTO_FILES:
     sh: find ./api/ -type f -name "*.proto" -printf "%p "
+  BENCHMARKS:
+    sh: find . -type f -name "*_bench_test.go"
 
 env:
   GOOS: linux
@@ -53,6 +55,15 @@ tasks:
       - gocover-cobertura < {{ .OUT_DIR }}/cov.out > {{ .OUT_DIR }}/coverage.xml
       - rm -f {{ .OUT_DIR }}/cov-raw.out
 
+  integration-test:
+    deps:
+      - generate
+    cmds:
+      - |
+        {{ range .BENCHMARKS | splitLines -}}
+        go test -bench=. {{ . }}
+        {{ end }}
+
   cli-cover-report:
     deps:
       - test
@@ -99,3 +110,7 @@ tasks:
       - test
     cmds:
       - goreleaser release
+
+  docs:
+    cmds:
+      - mdbook build -d ./../public ./docs

@@ -23,11 +23,11 @@ func EventFromRequest(request *http.Request, app audit.AppProtocol) audit.Event 
 		ProtocolDetails: httpDetails,
 	}
 
-	if request.TLS != nil {
+	if state, ok := tlsConnectionState(request.Context()); ok {
 		ev.TLS = &audit.TLSDetails{
-			Version:     audit.TLSVersionToEntity(request.TLS.Version).String(),
-			CipherSuite: tls.CipherSuiteName(request.TLS.CipherSuite),
-			ServerName:  request.TLS.ServerName,
+			Version:     audit.TLSVersionToEntity(state.Version).String(),
+			CipherSuite: tls.CipherSuiteName(state.CipherSuite),
+			ServerName:  state.ServerName,
 		}
 	}
 

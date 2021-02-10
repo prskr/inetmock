@@ -3,14 +3,13 @@ package interceptor
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
-	"gitlab.com/inetmock/inetmock/pkg/api"
-	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -30,36 +29,28 @@ type tlsInterceptor struct {
 	connectionsMutex        *sync.Mutex
 }
 
-func (t *tlsInterceptor) Start(ctx api.PluginContext, config config.HandlerConfig) (err error) {
-	t.name = config.HandlerName
+func (t *tlsInterceptor) Start(ctx endpoint.Lifecycle) (err error) {
+	t.name = ctx.Name()
 
-	if err = config.Options.Unmarshal(&t.options); err != nil {
+	if err = ctx.UnmarshalOptions(&t.options); err != nil {
 		return
 	}
 
 	t.logger = t.logger.With(
-		zap.String("handler_name", config.HandlerName),
-		zap.String("address", config.ListenAddr()),
+		zap.String("handler_name", ctx.Name()),
+		zap.String("address", ctx.Uplink().Addr().String()),
 		zap.String("Target", t.options.Target.address()),
 	)
 
-	if t.listener, err = tls.Listen("tcp", config.ListenAddr(), ctx.CertStore().TLSConfig()); err != nil {
-		t.logger.Fatal(
-			"failed to create tls listener",
-			zap.Error(err),
-		)
-		err = fmt.Errorf(
-			"failed to create tls listener: %w",
-			err,
-		)
-		return
-	}
+	t.listener = tls.NewListener(ctx.Uplink().Listener, ctx.CertStore().TLSConfig())
 
 	go t.startListener()
+	go t.shutdownOnContextDone(ctx.Context())
 	return
 }
 
-func (t *tlsInterceptor) Shutdown(ctx context.Context) (err error) {
+func (t *tlsInterceptor) shutdownOnContextDone(ctx context.Context) {
+	<-ctx.Done()
 	t.logger.Info("Shutting down TLS interceptor")
 	t.shutdownRequested = true
 	done := make(chan struct{})
@@ -71,16 +62,12 @@ func (t *tlsInterceptor) Shutdown(ctx context.Context) (err error) {
 	select {
 	case <-done:
 		return
-	case <-ctx.Done():
+	case <-time.After(100 * time.Millisecond):
 		for _, proxyConn := range t.currentConnections {
-			if err = proxyConn.Close(); err != nil {
+			if err := proxyConn.Close(); err != nil {
 				t.logger.Error(
 					"error while closing remaining proxy connections",
 					zap.Error(err),
-				)
-				err = fmt.Errorf(
-					"error while closing remaining proxy connections: %w",
-					err,
 				)
 			}
 		}

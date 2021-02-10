@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
-	"gitlab.com/inetmock/inetmock/pkg/config"
 	"go.uber.org/zap"
 )
 
@@ -64,11 +63,11 @@ func runGenerateCA(_ *cobra.Command, _ []string) {
 		zap.String(generateCACertOutPath, certOutPath),
 	)
 
-	generator := cert.NewDefaultGenerator(config.CertOptions{
+	generator := cert.NewDefaultGenerator(cert.CertOptions{
 		CertCachePath: certOutPath,
-		Curve:         config.CurveType(curveName),
-		Validity: config.ValidityByPurpose{
-			CA: config.ValidityDuration{
+		Curve:         cert.CurveType(curveName),
+		Validity: cert.ValidityByPurpose{
+			CA: cert.ValidityDuration{
 				NotAfterRelative:  notAfter,
 				NotBeforeRelative: notBefore,
 			},

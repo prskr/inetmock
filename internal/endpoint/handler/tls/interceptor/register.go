@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
-	"gitlab.com/inetmock/inetmock/pkg/api"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 	"go.uber.org/zap"
@@ -18,7 +18,7 @@ var (
 	requestDurationHistogram *prometheus.HistogramVec
 )
 
-func AddTLSInterceptor(registry api.HandlerRegistry) (err error) {
+func AddTLSInterceptor(registry endpoint.HandlerRegistry) (err error) {
 	var logger logging.Logger
 	if logger, err = logging.CreateLogger(); err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func AddTLSInterceptor(registry api.HandlerRegistry) (err error) {
 
 	}
 
-	registry.RegisterHandler(name, func() api.ProtocolHandler {
+	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return &tlsInterceptor{
 			logger:                  logger,
 			currentConnectionsCount: new(sync.WaitGroup),

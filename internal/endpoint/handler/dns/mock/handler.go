@@ -2,36 +2,35 @@ package mock
 
 import (
 	"context"
+	"time"
 
 	"github.com/miekg/dns"
-	"gitlab.com/inetmock/inetmock/pkg/api"
-	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
 
 type dnsHandler struct {
 	logger    logging.Logger
-	dnsServer []*dns.Server
+	dnsServer *dns.Server
 }
 
-func (d *dnsHandler) Start(pluginCtx api.PluginContext, config config.HandlerConfig) (err error) {
+func (d *dnsHandler) Start(lifecycle endpoint.Lifecycle) (err error) {
 	var options dnsOptions
-	if options, err = loadFromConfig(config.Options); err != nil {
+	if options, err = loadFromConfig(lifecycle); err != nil {
 		return
 	}
 
-	listenAddr := config.ListenAddr()
-	d.logger = pluginCtx.Logger().With(
-		zap.String("handler_name", config.HandlerName),
-		zap.String("address", listenAddr),
+	d.logger = lifecycle.Logger().With(
+		zap.String("handler_name", lifecycle.Name()),
+		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
 	handler := &regexHandler{
-		handlerName:  config.HandlerName,
+		handlerName:  lifecycle.Name(),
 		fallback:     options.Fallback,
-		logger:       pluginCtx.Logger(),
-		auditEmitter: pluginCtx.Audit(),
+		logger:       lifecycle.Logger(),
+		auditEmitter: lifecycle.Audit(),
 	}
 
 	for _, rule := range options.Rules {
@@ -43,31 +42,24 @@ func (d *dnsHandler) Start(pluginCtx api.PluginContext, config config.HandlerCon
 		handler.AddRule(rule)
 	}
 
-	d.logger = d.logger.With(
-		zap.String("address", listenAddr),
-	)
-
-	d.dnsServer = []*dns.Server{
-		{
-			Addr:    listenAddr,
-			Net:     "udp",
-			Handler: handler,
-		},
-		{
-			Addr:    listenAddr,
-			Net:     "tcp",
-			Handler: handler,
-		},
+	if lifecycle.Uplink().Listener != nil {
+		d.dnsServer = &dns.Server{
+			Listener: lifecycle.Uplink().Listener,
+			Handler:  handler,
+		}
+	} else {
+		d.dnsServer = &dns.Server{
+			PacketConn: lifecycle.Uplink().PacketConn,
+			Handler:    handler,
+		}
 	}
 
-	for _, dnsServer := range d.dnsServer {
-		go d.startServer(dnsServer)
-	}
+	go d.startServer()
 	return
 }
 
-func (d *dnsHandler) startServer(dnsServer *dns.Server) {
-	if err := dnsServer.ListenAndServe(); err != nil {
+func (d *dnsHandler) startServer() {
+	if err := d.dnsServer.ActivateAndServe(); err != nil {
 		d.logger.Error(
 			"failed to start DNS server listener",
 			zap.Error(err),
@@ -75,15 +67,11 @@ func (d *dnsHandler) startServer(dnsServer *dns.Server) {
 	}
 }
 
-func (d *dnsHandler) Shutdown(ctx context.Context) error {
-	d.logger.Info("shutting down DNS mock")
-	for _, dnsServer := range d.dnsServer {
-		if err := dnsServer.ShutdownContext(ctx); err != nil {
-			d.logger.Error(
-				"failed to shutdown server",
-				zap.Error(err),
-			)
-		}
+func (d *dnsHandler) shutdownOnEnd(ctx context.Context) {
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	if err := d.dnsServer.ShutdownContext(shutdownCtx); err != nil {
+		d.logger.Error("failed to shutdown DNS server", zap.Error(err))
 	}
-	return nil
 }

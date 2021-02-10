@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
-	"gitlab.com/inetmock/inetmock/pkg/config"
 )
 
 func readViper(cfg string) *viper.Viper {
@@ -26,7 +25,7 @@ func Test_loadFromConfig(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    config.CertOptions
+		want    CertOptions
 		wantErr bool
 	}{
 		{
@@ -49,19 +48,19 @@ tls:
   certCachePath: /tmp/inetmock/
 `),
 			},
-			want: config.CertOptions{
-				RootCACert: config.File{
+			want: CertOptions{
+				RootCACert: File{
 					PublicKeyPath:  "./ca.pem",
 					PrivateKeyPath: "./ca.key",
 				},
 				CertCachePath: "/tmp/inetmock/",
-				Curve:         config.CurveTypeP256,
-				Validity: config.ValidityByPurpose{
-					CA: config.ValidityDuration{
+				Curve:         CurveTypeP256,
+				Validity: ValidityByPurpose{
+					CA: ValidityDuration{
 						NotBeforeRelative: 17520 * time.Hour,
 						NotAfterRelative:  17520 * time.Hour,
 					},
-					Server: config.ValidityDuration{
+					Server: ValidityDuration{
 						NotBeforeRelative: 168 * time.Hour,
 						NotAfterRelative:  168 * time.Hour,
 					},
@@ -77,7 +76,7 @@ tls:
     privateKey: ./ca.key
 `),
 			},
-			want:    config.CertOptions{},
+			want:    CertOptions{},
 			wantErr: true,
 		},
 		{
@@ -89,7 +88,7 @@ tls:
     publicKey: ./ca.pem
 `),
 			},
-			want:    config.CertOptions{},
+			want:    CertOptions{},
 			wantErr: true,
 		},
 		{
@@ -102,19 +101,19 @@ tls:
     privateKey: ./ca.key
 `),
 			},
-			want: config.CertOptions{
-				RootCACert: config.File{
+			want: CertOptions{
+				RootCACert: File{
 					PublicKeyPath:  "./ca.pem",
 					PrivateKeyPath: "./ca.key",
 				},
 				CertCachePath: os.TempDir(),
-				Curve:         config.CurveTypeED25519,
-				Validity: config.ValidityByPurpose{
-					CA: config.ValidityDuration{
+				Curve:         CurveTypeED25519,
+				Validity: ValidityByPurpose{
+					CA: ValidityDuration{
 						NotBeforeRelative: 17520 * time.Hour,
 						NotAfterRelative:  17520 * time.Hour,
 					},
-					Server: config.ValidityDuration{
+					Server: ValidityDuration{
 						NotBeforeRelative: 168 * time.Hour,
 						NotAfterRelative:  168 * time.Hour,
 					},

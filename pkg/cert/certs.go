@@ -1,4 +1,4 @@
-package config
+package cert
 
 import (
 	"crypto/tls"

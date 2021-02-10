@@ -1,0 +1,70 @@
+package app
+
+import (
+	"reflect"
+	"testing"
+
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
+)
+
+func Test_config_ReadConfig(t *testing.T) {
+	type args struct {
+		config string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantListeners map[string]endpoint.ListenerSpec
+		wantErr       bool
+	}{
+		{
+			name: "Test endpoints config",
+			args: args{
+				//language=yaml
+				config: `
+listeners:
+  tcp_80:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 80
+  tcp_443:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 443
+`,
+			},
+			wantListeners: map[string]endpoint.ListenerSpec{
+				"tcp_80": {
+					Name:      "",
+					Protocol:  "tcp",
+					Address:   "",
+					Port:      80,
+					Endpoints: nil,
+				},
+				"tcp_443": {
+					Name:      "",
+					Protocol:  "tcp",
+					Address:   "",
+					Port:      443,
+					Endpoints: nil,
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := CreateConfig()
+			if err := cfg.ReadConfigString(tt.args.config, "yaml"); (err != nil) != tt.wantErr {
+				t.Errorf("ReadConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(tt.wantListeners, cfg.ListenerSpecs()) {
+				t.Errorf("want = %v, got = %v", tt.wantListeners, cfg.ListenerSpecs())
+			}
+		})
+	}
+}

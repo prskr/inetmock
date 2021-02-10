@@ -1,13 +1,11 @@
 package metrics
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"gitlab.com/inetmock/inetmock/pkg/api"
-	"gitlab.com/inetmock/inetmock/pkg/config"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -21,35 +19,37 @@ type metricsExporter struct {
 	server *http.Server
 }
 
-func (m *metricsExporter) Start(_ api.PluginContext, config config.HandlerConfig) (err error) {
-	exporterOptions := metricsExporterOptions{}
-	if err = config.Options.Unmarshal(&exporterOptions); err != nil {
+func (m *metricsExporter) Start(lifecycle endpoint.Lifecycle) (err error) {
+	var exporterOptions metricsExporterOptions
+	if err = lifecycle.UnmarshalOptions(&exporterOptions); err != nil {
 		return
 	}
 
 	m.logger = m.logger.With(
-		zap.String("handler_name", config.HandlerName),
-		zap.String("address", config.ListenAddr()),
+		zap.String("handler_name", lifecycle.Name()),
+		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
 	mux := http.NewServeMux()
 	mux.Handle(exporterOptions.Route, promhttp.Handler())
 	m.server = &http.Server{
-		Addr:    config.ListenAddr(),
 		Handler: mux,
 	}
 
 	go func() {
-		if err := m.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := m.server.Serve(lifecycle.Uplink().Listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			m.logger.Error(
 				"Error occurred while serving metrics",
 				zap.Error(err),
 			)
 		}
 	}()
-	return
-}
 
-func (m *metricsExporter) Shutdown(ctx context.Context) error {
-	return m.server.Shutdown(ctx)
+	go func() {
+		<-lifecycle.Context().Done()
+		if err := m.server.Close(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			m.logger.Error("failed to stop metrics server", zap.Error(err))
+		}
+	}()
+	return
 }

@@ -3,12 +3,12 @@ package proxy
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net"
 	"net/http"
 
+	"github.com/soheilhy/cmux"
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
-	"gitlab.com/inetmock/inetmock/pkg/api"
-	"gitlab.com/inetmock/inetmock/pkg/config"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
 	"gopkg.in/elazarl/goproxy.v1"
@@ -24,46 +24,49 @@ type httpProxy struct {
 	server *http.Server
 }
 
-func (h *httpProxy) Start(ctx api.PluginContext, cfg config.HandlerConfig) (err error) {
+func (h *httpProxy) Matchers() []cmux.Matcher {
+	return []cmux.Matcher{cmux.HTTP1()}
+}
+
+func (h *httpProxy) Start(lifecycle endpoint.Lifecycle) (err error) {
 	var opts httpProxyOptions
-	if err = cfg.Options.Unmarshal(&opts); err != nil {
+	if err = lifecycle.UnmarshalOptions(&opts); err != nil {
 		return
 	}
-	listenAddr := cfg.ListenAddr()
+
 	h.server = &http.Server{
-		Addr:        listenAddr,
 		Handler:     h.proxy,
 		ConnContext: imHttp.StoreConnPropertiesInContext,
 	}
 	h.logger = h.logger.With(
-		zap.String("handler_name", cfg.HandlerName),
-		zap.String("address", listenAddr),
+		zap.String("handler_name", lifecycle.Name()),
+		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
-	tlsConfig := ctx.CertStore().TLSConfig()
+	tlsConfig := lifecycle.CertStore().TLSConfig()
 
 	proxyHandler := &proxyHttpHandler{
-		handlerName: cfg.HandlerName,
+		handlerName: lifecycle.Name(),
 		options:     opts,
 		logger:      h.logger,
-		emitter:     ctx.Audit(),
+		emitter:     lifecycle.Audit(),
 	}
 
 	proxyHTTPSHandler := &proxyHttpsHandler{
-		handlerName: cfg.HandlerName,
-		tlsConfig:   tlsConfig,
-		logger:      h.logger,
-		emitter:     ctx.Audit(),
+		options:   opts,
+		tlsConfig: tlsConfig,
+		emitter:   lifecycle.Audit(),
 	}
 
 	h.proxy.OnRequest().Do(proxyHandler)
 	h.proxy.OnRequest().HandleConnect(proxyHTTPSHandler)
-	go h.startProxy()
+	go h.startProxy(lifecycle.Uplink().Listener)
+	go h.shutdownOnContextDone(lifecycle.Context())
 	return
 }
 
-func (h *httpProxy) startProxy() {
-	if err := h.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+func (h *httpProxy) startProxy(listener net.Listener) {
+	if err := h.server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		h.logger.Error(
 			"failed to start proxy server",
 			zap.Error(err),
@@ -71,17 +74,14 @@ func (h *httpProxy) startProxy() {
 	}
 }
 
-func (h *httpProxy) Shutdown(ctx context.Context) (err error) {
+func (h *httpProxy) shutdownOnContextDone(ctx context.Context) {
+	<-ctx.Done()
+	var err error
 	h.logger.Info("Shutting down HTTP proxy")
-	if err = h.server.Shutdown(ctx); err != nil {
+	if err = h.server.Close(); err != nil {
 		h.logger.Error(
 			"failed to shutdown proxy endpoint",
 			zap.Error(err),
-		)
-
-		err = fmt.Errorf(
-			"failed to shutdown proxy endpoint: %w",
-			err,
 		)
 	}
 	return

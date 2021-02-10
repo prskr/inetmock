@@ -29,7 +29,7 @@ type Event struct {
 	TLS             *TLSDetails
 }
 
-func (e *Event) ProtoMessage() *EventEntity {
+func (e Event) ProtoMessage() *EventEntity {
 	var tlsDetails *TLSDetailsEntity = nil
 	if e.TLS != nil {
 		tlsDetails = e.TLS.ProtoMessage()

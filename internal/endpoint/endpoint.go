@@ -1,55 +1,42 @@
-//go:generate mockgen -source=$GOFILE -destination=./../../internal/mock/endpoints/endpoint.mock.go -package=endpoints_mock
 package endpoint
 
 import (
 	"context"
+	"time"
 
-	"github.com/google/uuid"
-	"gitlab.com/inetmock/inetmock/pkg/api"
-	"gitlab.com/inetmock/inetmock/pkg/config"
+	"go.uber.org/zap"
 )
 
-type Endpoint interface {
-	Id() uuid.UUID
-	Start(ctx api.PluginContext) error
-	Shutdown(ctx context.Context) error
-	Name() string
-	Handler() string
-	Listen() string
-	Port() uint16
+const (
+	startupTimeoutDuration = 100 * time.Millisecond
+)
+
+type Endpoint struct {
+	Spec
+	name   string
+	uplink Uplink
 }
 
-type endpoint struct {
-	id      uuid.UUID
-	name    string
-	handler api.ProtocolHandler
-	config  config.HandlerConfig
-}
+func (e Endpoint) Start(lifecycle Lifecycle) (err error) {
+	startupResult := make(chan error)
+	ctx, cancel := context.WithTimeout(lifecycle.Context(), startupTimeoutDuration)
+	defer cancel()
 
-func (e endpoint) Id() uuid.UUID {
-	return e.id
-}
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				lifecycle.Logger().Fatal("Startup error recovered", zap.Any("recovered", r))
+			}
+		}()
 
-func (e endpoint) Name() string {
-	return e.name
-}
+		startupResult <- e.Handler.Start(lifecycle)
+	}()
 
-func (e endpoint) Handler() string {
-	return e.config.HandlerName
-}
+	select {
+	case err = <-startupResult:
+	case <-ctx.Done():
+		err = ErrStartupTimeout
+	}
 
-func (e endpoint) Listen() string {
-	return e.config.ListenAddress
-}
-
-func (e endpoint) Port() uint16 {
-	return e.config.Port
-}
-
-func (e *endpoint) Start(ctx api.PluginContext) (err error) {
-	return e.handler.Start(ctx, e.config)
-}
-
-func (e *endpoint) Shutdown(ctx context.Context) (err error) {
-	return e.handler.Shutdown(ctx)
+	return
 }

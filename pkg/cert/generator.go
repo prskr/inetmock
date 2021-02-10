@@ -10,13 +10,6 @@ import (
 	"encoding/pem"
 	"math/big"
 	"net"
-
-	"gitlab.com/inetmock/inetmock/pkg/config"
-	"gitlab.com/inetmock/inetmock/pkg/defaulting"
-)
-
-var (
-	defaulters = defaulting.New()
 )
 
 type GenerationOptions struct {
@@ -37,11 +30,11 @@ type Generator interface {
 	ServerCert(options GenerationOptions, ca *tls.Certificate) (*tls.Certificate, error)
 }
 
-func NewDefaultGenerator(options config.CertOptions) Generator {
+func NewDefaultGenerator(options CertOptions) Generator {
 	return NewGenerator(options, NewTimeSource(), defaultKeyProvider(options))
 }
 
-func NewGenerator(options config.CertOptions, source TimeSource, provider KeyProvider) Generator {
+func NewGenerator(options CertOptions, source TimeSource, provider KeyProvider) Generator {
 	return &generator{
 		options:    options,
 		provider:   provider,
@@ -50,7 +43,7 @@ func NewGenerator(options config.CertOptions, source TimeSource, provider KeyPro
 }
 
 type generator struct {
-	options    config.CertOptions
+	options    CertOptions
 	provider   KeyProvider
 	timeSource TimeSource
 	outDir     string
@@ -65,7 +58,7 @@ func (g *generator) privateKey() (key interface{}, err error) {
 }
 
 func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (cert *tls.Certificate, err error) {
-	defaulters.Apply(&options)
+	applyDefaultGenerationOptions(&options)
 	var serialNumber *big.Int
 	if serialNumber, err = generateSerialNumber(); err != nil {
 		return
@@ -116,7 +109,7 @@ func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (
 }
 
 func (g generator) CACert(options GenerationOptions) (crt *tls.Certificate, err error) {
-	defaulters.Apply(&options)
+	applyDefaultGenerationOptions(&options)
 
 	var privateKey interface{}
 	var serialNumber *big.Int
