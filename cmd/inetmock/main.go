@@ -6,7 +6,6 @@ import (
 	http "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/tls/interceptor"
 )
 
 var (
@@ -18,7 +17,6 @@ func main() {
 		WithHandlerRegistry(
 			http.AddHTTPMock,
 			dns.AddDNSMock,
-			interceptor.AddTLSInterceptor,
 			proxy.AddHTTPProxy,
 			metrics.AddMetricsExporter).
 		WithCommands(serveCmd, generateCaCmd).

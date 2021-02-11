@@ -131,3 +131,7 @@ tasks:
   docs:
     cmds:
       - mdbook build -d ./../public ./docs
+  
+  serve-docs:
+    cmds:
+    - mdbook serve -d ./../public ./docs
