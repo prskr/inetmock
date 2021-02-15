@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/rpc"
 )
 
 var (

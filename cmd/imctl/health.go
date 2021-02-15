@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"gitlab.com/inetmock/inetmock/internal/format"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
+	"gitlab.com/inetmock/inetmock/pkg/rpc"
 )
 
 var (

@@ -4,24 +4,25 @@ import (
 	"context"
 
 	"gitlab.com/inetmock/inetmock/internal/app"
+	"gitlab.com/inetmock/inetmock/pkg/rpc"
 )
 
 type healthServer struct {
-	UnimplementedHealthServer
+	rpc.UnimplementedHealthServer
 	app app.App
 }
 
-func (h healthServer) GetHealth(_ context.Context, _ *HealthRequest) (resp *HealthResponse, err error) {
+func (h healthServer) GetHealth(_ context.Context, _ *rpc.HealthRequest) (resp *rpc.HealthResponse, err error) {
 	checker := h.app.Checker()
 	result := checker.IsHealthy()
 
-	resp = &HealthResponse{
-		OverallHealthState: HealthState(result.Status),
-		ComponentsHealth:   map[string]*ComponentHealth{}}
+	resp = &rpc.HealthResponse{
+		OverallHealthState: rpc.HealthState(result.Status),
+		ComponentsHealth:   map[string]*rpc.ComponentHealth{}}
 
 	for component, status := range result.Components {
-		resp.ComponentsHealth[component] = &ComponentHealth{
-			State:   HealthState(status.Status),
+		resp.ComponentsHealth[component] = &rpc.ComponentHealth{
+			State:   rpc.HealthState(status.Status),
 			Message: status.Message,
 		}
 	}

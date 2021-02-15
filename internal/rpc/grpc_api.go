@@ -8,6 +8,7 @@ import (
 
 	app2 "gitlab.com/inetmock/inetmock/internal/app"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/pkg/rpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -43,11 +44,11 @@ func (i *inetmockAPI) StartServer() (err error) {
 	}
 	i.server = grpc.NewServer()
 
-	RegisterHealthServer(i.server, &healthServer{
+	rpc.RegisterHealthServer(i.server, &healthServer{
 		app: i.app,
 	})
 
-	RegisterAuditServer(i.server, &auditServer{
+	rpc.RegisterAuditServer(i.server, &auditServer{
 		logger:      i.app.Logger(),
 		eventStream: i.app.EventStream(),
 	})
