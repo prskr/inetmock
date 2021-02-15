@@ -19,54 +19,24 @@ type WriterCloserSyncer interface {
 }
 
 func Test_eventWriter_Write(t *testing.T) {
-	type fields struct {
-		order binary.ByteOrder
-	}
 	type args struct {
 		evs []*audit.Event
 	}
 	type testCase struct {
 		name    string
-		fields  fields
 		args    args
 		wantErr bool
 	}
 	tests := []testCase{
 		{
-			name: "Write a single event - little endian",
-			fields: fields{
-				order: binary.LittleEndian,
-			},
+			name: "Write a single event",
 			args: args{
 				evs: testEvents[:1],
 			},
 			wantErr: false,
 		},
 		{
-			name: "Write a single event - big endian",
-			fields: fields{
-				order: binary.BigEndian,
-			},
-			args: args{
-				evs: testEvents[:1],
-			},
-			wantErr: false,
-		},
-		{
-			name: "Write multiple events - little endian",
-			fields: fields{
-				order: binary.LittleEndian,
-			},
-			args: args{
-				evs: testEvents,
-			},
-			wantErr: false,
-		},
-		{
-			name: "Write multiple events - big endian",
-			fields: fields{
-				order: binary.BigEndian,
-			},
+			name: "Write multiple events",
 			args: args{
 				evs: testEvents,
 			},
@@ -86,7 +56,7 @@ func Test_eventWriter_Write(t *testing.T) {
 						Write(gomock.Any()).
 						Do(func(data []byte) {
 							t.Logf("got payload = %s", hex.EncodeToString(data))
-							t.Logf("got length %d", tt.fields.order.Uint32(data))
+							t.Logf("got length %d", binary.BigEndian.Uint32(data))
 						}),
 					writerMock.
 						EXPECT().
@@ -101,7 +71,7 @@ func Test_eventWriter_Write(t *testing.T) {
 			}
 			gomock.InOrder(calls...)
 
-			e := audit.NewEventWriter(writerMock, audit.WithWriterByteOrder(tt.fields.order))
+			e := audit.NewEventWriter(writerMock)
 
 			for _, ev := range tt.args.evs {
 				if err := e.Write(ev); (err != nil) != tt.wantErr {

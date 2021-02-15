@@ -124,9 +124,9 @@ func guessDetailsFromApp(any *anypb.Any) Details {
 		return nil
 	}
 	switch any.TypeUrl {
-	case "type.googleapis.com/inetmock.audit.HTTPDetailsEntity":
+	case "type.googleapis.com/inetmock.audit.details.HTTPDetailsEntity":
 		return details.NewHTTPFromWireFormat(detailsProto.(*details.HTTPDetailsEntity))
-	case "type.googleapis.com/inetmock.audit.DNSDetailsEntity":
+	case "type.googleapis.com/inetmock.audit.details.DNSDetailsEntity":
 		return details.NewDNSFromWireFormat(detailsProto.(*details.DNSDetailsEntity))
 	default:
 		return nil

@@ -19,18 +19,9 @@ type Reader interface {
 
 type EventReaderOption func(reader *eventReader)
 
-var (
-	WithReaderByteOrder = func(order binary.ByteOrder) EventReaderOption {
-		return func(reader *eventReader) {
-			reader.byteOrder = order
-		}
-	}
-)
-
 func NewEventReader(source io.Reader, opts ...EventReaderOption) Reader {
 	reader := &eventReader{
-		source:    source,
-		byteOrder: defaultOrder,
+		source: source,
 		lengthPool: &sync.Pool{
 			New: func() interface{} {
 				return make([]byte, lengthBufferSize)
@@ -53,7 +44,6 @@ func NewEventReader(source io.Reader, opts ...EventReaderOption) Reader {
 type eventReader struct {
 	lengthPool  *sync.Pool
 	payloadPool *sync.Pool
-	byteOrder   binary.ByteOrder
 	source      io.Reader
 }
 
@@ -63,7 +53,7 @@ func (e eventReader) Read() (ev Event, err error) {
 		return
 	}
 
-	length := e.byteOrder.Uint32(lengthBuf)
+	length := binary.BigEndian.Uint32(lengthBuf)
 	var msgBuf []byte
 	if length <= defaultPayloadBufferSize {
 		msgBuf = e.payloadPool.Get().([]byte)[:length]

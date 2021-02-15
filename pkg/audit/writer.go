@@ -12,12 +12,6 @@ import (
 )
 
 var (
-	WithWriterByteOrder = func(order binary.ByteOrder) func(writer *eventWriter) {
-		return func(writer *eventWriter) {
-			writer.byteOrder = order
-		}
-	}
-	defaultOrder         = binary.BigEndian
 	ErrValueMostNotBeNil = errors.New("event value must not be nil")
 )
 
@@ -30,8 +24,7 @@ type EventWriterOption func(writer *eventWriter)
 
 func NewEventWriter(target io.Writer, opts ...EventWriterOption) Writer {
 	writer := &eventWriter{
-		target:    target,
-		byteOrder: defaultOrder,
+		target: target,
 		lengthPool: &sync.Pool{
 			New: func() interface{} {
 				return make([]byte, lengthBufferSize)
@@ -49,7 +42,6 @@ func NewEventWriter(target io.Writer, opts ...EventWriterOption) Writer {
 type eventWriter struct {
 	lengthPool *sync.Pool
 	target     io.Writer
-	byteOrder  binary.ByteOrder
 }
 
 type syncer interface {
@@ -66,7 +58,7 @@ func (e eventWriter) Write(ev *Event) (err error) {
 		return
 	}
 	buf := e.lengthPool.Get().([]byte)
-	e.byteOrder.PutUint32(buf, uint32(len(bytes)))
+	binary.BigEndian.PutUint32(buf, uint32(len(bytes)))
 
 	if _, err = e.target.Write(buf); err != nil {
 		return
