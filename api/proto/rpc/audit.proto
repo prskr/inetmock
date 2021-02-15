@@ -6,7 +6,7 @@ option java_package = "com.github.baez90.inetmock.rpc";
 option java_outer_classname = "AuditProto";
 option csharp_namespace = "INetMock.Client.Rpc";
 
-import 'proto/audit/event_entity.proto';
+import 'audit/event_entity.proto';
 
 package inetmock.rpc;
 
