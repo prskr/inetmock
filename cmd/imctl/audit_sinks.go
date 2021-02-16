@@ -12,6 +12,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/format"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
+	"go.uber.org/zap"
 )
 
 var (
@@ -75,7 +76,15 @@ func runAddFile(_ *cobra.Command, args []string) (err error) {
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
-	_, err = auditClient.RegisterFileSink(ctx, &rpc.RegisterFileSinkRequest{TargetPath: args[0]})
+	var resp *rpc.RegisterFileSinkResponse
+	resp, err = auditClient.RegisterFileSink(ctx, &rpc.RegisterFileSinkRequest{TargetPath: args[0]})
+
+	if err != nil {
+		return
+	}
+
+	cliApp.Logger().Info("Successfully registered file sink", zap.String("targetPath", resp.ResolvedPath))
+
 	return
 }
 

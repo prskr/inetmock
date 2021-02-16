@@ -6,7 +6,9 @@ import (
 	"os"
 	"time"
 
-	app2 "gitlab.com/inetmock/inetmock/internal/app"
+	"gitlab.com/inetmock/inetmock/internal/pcap"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
 	"go.uber.org/zap"
@@ -20,20 +22,30 @@ type INetMockAPI interface {
 }
 
 type inetmockAPI struct {
-	app           app2.App
 	url           *url.URL
 	server        *grpc.Server
 	logger        logging.Logger
-	serverRunning bool
+	checker       health.Checker
+	eventStream   audit.EventStream
+	auditDataDir  string
+	pcapDataDir   string
+	serverRunning chan struct{}
 }
 
 func NewINetMockAPI(
-	app app2.App,
+	cfg Config,
+	logger logging.Logger,
+	checker health.Checker,
+	eventStream audit.EventStream,
+	auditDataDir, pcapDataDir string,
 ) INetMockAPI {
 	return &inetmockAPI{
-		app:    app,
-		url:    app.Config().APIConfig().ListenURL(),
-		logger: app.Logger().Named("api"),
+		url:          cfg.ListenURL(),
+		logger:       logger.Named("api"),
+		checker:      checker,
+		eventStream:  eventStream,
+		auditDataDir: auditDataDir,
+		pcapDataDir:  pcapDataDir,
 	}
 }
 
@@ -45,12 +57,18 @@ func (i *inetmockAPI) StartServer() (err error) {
 	i.server = grpc.NewServer()
 
 	rpc.RegisterHealthServer(i.server, &healthServer{
-		app: i.app,
+		checker: i.checker,
 	})
 
 	rpc.RegisterAuditServer(i.server, &auditServer{
-		logger:      i.app.Logger(),
-		eventStream: i.app.EventStream(),
+		logger:           i.logger,
+		eventStream:      i.eventStream,
+		auditDataDirPath: i.auditDataDir,
+	})
+
+	rpc.RegisterPCAPServer(i.server, &pcapServer{
+		recorder:    pcap.NewRecorder(),
+		pcapDataDir: i.pcapDataDir,
 	})
 
 	reflection.Register(i.server)
@@ -60,7 +78,7 @@ func (i *inetmockAPI) StartServer() (err error) {
 }
 
 func (i *inetmockAPI) StopServer() {
-	if !i.serverRunning {
+	if !i.isRunning() {
 		i.logger.Info(
 			"Skipping API server shutdown because server is not running",
 		)
@@ -80,13 +98,22 @@ func (i *inetmockAPI) StopServer() {
 }
 
 func (i *inetmockAPI) startServerAsync(listener net.Listener) {
-	i.serverRunning = true
+	i.serverRunning = make(chan struct{})
+	defer close(i.serverRunning)
 	if err := i.server.Serve(listener); err != nil {
-		i.serverRunning = false
 		i.logger.Error(
 			"failed to start INetMock API",
 			zap.Error(err),
 		)
+	}
+}
+
+func (i inetmockAPI) isRunning() bool {
+	select {
+	case _, more := <-i.serverRunning:
+		return more
+	default:
+		return true
 	}
 }
 

@@ -54,6 +54,10 @@ x-http-handlers: &httpHandlers
       options:
         <<: *httpResponseRules
 
+data:
+  pcap: /var/lib/inetmock/data/pcap
+  audit: /var/lib/inetmock/data/audit
+
 api:
   listen: unix:///var/run/inetmock.sock
 

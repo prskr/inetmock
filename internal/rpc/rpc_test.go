@@ -1,4 +1,4 @@
-package app
+package rpc
 
 import (
 	"net/url"
@@ -60,7 +60,7 @@ func TestRPC_ListenURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := RPC{
+			r := Config{
 				Listen: tt.fields.Listen,
 			}
 			if gotU := r.ListenURL(); !reflect.DeepEqual(gotU, tt.wantU) {

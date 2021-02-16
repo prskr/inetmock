@@ -7,6 +7,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
+	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.2.0
 	github.com/imdario/mergo v0.3.11
 	github.com/jinzhu/copier v0.2.4

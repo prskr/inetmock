@@ -3,18 +3,17 @@ package rpc
 import (
 	"context"
 
-	"gitlab.com/inetmock/inetmock/internal/app"
+	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
 )
 
 type healthServer struct {
 	rpc.UnimplementedHealthServer
-	app app.App
+	checker health.Checker
 }
 
 func (h healthServer) GetHealth(_ context.Context, _ *rpc.HealthRequest) (resp *rpc.HealthResponse, err error) {
-	checker := h.app.Checker()
-	result := checker.IsHealthy()
+	result := h.checker.IsHealthy()
 
 	resp = &rpc.HealthResponse{
 		OverallHealthState: rpc.HealthState(result.Status),

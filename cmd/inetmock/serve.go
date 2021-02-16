@@ -16,7 +16,14 @@ var (
 )
 
 func startINetMock(_ *cobra.Command, _ []string) (err error) {
-	rpcAPI := rpc.NewINetMockAPI(serverApp)
+	rpcAPI := rpc.NewINetMockAPI(
+		serverApp.Config().APIConfig(),
+		serverApp.Logger(),
+		serverApp.Checker(),
+		serverApp.EventStream(),
+		serverApp.Config().AuditDataDir(),
+		serverApp.Config().PCAPDataDir(),
+	)
 	logger := serverApp.Logger()
 
 	cfg := serverApp.Config()

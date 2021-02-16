@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+option go_package = "gitlab.com/inetmock/inetmock/pkg/rpc";
+option java_multiple_files = true;
+option java_package = "com.github.baez90.inetmock.rpc";
+option java_outer_classname = "AuditProto";
+option csharp_namespace = "INetMock.Client.Rpc";
+
+package inetmock.rpc;
+
+message ListAvailableDevicesRequest {
+
+}
+
+message ListAvailableDevicesResponse {
+
+    message PCAPDevice {
+        string name = 1;
+        repeated bytes addresses = 2;
+    }
+
+    repeated PCAPDevice availableDevices = 1;
+}
+
+message ListRecordingsRequest {
+
+}
+
+message ListRecordingsResponse {
+    message ConsumerList {
+        repeated string consumers = 1;
+    }
+    map<string, ConsumerList> subscriptions = 1;
+}
+
+message RegisterPCAPFileRecordRequest {
+    string device = 1;
+    string targetPath = 2;
+}
+
+message RegisterPCAPFileRecordResponse {
+    string resolvedPath = 1;
+}
+
+message RemovePCAPFileRecordRequest {
+    string device = 1;
+    string targetPath = 2;
+}
+
+message RemovePCAPFileRecordResponse {
+    bool removed = 1;
+}
+
+service PCAP {
+    rpc ListAvailableDevices(ListAvailableDevicesRequest) returns (ListAvailableDevicesResponse);
+    rpc ListRecordings(ListRecordingsRequest) returns (ListRecordingsResponse);
+    rpc RegisterPCAPFileRecord(RegisterPCAPFileRecordRequest) returns (RegisterPCAPFileRecordResponse);
+    rpc RemovePCAPFileRecord(RemovePCAPFileRecordRequest) returns (RemovePCAPFileRecordResponse);
+}

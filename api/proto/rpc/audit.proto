@@ -21,12 +21,10 @@ message WatchEventsRequest {
 
 message RegisterFileSinkRequest {
     string targetPath = 1;
-    FileOpenMode openMode = 2;
-    uint32 permissions = 3;
 }
 
 message RegisterFileSinkResponse {
-
+    string resolvedPath = 1;
 }
 
 message RemoveFileSinkRequest {

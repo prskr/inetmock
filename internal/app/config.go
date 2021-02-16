@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/viper"
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/internal/rpc"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/path"
 )
@@ -38,7 +39,9 @@ type Config interface {
 	ReadConfig(configFilePath string) error
 	ReadConfigString(config, format string) error
 	TLSConfig() cert.CertOptions
-	APIConfig() RPC
+	APIConfig() rpc.Config
+	AuditDataDir() string
+	PCAPDataDir() string
 	ListenerSpecs() map[string]endpoint.ListenerSpec
 }
 
@@ -46,11 +49,28 @@ type config struct {
 	cfg       *viper.Viper
 	TLS       cert.CertOptions
 	Listeners map[string]endpoint.ListenerSpec
-	API       RPC
+	API       rpc.Config
+	Data      Data
 }
 
-func (c *config) APIConfig() RPC {
+func (c config) AuditDataDir() string {
+	return c.Data.Audit
+}
+
+func (c config) PCAPDataDir() string {
+	return c.Data.PCAP
+}
+
+func (c config) APIConfig() rpc.Config {
 	return c.API
+}
+
+func (c config) ListenerSpecs() map[string]endpoint.ListenerSpec {
+	return c.Listeners
+}
+
+func (c config) TLSConfig() cert.CertOptions {
+	return c.TLS
 }
 
 func (c *config) ReadConfigString(config, format string) (err error) {
@@ -61,14 +81,6 @@ func (c *config) ReadConfigString(config, format string) (err error) {
 
 	err = c.cfg.Unmarshal(c)
 	return
-}
-
-func (c config) ListenerSpecs() map[string]endpoint.ListenerSpec {
-	return c.Listeners
-}
-
-func (c config) TLSConfig() cert.CertOptions {
-	return c.TLS
 }
 
 func (c *config) ReadConfig(configFilePath string) (err error) {
@@ -83,7 +95,13 @@ func (c *config) ReadConfig(configFilePath string) (err error) {
 		}
 	}
 
-	err = c.cfg.Unmarshal(c)
+	if err = c.cfg.Unmarshal(c); err != nil {
+		return
+	}
+
+	if err = c.Data.setup(); err != nil {
+		return
+	}
 
 	return
 }
