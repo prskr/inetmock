@@ -2,6 +2,7 @@ package pcap
 
 import (
 	"context"
+	"io"
 	"net"
 	"time"
 
@@ -29,6 +30,7 @@ type RecordingOptions struct {
 }
 
 type Recorder interface {
+	io.Closer
 	AvailableDevices() (devices []Device, err error)
 	Subscriptions() (subscriptions []Subscription)
 	StartRecording(ctx context.Context, device string, consumer Consumer) (err error)

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	_ "github.com/google/gopacket/layers"
+	"go.uber.org/multierr"
 )
 
 const (
@@ -37,7 +38,7 @@ type recorder struct {
 
 func (r recorder) Subscriptions() (subscriptions []Subscription) {
 	r.locker.Lock()
-	r.locker.Unlock()
+	defer r.locker.Unlock()
 
 	for devName, dev := range r.openDevices {
 		sub := Subscription{
@@ -100,7 +101,7 @@ func (r *recorder) StartRecording(ctx context.Context, device string, consumer C
 
 func (r *recorder) StopRecording(consumerKey string) (err error) {
 	r.locker.Lock()
-	r.locker.Unlock()
+	defer r.locker.Unlock()
 
 	var dev deviceConsumer
 	var known bool
@@ -112,5 +113,15 @@ func (r *recorder) StopRecording(consumerKey string) (err error) {
 
 	err = dev.Close()
 
+	return
+}
+
+func (r recorder) Close() (err error) {
+	r.locker.Lock()
+	defer r.locker.Unlock()
+
+	for _, consumer := range r.openDevices {
+		err = multierr.Append(err, consumer.Close())
+	}
 	return
 }

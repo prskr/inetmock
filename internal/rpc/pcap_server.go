@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
+	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -61,7 +62,7 @@ func (p pcapServer) StartPCAPFileRecording(_ context.Context, req *rpc.RegisterP
 	}
 
 	var consumer pcap.Consumer
-	if consumer, err = pcap.NewWriterConsumer(req.TargetPath, writer); err != nil {
+	if consumer, err = consumers.NewWriterConsumer(req.TargetPath, writer); err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 

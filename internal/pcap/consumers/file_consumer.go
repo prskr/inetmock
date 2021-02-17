@@ -1,10 +1,11 @@
-package pcap
+package consumers
 
 import (
 	"io"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcapgo"
+	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"go.uber.org/multierr"
 )
 
@@ -14,11 +15,11 @@ type writerConsumer struct {
 	packageWriter *pcapgo.Writer
 }
 
-func (f *writerConsumer) Init(params CaptureParameters) {
+func (f *writerConsumer) Init(params pcap.CaptureParameters) {
 	_ = f.packageWriter.WriteFileHeader(65536, params.LinkType)
 }
 
-func NewWriterConsumer(name string, writer io.Writer) (consumer Consumer, err error) {
+func NewWriterConsumer(name string, writer io.Writer) (consumer pcap.Consumer, err error) {
 	consumer = &writerConsumer{
 		name:          name,
 		origWriter:    writer,
