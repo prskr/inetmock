@@ -8,6 +8,8 @@ option csharp_namespace = "INetMock.Client.Rpc";
 
 package inetmock.rpc;
 
+import "google/protobuf/duration.proto";
+
 message ListAvailableDevicesRequest {
 
 }
@@ -27,15 +29,14 @@ message ListRecordingsRequest {
 }
 
 message ListRecordingsResponse {
-    message ConsumerList {
-        repeated string consumers = 1;
-    }
-    map<string, ConsumerList> subscriptions = 1;
+    repeated string subscriptions = 1;
 }
 
 message RegisterPCAPFileRecordRequest {
     string device = 1;
     string targetPath = 2;
+    bool promiscuous = 3;
+    google.protobuf.Duration readTimeout = 4;
 }
 
 message RegisterPCAPFileRecordResponse {
@@ -43,8 +44,7 @@ message RegisterPCAPFileRecordResponse {
 }
 
 message RemovePCAPFileRecordRequest {
-    string device = 1;
-    string targetPath = 2;
+    string consumerKey = 1;
 }
 
 message RemovePCAPFileRecordResponse {
@@ -53,7 +53,7 @@ message RemovePCAPFileRecordResponse {
 
 service PCAP {
     rpc ListAvailableDevices(ListAvailableDevicesRequest) returns (ListAvailableDevicesResponse);
-    rpc ListRecordings(ListRecordingsRequest) returns (ListRecordingsResponse);
-    rpc RegisterPCAPFileRecord(RegisterPCAPFileRecordRequest) returns (RegisterPCAPFileRecordResponse);
-    rpc RemovePCAPFileRecord(RemovePCAPFileRecordRequest) returns (RemovePCAPFileRecordResponse);
+    rpc ListActiveRecordings(ListRecordingsRequest) returns (ListRecordingsResponse);
+    rpc StartPCAPFileRecording(RegisterPCAPFileRecordRequest) returns (RegisterPCAPFileRecordResponse);
+    rpc StopPCAPFileRecord(RemovePCAPFileRecordRequest) returns (RemovePCAPFileRecordResponse);
 }

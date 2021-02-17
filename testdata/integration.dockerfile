@@ -1,6 +1,10 @@
-FROM golang:1.15-alpine as build
+FROM docker.io/library/golang:1.16-alpine as build
 
 WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod download
 
 COPY ./ ./
 

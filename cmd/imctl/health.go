@@ -36,13 +36,15 @@ The output contains information about each component and it's health state.
 	}
 )
 
-type printableHealthInfo struct {
-	Component string
-	State     string
-	Message   string
-}
+func fromComponentsHealth(componentsHealth map[string]*rpc.ComponentHealth) interface{} {
+	type printableHealthInfo struct {
+		Component string
+		State     string
+		Message   string
+	}
 
-func fromComponentsHealth(componentsHealth map[string]*rpc.ComponentHealth) (componentsInfo []printableHealthInfo) {
+	var componentsInfo []printableHealthInfo
+
 	for componentName, component := range componentsHealth {
 		componentsInfo = append(componentsInfo, printableHealthInfo{
 			Component: componentName,
@@ -50,7 +52,7 @@ func fromComponentsHealth(componentsHealth map[string]*rpc.ComponentHealth) (com
 			Message:   component.Message,
 		})
 	}
-	return
+	return componentsInfo
 }
 
 func getHealthResult() (healthResp *rpc.HealthResponse, err error) {

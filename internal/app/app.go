@@ -334,7 +334,7 @@ func NewApp(name, short string) App {
 		ctx:    ctx,
 		cancel: cancel,
 	}
-
+	a.rootCmd.AddCommand(completionCmd)
 	a.rootCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "Path to config file that should be used")
 	a.rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "logging level to use")
 	a.rootCmd.PersistentFlags().BoolVar(&developmentLogs, "development-logs", false, "Enable development mode logs")

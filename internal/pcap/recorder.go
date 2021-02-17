@@ -3,66 +3,35 @@ package pcap
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 	"time"
+
+	_ "github.com/google/gopacket/layers"
 )
 
 const (
-	defaultSnapshotLength int32 = 1600
-	defaultReadTimeout          = 30 * time.Second
+	DefaultReadTimeout = 30 * time.Second
 )
 
 var (
 	ErrConsumerAlreadyRegistered = errors.New("consumer with the given name is already registered")
-	WithSnapshotLength           = func(snapshotLength int32) RecorderOption {
-		return func(opt recorderOptions) recorderOptions {
-			opt.snapshotLength = snapshotLength
-			return opt
-		}
-	}
-
-	WithPromiscuous = func(promiscuous bool) RecorderOption {
-		return func(opt recorderOptions) recorderOptions {
-			opt.promiscuous = promiscuous
-			return opt
-		}
-	}
-	WithReadTimeout = func(readTimeout time.Duration) RecorderOption {
-		return func(opt recorderOptions) recorderOptions {
-			opt.readTimeout = readTimeout
-			return opt
-		}
+	DefaultRecordingOptions      = RecordingOptions{
+		ReadTimeout: DefaultReadTimeout,
+		Promiscuous: false,
 	}
 )
 
-type recorderOptions struct {
-	snapshotLength int32
-	promiscuous    bool
-	readTimeout    time.Duration
-}
-
-func NewRecorder(options ...RecorderOption) Recorder {
-	opts := recorderOptions{
-		snapshotLength: defaultSnapshotLength,
-		promiscuous:    true,
-		readTimeout:    defaultReadTimeout,
-	}
-
-	for i := range options {
-		opts = options[i](opts)
-	}
-
+func NewRecorder() Recorder {
 	return &recorder{
 		locker:      new(sync.Mutex),
-		opts:        opts,
 		openDevices: make(map[string]deviceConsumer),
 	}
 }
 
 type recorder struct {
 	locker      sync.Locker
-	opts        recorderOptions
 	openDevices map[string]deviceConsumer
 }
 
@@ -72,11 +41,9 @@ func (r recorder) Subscriptions() (subscriptions []Subscription) {
 
 	for devName, dev := range r.openDevices {
 		sub := Subscription{
-			Device: devName,
+			ConsumerKey: devName,
 		}
-		for name := range dev.consumers {
-			sub.Consumers = append(sub.Consumers, name)
-		}
+		sub.ConsumerName = dev.consumer.Name()
 		subscriptions = append(subscriptions, sub)
 	}
 	return
@@ -106,37 +73,44 @@ func (recorder) AvailableDevices() (devices []Device, err error) {
 	return
 }
 
-func (r *recorder) Subscribe(ctx context.Context, device string, consumer Consumer) (err error) {
+func (r recorder) StartRecordingWithOptions(ctx context.Context, device string, consumer Consumer, opts RecordingOptions) (err error) {
 	r.locker.Lock()
 	defer r.locker.Unlock()
 
+	consumerKey := fmt.Sprintf("%s:%s", device, consumer.Name())
 	var openDev deviceConsumer
 	var alreadyOpened bool
-	if openDev, alreadyOpened = r.openDevices[device]; !alreadyOpened || openDev.CleanupOrphaned() {
-		if openDev, err = openDeviceForConsumers(device, r.opts); err != nil {
-			return
-		}
-		openDev.StartTransport()
-		r.openDevices[device] = openDev
-	}
-
-	if err = openDev.AddConsumer(ctx, consumer); err != nil {
+	if openDev, alreadyOpened = r.openDevices[consumerKey]; alreadyOpened {
+		err = ErrConsumerAlreadyRegistered
 		return
 	}
+
+	if openDev, err = openDeviceForConsumers(ctx, device, consumer, opts); err != nil {
+		return
+	}
+	openDev.StartTransport()
+	r.openDevices[consumerKey] = openDev
 
 	return
 }
 
-func (r *recorder) RemoveSubscriptions(device, consumerName string) (removed bool) {
+func (r *recorder) StartRecording(ctx context.Context, device string, consumer Consumer) (err error) {
+	return r.StartRecordingWithOptions(ctx, device, consumer, DefaultRecordingOptions)
+}
+
+func (r *recorder) StopRecording(consumerKey string) (err error) {
 	r.locker.Lock()
 	r.locker.Unlock()
 
 	var dev deviceConsumer
 	var known bool
-	if dev, known = r.openDevices[device]; !known {
-		return false
+	if dev, known = r.openDevices[consumerKey]; !known {
+		return nil
 	}
 
-	removed, _ = dev.RemoveConsumer(consumerName)
+	delete(r.openDevices, consumerKey)
+
+	err = dev.Close()
+
 	return
 }

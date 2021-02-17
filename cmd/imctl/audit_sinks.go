@@ -47,18 +47,18 @@ var (
 	}
 )
 
-type printableSink struct {
-	Name string
-}
-
 func runListSinks(*cobra.Command, []string) (err error) {
 	auditClient := rpc.NewAuditClient(conn)
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
 	var resp *rpc.ListSinksResponse
-	if resp, err = auditClient.ListSinks(ctx, &rpc.ListSinksRequest{}); err != nil {
+	if resp, err = auditClient.ListSinks(ctx, new(rpc.ListSinksRequest)); err != nil {
 		return
+	}
+
+	type printableSink struct {
+		Name string
 	}
 
 	var sinks []printableSink

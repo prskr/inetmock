@@ -4,23 +4,18 @@ import (
 	"io"
 
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 	"go.uber.org/multierr"
 )
 
 type writerConsumer struct {
-	name           string
-	origWriter     io.Writer
-	packageWriter  *pcapgo.Writer
-	snapshotLength int32
-	linkType       layers.LinkType
+	name          string
+	origWriter    io.Writer
+	packageWriter *pcapgo.Writer
 }
 
 func (f *writerConsumer) Init(params CaptureParameters) {
-	f.snapshotLength = params.SnapshotLength
-	f.linkType = params.LinkType
-	_ = f.packageWriter.WriteFileHeader(uint32(params.SnapshotLength), params.LinkType)
+	_ = f.packageWriter.WriteFileHeader(65536, params.LinkType)
 }
 
 func NewWriterConsumer(name string, writer io.Writer) (consumer Consumer, err error) {
@@ -40,9 +35,7 @@ func (f writerConsumer) Observe(pkg gopacket.Packet) {
 	if f.packageWriter == nil {
 		return
 	}
-	if pkg.ApplicationLayer() != nil {
-		_ = f.packageWriter.WritePacket(pkg.Metadata().CaptureInfo, pkg.Data())
-	}
+	_ = f.packageWriter.WritePacket(pkg.Metadata().CaptureInfo, pkg.Data())
 }
 
 func (f *writerConsumer) Close() (err error) {

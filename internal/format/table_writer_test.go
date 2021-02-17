@@ -16,6 +16,12 @@ func Test_tblWriter_Write(t *testing.T) {
 		Age  int    `table:"Age in years"`
 	}
 
+	type s3 struct {
+		Name        string
+		Age         int
+		privateCity string
+	}
+
 	type args struct {
 		in interface{}
 	}
@@ -114,10 +120,26 @@ func Test_tblWriter_Write(t *testing.T) {
 | Ted Tester |           28 |
 `,
 		},
+		{
+			name: "Test write table without errors and with private field",
+			args: args{
+				in: s3{
+					Name:        "Ted Tester",
+					Age:         28,
+					privateCity: "Munich",
+				},
+			},
+			wantErr: false,
+			wantResult: `
+|    NAME    | AGE |
+|------------|-----|
+| Ted Tester |  28 |
+`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			bldr := &strings.Builder{}
+			bldr := new(strings.Builder)
 
 			// hack to be able to format expected strings pretty
 			bldr.WriteRune('\n')

@@ -19,7 +19,7 @@ var (
 
 	auditCmd = &cobra.Command{
 		Use:   "audit",
-		Short: "Interact with the audit stream",
+		Short: "Interact with the audit API",
 	}
 
 	listenerName string

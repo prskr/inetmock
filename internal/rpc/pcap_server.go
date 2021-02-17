@@ -20,15 +20,11 @@ type pcapServer struct {
 	pcapDataDir string
 }
 
-func (p pcapServer) ListRecordings(context.Context, *rpc.ListRecordingsRequest) (resp *rpc.ListRecordingsResponse, _ error) {
-	resp = &rpc.ListRecordingsResponse{
-		Subscriptions: make(map[string]*rpc.ListRecordingsResponse_ConsumerList),
-	}
+func (p pcapServer) ListActiveRecordings(context.Context, *rpc.ListRecordingsRequest) (resp *rpc.ListRecordingsResponse, _ error) {
+	resp = new(rpc.ListRecordingsResponse)
 	subs := p.recorder.Subscriptions()
 	for i := range subs {
-		resp.Subscriptions[subs[i].Device] = &rpc.ListRecordingsResponse_ConsumerList{
-			Consumers: subs[i].Consumers,
-		}
+		resp.Subscriptions = append(resp.Subscriptions, subs[i].ConsumerKey)
 	}
 
 	return
@@ -52,7 +48,7 @@ func (p pcapServer) ListAvailableDevices(context.Context, *rpc.ListAvailableDevi
 	return resp, nil
 }
 
-func (p pcapServer) RegisterPCAPFileRecord(_ context.Context, req *rpc.RegisterPCAPFileRecordRequest) (*rpc.RegisterPCAPFileRecordResponse, error) {
+func (p pcapServer) StartPCAPFileRecording(_ context.Context, req *rpc.RegisterPCAPFileRecordRequest) (*rpc.RegisterPCAPFileRecordResponse, error) {
 	var targetPath = req.TargetPath
 	if !filepath.IsAbs(targetPath) {
 		targetPath = filepath.Join(p.pcapDataDir, req.TargetPath)
@@ -68,7 +64,18 @@ func (p pcapServer) RegisterPCAPFileRecord(_ context.Context, req *rpc.RegisterP
 	if consumer, err = pcap.NewWriterConsumer(req.TargetPath, writer); err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	if err = p.recorder.Subscribe(context.Background(), req.Device, consumer); err != nil {
+
+	readTimeout := req.ReadTimeout.AsDuration()
+	if readTimeout == 0 {
+		readTimeout = pcap.DefaultReadTimeout
+	}
+
+	opts := pcap.RecordingOptions{
+		Promiscuous: req.Promiscuous,
+		ReadTimeout: readTimeout,
+	}
+
+	if err = p.recorder.StartRecordingWithOptions(context.Background(), req.Device, consumer, opts); err != nil {
 		if errors.Is(err, pcap.ErrConsumerAlreadyRegistered) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
@@ -80,9 +87,9 @@ func (p pcapServer) RegisterPCAPFileRecord(_ context.Context, req *rpc.RegisterP
 	}, nil
 }
 
-func (p pcapServer) RemovePCAPFileRecord(_ context.Context, request *rpc.RemovePCAPFileRecordRequest) (resp *rpc.RemovePCAPFileRecordResponse, _ error) {
+func (p pcapServer) StopPCAPFileRecord(_ context.Context, request *rpc.RemovePCAPFileRecordRequest) (resp *rpc.RemovePCAPFileRecordResponse, _ error) {
 	resp = new(rpc.RemovePCAPFileRecordResponse)
-	resp.Removed = p.recorder.RemoveSubscriptions(request.Device, request.TargetPath)
+	resp.Removed = p.recorder.StopRecording(request.ConsumerKey) == nil
 	return
 }
 

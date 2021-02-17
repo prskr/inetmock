@@ -25,7 +25,7 @@ func main() {
 	healthCmd.AddCommand(generalHealthCmd, containerHealthCmd)
 
 	cliApp = app.NewApp("imctl", "IMCTL is the CLI app to interact with an INetMock server").
-		WithCommands(healthCmd, auditCmd).
+		WithCommands(healthCmd, auditCmd, pcapCmd).
 		WithInitTasks(func(_ *cobra.Command, _ []string) (err error) {
 			return initGRPCConnection()
 		}).
@@ -49,6 +49,7 @@ func main() {
 
 	watchEventsCmd.PersistentFlags().StringVar(&listenerName, "listener-name", fmt.Sprintf("%s\\%s is watching", hostname, currentUser), "set listener name - defaults to the current username, if the user cannot be determined a random UUID will be used")
 	auditCmd.AddCommand(listSinksCmd, watchEventsCmd, addFileCmd, removeFileCmd, readFileCmd)
+	pcapCmd.AddCommand(listAvailableDevicesCmd, listCurrentlyRecordingsCmd, addRecordingCmd, removeCurrentlyActiveRecording)
 
 	cliApp.MustRun()
 }

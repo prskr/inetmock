@@ -67,16 +67,19 @@ func (t *tblWriter) getData(val reflect.Value, numberOfFields int) (data []strin
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
+
 	for i := 0; i < numberOfFields; i++ {
-		data = append(data, value(val.Field(i)))
+		field := val.Field(i)
+		if !isPrivateField(val.Type(), i) {
+			data = append(data, value(field))
+		}
 	}
 
 	return
 }
 
 func value(val reflect.Value) string {
-
-	if val.IsZero() {
+	if val.IsZero() || !val.IsValid() {
 		return ""
 	}
 
@@ -104,6 +107,9 @@ func value(val reflect.Value) string {
 
 func headersForType(t reflect.Type, numberOfFields int) (headers []string) {
 	for i := 0; i < numberOfFields; i++ {
+		if isPrivateField(t, i) {
+			continue
+		}
 		field := t.Field(i)
 		if tableTag, ok := field.Tag.Lookup("table"); ok {
 			headers = append(headers, tableTag)
@@ -112,4 +118,12 @@ func headersForType(t reflect.Type, numberOfFields int) (headers []string) {
 		}
 	}
 	return
+}
+
+func isPrivateField(t reflect.Type, idx int) bool {
+	varPrefix := t.Field(idx).Name[0:1]
+	if varPrefix >= "a" && varPrefix <= "z" {
+		return true
+	}
+	return false
 }
