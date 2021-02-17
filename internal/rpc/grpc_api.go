@@ -33,14 +33,14 @@ type inetmockAPI struct {
 }
 
 func NewINetMockAPI(
-	cfg Config,
+	url *url.URL,
 	logger logging.Logger,
 	checker health.Checker,
 	eventStream audit.EventStream,
 	auditDataDir, pcapDataDir string,
 ) INetMockAPI {
 	return &inetmockAPI{
-		url:          cfg.ListenURL(),
+		url:          url,
 		logger:       logger.Named("api"),
 		checker:      checker,
 		eventStream:  eventStream,

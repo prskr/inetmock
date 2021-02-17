@@ -1,3 +1,5 @@
+// +build linux
+
 package pcap
 
 import (
@@ -5,9 +7,6 @@ import (
 	"io"
 	"net"
 	"time"
-
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 )
 
 type Device struct {
@@ -18,10 +17,6 @@ type Device struct {
 type Subscription struct {
 	ConsumerKey  string
 	ConsumerName string
-}
-
-type CaptureParameters struct {
-	LinkType layers.LinkType
 }
 
 type RecordingOptions struct {
@@ -36,10 +31,4 @@ type Recorder interface {
 	StartRecording(ctx context.Context, device string, consumer Consumer) (err error)
 	StartRecordingWithOptions(ctx context.Context, device string, consumer Consumer, opts RecordingOptions) (err error)
 	StopRecording(consumerKey string) (err error)
-}
-
-type Consumer interface {
-	Name() string
-	Observe(pkg gopacket.Packet)
-	Init(params CaptureParameters)
 }

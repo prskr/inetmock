@@ -23,6 +23,8 @@ builds:
       - -w -s
     goos:
       - linux
+      - freebsd
+      - darwin
       - windows
     goarch:
       - amd64

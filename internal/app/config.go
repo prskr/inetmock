@@ -1,11 +1,11 @@
 package app
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/spf13/viper"
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/path"
 )
@@ -39,17 +39,21 @@ type Config interface {
 	ReadConfig(configFilePath string) error
 	ReadConfigString(config, format string) error
 	TLSConfig() cert.CertOptions
-	APIConfig() rpc.Config
+	APIURL() *url.URL
 	AuditDataDir() string
 	PCAPDataDir() string
 	ListenerSpecs() map[string]endpoint.ListenerSpec
+}
+
+type apiConfig struct {
+	Listen string
 }
 
 type config struct {
 	cfg       *viper.Viper
 	TLS       cert.CertOptions
 	Listeners map[string]endpoint.ListenerSpec
-	API       rpc.Config
+	api       apiConfig
 	Data      Data
 }
 
@@ -61,8 +65,13 @@ func (c config) PCAPDataDir() string {
 	return c.Data.PCAP
 }
 
-func (c config) APIConfig() rpc.Config {
-	return c.API
+func (c config) APIURL() *url.URL {
+	if u, err := url.Parse(c.api.Listen); err != nil {
+		u, _ = url.Parse("tcp://:0")
+		return u
+	} else {
+		return u
+	}
 }
 
 func (c config) ListenerSpecs() map[string]endpoint.ListenerSpec {
