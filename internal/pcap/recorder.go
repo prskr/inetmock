@@ -19,8 +19,9 @@ const (
 )
 
 var (
-	ErrConsumerAlreadyRegistered = errors.New("consumer with the given name is already registered")
-	DefaultRecordingOptions      = RecordingOptions{
+	ErrConsumerAlreadyRegistered    = errors.New("consumer with the given name is already registered")
+	ErrNoMatchingConsumerRegistered = errors.New("no consumer with given key is registered")
+	DefaultRecordingOptions         = RecordingOptions{
 		ReadTimeout: DefaultReadTimeout,
 		Promiscuous: false,
 	}
@@ -108,7 +109,8 @@ func (r *recorder) StopRecording(consumerKey string) (err error) {
 	var dev deviceConsumer
 	var known bool
 	if dev, known = r.openDevices[consumerKey]; !known {
-		return nil
+		err = ErrNoMatchingConsumerRegistered
+		return
 	}
 
 	delete(r.openDevices, consumerKey)

@@ -33,14 +33,14 @@ type inetmockAPI struct {
 }
 
 func NewINetMockAPI(
-	url *url.URL,
+	u *url.URL,
 	logger logging.Logger,
 	checker health.Checker,
 	eventStream audit.EventStream,
 	auditDataDir, pcapDataDir string,
 ) INetMockAPI {
 	return &inetmockAPI{
-		url:          url,
+		url:          u,
 		logger:       logger.Named("api"),
 		checker:      checker,
 		eventStream:  eventStream,
@@ -66,10 +66,7 @@ func (i *inetmockAPI) StartServer() (err error) {
 		auditDataDirPath: i.auditDataDir,
 	})
 
-	rpc.RegisterPCAPServer(i.server, &pcapServer{
-		recorder:    pcap.NewRecorder(),
-		pcapDataDir: i.pcapDataDir,
-	})
+	rpc.RegisterPCAPServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 
 	reflection.Register(i.server)
 
@@ -108,7 +105,7 @@ func (i *inetmockAPI) startServerAsync(listener net.Listener) {
 	}
 }
 
-func (i inetmockAPI) isRunning() bool {
+func (i *inetmockAPI) isRunning() bool {
 	select {
 	case _, more := <-i.serverRunning:
 		return more
@@ -117,17 +114,17 @@ func (i inetmockAPI) isRunning() bool {
 	}
 }
 
-func createListenerFromURL(url *url.URL) (lis net.Listener, err error) {
-	switch url.Scheme {
+func createListenerFromURL(u *url.URL) (lis net.Listener, err error) {
+	switch u.Scheme {
 	case "unix":
-		if _, err = os.Stat(url.Path); err == nil {
-			if err = os.Remove(url.Path); err != nil {
+		if _, err = os.Stat(u.Path); err == nil {
+			if err = os.Remove(u.Path); err != nil {
 				return
 			}
 		}
-		lis, err = net.Listen(url.Scheme, url.Path)
+		lis, err = net.Listen(u.Scheme, u.Path)
 	default:
-		lis, err = net.Listen(url.Scheme, url.Host)
+		lis, err = net.Listen(u.Scheme, u.Host)
 	}
 	return
 }

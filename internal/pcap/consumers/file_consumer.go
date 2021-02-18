@@ -7,8 +7,9 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcapgo"
-	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"go.uber.org/multierr"
+
+	"gitlab.com/inetmock/inetmock/internal/pcap"
 )
 
 type writerConsumer struct {
@@ -46,5 +47,5 @@ func (f *writerConsumer) Close() (err error) {
 		err = multierr.Append(err, closer.Close())
 	}
 	f.packageWriter = nil
-	return nil
+	return
 }

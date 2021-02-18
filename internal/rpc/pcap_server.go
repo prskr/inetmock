@@ -8,11 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type pcapServer struct {
@@ -21,7 +22,14 @@ type pcapServer struct {
 	pcapDataDir string
 }
 
-func (p pcapServer) ListActiveRecordings(context.Context, *rpc.ListRecordingsRequest) (resp *rpc.ListRecordingsResponse, _ error) {
+func NewPCAPServer(pcapDataDir string, recorder pcap.Recorder) rpc.PCAPServer {
+	return &pcapServer{
+		pcapDataDir: pcapDataDir,
+		recorder:    recorder,
+	}
+}
+
+func (p *pcapServer) ListActiveRecordings(context.Context, *rpc.ListRecordingsRequest) (resp *rpc.ListRecordingsResponse, _ error) {
 	resp = new(rpc.ListRecordingsResponse)
 	subs := p.recorder.Subscriptions()
 	for i := range subs {
@@ -31,7 +39,7 @@ func (p pcapServer) ListActiveRecordings(context.Context, *rpc.ListRecordingsReq
 	return
 }
 
-func (p pcapServer) ListAvailableDevices(context.Context, *rpc.ListAvailableDevicesRequest) (*rpc.ListAvailableDevicesResponse, error) {
+func (p *pcapServer) ListAvailableDevices(context.Context, *rpc.ListAvailableDevicesRequest) (*rpc.ListAvailableDevicesResponse, error) {
 	var err error
 	var devs []pcap.Device
 	if devs, err = p.recorder.AvailableDevices(); err != nil {
@@ -49,7 +57,10 @@ func (p pcapServer) ListAvailableDevices(context.Context, *rpc.ListAvailableDevi
 	return resp, nil
 }
 
-func (p pcapServer) StartPCAPFileRecording(_ context.Context, req *rpc.RegisterPCAPFileRecordRequest) (*rpc.RegisterPCAPFileRecordResponse, error) {
+func (p *pcapServer) StartPCAPFileRecording(
+	_ context.Context,
+	req *rpc.RegisterPCAPFileRecordRequest,
+) (*rpc.RegisterPCAPFileRecordResponse, error) {
 	var targetPath = req.TargetPath
 	if !filepath.IsAbs(targetPath) {
 		targetPath = filepath.Join(p.pcapDataDir, req.TargetPath)
@@ -88,7 +99,10 @@ func (p pcapServer) StartPCAPFileRecording(_ context.Context, req *rpc.RegisterP
 	}, nil
 }
 
-func (p pcapServer) StopPCAPFileRecord(_ context.Context, request *rpc.RemovePCAPFileRecordRequest) (resp *rpc.RemovePCAPFileRecordResponse, _ error) {
+func (p *pcapServer) StopPCAPFileRecord(
+	_ context.Context,
+	request *rpc.RemovePCAPFileRecordRequest,
+) (resp *rpc.RemovePCAPFileRecordResponse, _ error) {
 	resp = new(rpc.RemovePCAPFileRecordResponse)
 	resp.Removed = p.recorder.StopRecording(request.ConsumerKey) == nil
 	return

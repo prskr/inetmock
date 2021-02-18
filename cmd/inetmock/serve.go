@@ -2,8 +2,11 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
 	"go.uber.org/zap"
+
+	"gitlab.com/inetmock/inetmock/internal/pcap"
+	"gitlab.com/inetmock/inetmock/internal/pcap/consumers/audit"
+	"gitlab.com/inetmock/inetmock/internal/rpc"
 )
 
 var (
@@ -48,6 +51,10 @@ func startINetMock(_ *cobra.Command, _ []string) (err error) {
 		)
 	}
 
+	/*if err = startAuditConsumer(); err != nil {
+		return
+	}*/
+
 loop:
 	for {
 		select {
@@ -62,4 +69,11 @@ loop:
 
 	rpcAPI.StopServer()
 	return
+}
+
+func startAuditConsumer() error {
+	recorder := pcap.NewRecorder()
+	auditConsumer := audit.NewAuditConsumer("audit", serverApp.EventStream())
+
+	return recorder.StartRecording(serverApp.Context(), "lo", auditConsumer)
 }

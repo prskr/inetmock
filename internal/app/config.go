@@ -53,7 +53,7 @@ type config struct {
 	cfg       *viper.Viper
 	TLS       cert.CertOptions
 	Listeners map[string]endpoint.ListenerSpec
-	api       apiConfig
+	API       apiConfig
 	Data      Data
 }
 
@@ -66,7 +66,7 @@ func (c config) PCAPDataDir() string {
 }
 
 func (c config) APIURL() *url.URL {
-	if u, err := url.Parse(c.api.Listen); err != nil {
+	if u, err := url.Parse(c.API.Listen); err != nil {
 		u, _ = url.Parse("tcp://:0")
 		return u
 	} else {

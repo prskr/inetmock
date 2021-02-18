@@ -1,12 +1,4 @@
 linters-settings:
-  depguard:
-    list-type: blacklist
-    packages:
-      # logging is allowed only by logutils.Log, logrus
-      # is allowed to use only in logutils package
-      - github.com/sirupsen/logrus
-    packages-with-error-message:
-      - github.com/sirupsen/logrus: "logging is allowed only by logutils.Log"
   dupl:
     threshold: 100
   funlen:
@@ -20,10 +12,8 @@ linters-settings:
   gocritic:
     enabled-tags:
       - diagnostic
-      - experimental
       - opinionated
       - performance
-      - style
     disabled-checks:
       - dupImport # https://github.com/go-critic/go-critic/issues/845
       - ifElseChain
@@ -40,7 +30,11 @@ linters-settings:
     settings:
       mnd:
         # don't include the "operation" and "assign"
-        checks: argument,case,condition,return
+        checks:
+          - argument
+          - case
+          - condition
+          - return
   govet:
     check-shadowing: true
   lll:
@@ -60,23 +54,18 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    - bodyclose
     - deadcode
-    - depguard
     - dogsled
     - dupl
     - errcheck
     - exhaustive
     - funlen
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - golint
     - gomnd
-    - goprintffuncname
     - gosec
     - gosimple
     - govet
@@ -87,7 +76,6 @@ linters:
     - nakedret
     - noctx
     - nolintlint
-    - rowserrcheck
     - scopelint
     - staticcheck
     - structcheck
@@ -95,22 +83,10 @@ linters:
     - typecheck
     - unconvert
     - unparam
-    - unused
     - varcheck
     - whitespace
 
-  # don't enable:
-  # - asciicheck
-  # - gochecknoglobals
-  # - gocognit
-  # - godot
-  # - godox
-  # - goerr113
-  # - maligned
-  # - nestif
-  # - prealloc
-  # - testpackage
-  # - wsl
+    #- unused
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
@@ -131,6 +107,6 @@ run:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.23.x # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.37.x # use the fixed version to not introduce new linters unexpectedly
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"

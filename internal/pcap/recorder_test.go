@@ -14,6 +14,21 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
 )
 
+type fakeWriterCloser struct {
+	closeHandle func() error
+}
+
+func (fakeWriterCloser) Write(p []byte) (n int, err error) {
+	return len(p), nil
+}
+
+func (f fakeWriterCloser) Close() error {
+	if f.closeHandle != nil {
+		return f.closeHandle()
+	}
+	return nil
+}
+
 func Test_recorder_Subscriptions(t *testing.T) {
 	type subscriptionRequest struct {
 		Name   string
@@ -72,7 +87,9 @@ func Test_recorder_Subscriptions(t *testing.T) {
 			r := pcap.NewRecorder()
 
 			t.Cleanup(func() {
-				_ = r.Close()
+				if err := r.Close(); err != nil {
+					t.Errorf("Recorder.Close() error = %v", err)
+				}
 			})
 
 			for _, req := range tt.requests {
@@ -148,7 +165,9 @@ func Test_recorder_StartRecordingWithOptions(t *testing.T) {
 			}
 
 			t.Cleanup(func() {
-				_ = recorder.Close()
+				if err := recorder.Close(); err != nil {
+					t.Errorf("Recorder.Close() error = %v", err)
+				}
 			})
 
 			if err = recorder.StartRecordingWithOptions(context.Background(), tt.args.device, tt.args.consumer, tt.args.opts); (err != nil) != tt.wantErr {
@@ -192,6 +211,11 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			re := pcap.NewRecorder()
+			t.Cleanup(func() {
+				if err := re.Close(); err != nil {
+					t.Errorf("Recorder.Close() error = %v", err)
+				}
+			})
 			gotDevices, err := re.AvailableDevices()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AvailableDevices() error = %v, wantErr %v", err, tt.wantErr)
@@ -209,4 +233,94 @@ func sortSubscriptions(subs []pcap.Subscription) []pcap.Subscription {
 		return subs[i].ConsumerName < subs[j].ConsumerName
 	})
 	return subs
+}
+
+func Test_recorder_StopRecording(t *testing.T) {
+	type args struct {
+		consumerKey string
+	}
+	type testCase struct {
+		name          string
+		args          args
+		recorderSetup func(t *testing.T) (recorder pcap.Recorder, err error)
+		wantErr       bool
+	}
+	tests := []testCase{
+		{
+			name: "Stop non existing recording",
+			args: args{
+				consumerKey: "lo:test.pcap",
+			},
+			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
+				return pcap.NewRecorder(), nil
+			},
+			wantErr: true,
+		},
+		{
+			name: "Stop recording lo:test",
+			args: args{
+				consumerKey: "lo:test",
+			},
+			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
+				recorder = pcap.NewRecorder()
+				err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test"))
+
+				return
+			},
+			wantErr: false,
+		},
+		{
+			name: "Stop recording - ensure closing of writers",
+			args: args{
+				consumerKey: "lo:test",
+			},
+			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
+				recorder = pcap.NewRecorder()
+				var writerConsumer pcap.Consumer
+				gotClosed := false
+				writerConsumer, err = consumers.NewWriterConsumer("test", &fakeWriterCloser{
+					func() error {
+						gotClosed = true
+						return nil
+					},
+				})
+
+				t.Cleanup(func() {
+					if !gotClosed {
+						t.Errorf("writer was not closed")
+					}
+				})
+
+				if err != nil {
+					return
+				}
+				err = recorder.StartRecording(context.Background(), "lo", writerConsumer)
+
+				return
+			},
+			wantErr: false,
+		},
+	}
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
+			var err error
+			var r pcap.Recorder
+			if r, err = tt.recorderSetup(t); err != nil {
+				t.Fatalf("recorderSetup() error = %v", err)
+			}
+
+			t.Cleanup(func() {
+				if err := r.Close(); err != nil {
+					t.Errorf("Recorder.Close() error = %v", err)
+				}
+			})
+
+			if err := r.StopRecording(tt.args.consumerKey); (err != nil) != tt.wantErr {
+				t.Errorf("StopRecording() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
+	}
 }
