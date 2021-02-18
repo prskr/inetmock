@@ -25,8 +25,7 @@ integration-test:
 lint:
   stage: test
   script:
-    - golangci-lint run
-  allow_failure: true
+    - task lint
 
 snapshot-release:
   stage: build

@@ -30,7 +30,7 @@ type Event struct {
 	TLS             *TLSDetails
 }
 
-func (e Event) ProtoMessage() *EventEntity {
+func (e *Event) ProtoMessage() *EventEntity {
 	var tlsDetails *TLSDetailsEntity = nil
 	if e.TLS != nil {
 		tlsDetails = e.TLS.ProtoMessage()
@@ -94,6 +94,7 @@ func NewEventFromProto(msg *EventEntity) (ev Event) {
 }
 
 func parseIPPortFromAddr(addr net.Addr) (ip net.IP, port uint16) {
+	const expectedIPPortSplitLength = 2
 	if addr == nil {
 		return
 	}
@@ -106,7 +107,7 @@ func parseIPPortFromAddr(addr net.Addr) (ip net.IP, port uint16) {
 		return
 	default:
 		ipPortSplit := strings.Split(addr.String(), ":")
-		if len(ipPortSplit) != 2 {
+		if len(ipPortSplit) != expectedIPPortSplitLength {
 			return
 		}
 

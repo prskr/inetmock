@@ -44,6 +44,7 @@ var (
 	}
 )
 
+//nolint:gomnd
 func init() {
 	if defaultDistributeParallelization = runtime.NumCPU() / 2; defaultDistributeParallelization < 2 {
 		defaultDistributeParallelization = 2

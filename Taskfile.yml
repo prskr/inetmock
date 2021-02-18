@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 vars:
   OUT_DIR: ./out
@@ -24,6 +24,13 @@ tasks:
     cmds:
       - go fmt ./...
 
+  deps:
+    sources:
+      - go.mod
+      - go.sum
+    cmds:
+      - go mod download
+
   protoc:
     sources:
       - "api/proto/**/*.proto"
@@ -31,6 +38,8 @@ tasks:
       - protoc --proto_path ./api/proto/ --go_out=./pkg/ --go_opt=paths=source_relative --go-grpc_out=./pkg/ --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
 
   go-generate:
+    deps:
+      - deps
     sources:
       - "**/*.go"
     cmds:
@@ -41,10 +50,18 @@ tasks:
       - go-generate
       - protoc
 
+  lint:
+    deps:
+      - deps
+      - generate
+    cmds:
+      - golangci-lint run --timeout 5m
+
   test:
     sources:
       - "**/*.go"
     deps:
+      - deps
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}

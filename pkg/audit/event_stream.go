@@ -30,17 +30,17 @@ type registeredSink struct {
 	lock       sync.Locker
 }
 
-func NewEventStream(logger logging.Logger, options ...EventStreamOption) (es EventStream, err error) {
+func NewEventStream(logger logging.Logger, options ...EventStreamOption) (EventStream, error) {
 	cfg := newEventStreamCfg()
 
 	for _, opt := range options {
 		opt(&cfg)
 	}
 
+	var err error
 	var node *snowflake.Node
-	node, err = snowflake.NewNode(cfg.generatorIndex)
-	if err != nil {
-		return
+	if node, err = snowflake.NewNode(cfg.generatorIndex); err != nil {
+		return nil, err
 	}
 
 	generatorIdx++
@@ -59,11 +59,10 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (es Eve
 		go underlying.distribute()
 	}
 
-	es = underlying
-
-	return
+	return underlying, err
 }
 
+//nolint:gocritic
 func (e *eventStream) Emit(ev Event) {
 	ev.ApplyDefaults(e.idGenerator.Generate().Int64())
 	select {

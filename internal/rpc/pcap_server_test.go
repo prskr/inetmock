@@ -52,7 +52,7 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 			}
 
 			t.Cleanup(func() {
-				if err := recorder.Close(); err != nil {
+				if err = recorder.Close(); err != nil {
 					t.Errorf("recorder.Close() error = %v", err)
 				}
 			})

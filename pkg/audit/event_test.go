@@ -12,7 +12,6 @@ import (
 )
 
 func Test_guessDetailsFromApp(t *testing.T) {
-
 	mustAny := func(msg proto.Message) *anypb.Any {
 		a, err := anypb.New(msg)
 		if err != nil {

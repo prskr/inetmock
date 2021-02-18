@@ -17,7 +17,7 @@ type dnsOptions struct {
 	Fallback ResolverFallback
 }
 
-func loadFromConfig(lifecycle endpoint.Lifecycle) (options dnsOptions, err error) {
+func loadFromConfig(lifecycle endpoint.Lifecycle) (dnsOptions, error) {
 	type rule struct {
 		Pattern  string
 		Response string
@@ -33,8 +33,11 @@ func loadFromConfig(lifecycle endpoint.Lifecycle) (options dnsOptions, err error
 		Fallback fallback
 	}{}
 
-	err = lifecycle.UnmarshalOptions(&opts)
+	if err := lifecycle.UnmarshalOptions(&opts); err != nil {
+		return dnsOptions{}, err
+	}
 
+	var options dnsOptions
 	for _, rule := range opts.Rules {
 		var err error
 		var rr resolverRule
@@ -53,5 +56,5 @@ func loadFromConfig(lifecycle endpoint.Lifecycle) (options dnsOptions, err error
 		opts.Fallback.Args,
 	)
 
-	return
+	return options, nil
 }

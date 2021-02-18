@@ -12,6 +12,8 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 )
 
+const defaultSnapshotLength = 65536
+
 type writerConsumer struct {
 	name          string
 	origWriter    io.Writer
@@ -19,7 +21,7 @@ type writerConsumer struct {
 }
 
 func (f *writerConsumer) Init(params pcap.CaptureParameters) {
-	_ = f.packageWriter.WriteFileHeader(65536, params.LinkType)
+	_ = f.packageWriter.WriteFileHeader(defaultSnapshotLength, params.LinkType)
 }
 
 func NewWriterConsumer(name string, writer io.Writer) (consumer pcap.Consumer, err error) {

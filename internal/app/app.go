@@ -29,13 +29,14 @@ var (
 type contextKey string
 
 const (
-	loggerKey          contextKey = "gitlab.com/inetmock/inetmock/app/context/logger"
-	configKey          contextKey = "gitlab.com/inetmock/inetmock/app/context/config"
-	handlerRegistryKey contextKey = "gitlab.com/inetmock/inetmock/app/context/handlerRegistry"
-	healthCheckerKey   contextKey = "gitlab.com/inetmock/inetmock/app/context/healthChecker"
-	endpointManagerKey contextKey = "gitlab.com/inetmock/inetmock/app/context/endpointManager"
-	certStoreKey       contextKey = "gitlab.com/inetmock/inetmock/app/context/certStore"
-	eventStreamKey     contextKey = "gitlab.com/inetmock/inetmock/app/context/eventStream"
+	loggerKey              contextKey = "gitlab.com/inetmock/inetmock/app/context/logger"
+	configKey              contextKey = "gitlab.com/inetmock/inetmock/app/context/config"
+	handlerRegistryKey     contextKey = "gitlab.com/inetmock/inetmock/app/context/handlerRegistry"
+	healthCheckerKey       contextKey = "gitlab.com/inetmock/inetmock/app/context/healthChecker"
+	endpointManagerKey     contextKey = "gitlab.com/inetmock/inetmock/app/context/endpointManager"
+	certStoreKey           contextKey = "gitlab.com/inetmock/inetmock/app/context/certStore"
+	eventStreamKey         contextKey = "gitlab.com/inetmock/inetmock/app/context/eventStream"
+	defaultEventBufferSize            = 10
 )
 
 type App interface {
@@ -279,7 +280,7 @@ func (a *app) WithEventStream() App {
 		var eventStream audit.EventStream
 		eventStream, err = audit.NewEventStream(
 			a.Logger().Named("EventStream"),
-			audit.WithSinkBufferSize(10),
+			audit.WithSinkBufferSize(defaultEventBufferSize),
 		)
 		if err != nil {
 			return

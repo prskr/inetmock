@@ -30,11 +30,13 @@ type Generator interface {
 	ServerCert(options GenerationOptions, ca *tls.Certificate) (*tls.Certificate, error)
 }
 
-func NewDefaultGenerator(options CertOptions) Generator {
+//nolint:gocritic
+func NewDefaultGenerator(options Options) Generator {
 	return NewGenerator(options, NewTimeSource(), defaultKeyProvider(options))
 }
 
-func NewGenerator(options CertOptions, source TimeSource, provider KeyProvider) Generator {
+//nolint:gocritic
+func NewGenerator(options Options, source TimeSource, provider KeyProvider) Generator {
 	return &generator{
 		options:    options,
 		provider:   provider,
@@ -43,10 +45,9 @@ func NewGenerator(options CertOptions, source TimeSource, provider KeyProvider) 
 }
 
 type generator struct {
-	options    CertOptions
+	options    Options
 	provider   KeyProvider
 	timeSource TimeSource
-	outDir     string
 }
 
 func (g *generator) privateKey() (key interface{}, err error) {
@@ -57,16 +58,20 @@ func (g *generator) privateKey() (key interface{}, err error) {
 	}
 }
 
-func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (cert *tls.Certificate, err error) {
-	applyDefaultGenerationOptions(&options)
+//nolint:gocritic
+func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (*tls.Certificate, error) {
+	var err = applyDefaultGenerationOptions(&options)
+	if err != nil {
+		return nil, err
+	}
 	var serialNumber *big.Int
 	if serialNumber, err = generateSerialNumber(); err != nil {
-		return
+		return nil, err
 	}
 
 	var privateKey interface{}
 	if privateKey, err = g.privateKey(); err != nil {
-		return
+		return nil, err
 	}
 
 	template := x509.Certificate{
@@ -89,36 +94,43 @@ func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 	}
 	var caCrt *x509.Certificate
-	caCrt, err = x509.ParseCertificate(ca.Certificate[0])
+	if caCrt, err = x509.ParseCertificate(ca.Certificate[0]); err != nil {
+		return nil, err
+	}
 
 	var derBytes []byte
 	if derBytes, err = x509.CreateCertificate(rand.Reader, &template, caCrt, publicKey(privateKey), ca.PrivateKey); err != nil {
-		return
+		return nil, err
 	}
 
 	var privateKeyBytes []byte
 	if privateKeyBytes, err = x509.MarshalPKCS8PrivateKey(privateKey); err != nil {
-		return
+		return nil, err
 	}
 
+	var cert *tls.Certificate
 	if cert, err = parseCert(derBytes, privateKeyBytes); err != nil {
-		return
+		return nil, err
 	}
 
-	return
+	return cert, nil
 }
 
-func (g generator) CACert(options GenerationOptions) (crt *tls.Certificate, err error) {
-	applyDefaultGenerationOptions(&options)
+//nolint:gocritic
+func (g *generator) CACert(options GenerationOptions) (*tls.Certificate, error) {
+	var err = applyDefaultGenerationOptions(&options)
+	if err != nil {
+		return nil, err
+	}
 
 	var privateKey interface{}
 	var serialNumber *big.Int
 	if serialNumber, err = generateSerialNumber(); err != nil {
-		return
+		return nil, err
 	}
 
 	if privateKey, err = g.privateKey(); err != nil {
-		return
+		return nil, err
 	}
 
 	template := x509.Certificate{
@@ -142,17 +154,20 @@ func (g generator) CACert(options GenerationOptions) (crt *tls.Certificate, err 
 
 	var derBytes []byte
 	if derBytes, err = x509.CreateCertificate(rand.Reader, &template, &template, publicKey(privateKey), privateKey); err != nil {
-		return
+		return nil, err
 	}
 
 	var privateKeyBytes []byte
 	if privateKeyBytes, err = x509.MarshalPKCS8PrivateKey(privateKey); err != nil {
-		return
+		return nil, err
 	}
 
-	crt, err = parseCert(derBytes, privateKeyBytes)
+	var cert *tls.Certificate
+	if cert, err = parseCert(derBytes, privateKeyBytes); err != nil {
+		return nil, err
+	}
 
-	return
+	return cert, nil
 }
 
 func generateSerialNumber() (*big.Int, error) {
@@ -171,7 +186,7 @@ func publicKey(privateKey interface{}) interface{} {
 	}
 }
 
-func parseCert(derBytes []byte, privateKeyBytes []byte) (*tls.Certificate, error) {
+func parseCert(derBytes, privateKeyBytes []byte) (*tls.Certificate, error) {
 	pemEncodedPublicKey := pem.EncodeToMemory(&pem.Block{Type: certificateBlockType, Bytes: derBytes})
 	pemEncodedPrivateKey := pem.EncodeToMemory(&pem.Block{Type: privateKeyBlockType, Bytes: privateKeyBytes})
 	cert, err := tls.X509KeyPair(pemEncodedPublicKey, pemEncodedPrivateKey)

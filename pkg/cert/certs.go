@@ -16,8 +16,6 @@ func (x TLSVersion) Value() string {
 
 func (x TLSVersion) TLSVersion() uint16 {
 	switch TLSVersion(x.Value()) {
-	case TLSVersionSSL3:
-		return tls.VersionSSL30
 	case TLSVersionTLS10:
 		return tls.VersionTLS10
 	case TLSVersionTLS11:
@@ -44,7 +42,7 @@ type ValidityByPurpose struct {
 	Server ValidityDuration
 }
 
-type CertOptions struct {
+type Options struct {
 	RootCACert                  File
 	CertCachePath               string
 	Curve                       CurveType

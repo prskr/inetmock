@@ -5,15 +5,17 @@ import (
 	"testing"
 )
 
+//nolint:funlen
 func Test_checker_IsHealthy(t *testing.T) {
 	type fields struct {
 		componentChecks map[string]Check
 	}
-	tests := []struct {
+	type testCase struct {
 		name   string
 		fields fields
 		wantR  Result
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "No checks registered expect HEALTHY",
 			fields: fields{
@@ -143,14 +145,17 @@ func Test_checker_IsHealthy(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			c := &checker{
 				componentChecks: tt.fields.componentChecks,
 			}
 			if gotR := c.IsHealthy(); !reflect.DeepEqual(gotR, tt.wantR) {
 				t.Errorf("IsHealthy() = %v, want %v", gotR, tt.wantR)
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }

@@ -34,7 +34,8 @@ func (f *fileSystemCache) Put(cert *tls.Certificate) (err error) {
 	}
 	var cn string
 	if len(cert.Certificate) > 0 {
-		if pubKey, err := x509.ParseCertificate(cert.Certificate[0]); err != nil {
+		var pubKey *x509.Certificate
+		if pubKey, err = x509.ParseCertificate(cert.Certificate[0]); err != nil {
 			return err
 		} else {
 			cn = pubKey.Subject.CommonName
@@ -50,7 +51,6 @@ func (f *fileSystemCache) Put(cert *tls.Certificate) (err error) {
 }
 
 func (f *fileSystemCache) Get(cn string) (*tls.Certificate, bool) {
-
 	if crt, ok := f.inMemCache[cn]; ok {
 		return crt, true
 	}
@@ -71,8 +71,5 @@ func (f *fileSystemCache) Get(cn string) (*tls.Certificate, bool) {
 func certShouldBeRenewed(timeSource TimeSource, cert *x509.Certificate) bool {
 	lifetime := cert.NotAfter.Sub(cert.NotBefore)
 	// if the cert is closer to the end of the lifetime than lifetime/2 it should be renewed
-	if cert.NotAfter.Sub(timeSource.UTCNow()) < lifetime/4 {
-		return true
-	}
-	return false
+	return cert.NotAfter.Sub(timeSource.UTCNow()) < lifetime/4
 }

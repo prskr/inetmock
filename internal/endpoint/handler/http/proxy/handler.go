@@ -29,10 +29,10 @@ func (h *httpProxy) Matchers() []cmux.Matcher {
 	return []cmux.Matcher{cmux.HTTP1()}
 }
 
-func (h *httpProxy) Start(lifecycle endpoint.Lifecycle) (err error) {
+func (h *httpProxy) Start(lifecycle endpoint.Lifecycle) error {
 	var opts httpProxyOptions
-	if err = lifecycle.UnmarshalOptions(&opts); err != nil {
-		return
+	if err := lifecycle.UnmarshalOptions(&opts); err != nil {
+		return err
 	}
 
 	h.server = &http.Server{
@@ -46,14 +46,14 @@ func (h *httpProxy) Start(lifecycle endpoint.Lifecycle) (err error) {
 
 	tlsConfig := lifecycle.CertStore().TLSConfig()
 
-	proxyHandler := &proxyHttpHandler{
+	proxyHandler := &proxyHTTPHandler{
 		handlerName: lifecycle.Name(),
 		options:     opts,
 		logger:      h.logger,
 		emitter:     lifecycle.Audit(),
 	}
 
-	proxyHTTPSHandler := &proxyHttpsHandler{
+	proxyHTTPSHandler := &proxyHTTPSHandler{
 		options:   opts,
 		tlsConfig: tlsConfig,
 		emitter:   lifecycle.Audit(),
@@ -63,7 +63,7 @@ func (h *httpProxy) Start(lifecycle endpoint.Lifecycle) (err error) {
 	h.proxy.OnRequest().HandleConnect(proxyHTTPSHandler)
 	go h.startProxy(lifecycle.Uplink().Listener)
 	go h.shutdownOnContextDone(lifecycle.Context())
-	return
+	return nil
 }
 
 func (h *httpProxy) startProxy(listener net.Listener) {
@@ -85,5 +85,4 @@ func (h *httpProxy) shutdownOnContextDone(ctx context.Context) {
 			zap.Error(err),
 		)
 	}
-	return
 }

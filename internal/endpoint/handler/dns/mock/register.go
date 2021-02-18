@@ -18,14 +18,15 @@ var (
 	requestDurationHistogram    *prometheus.HistogramVec
 )
 
-func AddDNSMock(registry endpoint.HandlerRegistry) (err error) {
+func AddDNSMock(registry endpoint.HandlerRegistry) error {
+	var err error
 	if totalHandledRequestsCounter, err = metrics.Counter(
 		name,
 		"handled_requests_total",
 		"",
 		handlerNameLblName,
 	); err != nil {
-		return
+		return err
 	}
 
 	if unhandledRequestsCounter, err = metrics.Counter(
@@ -34,7 +35,7 @@ func AddDNSMock(registry endpoint.HandlerRegistry) (err error) {
 		"",
 		handlerNameLblName,
 	); err != nil {
-		return
+		return err
 	}
 
 	if requestDurationHistogram, err = metrics.Histogram(
@@ -44,12 +45,12 @@ func AddDNSMock(registry endpoint.HandlerRegistry) (err error) {
 		nil,
 		handlerNameLblName,
 	); err != nil {
-		return
+		return err
 	}
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return &dnsHandler{}
 	})
 
-	return
+	return nil
 }

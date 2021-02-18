@@ -53,7 +53,7 @@ type httpOptions struct {
 	Rules []targetRule
 }
 
-func loadFromConfig(lifecycle endpoint.Lifecycle) (options httpOptions, err error) {
+func loadFromConfig(lifecycle endpoint.Lifecycle) (httpOptions, error) {
 	type tmpCfg struct {
 		Pattern  string
 		Response string
@@ -65,9 +65,11 @@ func loadFromConfig(lifecycle endpoint.Lifecycle) (options httpOptions, err erro
 		Rules []tmpCfg
 	}{}
 
-	if err = lifecycle.UnmarshalOptions(&tmpRules); err != nil {
-		return
+	if err := lifecycle.UnmarshalOptions(&tmpRules); err != nil {
+		return httpOptions{}, err
 	}
+
+	var options httpOptions
 
 	for _, i := range tmpRules.Rules {
 		var rulePattern *regexp.Regexp
@@ -93,5 +95,5 @@ func loadFromConfig(lifecycle endpoint.Lifecycle) (options httpOptions, err erro
 		})
 	}
 
-	return
+	return options, nil
 }

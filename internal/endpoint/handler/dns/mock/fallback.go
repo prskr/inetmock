@@ -22,15 +22,15 @@ var (
 			tmp := struct {
 				StartIP string
 			}{}
-			var startIp net.IP
+			var startIP net.IP
 			if err := mapstructure.Decode(args, &tmp); err == nil {
-				startIp = net.ParseIP(tmp.StartIP)
+				startIP = net.ParseIP(tmp.StartIP)
 			}
-			if startIp == nil || len(startIp) == 0 {
-				startIp = defaultStartIPIncrementalStrategy
+			if startIP == nil || len(startIP) == 0 {
+				startIP = defaultStartIPIncrementalStrategy
 			}
 			return &incrementalIPFallback{
-				latestIp: ipToInt32(startIp),
+				latestIP: ipToInt32(startIP),
 			}
 		},
 		randomIPStrategyName: func(map[string]interface{}) ResolverFallback {
@@ -54,20 +54,21 @@ type ResolverFallback interface {
 }
 
 type incrementalIPFallback struct {
-	latestIp uint32
+	latestIP uint32
 }
 
 func (i *incrementalIPFallback) GetIP() net.IP {
-	if i.latestIp < math.MaxInt32 {
-		i.latestIp += 1
+	if i.latestIP < math.MaxInt32 {
+		i.latestIP += 1
 	}
-	return uint32ToIP(i.latestIp)
+	return uint32ToIP(i.latestIP)
 }
 
 type randomIPFallback struct {
 }
 
 func (randomIPFallback) GetIP() net.IP {
+	//nolint:gosec
 	return uint32ToIP(uint32(rand.Int31()))
 }
 

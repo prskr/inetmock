@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"go.uber.org/multierr"
+
 	"gitlab.com/inetmock/inetmock/pkg/path"
 )
 
@@ -38,13 +40,14 @@ func (p *pemCrt) Cert() *tls.Certificate {
 	return p.crt
 }
 
-func (p pemCrt) Write(cn string, outDir string) (err error) {
-
+func (p pemCrt) Write(cn, outDir string) (err error) {
 	var certOut *os.File
 	if certOut, err = os.Create(filepath.Join(outDir, fmt.Sprintf("%s.pem", cn))); err != nil {
 		return
 	}
-	defer certOut.Close()
+	defer func() {
+		err = multierr.Append(err, certOut.Close())
+	}()
 	if err = pem.Encode(certOut, &pem.Block{Type: certificateBlockType, Bytes: p.crt.Certificate[0]}); err != nil {
 		return
 	}
@@ -59,7 +62,7 @@ func (p pemCrt) Write(cn string, outDir string) (err error) {
 	return
 }
 
-func (p *pemCrt) Read(cn string, inDir string) error {
+func (p *pemCrt) Read(cn, inDir string) error {
 	certPath := filepath.Join(inDir, fmt.Sprintf("%s.pem", cn))
 	keyPath := filepath.Join(inDir, fmt.Sprintf("%s.key", cn))
 

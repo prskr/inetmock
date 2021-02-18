@@ -18,7 +18,7 @@ var (
 	}
 )
 
-func startINetMock(_ *cobra.Command, _ []string) (err error) {
+func startINetMock(_ *cobra.Command, _ []string) error {
 	rpcAPI := rpc.NewINetMockAPI(
 		serverApp.Config().APIURL(),
 		serverApp.Logger(),
@@ -36,14 +36,14 @@ func startINetMock(_ *cobra.Command, _ []string) (err error) {
 		if spec.Name == "" {
 			spec.Name = name
 		}
-		if err = endpointOrchestrator.RegisterListener(spec); err != nil {
+		if err := endpointOrchestrator.RegisterListener(spec); err != nil {
 			logger.Error("Failed to register listener", zap.Error(err))
-			return
+			return err
 		}
 	}
 
 	errChan := serverApp.EndpointManager().StartEndpoints()
-	if err = rpcAPI.StartServer(); err != nil {
+	if err := rpcAPI.StartServer(); err != nil {
 		serverApp.Shutdown()
 		logger.Error(
 			"failed to start gRPC API",
@@ -51,6 +51,7 @@ func startINetMock(_ *cobra.Command, _ []string) (err error) {
 		)
 	}
 
+	//nolint:gocritic
 	/*if err = startAuditConsumer(); err != nil {
 		return
 	}*/
@@ -68,9 +69,10 @@ loop:
 	logger.Info("App context canceled - shutting down")
 
 	rpcAPI.StopServer()
-	return
+	return nil
 }
 
+//nolint:deadcode
 func startAuditConsumer() error {
 	recorder := pcap.NewRecorder()
 	auditConsumer := audit.NewAuditConsumer("audit", serverApp.EventStream())

@@ -24,6 +24,7 @@ const (
 	generateCACurveName              = "curve"
 	generateCANotBeforeRelative      = "not-before"
 	generateCANotAfterRelative       = "not-after"
+	defaultValidityOffset            = 17520 * time.Hour
 )
 
 var (
@@ -52,8 +53,8 @@ func init() {
 	generateCaCmd.Flags().StringSliceVar(&caCertOptions.PostalCode, generateCaPostalCodeName, nil, "Postal code information to append to certificate")
 	generateCaCmd.Flags().StringVar(&certOutPath, generateCACertOutPath, "", "Path where CA files should be stored")
 	generateCaCmd.Flags().StringVar(&curveName, generateCACurveName, "", "Name of the curve to use, if empty ED25519 is used, other valid values are [P224, P256,P384,P521]")
-	generateCaCmd.Flags().DurationVar(&notBefore, generateCANotBeforeRelative, 17520*time.Hour, "Relative time value since when in the past the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
-	generateCaCmd.Flags().DurationVar(&notAfter, generateCANotAfterRelative, 17520*time.Hour, "Relative time value until when in the future the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
+	generateCaCmd.Flags().DurationVar(&notBefore, generateCANotBeforeRelative, defaultValidityOffset, "Relative time value since when in the past the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
+	generateCaCmd.Flags().DurationVar(&notAfter, generateCANotAfterRelative, defaultValidityOffset, "Relative time value until when in the future the CA certificate should be valid. The value has a time unit, the greatest time unit is h for hour.")
 }
 
 func runGenerateCA(_ *cobra.Command, _ []string) {
@@ -64,7 +65,7 @@ func runGenerateCA(_ *cobra.Command, _ []string) {
 		zap.String(generateCACertOutPath, certOutPath),
 	)
 
-	generator := cert.NewDefaultGenerator(cert.CertOptions{
+	generator := cert.NewDefaultGenerator(cert.Options{
 		CertCachePath: certOutPath,
 		Curve:         cert.CurveType(curveName),
 		Validity: cert.ValidityByPurpose{

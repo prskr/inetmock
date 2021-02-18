@@ -21,11 +21,17 @@ type Orchestrator interface {
 	StartEndpoints() (errChan chan error)
 }
 
-func NewOrchestrator(appCtx context.Context, certStore cert.Store, registry HandlerRegistry, emitter audit.Emitter, logging logging.Logger) Orchestrator {
+func NewOrchestrator(
+	appCtx context.Context,
+	certStore cert.Store,
+	registry HandlerRegistry,
+	emitter audit.Emitter,
+	logger logging.Logger,
+) Orchestrator {
 	return &orchestrator{
 		appCtx:    appCtx,
 		registry:  registry,
-		logger:    logging,
+		logger:    logger,
 		certStore: certStore,
 		emitter:   emitter,
 	}
@@ -62,8 +68,8 @@ func (e *orchestrator) RegisterListener(spec ListenerSpec) (err error) {
 	return
 }
 
-func (e *orchestrator) StartEndpoints() (errChan chan error) {
-	errChan = make(chan error)
+func (e *orchestrator) StartEndpoints() chan error {
+	var errChan = make(chan error)
 	for _, epListener := range e.endpointListeners {
 		endpointLogger := e.logger.With(
 			zap.String("epListener", epListener.name),
@@ -99,5 +105,5 @@ func (e *orchestrator) StartEndpoints() (errChan chan error) {
 		}(mux)
 	}
 
-	return
+	return errChan
 }

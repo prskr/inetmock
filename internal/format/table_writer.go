@@ -25,6 +25,7 @@ func (t *tblWriter) Write(in interface{}) (err error) {
 
 	data := make([][]string, 0)
 
+	//nolint:exhaustive
 	switch v.Kind() {
 	case reflect.Interface:
 		return errors.New("interface{} is not supported")
@@ -87,6 +88,7 @@ func value(val reflect.Value) string {
 		return stringer.String()
 	}
 
+	//nolint:exhaustive
 	switch val.Kind() {
 	case reflect.Ptr:
 		return value(val.Elem())

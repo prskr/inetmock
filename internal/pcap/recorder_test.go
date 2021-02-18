@@ -41,7 +41,7 @@ func Test_recorder_Subscriptions(t *testing.T) {
 	}
 	tests := []testCase{
 		{
-			name: "Emtpy",
+			name: "Empty",
 		},
 		{
 			name: "Subscription to loopback",
@@ -165,12 +165,13 @@ func Test_recorder_StartRecordingWithOptions(t *testing.T) {
 			}
 
 			t.Cleanup(func() {
-				if err := recorder.Close(); err != nil {
+				if err = recorder.Close(); err != nil {
 					t.Errorf("Recorder.Close() error = %v", err)
 				}
 			})
 
-			if err = recorder.StartRecordingWithOptions(context.Background(), tt.args.device, tt.args.consumer, tt.args.opts); (err != nil) != tt.wantErr {
+			err = recorder.StartRecordingWithOptions(context.Background(), tt.args.device, tt.args.consumer, tt.args.opts)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("StartRecordingWithOptions() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		}
@@ -208,8 +209,8 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			re := pcap.NewRecorder()
 			t.Cleanup(func() {
 				if err := re.Close(); err != nil {
@@ -224,7 +225,10 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 			if err := tt.mtacher(gotDevices); err != nil {
 				t.Errorf("AvailableDevices() matcher error = %v", err)
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 

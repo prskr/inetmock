@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // PCAPClient is the client API for PCAP service.
@@ -104,7 +105,7 @@ type UnsafePCAPServer interface {
 }
 
 func RegisterPCAPServer(s grpc.ServiceRegistrar, srv PCAPServer) {
-	s.RegisterService(&_PCAP_serviceDesc, srv)
+	s.RegisterService(&PCAP_ServiceDesc, srv)
 }
 
 func _PCAP_ListAvailableDevices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -179,7 +180,10 @@ func _PCAP_StopPCAPFileRecord_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-var _PCAP_serviceDesc = grpc.ServiceDesc{
+// PCAP_ServiceDesc is the grpc.ServiceDesc for PCAP service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var PCAP_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "inetmock.rpc.PCAP",
 	HandlerType: (*PCAPServer)(nil),
 	Methods: []grpc.MethodDesc{

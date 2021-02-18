@@ -11,15 +11,18 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
+const shutdownTimeout = 100 * time.Millisecond
+
 type dnsHandler struct {
 	logger    logging.Logger
 	dnsServer *dns.Server
 }
 
-func (d *dnsHandler) Start(lifecycle endpoint.Lifecycle) (err error) {
+func (d *dnsHandler) Start(lifecycle endpoint.Lifecycle) error {
+	var err error
 	var options dnsOptions
 	if options, err = loadFromConfig(lifecycle); err != nil {
-		return
+		return err
 	}
 
 	d.logger = lifecycle.Logger().With(
@@ -56,7 +59,7 @@ func (d *dnsHandler) Start(lifecycle endpoint.Lifecycle) (err error) {
 	}
 
 	go d.startServer()
-	return
+	return nil
 }
 
 func (d *dnsHandler) startServer() {
@@ -70,7 +73,7 @@ func (d *dnsHandler) startServer() {
 
 func (d *dnsHandler) shutdownOnEnd(ctx context.Context) {
 	<-ctx.Done()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	if err := d.dnsServer.ShutdownContext(shutdownCtx); err != nil {
 		d.logger.Error("failed to shutdown DNS server", zap.Error(err))

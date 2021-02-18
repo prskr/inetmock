@@ -14,6 +14,10 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/app"
 )
 
+const (
+	defaultGRPCTimeout = 5 * time.Second
+)
+
 var (
 	inetMockSocketPath string
 	outputFormat       string
@@ -22,6 +26,7 @@ var (
 	conn               *grpc.ClientConn
 )
 
+//nolint:lll
 func main() {
 	healthCmd.AddCommand(generalHealthCmd, containerHealthCmd)
 
@@ -34,7 +39,7 @@ func main() {
 
 	cliApp.RootCommand().PersistentFlags().StringVar(&inetMockSocketPath, "socket-path", "unix:///var/run/inetmock.sock", "Path to the INetMock socket file")
 	cliApp.RootCommand().PersistentFlags().StringVarP(&outputFormat, "format", "f", "table", "Output format to use. Possible values: table, json, yaml")
-	cliApp.RootCommand().PersistentFlags().DurationVar(&grpcTimeout, "grpc-timeout", 5*time.Second, "Timeout to connect to the gRPC API")
+	cliApp.RootCommand().PersistentFlags().DurationVar(&grpcTimeout, "grpc-timeout", defaultGRPCTimeout, "Timeout to connect to the gRPC API")
 
 	currentUser := ""
 	if usr, err := user.Current(); err == nil {

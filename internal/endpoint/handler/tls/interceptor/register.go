@@ -35,7 +35,7 @@ func AddTLSInterceptor(registry endpoint.HandlerRegistry) (err error) {
 		return
 	}
 	if requestDurationHistogram, err = metrics.Histogram(name, "request_duration", "", nil, labelNames...); err != nil {
-
+		return
 	}
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {

@@ -13,12 +13,16 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func SetupINetMockContainer(ctx context.Context, tb testing.TB, exposedPorts ...string) (imContainer testcontainers.Container, err error) {
+const containerShutdownTimeout = 5 * time.Second
+
+func SetupINetMockContainer(ctx context.Context, tb testing.TB, exposedPorts ...string) (testcontainers.Container, error) {
+	//nolint:dogsled
 	_, fileName, _, _ := runtime.Caller(0)
 
+	var err error
 	var repoRoot string
 	if repoRoot, err = filepath.Abs(filepath.Join(filepath.Dir(fileName), "..", "..", "..")); err != nil {
-		return
+		return nil, err
 	}
 
 	var waitStrategies []wait.Strategy
@@ -39,26 +43,27 @@ func SetupINetMockContainer(ctx context.Context, tb testing.TB, exposedPorts ...
 	req := testcontainers.ContainerRequest{
 		FromDockerfile: testcontainers.FromDockerfile{
 			Context:    repoRoot,
-			Dockerfile: filepath.Join("./", "testdata", "integration.dockerfile"),
+			Dockerfile: filepath.Join(".", "testdata", "integration.dockerfile"),
 		},
 		ExposedPorts: exposedPorts,
 		WaitingFor:   wait.ForAll(waitStrategies...),
 	}
 
+	var imContainer testcontainers.Container
 	imContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
 	})
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	tb.Cleanup(func() {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), containerShutdownTimeout)
 		defer cancel()
 		_ = imContainer.Terminate(shutdownCtx)
 	})
 
-	return
+	return imContainer, nil
 }

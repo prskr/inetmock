@@ -35,7 +35,8 @@ func (f writerCloserSink) Name() string {
 
 func (f writerCloserSink) OnSubscribe(evs <-chan audit.Event) {
 	go func(target audit.Writer, closeOnExit bool, evs <-chan audit.Event) {
-		for ev := range evs {
+		for e := range evs {
+			ev := e
 			_ = target.Write(&ev)
 		}
 		if closeOnExit {

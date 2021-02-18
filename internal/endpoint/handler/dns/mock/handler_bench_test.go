@@ -42,12 +42,12 @@ func Benchmark_dnsHandler(b *testing.B) {
 			}
 		}
 	})
-
 }
 
 func randomString(length int) (result string) {
 	buffer := strings.Builder{}
 	for i := 0; i < length; i++ {
+		//nolint:gosec
 		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
 	}
 	return buffer.String()

@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	name = "tls_interceptor"
+	name                = "tls_interceptor"
+	shutdownGracePeriod = 100 * time.Millisecond
 )
 
 type tlsInterceptor struct {
@@ -63,7 +64,7 @@ func (t *tlsInterceptor) shutdownOnContextDone(ctx context.Context) {
 	select {
 	case <-done:
 		return
-	case <-time.After(100 * time.Millisecond):
+	case <-time.After(shutdownGracePeriod):
 		for _, proxyConn := range t.currentConnections {
 			if err := proxyConn.Close(); err != nil {
 				t.logger.Error(
@@ -131,8 +132,7 @@ func (t *tlsInterceptor) proxyConn(conn net.Conn) {
 	Pipe(conn, targetConn)
 	t.cleanConnection(conUID)
 
-	switch tlsConn := conn.(type) {
-	case *tls.Conn:
+	if tlsConn, ok := conn.(*tls.Conn); ok {
 		if tlsConn.Handshake() != nil {
 			t.logger.Error(
 				"error occurred during TLS handshake",
@@ -156,7 +156,5 @@ func (t *tlsInterceptor) storeConnection(connUUID uuid.UUID, conn *proxyConn) {
 func (t *tlsInterceptor) cleanConnection(connUUID uuid.UUID) {
 	t.connectionsMutex.Lock()
 	defer t.connectionsMutex.Unlock()
-	if _, ok := t.currentConnections[connUUID]; ok {
-		delete(t.currentConnections, connUUID)
-	}
+	delete(t.currentConnections, connUUID)
 }

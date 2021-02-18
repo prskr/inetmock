@@ -17,7 +17,7 @@ type Endpoint struct {
 	uplink Uplink
 }
 
-func (e Endpoint) Start(lifecycle Lifecycle) (err error) {
+func (e *Endpoint) Start(lifecycle Lifecycle) (err error) {
 	startupResult := make(chan error)
 	ctx, cancel := context.WithTimeout(lifecycle.Context(), startupTimeoutDuration)
 	defer cancel()

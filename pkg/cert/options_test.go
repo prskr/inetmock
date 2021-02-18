@@ -18,6 +18,7 @@ func readViper(cfg string) *viper.Viper {
 	return vpr
 }
 
+//nolint:funlen
 func Test_loadFromConfig(t *testing.T) {
 	type args struct {
 		config *viper.Viper
@@ -25,7 +26,7 @@ func Test_loadFromConfig(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    CertOptions
+		want    Options
 		wantErr bool
 	}{
 		{
@@ -48,7 +49,7 @@ tls:
   certCachePath: /tmp/inetmock/
 `),
 			},
-			want: CertOptions{
+			want: Options{
 				RootCACert: File{
 					PublicKeyPath:  "./ca.pem",
 					PrivateKeyPath: "./ca.key",
@@ -76,7 +77,7 @@ tls:
     privateKey: ./ca.key
 `),
 			},
-			want:    CertOptions{},
+			want:    Options{},
 			wantErr: true,
 		},
 		{
@@ -88,7 +89,7 @@ tls:
     publicKey: ./ca.pem
 `),
 			},
-			want:    CertOptions{},
+			want:    Options{},
 			wantErr: true,
 		},
 		{
@@ -101,7 +102,7 @@ tls:
     privateKey: ./ca.key
 `),
 			},
-			want: CertOptions{
+			want: Options{
 				RootCACert: File{
 					PublicKeyPath:  "./ca.pem",
 					PrivateKeyPath: "./ca.key",

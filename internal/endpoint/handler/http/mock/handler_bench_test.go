@@ -70,13 +70,14 @@ func Benchmark_httpHandler(b *testing.B) {
 
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
+					//nolint:gosec
 					extension := availableExtensions[rand.Intn(len(availableExtensions))]
 
-					reqUrl, _ := url.Parse(fmt.Sprintf("%s/%s.%s", endpoint, randomString(15), extension))
+					reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", endpoint, randomString(15), extension))
 
 					req := &http.Request{
 						Method: http.MethodGet,
-						URL:    reqUrl,
+						URL:    reqURL,
 						Close:  false,
 						Host:   "www.inetmock.com",
 					}
@@ -97,6 +98,7 @@ func Benchmark_httpHandler(b *testing.B) {
 func randomString(length int) (result string) {
 	buffer := strings.Builder{}
 	for i := 0; i < length; i++ {
+		//nolint:gosec
 		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
 	}
 	return buffer.String()
@@ -116,26 +118,28 @@ func setupContainer(b *testing.B, scheme, port string) (httpEndpoint string, err
 	return
 }
 
-func setupHTTPClient() (client *http.Client, err error) {
+func setupHTTPClient() (*http.Client, error) {
+	//nolint:dogsled
 	_, fileName, _, _ := runtime.Caller(0)
 
+	var err error
 	var repoRoot string
 	if repoRoot, err = filepath.Abs(filepath.Join(filepath.Dir(fileName), "..", "..", "..", "..", "..")); err != nil {
-		return
+		return nil, err
 	}
 
 	var demoCABytes []byte
 	if demoCABytes, err = ioutil.ReadFile(filepath.Join(repoRoot, "assets", "demoCA", "ca.pem")); err != nil {
-		return
+		return nil, err
 	}
 
 	rootCaPool := x509.NewCertPool()
 	if !rootCaPool.AppendCertsFromPEM(demoCABytes) {
-		err = errors.New("failed to add CA key")
-		return
+		return nil, errors.New("failed to add CA key")
 	}
 
-	client = &http.Client{
+	//nolint:gosec
+	var client = &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
 				Timeout:   30 * time.Second,
@@ -152,5 +156,5 @@ func setupHTTPClient() (client *http.Client, err error) {
 		},
 	}
 
-	return
+	return client, nil
 }

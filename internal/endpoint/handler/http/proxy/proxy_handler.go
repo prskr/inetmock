@@ -14,13 +14,13 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-type proxyHttpsHandler struct {
+type proxyHTTPSHandler struct {
 	options   httpProxyOptions
 	tlsConfig *tls.Config
 	emitter   audit.Emitter
 }
 
-func (p *proxyHttpsHandler) HandleConnect(_ string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+func (p *proxyHTTPSHandler) HandleConnect(_ string, ctx *goproxy.ProxyCtx) (resultingAction *goproxy.ConnectAction, redirectTo string) {
 	p.emitter.Emit(imHttp.EventFromRequest(ctx.Req, audit.AppProtocol_HTTP_PROXY))
 
 	return &goproxy.ConnectAction{
@@ -31,14 +31,14 @@ func (p *proxyHttpsHandler) HandleConnect(_ string, ctx *goproxy.ProxyCtx) (*gop
 	}, p.options.Target.host()
 }
 
-type proxyHttpHandler struct {
+type proxyHTTPHandler struct {
 	handlerName string
 	options     httpProxyOptions
 	logger      logging.Logger
 	emitter     audit.Emitter
 }
 
-func (p *proxyHttpHandler) Handle(req *http.Request, ctx *goproxy.ProxyCtx) (retReq *http.Request, resp *http.Response) {
+func (p *proxyHTTPHandler) Handle(req *http.Request, ctx *goproxy.ProxyCtx) (retReq *http.Request, resp *http.Response) {
 	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(p.handlerName))
 	defer timer.ObserveDuration()
 

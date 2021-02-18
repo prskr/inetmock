@@ -47,13 +47,14 @@ type Spec struct {
 	Options    map[string]interface{}
 }
 
-func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) (endpoints []Endpoint, muxes []cmux.CMux, err error) {
+func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint, []cmux.CMux, error) {
 	if l.Uplink == nil {
-		if err = l.setupUplink(); err != nil {
-			return
+		if err := l.setupUplink(); err != nil {
+			return nil, nil, err
 		}
 	}
 
+	var endpoints []Endpoint
 	if len(l.Endpoints) <= 1 {
 		for name, s := range l.Endpoints {
 			endpoints = append(endpoints, Endpoint{
@@ -61,13 +62,12 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) (endpoints [
 				uplink: *l.Uplink,
 				Spec:   s,
 			})
-			return
+			return endpoints, nil, nil
 		}
 	}
 
 	if l.Uplink.Proto == NetProtoUDP {
-		err = ErrUDPMultiplexer
-		return
+		return nil, nil, ErrUDPMultiplexer
 	}
 
 	var epNames []string
@@ -75,8 +75,7 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) (endpoints [
 	for name, spec := range l.Endpoints {
 		epNames = append(epNames, name)
 		if ep, ok := spec.Handler.(MultiplexHandler); !ok {
-			err = fmt.Errorf("handler %s %w", spec.HandlerRef, ErrMultiplexingNotSupported)
-			return
+			return nil, nil, fmt.Errorf("handler %s %w", spec.HandlerRef, ErrMultiplexingNotSupported)
 		} else {
 			multiplexEndpoints[name] = ep
 		}
@@ -110,6 +109,7 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) (endpoints [
 		endpoints = append(endpoints, epListener)
 	}
 
+	var muxes []cmux.CMux
 	muxes = append(muxes, plainMux)
 
 	if tlsRequired {
@@ -118,7 +118,7 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) (endpoints [
 		_ = tlsListener.Close()
 	}
 
-	return
+	return endpoints, muxes, nil
 }
 
 func (l *ListenerSpec) setupUplink() (err error) {

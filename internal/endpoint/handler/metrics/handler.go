@@ -20,10 +20,10 @@ type metricsExporter struct {
 	server *http.Server
 }
 
-func (m *metricsExporter) Start(lifecycle endpoint.Lifecycle) (err error) {
+func (m *metricsExporter) Start(lifecycle endpoint.Lifecycle) error {
 	var exporterOptions metricsExporterOptions
-	if err = lifecycle.UnmarshalOptions(&exporterOptions); err != nil {
-		return
+	if err := lifecycle.UnmarshalOptions(&exporterOptions); err != nil {
+		return err
 	}
 
 	m.logger = m.logger.With(
@@ -52,5 +52,5 @@ func (m *metricsExporter) Start(lifecycle endpoint.Lifecycle) (err error) {
 			m.logger.Error("failed to stop metrics server", zap.Error(err))
 		}
 	}()
-	return
+	return nil
 }

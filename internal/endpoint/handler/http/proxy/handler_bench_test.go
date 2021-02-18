@@ -72,13 +72,14 @@ func Benchmark_httpProxy(b *testing.B) {
 
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
+					//nolint:gosec
 					extension := availableExtensions[rand.Intn(len(availableExtensions))]
 
-					reqUrl, _ := url.Parse(fmt.Sprintf("%s://%s/%s.%s", bm.scheme, endpoint, randomString(15), extension))
+					reqURL, _ := url.Parse(fmt.Sprintf("%s://%s/%s.%s", bm.scheme, endpoint, randomString(15), extension))
 
 					req := &http.Request{
 						Method: http.MethodGet,
-						URL:    reqUrl,
+						URL:    reqURL,
 						Close:  false,
 						Host:   "www.inetmock.com",
 					}
@@ -99,6 +100,7 @@ func Benchmark_httpProxy(b *testing.B) {
 func randomString(length int) (result string) {
 	buffer := strings.Builder{}
 	for i := 0; i < length; i++ {
+		//nolint:gosec
 		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
 	}
 	return buffer.String()
@@ -118,26 +120,27 @@ func setupContainer(b *testing.B, port string) (httpEndpoint string, err error) 
 	return
 }
 
-func setupHTTPClient(httpEndpoint, httpsEndpoint string) (client *http.Client, err error) {
+func setupHTTPClient(httpEndpoint, httpsEndpoint string) (*http.Client, error) {
+	//nolint:dogsled
 	_, fileName, _, _ := runtime.Caller(0)
 
+	var err error
 	var repoRoot string
 	if repoRoot, err = filepath.Abs(filepath.Join(filepath.Dir(fileName), "..", "..", "..", "..", "..")); err != nil {
-		return
+		return nil, err
 	}
 
 	var demoCABytes []byte
 	if demoCABytes, err = ioutil.ReadFile(filepath.Join(repoRoot, "assets", "demoCA", "ca.pem")); err != nil {
-		return
+		return nil, err
 	}
 
 	rootCaPool := x509.NewCertPool()
 	if !rootCaPool.AppendCertsFromPEM(demoCABytes) {
-		err = errors.New("failed to add CA key")
-		return
+		return nil, errors.New("failed to add CA key")
 	}
 
-	client = &http.Client{
+	var client = &http.Client{
 		Transport: &http.Transport{
 			Proxy: func(req *http.Request) (*url.URL, error) {
 				switch req.URL.Scheme {
@@ -153,6 +156,7 @@ func setupHTTPClient(httpEndpoint, httpsEndpoint string) (client *http.Client, e
 				Timeout:   30 * time.Second,
 				KeepAlive: 30 * time.Second,
 			}).DialContext,
+			//nolint:gosec
 			TLSClientConfig: &tls.Config{
 				RootCAs: rootCaPool,
 			},
@@ -164,5 +168,5 @@ func setupHTTPClient(httpEndpoint, httpsEndpoint string) (client *http.Client, e
 		},
 	}
 
-	return
+	return client, nil
 }

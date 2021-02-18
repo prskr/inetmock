@@ -17,6 +17,8 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
 )
 
+const gracefulShutdownTimeout = 5 * time.Second
+
 type INetMockAPI interface {
 	StartServer() error
 	StopServer()
@@ -90,7 +92,7 @@ func (i *inetmockAPI) StopServer() {
 
 	select {
 	case <-gracefulStopChan:
-	case <-time.After(5 * time.Second):
+	case <-time.After(gracefulShutdownTimeout):
 		i.server.Stop()
 	}
 }

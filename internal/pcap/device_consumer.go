@@ -12,14 +12,15 @@ import (
 	"github.com/google/gopacket/pcapgo"
 )
 
-func openDeviceForConsumers(ctx context.Context, device string, consumer Consumer, opts RecordingOptions) (dev deviceConsumer, err error) {
+func openDeviceForConsumers(ctx context.Context, device string, consumer Consumer, opts RecordingOptions) (deviceConsumer, error) {
+	var err error
 	var handle *pcapgo.EthernetHandle
 	if handle, err = pcapgo.NewEthernetHandle(device); err != nil {
-		return
+		return deviceConsumer{}, err
 	}
 
-	if err = handle.SetPromiscuous(opts.Promiscuous); err != nil {
-		return
+	if err := handle.SetPromiscuous(opts.Promiscuous); err != nil {
+		return deviceConsumer{}, err
 	}
 
 	consumerCtx, cancel := context.WithCancel(ctx)
@@ -28,7 +29,7 @@ func openDeviceForConsumers(ctx context.Context, device string, consumer Consume
 		LinkType: layers.LinkTypeEthernet,
 	})
 
-	dev = deviceConsumer{
+	var dev = deviceConsumer{
 		locker: new(sync.Mutex),
 		ctx:    consumerCtx,
 		cancel: cancel,
@@ -42,7 +43,7 @@ func openDeviceForConsumers(ctx context.Context, device string, consumer Consume
 
 	go dev.removeConsumerOnContextEnd()
 
-	return
+	return dev, nil
 }
 
 type deviceConsumer struct {

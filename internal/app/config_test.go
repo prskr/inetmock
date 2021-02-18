@@ -11,16 +11,17 @@ func Test_config_ReadConfig(t *testing.T) {
 	type args struct {
 		config string
 	}
-	tests := []struct {
+	type testCase struct {
 		name          string
 		args          args
 		wantListeners map[string]endpoint.ListenerSpec
 		wantErr       bool
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Test endpoints config",
 			args: args{
-				//language=yaml
+				// language=yaml
 				config: `
 listeners:
   tcp_80:
@@ -54,8 +55,8 @@ listeners:
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			cfg := CreateConfig()
 			if err := cfg.ReadConfigString(tt.args.config, "yaml"); (err != nil) != tt.wantErr {
 				t.Errorf("ReadConfig() error = %v, wantErr %v", err, tt.wantErr)
@@ -65,6 +66,9 @@ listeners:
 			if !reflect.DeepEqual(tt.wantListeners, cfg.ListenerSpecs()) {
 				t.Errorf("want = %v, got = %v", tt.wantListeners, cfg.ListenerSpecs())
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }

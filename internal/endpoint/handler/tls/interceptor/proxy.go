@@ -36,7 +36,7 @@ func chanFromConn(conn net.Conn) chan []byte {
 	return c
 }
 
-func Pipe(conn1 net.Conn, conn2 net.Conn) {
+func Pipe(conn1, conn2 net.Conn) {
 	chan1 := chanFromConn(conn1)
 	chan2 := chanFromConn(conn2)
 
@@ -46,13 +46,13 @@ func Pipe(conn1 net.Conn, conn2 net.Conn) {
 			if b1 == nil {
 				return
 			} else {
-				conn2.Write(b1)
+				_, _ = conn2.Write(b1)
 			}
 		case b2 := <-chan2:
 			if b2 == nil {
 				return
 			} else {
-				conn1.Write(b2)
+				_, _ = conn1.Write(b2)
 			}
 		}
 	}

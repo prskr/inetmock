@@ -29,14 +29,15 @@ func (p *httpHandler) Matchers() []cmux.Matcher {
 	return []cmux.Matcher{cmux.HTTP1()}
 }
 
-func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) (err error) {
+func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) error {
 	p.logger = lifecycle.Logger().With(
 		zap.String("protocol_handler", name),
 	)
 
+	var err error
 	var options httpOptions
 	if options, err = loadFromConfig(lifecycle); err != nil {
-		return
+		return err
 	}
 
 	p.logger = p.logger.With(
@@ -59,7 +60,7 @@ func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) (err error) {
 
 	go p.startServer(lifecycle.Uplink().Listener)
 	go p.shutdownOnCancel(lifecycle.Context())
-	return
+	return nil
 }
 
 func (p *httpHandler) shutdownOnCancel(ctx context.Context) {
@@ -71,7 +72,6 @@ func (p *httpHandler) shutdownOnCancel(ctx context.Context) {
 			zap.Error(err),
 		)
 	}
-	return
 }
 
 func (p *httpHandler) startServer(listener net.Listener) {

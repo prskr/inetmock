@@ -17,17 +17,18 @@ func Test_randomIPFallback_GetIP(t *testing.T) {
 
 func Test_incrementalIPFallback_GetIP(t *testing.T) {
 	type fields struct {
-		latestIp uint32
+		latestIP uint32
 	}
-	tests := []struct {
+	type testCase struct {
 		name   string
 		fields fields
 		want   []net.IP
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Expect the next icremental IP",
 			fields: fields{
-				latestIp: 167772160,
+				latestIP: 167772160,
 			},
 			want: []net.IP{
 				net.IPv4(10, 0, 0, 1),
@@ -36,7 +37,7 @@ func Test_incrementalIPFallback_GetIP(t *testing.T) {
 		{
 			name: "Expect a sequence of 5",
 			fields: fields{
-				latestIp: 167772160,
+				latestIP: 167772160,
 			},
 			want: []net.IP{
 				net.IPv4(10, 0, 0, 1),
@@ -49,7 +50,7 @@ func Test_incrementalIPFallback_GetIP(t *testing.T) {
 		{
 			name: "Expect next block to be incremented",
 			fields: fields{
-				latestIp: 167772413,
+				latestIP: 167772413,
 			},
 			want: []net.IP{
 				net.IPv4(10, 0, 0, 254),
@@ -58,17 +59,20 @@ func Test_incrementalIPFallback_GetIP(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			i := &incrementalIPFallback{
-				latestIp: tt.fields.latestIp,
+				latestIP: tt.fields.latestIP,
 			}
 			for k := 0; k < len(tt.want); k++ {
 				if got := i.GetIP(); !reflect.DeepEqual(got, tt.want[k]) {
 					t.Errorf("GetIP() = %v, want %v", got, tt.want[k])
 				}
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 
@@ -76,11 +80,12 @@ func Test_ipToInt32(t *testing.T) {
 	type args struct {
 		ip net.IP
 	}
-	tests := []struct {
+	type testCase struct {
 		name string
 		args args
 		want uint32
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Convert 188.193.106.113 to int",
 			args: args{
@@ -96,11 +101,14 @@ func Test_ipToInt32(t *testing.T) {
 			want: 3232281098,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			if got := ipToInt32(tt.args.ip); got != tt.want {
 				t.Errorf("ipToInt32() = %v, want %v", got, tt.want)
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }

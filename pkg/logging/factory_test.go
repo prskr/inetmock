@@ -7,15 +7,17 @@ import (
 	"go.uber.org/zap"
 )
 
+//nolint:funlen
 func TestParseLevel(t *testing.T) {
 	type args struct {
 		levelString string
 	}
-	tests := []struct {
+	type testCase struct {
 		name string
 		args args
 		want zap.AtomicLevel
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Test parse DEBUG level",
 			args: args{
@@ -101,12 +103,15 @@ func TestParseLevel(t *testing.T) {
 			want: zap.NewAtomicLevelAt(zap.InfoLevel),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			if got := ParseLevel(tt.args.levelString); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseLevel() = %v, want %v", got, tt.want)
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 
@@ -116,10 +121,11 @@ func TestConfigureLogging(t *testing.T) {
 		developmentLogging bool
 		initialFields      map[string]interface{}
 	}
-	tests := []struct {
+	type testCase struct {
 		name string
 		args args
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Test configure defaults",
 			args: args{},
@@ -145,8 +151,8 @@ func TestConfigureLogging(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			ConfigureLogging(tt.args.level, tt.args.developmentLogging, tt.args.initialFields)
 			if loggingConfig.Development != tt.args.developmentLogging {
 				t.Errorf("loggingConfig.Development = %t, want %t", loggingConfig.Development, tt.args.developmentLogging)
@@ -162,6 +168,9 @@ func TestConfigureLogging(t *testing.T) {
 				t.Errorf("loggingConfig.InitialFields = %v, want %v", loggingConfig.InitialFields, tt.args.initialFields)
 				return
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }

@@ -39,7 +39,7 @@ func CreateConfig() Config {
 type Config interface {
 	ReadConfig(configFilePath string) error
 	ReadConfigString(config, format string) error
-	TLSConfig() cert.CertOptions
+	TLSConfig() cert.Options
 	APIURL() *url.URL
 	AuditDataDir() string
 	PCAPDataDir() string
@@ -52,21 +52,21 @@ type apiConfig struct {
 
 type config struct {
 	cfg       *viper.Viper
-	TLS       cert.CertOptions
+	TLS       cert.Options
 	Listeners map[string]endpoint.ListenerSpec
 	API       apiConfig
 	Data      Data
 }
 
-func (c config) AuditDataDir() string {
+func (c *config) AuditDataDir() string {
 	return c.Data.Audit
 }
 
-func (c config) PCAPDataDir() string {
+func (c *config) PCAPDataDir() string {
 	return c.Data.PCAP
 }
 
-func (c config) APIURL() *url.URL {
+func (c *config) APIURL() *url.URL {
 	if u, err := url.Parse(c.API.Listen); err != nil {
 		u, _ = url.Parse("tcp://:0")
 		return u
@@ -75,11 +75,11 @@ func (c config) APIURL() *url.URL {
 	}
 }
 
-func (c config) ListenerSpecs() map[string]endpoint.ListenerSpec {
+func (c *config) ListenerSpecs() map[string]endpoint.ListenerSpec {
 	return c.Listeners
 }
 
-func (c config) TLSConfig() cert.CertOptions {
+func (c *config) TLSConfig() cert.Options {
 	return c.TLS
 }
 

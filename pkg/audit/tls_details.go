@@ -4,7 +4,6 @@ import "crypto/tls"
 
 var (
 	tlsToEntity = map[uint16]TLSVersion{
-		tls.VersionSSL30: TLSVersion_SSLv30,
 		tls.VersionTLS10: TLSVersion_TLS10,
 		tls.VersionTLS11: TLSVersion_TLS11,
 		tls.VersionTLS12: TLSVersion_TLS12,

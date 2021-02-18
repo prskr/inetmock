@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const wrapperCallFramesCount = 2
+
 type testLogger struct {
 	name    string
 	fields  []zap.Field
@@ -42,7 +44,7 @@ func (t testLogger) Debug(msg string, fields ...zap.Field) {
 		Time:       time.Now(),
 		LoggerName: t.name,
 		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(2)),
+		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
 	}, append(t.fields, fields...))
 
 	if err == nil {
@@ -57,7 +59,7 @@ func (t testLogger) Info(msg string, fields ...zap.Field) {
 		Time:       time.Now(),
 		LoggerName: t.name,
 		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(2)),
+		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
 	}, append(t.fields, fields...))
 
 	if err == nil {
@@ -72,7 +74,7 @@ func (t testLogger) Warn(msg string, fields ...zap.Field) {
 		Time:       time.Now(),
 		LoggerName: t.name,
 		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(2)),
+		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
 	}, append(t.fields, fields...))
 
 	if err == nil {
@@ -87,7 +89,7 @@ func (t testLogger) Error(msg string, fields ...zap.Field) {
 		Time:       time.Now(),
 		LoggerName: t.name,
 		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(2)),
+		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
 		Stack:      string(debug.Stack()),
 	}, append(t.fields, fields...))
 
@@ -103,7 +105,7 @@ func (t testLogger) Panic(msg string, fields ...zap.Field) {
 		Time:       time.Now(),
 		LoggerName: t.name,
 		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(2)),
+		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
 		Stack:      string(debug.Stack()),
 	}, append(t.fields, fields...))
 
@@ -119,7 +121,7 @@ func (t testLogger) Fatal(msg string, fields ...zap.Field) {
 		Time:       time.Now(),
 		LoggerName: t.name,
 		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(2)),
+		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
 		Stack:      string(debug.Stack()),
 	}, append(t.fields, fields...))
 

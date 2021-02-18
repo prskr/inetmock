@@ -15,6 +15,8 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
 )
 
+const expectedAddRecordsArgsLength = 2
+
 var (
 	pcapCmd = &cobra.Command{
 		Use:   "pcap",
@@ -59,11 +61,11 @@ var (
 		Short:   "[device] [targetPath] - adds a PCAP file subscription to the given path.",
 		Long:    `If the path is relative it will be stored in the configured PCAP data directory.`,
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
-			if len(args) > 2 {
+			if len(args) > expectedAddRecordsArgsLength {
 				return nil, cobra.ShellCompDirectiveError
 			}
 
-			if len(args) == 2 {
+			if len(args) == expectedAddRecordsArgsLength {
 				return nil, cobra.ShellCompDirectiveDefault
 			}
 
@@ -84,7 +86,7 @@ var (
 			return nil, cobra.ShellCompDirectiveError
 		},
 		Args: func(cmd *cobra.Command, args []string) (err error) {
-			if len(args) != 2 {
+			if len(args) != expectedAddRecordsArgsLength {
 				return errors.New("expected [device] [targetPath] as parameters")
 			}
 
@@ -126,8 +128,7 @@ func runListAvailableDevices(*cobra.Command, []string) (err error) {
 	return
 }
 
-func runListActiveRecordings(*cobra.Command, []string) (err error) {
-
+func runListActiveRecordings(*cobra.Command, []string) error {
 	type printableSubscription struct {
 		Name        string
 		Device      string
@@ -139,16 +140,18 @@ func runListActiveRecordings(*cobra.Command, []string) (err error) {
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
+	var err error
 	var resp *rpc.ListRecordingsResponse
 	if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpc.ListRecordingsRequest)); err != nil {
-		return
+		return err
 	}
 
 	var out []printableSubscription
 
+	const expectedComponents = 2
 	for _, subscription := range resp.Subscriptions {
 		nameDevSplit := strings.Split(subscription, ":")
-		if len(nameDevSplit) != 2 {
+		if len(nameDevSplit) != expectedComponents {
 			continue
 		}
 		out = append(out, printableSubscription{
@@ -159,9 +162,8 @@ func runListActiveRecordings(*cobra.Command, []string) (err error) {
 	}
 
 	writer := format.Writer(outputFormat, os.Stdout)
-	err = writer.Write(out)
 
-	return
+	return writer.Write(out)
 }
 
 func runAddRecording(_ *cobra.Command, args []string) (err error) {
@@ -202,7 +204,7 @@ func isValidRecordDevice(device string, pcapClient rpc.PCAPClient) (err error) {
 	}
 
 	for _, dev := range resp.AvailableDevices {
-		if strings.ToLower(dev.Name) == strings.ToLower(device) {
+		if strings.EqualFold(dev.Name, device) {
 			return nil
 		}
 	}

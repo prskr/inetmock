@@ -11,6 +11,11 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 )
 
+const (
+	inspectionPayloadLength = 4096
+	connectionCacheTTL      = 60 * time.Second
+)
+
 type auditConsumer struct {
 	name             string
 	emitter          audit.Emitter
@@ -38,6 +43,7 @@ func (a auditConsumer) Observe(pkg gopacket.Packet) {
 	connHash := (37 * pkg.NetworkLayer().NetworkFlow().FastHash()) ^ pkg.TransportLayer().TransportFlow().FastHash()
 
 	if _, known := a.knownConnections[connHash]; !known {
+		//nolint:lll
 		fmt.Printf("new connection - network = %s, transport = %s \n", pkg.NetworkLayer().NetworkFlow().String(), pkg.TransportLayer().TransportFlow().String())
 		payload := filterPayload(appLayer.Payload())
 		if bytes.Contains(payload, []byte("HTTP")) {
@@ -45,15 +51,15 @@ func (a auditConsumer) Observe(pkg gopacket.Packet) {
 			fmt.Println("found HTTP")
 		}
 	}
-	a.knownConnections[connHash] = time.Now().Add(60 * time.Second).Unix()
+	a.knownConnections[connHash] = time.Now().Add(connectionCacheTTL).Unix()
 }
 
 func (a auditConsumer) Init(pcap.CaptureParameters) {
 }
 
 func filterPayload(payload []byte) []byte {
-	if len(payload) < 4096 {
+	if len(payload) < inspectionPayloadLength {
 		return payload
 	}
-	return payload[:4096]
+	return payload[:inspectionPayloadLength]
 }

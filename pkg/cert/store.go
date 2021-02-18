@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	defaultKeyProvider = func(options CertOptions) func() (key interface{}, err error) {
+	defaultKeyProvider = func(options Options) func() (key interface{}, err error) {
 		return func() (key interface{}, err error) {
 			return privateKeyForCurve(options)
 		}
@@ -33,8 +33,9 @@ type Store interface {
 	TLSConfig() *tls.Config
 }
 
+//nolint:gocritic
 func NewDefaultStore(
-	options CertOptions,
+	options Options,
 	logger logging.Logger,
 ) (Store, error) {
 	timeSource := NewTimeSource()
@@ -46,8 +47,9 @@ func NewDefaultStore(
 	)
 }
 
+//nolint:gocritic
 func NewStore(
-	options CertOptions,
+	options Options,
 	cache Cache,
 	generator Generator,
 	logger logging.Logger,
@@ -67,12 +69,11 @@ func NewStore(
 }
 
 type store struct {
-	options    CertOptions
-	caCert     *tls.Certificate
-	cache      Cache
-	timeSource TimeSource
-	generator  Generator
-	logger     logging.Logger
+	options   Options
+	caCert    *tls.Certificate
+	cache     Cache
+	generator Generator
+	logger    logging.Logger
 }
 
 func (s *store) TLSConfig() *tls.Config {
@@ -92,22 +93,23 @@ func (s *store) TLSConfig() *tls.Config {
 		}
 	}
 
+	//nolint:gosec
 	return &tls.Config{
 		CipherSuites:             suites,
 		MinVersion:               s.options.MinTLSVersion.TLSVersion(),
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
 		GetCertificate: func(info *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
-			var localIp string
-			if localIp, err = extractIPFromAddress(info.Conn.LocalAddr().String()); err != nil {
-				localIp = ipv4Loopback
+			var localIP string
+			if localIP, err = extractIPFromAddress(info.Conn.LocalAddr().String()); err != nil {
+				localIP = ipv4Loopback
 			}
 
-			if cert, err = s.GetCertificate(info.ServerName, localIp); err != nil {
+			if cert, err = s.GetCertificate(info.ServerName, localIP); err != nil {
 				s.logger.Error(
 					"error while resolving certificate",
 					zap.String("serverName", info.ServerName),
-					zap.String("localAddr", localIp),
+					zap.String("localAddr", localIP),
 					zap.Error(err),
 				)
 			}
@@ -131,7 +133,7 @@ func (s *store) CACert() *tls.Certificate {
 	return s.caCert
 }
 
-func (s *store) GetCertificate(serverName string, ip string) (cert *tls.Certificate, err error) {
+func (s *store) GetCertificate(serverName, ip string) (cert *tls.Certificate, err error) {
 	if crt, ok := s.cache.Get(serverName); ok {
 		return crt, nil
 	}
@@ -141,13 +143,14 @@ func (s *store) GetCertificate(serverName string, ip string) (cert *tls.Certific
 		DNSNames:    []string{serverName},
 		IPAddresses: []net.IP{net.ParseIP(ip)},
 	}, s.caCert); err == nil {
-		s.cache.Put(cert)
+		_ = s.cache.Put(cert)
 	}
 
 	return
 }
 
-func privateKeyForCurve(options CertOptions) (privateKey interface{}, err error) {
+//nolint:gocritic
+func privateKeyForCurve(options Options) (privateKey interface{}, err error) {
 	switch options.Curve {
 	case CurveTypeP224:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
@@ -157,6 +160,8 @@ func privateKeyForCurve(options CertOptions) (privateKey interface{}, err error)
 		privateKey, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 	case CurveTypeP521:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	case CurveTypeED25519:
+		fallthrough
 	default:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	}

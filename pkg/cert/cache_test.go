@@ -33,11 +33,12 @@ func Test_certShouldBeRenewed(t *testing.T) {
 		timeSource TimeSource
 		cert       *x509.Certificate
 	}
-	tests := []struct {
+	type testCase struct {
 		name string
 		args args
 		want bool
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Expect cert should not be renewed right after creation",
 			args: args{
@@ -77,15 +78,19 @@ func Test_certShouldBeRenewed(t *testing.T) {
 			want: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			if got := certShouldBeRenewed(tt.args.timeSource, tt.args.cert); got != tt.want {
 				t.Errorf("certShouldBeRenewed() = %v, want %v", got, tt.want)
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 
+//nolint:funlen
 func Test_fileSystemCache_Get(t *testing.T) {
 	type fields struct {
 		certCachePath string
@@ -95,12 +100,13 @@ func Test_fileSystemCache_Get(t *testing.T) {
 	type args struct {
 		cn string
 	}
-	tests := []struct {
+	type testCase struct {
 		name   string
 		fields fields
 		args   args
 		wantOk bool
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Get a miss when no cert is present",
 			fields: fields{
@@ -178,8 +184,8 @@ func Test_fileSystemCache_Get(t *testing.T) {
 			wantOk: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			f := &fileSystemCache{
 				certCachePath: tt.fields.certCachePath,
 				inMemCache:    tt.fields.inMemCache,
@@ -194,7 +200,10 @@ func Test_fileSystemCache_Get(t *testing.T) {
 			if gotOk != tt.wantOk {
 				t.Errorf("Get() gotOk = %v, want %v", gotOk, tt.wantOk)
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 
@@ -207,12 +216,13 @@ func Test_fileSystemCache_Put(t *testing.T) {
 	type args struct {
 		cert *tls.Certificate
 	}
-	tests := []struct {
+	type testCase struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "Want error if nil cert is passed to put",
 			fields: fields{
@@ -271,8 +281,8 @@ func Test_fileSystemCache_Put(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	scenario := func(tt testCase) func(t *testing.T) {
+		return func(t *testing.T) {
 			f := &fileSystemCache{
 				certCachePath: tt.fields.certCachePath,
 				inMemCache:    tt.fields.inMemCache,
@@ -281,12 +291,15 @@ func Test_fileSystemCache_Put(t *testing.T) {
 			if err := f.Put(tt.args.cert); (err != nil) != tt.wantErr {
 				t.Errorf("Put() error = %v, wantErr %v", err, tt.wantErr)
 			}
-		})
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, scenario(tt))
 	}
 }
 
 func setupCertGen() Generator {
-	return NewDefaultGenerator(CertOptions{
+	return NewDefaultGenerator(Options{
 		Validity: ValidityByPurpose{
 			Server: ValidityDuration{
 				NotBeforeRelative: serverRelativeValidity,

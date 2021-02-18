@@ -17,7 +17,6 @@ type endpointLifecycle struct {
 	certStore    cert.Store
 	emitter      audit.Emitter
 	uplink       Uplink
-	tls          bool
 	opts         map[string]interface{}
 }
 
@@ -41,30 +40,30 @@ func NewEndpointLifecycleFromContext(
 	}
 }
 
-func (e endpointLifecycle) Name() string {
+func (e *endpointLifecycle) Name() string {
 	return e.endpointName
 }
 
-func (e endpointLifecycle) Uplink() Uplink {
+func (e *endpointLifecycle) Uplink() Uplink {
 	return e.uplink
 }
 
-func (e endpointLifecycle) Logger() logging.Logger {
+func (e *endpointLifecycle) Logger() logging.Logger {
 	return e.logger
 }
 
-func (e endpointLifecycle) CertStore() cert.Store {
+func (e *endpointLifecycle) CertStore() cert.Store {
 	return e.certStore
 }
 
-func (e endpointLifecycle) Audit() audit.Emitter {
+func (e *endpointLifecycle) Audit() audit.Emitter {
 	return e.emitter
 }
 
-func (e endpointLifecycle) Context() context.Context {
+func (e *endpointLifecycle) Context() context.Context {
 	return e.ctx
 }
 
-func (e endpointLifecycle) UnmarshalOptions(cfg interface{}) error {
+func (e *endpointLifecycle) UnmarshalOptions(cfg interface{}) error {
 	return mapstructure.Decode(e.opts, cfg)
 }
