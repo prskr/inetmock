@@ -1,9 +1,10 @@
 package metrics
 
 import (
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"go.uber.org/zap"
 )
 
 func AddMetricsExporter(registry endpoint.HandlerRegistry) (err error) {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
+
 	"gitlab.com/inetmock/inetmock/internal/test/integration"
 )
 

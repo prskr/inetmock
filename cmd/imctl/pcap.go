@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/internal/format"
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
-	"go.uber.org/zap"
 )
 
 var (

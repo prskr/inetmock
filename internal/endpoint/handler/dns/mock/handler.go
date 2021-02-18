@@ -5,9 +5,10 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"go.uber.org/zap"
 )
 
 type dnsHandler struct {

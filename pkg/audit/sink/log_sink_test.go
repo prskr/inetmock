@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
+
 	logging_mock "gitlab.com/inetmock/inetmock/internal/mock/logging"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/wait"
-	"go.uber.org/zap"
 )
 
 //nolint:dupl

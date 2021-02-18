@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/mitchellh/mapstructure"
+
 	endpoint_mock "gitlab.com/inetmock/inetmock/internal/mock/endpoint"
 )
 

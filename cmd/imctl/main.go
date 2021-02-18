@@ -9,8 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	"gitlab.com/inetmock/inetmock/internal/app"
 	"google.golang.org/grpc"
+
+	"gitlab.com/inetmock/inetmock/internal/app"
 )
 
 var (

@@ -2,6 +2,7 @@ package sink
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 )

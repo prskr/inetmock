@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"go.uber.org/zap"
+
+	"gitlab.com/inetmock/inetmock/pkg/cert"
 )
 
 const (

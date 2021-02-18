@@ -5,6 +5,7 @@ package consumers
 import (
 	"github.com/google/gopacket"
 	"github.com/google/uuid"
+
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 )
 

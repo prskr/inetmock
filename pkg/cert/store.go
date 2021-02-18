@@ -8,8 +8,9 @@ import (
 	"crypto/x509"
 	"net"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
+
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 const (

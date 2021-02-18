@@ -1,9 +1,10 @@
 package sink
 
 import (
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"go.uber.org/zap"
 )
 
 const (

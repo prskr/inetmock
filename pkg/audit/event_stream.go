@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"go.uber.org/zap"
+
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 func init() {

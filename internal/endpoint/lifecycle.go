@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/mitchellh/mapstructure"
+
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"

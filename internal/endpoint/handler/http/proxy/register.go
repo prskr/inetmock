@@ -2,11 +2,12 @@ package proxy
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
+	"gopkg.in/elazarl/goproxy.v1"
+
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
-	"go.uber.org/zap"
-	"gopkg.in/elazarl/goproxy.v1"
 )
 
 var (

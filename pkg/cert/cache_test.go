@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+
 	certmock "gitlab.com/inetmock/inetmock/internal/mock/cert"
 )
 

@@ -2,6 +2,7 @@ package mock
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 )

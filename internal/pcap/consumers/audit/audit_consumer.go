@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/gopacket"
+
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 )

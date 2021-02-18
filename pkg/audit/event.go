@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 )
 
 type Details interface {

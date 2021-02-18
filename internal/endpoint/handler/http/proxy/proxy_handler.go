@@ -6,11 +6,12 @@ import (
 
 	"github.com/jinzhu/copier"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
+	"gopkg.in/elazarl/goproxy.v1"
+
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"go.uber.org/zap"
-	"gopkg.in/elazarl/goproxy.v1"
 )
 
 type proxyHttpsHandler struct {

@@ -5,9 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 )
 
 func Test_guessDetailsFromApp(t *testing.T) {

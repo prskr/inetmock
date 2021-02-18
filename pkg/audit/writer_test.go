@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 )

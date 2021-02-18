@@ -5,10 +5,11 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"go.uber.org/zap"
 )
 
 type regexHandler struct {

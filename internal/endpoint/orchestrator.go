@@ -5,10 +5,11 @@ import (
 	"errors"
 
 	"github.com/soheilhy/cmux"
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"go.uber.org/zap"
 )
 
 var (

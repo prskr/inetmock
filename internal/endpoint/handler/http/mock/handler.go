@@ -7,10 +7,11 @@ import (
 	"net/http"
 
 	"github.com/soheilhy/cmux"
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"go.uber.org/zap"
 )
 
 const (
