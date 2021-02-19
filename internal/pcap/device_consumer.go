@@ -39,8 +39,6 @@ func openDeviceForConsumers(ctx context.Context, device string, consumer Consume
 		consumer:     consumer,
 	}
 
-	go dev.removeConsumerOnContextEnd()
-
 	return dev, nil
 }
 
@@ -51,15 +49,6 @@ type deviceConsumer struct {
 	locker       sync.Locker
 	handle       *pcapgo.EthernetHandle
 	packetSource *gopacket.PacketSource
-}
-
-func (o *deviceConsumer) removeConsumerOnContextEnd() {
-	<-o.ctx.Done()
-
-	o.locker.Lock()
-	defer o.locker.Unlock()
-
-	_ = o.Close()
 }
 
 func (o *deviceConsumer) Close() error {

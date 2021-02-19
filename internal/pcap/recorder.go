@@ -96,6 +96,7 @@ func (r recorder) StartRecordingWithOptions(ctx context.Context, device string, 
 	}
 	openDev.StartTransport()
 	r.openDevices[consumerKey] = openDev
+	go r.removeConsumerOnContextEnd(ctx, consumerKey)
 
 	return
 }
@@ -130,4 +131,9 @@ func (r recorder) Close() (err error) {
 		err = multierr.Append(err, consumer.Close())
 	}
 	return
+}
+
+func (r *recorder) removeConsumerOnContextEnd(ctx context.Context, consumerKey string) {
+	<-ctx.Done()
+	_ = r.StopRecording(consumerKey)
 }

@@ -232,13 +232,6 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 	}
 }
 
-func sortSubscriptions(subs []pcap.Subscription) []pcap.Subscription {
-	sort.Slice(subs, func(i, j int) bool {
-		return subs[i].ConsumerName < subs[j].ConsumerName
-	})
-	return subs
-}
-
 func Test_recorder_StopRecording(t *testing.T) {
 	type args struct {
 		consumerKey string
@@ -289,15 +282,16 @@ func Test_recorder_StopRecording(t *testing.T) {
 					},
 				})
 
+				if err != nil {
+					return
+				}
+
 				t.Cleanup(func() {
 					if !gotClosed {
 						t.Errorf("writer was not closed")
 					}
 				})
 
-				if err != nil {
-					return
-				}
 				err = recorder.StartRecording(context.Background(), "lo", writerConsumer)
 
 				return
@@ -327,4 +321,61 @@ func Test_recorder_StopRecording(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, scenario(tt))
 	}
+}
+
+func Test_recorder_StopRecordingFromContext(t *testing.T) {
+	var err error
+	var writerConsumer pcap.Consumer
+	gotClosed := false
+	writerConsumer, err = consumers.NewWriterConsumer("test", &fakeWriterCloser{
+		func() error {
+			gotClosed = true
+			return nil
+		},
+	})
+
+	if err != nil {
+		return
+	}
+
+	t.Cleanup(func() {
+		if !gotClosed {
+			t.Errorf("writer was not closed")
+		}
+	})
+
+	var recorder = pcap.NewRecorder()
+
+	t.Cleanup(func() {
+		if err = recorder.Close(); err != nil {
+			t.Errorf("Recorder.Close() error = %v", err)
+		}
+	})
+
+	recordingCtx, recordingCancel := context.WithCancel(context.Background())
+	defer recordingCancel()
+	if err = recorder.StartRecording(recordingCtx, "lo", writerConsumer); err != nil {
+		t.Errorf("StartRecording() error = %v", err)
+		return
+	}
+
+	if len(recorder.Subscriptions()) < 1 {
+		t.Fatal("No subscription even if there is one expected")
+	}
+
+	recordingCancel()
+
+	// give the cleanup a bit of time
+	time.Sleep(10 * time.Millisecond)
+
+	if len(recorder.Subscriptions()) > 0 {
+		t.Errorf("Subscriptions present but none expected: %v", recorder.Subscriptions())
+	}
+}
+
+func sortSubscriptions(subs []pcap.Subscription) []pcap.Subscription {
+	sort.Slice(subs, func(i, j int) bool {
+		return subs[i].ConsumerName < subs[j].ConsumerName
+	})
+	return subs
 }
