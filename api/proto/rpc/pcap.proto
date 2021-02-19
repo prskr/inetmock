@@ -32,28 +32,28 @@ message ListRecordingsResponse {
     repeated string subscriptions = 1;
 }
 
-message RegisterPCAPFileRecordRequest {
+message StartPCAPFileRecordRequest {
     string device = 1;
     string targetPath = 2;
     bool promiscuous = 3;
     google.protobuf.Duration readTimeout = 4;
 }
 
-message RegisterPCAPFileRecordResponse {
+message StartPCAPFileRecordResponse {
     string resolvedPath = 1;
 }
 
-message RemovePCAPFileRecordRequest {
+message StopPCAPFileRecordRequest {
     string consumerKey = 1;
 }
 
-message RemovePCAPFileRecordResponse {
+message StopPCAPFileRecordResponse {
     bool removed = 1;
 }
 
 service PCAP {
     rpc ListAvailableDevices(ListAvailableDevicesRequest) returns (ListAvailableDevicesResponse);
     rpc ListActiveRecordings(ListRecordingsRequest) returns (ListRecordingsResponse);
-    rpc StartPCAPFileRecording(RegisterPCAPFileRecordRequest) returns (RegisterPCAPFileRecordResponse);
-    rpc StopPCAPFileRecord(RemovePCAPFileRecordRequest) returns (RemovePCAPFileRecordResponse);
+    rpc StartPCAPFileRecording(StartPCAPFileRecordRequest) returns (StartPCAPFileRecordResponse);
+    rpc StopPCAPFileRecord(StopPCAPFileRecordRequest) returns (StopPCAPFileRecordResponse);
 }
