@@ -9,6 +9,8 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 )
 
+var _ pcap.Consumer = (*noopConsumer)(nil)
+
 type noopConsumer struct {
 	name string
 }
@@ -30,5 +32,6 @@ func (n noopConsumer) Name() string {
 func (n noopConsumer) Observe(gopacket.Packet) {
 }
 
-func (n noopConsumer) Init(pcap.CaptureParameters) {
+func (n noopConsumer) Init(pcap.CaptureParameters) error {
+	return nil
 }

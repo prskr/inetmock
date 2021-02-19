@@ -25,6 +25,8 @@ var (
 		ReadTimeout: DefaultReadTimeout,
 		Promiscuous: false,
 	}
+
+	_ Recorder = (*recorder)(nil)
 )
 
 func NewRecorder() Recorder {

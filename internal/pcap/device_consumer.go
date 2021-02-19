@@ -19,16 +19,19 @@ func openDeviceForConsumers(ctx context.Context, device string, consumer Consume
 		return deviceConsumer{}, err
 	}
 
+	//nolint:govet // either govet or gocritic have their opinions about why the other one is wrong
 	if err := handle.SetPromiscuous(opts.Promiscuous); err != nil {
 		return deviceConsumer{}, err
 	}
 
-	consumerCtx, cancel := context.WithCancel(ctx)
-
-	consumer.Init(CaptureParameters{
+	err = consumer.Init(CaptureParameters{
 		LinkType: layers.LinkTypeEthernet,
 	})
 
+	if err != nil {
+		return deviceConsumer{}, err
+	}
+	consumerCtx, cancel := context.WithCancel(ctx)
 	var dev = deviceConsumer{
 		locker: new(sync.Mutex),
 		ctx:    consumerCtx,

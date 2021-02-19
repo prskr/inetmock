@@ -14,14 +14,16 @@ import (
 
 const defaultSnapshotLength = 65536
 
+var _ pcap.Consumer = (*writerConsumer)(nil)
+
 type writerConsumer struct {
 	name          string
 	origWriter    io.Writer
 	packageWriter *pcapgo.Writer
 }
 
-func (f *writerConsumer) Init(params pcap.CaptureParameters) {
-	_ = f.packageWriter.WriteFileHeader(defaultSnapshotLength, params.LinkType)
+func (f *writerConsumer) Init(params pcap.CaptureParameters) error {
+	return f.packageWriter.WriteFileHeader(defaultSnapshotLength, params.LinkType)
 }
 
 func NewWriterConsumer(name string, writer io.Writer) (consumer pcap.Consumer, err error) {

@@ -16,6 +16,8 @@ const (
 	connectionCacheTTL      = 60 * time.Second
 )
 
+var _ pcap.Consumer = (*auditConsumer)(nil)
+
 type auditConsumer struct {
 	name             string
 	emitter          audit.Emitter
@@ -54,7 +56,8 @@ func (a auditConsumer) Observe(pkg gopacket.Packet) {
 	a.knownConnections[connHash] = time.Now().Add(connectionCacheTTL).Unix()
 }
 
-func (a auditConsumer) Init(pcap.CaptureParameters) {
+func (a auditConsumer) Init(pcap.CaptureParameters) error {
+	return nil
 }
 
 func filterPayload(payload []byte) []byte {
