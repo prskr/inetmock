@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
@@ -17,6 +19,15 @@ import (
 )
 
 var (
+	auditCmd = &cobra.Command{
+		Use:   "audit",
+		Short: "Interact with the audit API",
+	}
+	watchEventsCmd = &cobra.Command{
+		Use:   "watch",
+		Short: "Watch all audit events",
+		RunE:  watchAuditEvents,
+	}
 	listSinksCmd = &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls", "dir"},
@@ -46,7 +57,59 @@ var (
 		Args:    cobra.ExactArgs(1),
 		RunE:    runReadFile,
 	}
+
+	listenerName string
 )
+
+func init() {
+	currentUser := ""
+	if usr, err := user.Current(); err == nil {
+		currentUser = usr.Username
+	} else {
+		currentUser = uuid.New().String()
+	}
+
+	hostname := "."
+	if hn, err := os.Hostname(); err == nil {
+		hostname = hn
+	}
+
+	watchEventsCmd.PersistentFlags().StringVar(
+		&listenerName,
+		"listener-name",
+		fmt.Sprintf("%s\\%s is watching", hostname, currentUser),
+		"set listener name - defaults to the current username, if the user cannot be determined a random UUID will be used",
+	)
+	auditCmd.AddCommand(listSinksCmd, watchEventsCmd, addFileCmd, removeFileCmd, readFileCmd)
+}
+
+func watchAuditEvents(_ *cobra.Command, _ []string) (err error) {
+	auditClient := rpc.NewAuditClient(conn)
+
+	var watchClient rpc.Audit_WatchEventsClient
+	if watchClient, err = auditClient.WatchEvents(cliApp.Context(), &rpc.WatchEventsRequest{WatcherName: listenerName}); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	go func() {
+		var protoEv *audit.EventEntity
+		for protoEv, err = watchClient.Recv(); err == nil; protoEv, err = watchClient.Recv() {
+			ev := audit.NewEventFromProto(protoEv)
+			var out []byte
+			out, err = json.Marshal(ev)
+			if err != nil {
+				continue
+			}
+			fmt.Println(string(out))
+		}
+	}()
+
+	<-cliApp.Context().Done()
+	err = watchClient.CloseSend()
+
+	return
+}
 
 func runListSinks(*cobra.Command, []string) (err error) {
 	auditClient := rpc.NewAuditClient(conn)

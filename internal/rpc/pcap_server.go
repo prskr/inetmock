@@ -59,8 +59,8 @@ func (p *pcapServer) ListAvailableDevices(context.Context, *rpc.ListAvailableDev
 
 func (p *pcapServer) StartPCAPFileRecording(
 	_ context.Context,
-	req *rpc.RegisterPCAPFileRecordRequest,
-) (*rpc.RegisterPCAPFileRecordResponse, error) {
+	req *rpc.StartPCAPFileRecordRequest,
+) (*rpc.StartPCAPFileRecordResponse, error) {
 	var targetPath = req.TargetPath
 	if !filepath.IsAbs(targetPath) {
 		targetPath = filepath.Join(p.pcapDataDir, req.TargetPath)
@@ -94,16 +94,16 @@ func (p *pcapServer) StartPCAPFileRecording(
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 
-	return &rpc.RegisterPCAPFileRecordResponse{
+	return &rpc.StartPCAPFileRecordResponse{
 		ResolvedPath: targetPath,
 	}, nil
 }
 
 func (p *pcapServer) StopPCAPFileRecord(
 	_ context.Context,
-	request *rpc.RemovePCAPFileRecordRequest,
-) (resp *rpc.RemovePCAPFileRecordResponse, _ error) {
-	resp = new(rpc.RemovePCAPFileRecordResponse)
+	request *rpc.StopPCAPFileRecordRequest,
+) (resp *rpc.StopPCAPFileRecordResponse, _ error) {
+	resp = new(rpc.StopPCAPFileRecordResponse)
 	resp.Removed = p.recorder.StopRecording(request.ConsumerKey) == nil
 	return
 }

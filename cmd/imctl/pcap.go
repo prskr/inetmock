@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -15,46 +16,30 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/rpc"
 )
 
-const expectedAddRecordsArgsLength = 2
+const (
+	expectedAddRecordsArgsLength = 2
+	defaultReadTimeout           = 30 * time.Second
+)
 
 var (
 	pcapCmd = &cobra.Command{
 		Use:   "pcap",
 		Short: "Interact with the PCAP API",
 	}
-
 	listAvailableDevicesCmd = &cobra.Command{
 		Use:     "list-devices",
 		Aliases: []string{"lis-dev", "ls-dev"},
 		Short:   "List all devices that might be monitored",
 		RunE:    runListAvailableDevices,
 	}
-
 	listCurrentlyRecordingsCmd = &cobra.Command{
 		Use:     "list-recordings",
 		Aliases: []string{"lis-rec", "ls-rec", "ls-recs"},
 		Short:   "List currently active recordings",
 		RunE:    runListActiveRecordings,
 	}
-
-	removeCurrentlyActiveRecording = &cobra.Command{
-		Use:     "stop-recording",
-		Aliases: []string{"rm-rec", "del-rec", "stop"},
-		Short:   "Remove/stop a currently active recording",
-		RunE:    runRemoveCurrentlyRunningRecording,
-		ValidArgsFunction: func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
-			var err error
-			pcapClient := rpc.NewPCAPClient(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
-			defer cancel()
-			var resp *rpc.ListRecordingsResponse
-			if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpc.ListRecordingsRequest)); err == nil {
-				return resp.Subscriptions, cobra.ShellCompDirectiveNoFileComp
-			}
-			return nil, cobra.ShellCompDirectiveError
-		},
-	}
-
+	promiscuousMode bool
+	readTimeout     time.Duration
 	addRecordingCmd = &cobra.Command{
 		Use:     "start-recording",
 		Aliases: []string{"start"},
@@ -97,7 +82,48 @@ var (
 		},
 		RunE: runAddRecording,
 	}
+	removeCurrentlyActiveRecording = &cobra.Command{
+		Use:     "stop-recording",
+		Aliases: []string{"rm-rec", "del-rec", "stop"},
+		Short:   "Remove/stop a currently active recording",
+		RunE:    runRemoveCurrentlyRunningRecording,
+		Args:    cobra.ExactArgs(1),
+		ValidArgsFunction: func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+			var err error
+			pcapClient := rpc.NewPCAPClient(conn)
+			ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
+			defer cancel()
+			var resp *rpc.ListRecordingsResponse
+			if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpc.ListRecordingsRequest)); err == nil {
+				return resp.Subscriptions, cobra.ShellCompDirectiveNoFileComp
+			}
+			return nil, cobra.ShellCompDirectiveError
+		},
+	}
 )
+
+func init() {
+	addRecordingCmd.Flags().BoolVar(
+		&promiscuousMode,
+		"promiscuous",
+		false,
+		"Start the recording in promiscuous mode which means it also captures traffic not only meant for the given interface",
+	)
+
+	addRecordingCmd.Flags().DurationVar(
+		&readTimeout,
+		"read-timeout",
+		defaultReadTimeout,
+		"configure the read time for the recording - supported values are Go time.Duration strings",
+	)
+
+	pcapCmd.AddCommand(
+		listAvailableDevicesCmd,
+		listCurrentlyRecordingsCmd,
+		addRecordingCmd,
+		removeCurrentlyActiveRecording,
+	)
+}
 
 func runListAvailableDevices(*cobra.Command, []string) (err error) {
 	pcapClient := rpc.NewPCAPClient(conn)
@@ -147,16 +173,15 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 	}
 
 	var out []printableSubscription
-
-	const expectedComponents = 2
 	for _, subscription := range resp.Subscriptions {
-		nameDevSplit := strings.Split(subscription, ":")
-		if len(nameDevSplit) != expectedComponents {
+		splitIdx := strings.Index(subscription, ":")
+		if splitIdx < 0 {
 			continue
 		}
+
 		out = append(out, printableSubscription{
-			Name:        nameDevSplit[1],
-			Device:      nameDevSplit[0],
+			Name:        subscription[splitIdx:],
+			Device:      subscription[:splitIdx],
 			ConsumerKey: subscription,
 		})
 	}
@@ -176,8 +201,8 @@ func runAddRecording(_ *cobra.Command, args []string) (err error) {
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
-	var resp *rpc.RegisterPCAPFileRecordResponse
-	resp, err = pcapClient.StartPCAPFileRecording(ctx, &rpc.RegisterPCAPFileRecordRequest{
+	var resp *rpc.StartPCAPFileRecordResponse
+	resp, err = pcapClient.StartPCAPFileRecording(ctx, &rpc.StartPCAPFileRecordRequest{
 		Device:     args[0],
 		TargetPath: args[1],
 	})
@@ -191,8 +216,46 @@ func runAddRecording(_ *cobra.Command, args []string) (err error) {
 	return
 }
 
-func runRemoveCurrentlyRunningRecording(*cobra.Command, []string) (err error) {
-	return
+func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
+	pcapClient := rpc.NewPCAPClient(conn)
+
+	listRecsCtx, listRecsCancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	defer listRecsCancel()
+
+	var err error
+	var listRecsResp *rpc.ListRecordingsResponse
+	if listRecsResp, err = pcapClient.ListActiveRecordings(listRecsCtx, new(rpc.ListRecordingsRequest)); err != nil {
+		return err
+	}
+
+	var knownSubscription = false
+	for i := range listRecsResp.Subscriptions {
+		knownSubscription = knownSubscription || listRecsResp.Subscriptions[i] == args[0]
+		if knownSubscription {
+			break
+		}
+	}
+
+	if !knownSubscription {
+		return fmt.Errorf("the given subscription is not known: %s", args[0])
+	}
+
+	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	defer cancel()
+
+	var stopRecResp *rpc.StopPCAPFileRecordResponse
+	stopRecResp, err = pcapClient.StopPCAPFileRecord(ctx, &rpc.StopPCAPFileRecordRequest{
+		ConsumerKey: args[0],
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !stopRecResp.Removed {
+		return fmt.Errorf("apparently no recording got removed for the given key %s", args[0])
+	}
+	return nil
 }
 
 func isValidRecordDevice(device string, pcapClient rpc.PCAPClient) (err error) {
@@ -212,9 +275,9 @@ func isValidRecordDevice(device string, pcapClient rpc.PCAPClient) (err error) {
 	return fmt.Errorf("device %s not found in available devices", device)
 }
 
-func byteArraysToPrintableIPAddresses(arrs [][]byte) string {
+func byteArraysToPrintableIPAddresses(addresses [][]byte) string {
 	ipsArr := make([]string, 0)
-	for _, b := range arrs {
+	for _, b := range addresses {
 		ip := net.IP(b)
 		ipsArr = append(ipsArr, ip.String())
 	}

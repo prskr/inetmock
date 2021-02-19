@@ -12,7 +12,6 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // AuditClient is the client API for Audit service.
@@ -34,7 +33,7 @@ func NewAuditClient(cc grpc.ClientConnInterface) AuditClient {
 }
 
 func (c *auditClient) WatchEvents(ctx context.Context, in *WatchEventsRequest, opts ...grpc.CallOption) (Audit_WatchEventsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Audit_ServiceDesc.Streams[0], "/inetmock.rpc.Audit/WatchEvents", opts...)
+	stream, err := c.cc.NewStream(ctx, &_Audit_serviceDesc.Streams[0], "/inetmock.rpc.Audit/WatchEvents", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +128,7 @@ type UnsafeAuditServer interface {
 }
 
 func RegisterAuditServer(s grpc.ServiceRegistrar, srv AuditServer) {
-	s.RegisterService(&Audit_ServiceDesc, srv)
+	s.RegisterService(&_Audit_serviceDesc, srv)
 }
 
 func _Audit_WatchEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -207,10 +206,7 @@ func _Audit_ListSinks_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-// Audit_ServiceDesc is the grpc.ServiceDesc for Audit service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var Audit_ServiceDesc = grpc.ServiceDesc{
+var _Audit_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "inetmock.rpc.Audit",
 	HandlerType: (*AuditServer)(nil),
 	Methods: []grpc.MethodDesc{
