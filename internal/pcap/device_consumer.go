@@ -24,21 +24,16 @@ func openDeviceForConsumers(ctx context.Context, device string, consumer Consume
 		return deviceConsumer{}, err
 	}
 
-	err = consumer.Init(CaptureParameters{
-		LinkType: layers.LinkTypeEthernet,
-	})
+	err = consumer.Init()
 
 	if err != nil {
 		return deviceConsumer{}, err
 	}
 	consumerCtx, cancel := context.WithCancel(ctx)
 	var dev = deviceConsumer{
-		locker: new(sync.Mutex),
-		ctx:    consumerCtx,
-		cancel: cancel,
-		captureParameters: CaptureParameters{
-			LinkType: layers.LinkTypeEthernet,
-		},
+		locker:       new(sync.Mutex),
+		ctx:          consumerCtx,
+		cancel:       cancel,
 		handle:       handle,
 		packetSource: gopacket.NewPacketSource(handle, layers.LinkTypeEthernet),
 		consumer:     consumer,
@@ -50,13 +45,12 @@ func openDeviceForConsumers(ctx context.Context, device string, consumer Consume
 }
 
 type deviceConsumer struct {
-	ctx               context.Context
-	cancel            context.CancelFunc
-	consumer          Consumer
-	locker            sync.Locker
-	captureParameters CaptureParameters
-	handle            *pcapgo.EthernetHandle
-	packetSource      *gopacket.PacketSource
+	ctx          context.Context
+	cancel       context.CancelFunc
+	consumer     Consumer
+	locker       sync.Locker
+	handle       *pcapgo.EthernetHandle
+	packetSource *gopacket.PacketSource
 }
 
 func (o *deviceConsumer) removeConsumerOnContextEnd() {

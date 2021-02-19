@@ -56,7 +56,7 @@ func (a auditConsumer) Observe(pkg gopacket.Packet) {
 	a.knownConnections[connHash] = time.Now().Add(connectionCacheTTL).Unix()
 }
 
-func (a auditConsumer) Init(pcap.CaptureParameters) error {
+func (a auditConsumer) Init() error {
 	return nil
 }
 

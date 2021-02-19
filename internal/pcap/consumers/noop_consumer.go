@@ -32,6 +32,6 @@ func (n noopConsumer) Name() string {
 func (n noopConsumer) Observe(gopacket.Packet) {
 }
 
-func (n noopConsumer) Init(pcap.CaptureParameters) error {
+func (n noopConsumer) Init() error {
 	return nil
 }

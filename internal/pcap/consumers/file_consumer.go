@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 	"go.uber.org/multierr"
 
@@ -22,8 +23,8 @@ type writerConsumer struct {
 	packageWriter *pcapgo.Writer
 }
 
-func (f *writerConsumer) Init(params pcap.CaptureParameters) error {
-	return f.packageWriter.WriteFileHeader(defaultSnapshotLength, params.LinkType)
+func (f *writerConsumer) Init() error {
+	return f.packageWriter.WriteFileHeader(defaultSnapshotLength, layers.LinkTypeEthernet)
 }
 
 func NewWriterConsumer(name string, writer io.Writer) (consumer pcap.Consumer, err error) {
