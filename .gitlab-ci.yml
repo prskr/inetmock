@@ -1,0 +1,12 @@
+image:
+  name: docker.io/bufbuild/buf:latest
+  entrypoint: [""]
+
+stages:
+  - test
+
+lint:
+  stage: test
+  script:
+    - buf ls-files
+    - buf lint

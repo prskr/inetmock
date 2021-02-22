@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package inetmock.audit.v1;
+
+option csharp_namespace = "INetMock.Client.Audit";
+option go_package = "gitlab.com/inetmock/inetmock/pkg/audit";
+option java_multiple_files = true;
+option java_outer_classname = "HandlerEventProto";
+option java_package = "com.github.baez90.inetmock.audit";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+enum TransportProtocol {
+  TRANSPORT_PROTOCOL_UNSPECIFIED = 0;
+  TRANSPORT_PROTOCOL_TCP = 1;
+  TRANSPORT_PROTOCOL_UDP = 2;
+}
+
+enum AppProtocol {
+  APP_PROTOCOL_UNSPECIFIED = 0;
+  APP_PROTOCOL_DNS = 1;
+  APP_PROTOCOL_HTTP = 2;
+  APP_PROTOCOL_HTTP_PROXY = 3;
+}
+
+enum TLSVersion {
+  TLS_VERSION_UNSPECIFIED = 0;
+  TLS_VERSION_TLS10 = 1;
+  TLS_VERSION_TLS11 = 2;
+  TLS_VERSION_TLS12 = 3;
+  TLS_VERSION_TLS13 = 4;
+}
+
+message TLSDetailsEntity {
+  TLSVersion version = 1;
+  string cipher_suite = 2;
+  string server_name = 3;
+}
+
+message EventEntity {
+  int64 id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  TransportProtocol transport = 3;
+  AppProtocol application = 4;
+  bytes source_ip = 5;
+  bytes destination_ip = 6;
+  uint32 source_port = 7;
+  uint32 destination_port = 8;
+  TLSDetailsEntity tls = 9;
+  google.protobuf.Any protocol_details = 10;
+}
