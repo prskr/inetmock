@@ -132,13 +132,15 @@ tasks:
 
   snapshot-release:
     deps:
-      - test
+      - deps
+      - generate
     cmds:
       - goreleaser release --snapshot --skip-publish --rm-dist
 
   release:
     deps:
-      - test
+      - deps
+      - generate
     cmds:
       - goreleaser release
 
