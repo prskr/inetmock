@@ -6,9 +6,10 @@ import (
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
-func EventFromRequest(request *http.Request, app audit.AppProtocol) audit.Event {
+func EventFromRequest(request *http.Request, app v1.AppProtocol) audit.Event {
 	httpDetails := details.HTTP{
 		Method:  request.Method,
 		Host:    request.Host,
@@ -18,7 +19,7 @@ func EventFromRequest(request *http.Request, app audit.AppProtocol) audit.Event 
 	}
 
 	ev := audit.Event{
-		Transport:       audit.TransportProtocol_TCP,
+		Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
 		Application:     app,
 		ProtocolDetails: httpDetails,
 	}

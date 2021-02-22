@@ -15,6 +15,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/wait"
 )
@@ -22,8 +23,8 @@ import (
 var (
 	testEvents = []*audit.Event{
 		{
-			Transport:       audit.TransportProtocol_TCP,
-			Application:     audit.AppProtocol_HTTP,
+			Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
+			Application:     v1.AppProtocol_APP_PROTOCOL_HTTP,
 			SourceIP:        net.ParseIP("127.0.0.1").To4(),
 			DestinationIP:   net.ParseIP("127.0.0.1").To4(),
 			SourcePort:      32344,
@@ -44,8 +45,8 @@ var (
 			},
 		},
 		{
-			Transport:       audit.TransportProtocol_TCP,
-			Application:     audit.AppProtocol_DNS,
+			Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_UDP,
+			Application:     v1.AppProtocol_APP_PROTOCOL_DNS,
 			SourceIP:        net.ParseIP("::1").To16(),
 			DestinationIP:   net.ParseIP("::1").To16(),
 			SourcePort:      32344,

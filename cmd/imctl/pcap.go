@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/format"
-	"gitlab.com/inetmock/inetmock/pkg/rpc"
+	rpcV1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 const (
@@ -55,11 +55,11 @@ var (
 			}
 
 			var err error
-			pcapClient := rpc.NewPCAPClient(conn)
+			pcapClient := rpcV1.NewPCAPServiceClient(conn)
 			ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
 			defer cancel()
-			var resp *rpc.ListAvailableDevicesResponse
-			if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpc.ListAvailableDevicesRequest)); err == nil {
+			var resp *rpcV1.ListAvailableDevicesResponse
+			if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest)); err == nil {
 				var completions []string
 
 				for _, d := range resp.AvailableDevices {
@@ -90,11 +90,11 @@ var (
 		Args:    cobra.ExactArgs(1),
 		ValidArgsFunction: func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 			var err error
-			pcapClient := rpc.NewPCAPClient(conn)
+			pcapClient := rpcV1.NewPCAPServiceClient(conn)
 			ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
 			defer cancel()
-			var resp *rpc.ListRecordingsResponse
-			if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpc.ListRecordingsRequest)); err == nil {
+			var resp *rpcV1.ListActiveRecordingsResponse
+			if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpcV1.ListActiveRecordingsRequest)); err == nil {
 				return resp.Subscriptions, cobra.ShellCompDirectiveNoFileComp
 			}
 			return nil, cobra.ShellCompDirectiveError
@@ -126,12 +126,12 @@ func init() {
 }
 
 func runListAvailableDevices(*cobra.Command, []string) (err error) {
-	pcapClient := rpc.NewPCAPClient(conn)
+	pcapClient := rpcV1.NewPCAPServiceClient(conn)
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
-	var resp *rpc.ListAvailableDevicesResponse
-	if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpc.ListAvailableDevicesRequest)); err != nil {
+	var resp *rpcV1.ListAvailableDevicesResponse
+	if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest)); err != nil {
 		return
 	}
 
@@ -161,14 +161,14 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 		ConsumerKey string
 	}
 
-	pcapClient := rpc.NewPCAPClient(conn)
+	pcapClient := rpcV1.NewPCAPServiceClient(conn)
 
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
 	var err error
-	var resp *rpc.ListRecordingsResponse
-	if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpc.ListRecordingsRequest)); err != nil {
+	var resp *rpcV1.ListActiveRecordingsResponse
+	if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpcV1.ListActiveRecordingsRequest)); err != nil {
 		return err
 	}
 
@@ -192,7 +192,7 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 }
 
 func runAddRecording(_ *cobra.Command, args []string) (err error) {
-	pcapClient := rpc.NewPCAPClient(conn)
+	pcapClient := rpcV1.NewPCAPServiceClient(conn)
 
 	if err = isValidRecordDevice(args[0], pcapClient); err != nil {
 		return
@@ -201,8 +201,8 @@ func runAddRecording(_ *cobra.Command, args []string) (err error) {
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
-	var resp *rpc.StartPCAPFileRecordResponse
-	resp, err = pcapClient.StartPCAPFileRecording(ctx, &rpc.StartPCAPFileRecordRequest{
+	var resp *rpcV1.StartPCAPFileRecordingResponse
+	resp, err = pcapClient.StartPCAPFileRecording(ctx, &rpcV1.StartPCAPFileRecordingRequest{
 		Device:     args[0],
 		TargetPath: args[1],
 	})
@@ -217,14 +217,14 @@ func runAddRecording(_ *cobra.Command, args []string) (err error) {
 }
 
 func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
-	pcapClient := rpc.NewPCAPClient(conn)
+	pcapClient := rpcV1.NewPCAPServiceClient(conn)
 
 	listRecsCtx, listRecsCancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer listRecsCancel()
 
 	var err error
-	var listRecsResp *rpc.ListRecordingsResponse
-	if listRecsResp, err = pcapClient.ListActiveRecordings(listRecsCtx, new(rpc.ListRecordingsRequest)); err != nil {
+	var listRecsResp *rpcV1.ListActiveRecordingsResponse
+	if listRecsResp, err = pcapClient.ListActiveRecordings(listRecsCtx, new(rpcV1.ListActiveRecordingsRequest)); err != nil {
 		return err
 	}
 
@@ -243,8 +243,8 @@ func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
-	var stopRecResp *rpc.StopPCAPFileRecordResponse
-	stopRecResp, err = pcapClient.StopPCAPFileRecord(ctx, &rpc.StopPCAPFileRecordRequest{
+	var stopRecResp *rpcV1.StopPCAPFileRecordResponse
+	stopRecResp, err = pcapClient.StopPCAPFileRecord(ctx, &rpcV1.StopPCAPFileRecordRequest{
 		ConsumerKey: args[0],
 	})
 
@@ -258,11 +258,11 @@ func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func isValidRecordDevice(device string, pcapClient rpc.PCAPClient) (err error) {
+func isValidRecordDevice(device string, pcapClient rpcV1.PCAPServiceClient) (err error) {
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
-	var resp *rpc.ListAvailableDevicesResponse
-	if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpc.ListAvailableDevicesRequest)); err != nil {
+	var resp *rpcV1.ListAvailableDevicesResponse
+	if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest)); err != nil {
 		return
 	}
 

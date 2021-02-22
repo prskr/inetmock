@@ -14,7 +14,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/rpc"
+	v1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 const gracefulShutdownTimeout = 5 * time.Second
@@ -59,17 +59,17 @@ func (i *inetmockAPI) StartServer() (err error) {
 	}
 	i.server = grpc.NewServer()
 
-	rpc.RegisterHealthServer(i.server, &healthServer{
+	v1.RegisterHealthServiceServer(i.server, &healthServer{
 		checker: i.checker,
 	})
 
-	rpc.RegisterAuditServer(i.server, &auditServer{
+	v1.RegisterAuditServiceServer(i.server, &auditServer{
 		logger:           i.logger,
 		eventStream:      i.eventStream,
 		auditDataDirPath: i.auditDataDir,
 	})
 
-	rpc.RegisterPCAPServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
+	v1.RegisterPCAPServiceServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 
 	reflection.Register(i.server)
 

@@ -11,6 +11,7 @@ import (
 
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -21,7 +22,7 @@ type proxyHTTPSHandler struct {
 }
 
 func (p *proxyHTTPSHandler) HandleConnect(_ string, ctx *goproxy.ProxyCtx) (resultingAction *goproxy.ConnectAction, redirectTo string) {
-	p.emitter.Emit(imHttp.EventFromRequest(ctx.Req, audit.AppProtocol_HTTP_PROXY))
+	p.emitter.Emit(imHttp.EventFromRequest(ctx.Req, v1.AppProtocol_APP_PROTOCOL_HTTP_PROXY))
 
 	return &goproxy.ConnectAction{
 		Action: goproxy.ConnectAccept,
@@ -43,7 +44,7 @@ func (p *proxyHTTPHandler) Handle(req *http.Request, ctx *goproxy.ProxyCtx) (ret
 	defer timer.ObserveDuration()
 
 	retReq = req
-	p.emitter.Emit(imHttp.EventFromRequest(req, audit.AppProtocol_HTTP_PROXY))
+	p.emitter.Emit(imHttp.EventFromRequest(req, v1.AppProtocol_APP_PROTOCOL_HTTP_PROXY))
 
 	var err error
 	var redirectReq *http.Request

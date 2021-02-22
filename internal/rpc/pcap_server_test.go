@@ -15,7 +15,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
 	"gitlab.com/inetmock/inetmock/internal/rpc/test"
-	rpc2 "gitlab.com/inetmock/inetmock/pkg/rpc"
+	rpcV1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 func Test_pcapServer_ListActiveRecordings(t *testing.T) {
@@ -63,7 +63,7 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 
 			pcapClient := setupTestPCAPServer(t, recorder)
 
-			gotResp, err := pcapClient.ListActiveRecordings(context.Background(), new(rpc2.ListRecordingsRequest))
+			gotResp, err := pcapClient.ListActiveRecordings(context.Background(), new(rpcV1.ListActiveRecordingsRequest))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListActiveRecordings() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -88,13 +88,13 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 	type testCase struct {
 		name    string
-		matcher func(devs []*rpc2.ListAvailableDevicesResponse_PCAPDevice) error
+		matcher func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error
 		wantErr bool
 	}
 	tests := []testCase{
 		{
 			name: "Ensure that any device was found",
-			matcher: func(devs []*rpc2.ListAvailableDevicesResponse_PCAPDevice) error {
+			matcher: func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error {
 				if len(devs) > 0 {
 					return nil
 				}
@@ -104,7 +104,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 		},
 		{
 			name: "Ensure that any device with an assigned IP was found",
-			matcher: func(devs []*rpc2.ListAvailableDevicesResponse_PCAPDevice) error {
+			matcher: func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error {
 				for _, dev := range devs {
 					for _, addr := range dev.Addresses {
 						if addr == nil {
@@ -122,7 +122,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 		},
 		{
 			name: "Ensure that loopback device was found",
-			matcher: func(devs []*rpc2.ListAvailableDevicesResponse_PCAPDevice) error {
+			matcher: func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error {
 				foundLoopback := false
 				for _, dev := range devs {
 					foundLoopback = foundLoopback || dev.Name == "lo"
@@ -147,7 +147,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			got, err := pcapClient.ListAvailableDevices(context.Background(), new(rpc2.ListAvailableDevicesRequest))
+			got, err := pcapClient.ListAvailableDevices(context.Background(), new(rpcV1.ListAvailableDevicesRequest))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListAvailableDevices() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -167,14 +167,14 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 	type testCase struct {
 		name              string
-		req               *rpc2.StartPCAPFileRecordRequest
+		req               *rpcV1.StartPCAPFileRecordingRequest
 		wantSubscriptions []pcap.Subscription
 		wantErr           bool
 	}
 	tests := []testCase{
 		{
 			name: "Start a recording on lo interface",
-			req: &rpc2.StartPCAPFileRecordRequest{
+			req: &rpcV1.StartPCAPFileRecordingRequest{
 				Device:     "lo",
 				TargetPath: "test.pcap",
 			},
@@ -188,7 +188,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 		},
 		{
 			name: "Start a recording on a non-existing interface",
-			req: &rpc2.StartPCAPFileRecordRequest{
+			req: &rpcV1.StartPCAPFileRecordingRequest{
 				Device:     uuid.NewString(),
 				TargetPath: "test.pcap",
 			},
@@ -271,7 +271,7 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			gotResp, err := pcapClient.StopPCAPFileRecord(context.Background(), &rpc2.StopPCAPFileRecordRequest{
+			gotResp, err := pcapClient.StopPCAPFileRecord(context.Background(), &rpcV1.StopPCAPFileRecordRequest{
 				ConsumerKey: tt.keyToRemove,
 			})
 			if (err != nil) != tt.wantErr {
@@ -288,13 +288,13 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 	}
 }
 
-func setupTestPCAPServer(t *testing.T, recorder pcap.Recorder) rpc2.PCAPClient {
+func setupTestPCAPServer(t *testing.T, recorder pcap.Recorder) rpcV1.PCAPServiceClient {
 	t.Helper()
 	var err error
 	var srv *test.GRPCServer
 	p := rpc.NewPCAPServer(t.TempDir(), recorder)
 	srv, err = test.NewTestGRPCServer(func(registrar grpc.ServiceRegistrar) {
-		rpc2.RegisterPCAPServer(registrar, p)
+		rpcV1.RegisterPCAPServiceServer(registrar, p)
 	})
 
 	if err != nil {
@@ -320,5 +320,5 @@ func setupTestPCAPServer(t *testing.T, recorder pcap.Recorder) rpc2.PCAPClient {
 		}
 	})
 
-	return rpc2.NewPCAPClient(conn)
+	return rpcV1.NewPCAPServiceClient(conn)
 }

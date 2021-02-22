@@ -9,6 +9,7 @@ import (
 
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -64,6 +65,6 @@ type emittingFileHandler struct {
 }
 
 func (f emittingFileHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	f.emitter.Emit(imHttp.EventFromRequest(request, audit.AppProtocol_HTTP))
+	f.emitter.Emit(imHttp.EventFromRequest(request, v1.AppProtocol_APP_PROTOCOL_HTTP))
 	http.ServeFile(writer, request, f.targetPath)
 }

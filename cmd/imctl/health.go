@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"gitlab.com/inetmock/inetmock/internal/format"
-	"gitlab.com/inetmock/inetmock/pkg/rpc"
+	rpcV1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 var (
@@ -37,7 +37,7 @@ The output contains information about each component and it's health state.
 	}
 )
 
-func fromComponentsHealth(componentsHealth map[string]*rpc.ComponentHealth) interface{} {
+func fromComponentsHealth(componentsHealth map[string]*rpcV1.ComponentHealth) interface{} {
 	type printableHealthInfo struct {
 		Component string
 		State     string
@@ -56,16 +56,16 @@ func fromComponentsHealth(componentsHealth map[string]*rpc.ComponentHealth) inte
 	return componentsInfo
 }
 
-func getHealthResult() (healthResp *rpc.HealthResponse, err error) {
-	var healthClient = rpc.NewHealthClient(conn)
+func getHealthResult() (healthResp *rpcV1.GetHealthResponse, err error) {
+	var healthClient = rpcV1.NewHealthServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
-	healthResp, err = healthClient.GetHealth(ctx, &rpc.HealthRequest{})
+	healthResp, err = healthClient.GetHealth(ctx, &rpcV1.GetHealthRequest{})
 	cancel()
 	return
 }
 
 func runGeneralHealth(_ *cobra.Command, _ []string) {
-	var healthResp *rpc.HealthResponse
+	var healthResp *rpcV1.GetHealthResponse
 	var err error
 
 	if healthResp, err = getHealthResult(); err != nil {
@@ -85,7 +85,7 @@ func runContainerHealth(_ *cobra.Command, _ []string) {
 	if healthResp, err := getHealthResult(); err != nil {
 		fmt.Printf("Failed to get health information: %v", err)
 		os.Exit(1)
-	} else if healthResp.OverallHealthState != rpc.HealthState_HEALTHY {
+	} else if healthResp.OverallHealthState != rpcV1.HealthState_HEALTH_STATE_HEALTHY {
 		fmt.Println("Overall health state is not healthy")
 		os.Exit(1)
 	}

@@ -9,6 +9,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -106,19 +107,19 @@ func (rh *regexHandler) handleFallbackForMessage(m *dns.Msg, q dns.Question) {
 
 func (rh *regexHandler) recordRequest(m *dns.Msg, localAddr, remoteAddr net.Addr) {
 	dnsDetails := &details.DNS{
-		OPCode: details.DNSOpCode(m.Opcode),
+		OPCode: v1.DNSOpCode(m.Opcode),
 	}
 
 	for _, q := range m.Question {
 		dnsDetails.Questions = append(dnsDetails.Questions, details.DNSQuestion{
-			RRType: details.ResourceRecordType(q.Qtype),
+			RRType: v1.ResourceRecordType(q.Qtype),
 			Name:   q.Name,
 		})
 	}
 
 	ev := audit.Event{
 		Transport:       guessTransportFromAddr(localAddr),
-		Application:     audit.AppProtocol_DNS,
+		Application:     v1.AppProtocol_APP_PROTOCOL_DNS,
 		ProtocolDetails: dnsDetails,
 	}
 
@@ -128,13 +129,13 @@ func (rh *regexHandler) recordRequest(m *dns.Msg, localAddr, remoteAddr net.Addr
 	rh.auditEmitter.Emit(ev)
 }
 
-func guessTransportFromAddr(addr net.Addr) audit.TransportProtocol {
+func guessTransportFromAddr(addr net.Addr) v1.TransportProtocol {
 	switch addr.(type) {
 	case *net.TCPAddr:
-		return audit.TransportProtocol_TCP
+		return v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP
 	case *net.UDPAddr:
-		return audit.TransportProtocol_UDP
+		return v1.TransportProtocol_TRANSPORT_PROTOCOL_UDP
 	default:
-		return audit.TransportProtocol_UNKNOWN_TRANSPORT
+		return v1.TransportProtocol_TRANSPORT_PROTOCOL_UNSPECIFIED
 	}
 }

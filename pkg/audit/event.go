@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
 type Details interface {
@@ -20,8 +21,8 @@ type Details interface {
 type Event struct {
 	ID              int64
 	Timestamp       time.Time
-	Transport       TransportProtocol
-	Application     AppProtocol
+	Transport       v1.TransportProtocol
+	Application     v1.AppProtocol
 	SourceIP        net.IP
 	DestinationIP   net.IP
 	SourcePort      uint16
@@ -30,8 +31,8 @@ type Event struct {
 	TLS             *TLSDetails
 }
 
-func (e *Event) ProtoMessage() *EventEntity {
-	var tlsDetails *TLSDetailsEntity = nil
+func (e *Event) ProtoMessage() *v1.EventEntity {
+	var tlsDetails *v1.TLSDetailsEntity = nil
 	if e.TLS != nil {
 		tlsDetails = e.TLS.ProtoMessage()
 	}
@@ -43,13 +44,13 @@ func (e *Event) ProtoMessage() *EventEntity {
 		}
 	}
 
-	return &EventEntity{
+	return &v1.EventEntity{
 		Id:              e.ID,
 		Timestamp:       timestamppb.New(e.Timestamp),
 		Transport:       e.Transport,
 		Application:     e.Application,
-		SourceIP:        e.SourceIP,
-		DestinationIP:   e.DestinationIP,
+		SourceIp:        e.SourceIP,
+		DestinationIp:   e.DestinationIP,
 		SourcePort:      uint32(e.SourcePort),
 		DestinationPort: uint32(e.DestinationPort),
 		Tls:             tlsDetails,
@@ -77,14 +78,14 @@ func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) {
 	e.DestinationPort = port
 }
 
-func NewEventFromProto(msg *EventEntity) (ev Event) {
+func NewEventFromProto(msg *v1.EventEntity) (ev Event) {
 	ev = Event{
 		ID:              msg.GetId(),
 		Timestamp:       msg.GetTimestamp().AsTime(),
 		Transport:       msg.GetTransport(),
 		Application:     msg.GetApplication(),
-		SourceIP:        msg.SourceIP,
-		DestinationIP:   msg.DestinationIP,
+		SourceIP:        msg.SourceIp,
+		DestinationIP:   msg.DestinationIp,
 		SourcePort:      uint16(msg.GetSourcePort()),
 		DestinationPort: uint16(msg.GetDestinationPort()),
 		ProtocolDetails: guessDetailsFromApp(msg.GetProtocolDetails()),
@@ -126,10 +127,10 @@ func guessDetailsFromApp(any *anypb.Any) Details {
 		return nil
 	}
 	switch any.TypeUrl {
-	case "type.googleapis.com/inetmock.audit.details.HTTPDetailsEntity":
-		return details.NewHTTPFromWireFormat(detailsProto.(*details.HTTPDetailsEntity))
-	case "type.googleapis.com/inetmock.audit.details.DNSDetailsEntity":
-		return details.NewDNSFromWireFormat(detailsProto.(*details.DNSDetailsEntity))
+	case "type.googleapis.com/inetmock.audit.v1.HTTPDetailsEntity":
+		return details.NewHTTPFromWireFormat(detailsProto.(*v1.HTTPDetailsEntity))
+	case "type.googleapis.com/inetmock.audit.v1.DNSDetailsEntity":
+		return details.NewDNSFromWireFormat(detailsProto.(*v1.DNSDetailsEntity))
 	default:
 		return nil
 	}

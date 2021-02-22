@@ -31,11 +31,32 @@ tasks:
     cmds:
       - go mod download
 
+  golangci-lint:
+    deps:
+      - deps
+      - generate
+    cmds:
+      - golangci-lint run --timeout 5m
+
+  protobuf-lint:
+    dir: api/
+    sources:
+      - "proto/**/*.proto"
+    cmds:
+      - buf lint
+
+  lint:
+    deps:
+      - golangci-lint
+      - protobuf-lint
+
   protoc:
+    deps:
+      - protobuf-lint
     sources:
       - "api/proto/**/*.proto"
     cmds:
-      - protoc --proto_path ./api/proto/ --go_out=./pkg/ --go_opt=paths=source_relative --go-grpc_out=./pkg/ --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
+      - buf protoc --proto_path ./api/proto/ --go_out=./pkg/ --go_opt=paths=source_relative --go-grpc_out=./pkg/ --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
 
   go-generate:
     deps:
@@ -49,13 +70,6 @@ tasks:
     deps:
       - go-generate
       - protoc
-
-  lint:
-    deps:
-      - deps
-      - generate
-    cmds:
-      - golangci-lint run --timeout 5m
 
   test:
     sources:

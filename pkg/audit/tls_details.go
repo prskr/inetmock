@@ -1,13 +1,17 @@
 package audit
 
-import "crypto/tls"
+import (
+	"crypto/tls"
+
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+)
 
 var (
-	tlsToEntity = map[uint16]TLSVersion{
-		tls.VersionTLS10: TLSVersion_TLS10,
-		tls.VersionTLS11: TLSVersion_TLS11,
-		tls.VersionTLS12: TLSVersion_TLS12,
-		tls.VersionTLS13: TLSVersion_TLS13,
+	tlsToEntity = map[uint16]v1.TLSVersion{
+		tls.VersionTLS10: v1.TLSVersion_TLS_VERSION_TLS10,
+		tls.VersionTLS11: v1.TLSVersion_TLS_VERSION_TLS11,
+		tls.VersionTLS12: v1.TLSVersion_TLS_VERSION_TLS12,
+		tls.VersionTLS13: v1.TLSVersion_TLS_VERSION_TLS13,
 	}
 )
 
@@ -17,14 +21,14 @@ type TLSDetails struct {
 	ServerName  string
 }
 
-func TLSVersionToEntity(version uint16) TLSVersion {
+func TLSVersionToEntity(version uint16) v1.TLSVersion {
 	if v, known := tlsToEntity[version]; known {
 		return v
 	}
-	return TLSVersion_SSLv30
+	return v1.TLSVersion_TLS_VERSION_UNSPECIFIED
 }
 
-func NewTLSDetailsFromProto(entity *TLSDetailsEntity) *TLSDetails {
+func NewTLSDetailsFromProto(entity *v1.TLSDetailsEntity) *TLSDetails {
 	if entity == nil {
 		return nil
 	}
@@ -36,9 +40,9 @@ func NewTLSDetailsFromProto(entity *TLSDetailsEntity) *TLSDetails {
 	}
 }
 
-func (d TLSDetails) ProtoMessage() *TLSDetailsEntity {
-	return &TLSDetailsEntity{
-		Version:     TLSVersion(TLSVersion_value[d.Version]),
+func (d TLSDetails) ProtoMessage() *v1.TLSDetailsEntity {
+	return &v1.TLSDetailsEntity{
+		Version:     v1.TLSVersion(v1.TLSVersion_value[d.Version]),
 		CipherSuite: d.CipherSuite,
 		ServerName:  d.ServerName,
 	}
