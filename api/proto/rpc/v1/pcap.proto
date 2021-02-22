@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package inetmock.rpc.v1;
+
+option csharp_namespace = "INetMock.Client.Rpc";
+option go_package = "gitlab.com/inetmock/inetmock/pkg/rpc";
+option java_multiple_files = true;
+option java_outer_classname = "AuditProto";
+option java_package = "com.github.baez90.inetmock.rpc";
+
+import "google/protobuf/duration.proto";
+
+message ListAvailableDevicesRequest {}
+
+message ListAvailableDevicesResponse {
+  message PCAPDevice {
+    string name = 1;
+    repeated bytes addresses = 2;
+  }
+  repeated PCAPDevice available_devices = 1;
+}
+
+message ListActiveRecordingsRequest {}
+
+message ListActiveRecordingsResponse {
+  repeated string subscriptions = 1;
+}
+
+message StartPCAPFileRecordingRequest {
+  string device = 1;
+  string target_path = 2;
+  bool promiscuous = 3;
+  google.protobuf.Duration read_timeout = 4;
+}
+
+message StartPCAPFileRecordingResponse {
+  string resolved_path = 1;
+}
+
+message StopPCAPFileRecordRequest {
+  string consumer_key = 1;
+}
+
+message StopPCAPFileRecordResponse {
+  bool removed = 1;
+}
+
+service PCAPService {
+  rpc ListAvailableDevices(ListAvailableDevicesRequest) returns (ListAvailableDevicesResponse);
+  rpc ListActiveRecordings(ListActiveRecordingsRequest) returns (ListActiveRecordingsResponse);
+  rpc StartPCAPFileRecording(StartPCAPFileRecordingRequest) returns (StartPCAPFileRecordingResponse);
+  rpc StopPCAPFileRecord(StopPCAPFileRecordRequest) returns (StopPCAPFileRecordResponse);
+}

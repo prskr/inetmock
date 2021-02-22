@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package inetmock.audit.v1;
+
+option csharp_namespace = "INetMock.Client.Audit";
+option go_package = "gitlab.com/inetmock/inetmock/pkg/audit";
+option java_multiple_files = true;
+option java_outer_classname = "HandlerEventProto";
+option java_package = "com.github.baez90.inetmock.audit";
+
+enum DNSOpCode {
+  //buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  DNS_OP_CODE_QUERY = 0;
+  DNS_OP_CODE_STATUS = 2;
+  DNS_OP_CODE_NOTIFY = 4;
+  DNS_OP_CODE_UPDATE = 5;
+}
+
+enum ResourceRecordType {
+  RESOURCE_RECORD_TYPE_UNSPECIFIED = 0;
+  RESOURCE_RECORD_TYPE_A = 1;
+  RESOURCE_RECORD_TYPE_NS = 2;
+  RESOURCE_RECORD_TYPE_CNAME = 5;
+  RESOURCE_RECORD_TYPE_SOA = 6;
+  RESOURCE_RECORD_TYPE_PTR = 12;
+  RESOURCE_RECORD_TYPE_HINFO = 13;
+  RESOURCE_RECORD_TYPE_MINFO = 14;
+  RESOURCE_RECORD_TYPE_MX = 15;
+  RESOURCE_RECORD_TYPE_TXT = 16;
+  RESOURCE_RECORD_TYPE_RP = 17;
+  RESOURCE_RECORD_TYPE_AAAA = 28;
+  RESOURCE_RECORD_TYPE_SRV = 33;
+  RESOURCE_RECORD_TYPE_NAPTR = 35;
+}
+
+message DNSQuestionEntity {
+  ResourceRecordType type = 1;
+  string name = 2;
+}
+
+message DNSDetailsEntity {
+  DNSOpCode opcode = 1;
+  repeated DNSQuestionEntity questions = 2;
+}
