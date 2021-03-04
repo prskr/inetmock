@@ -106,11 +106,11 @@ func (p *pcapServer) StartPCAPFileRecording(
 	}, nil
 }
 
-func (p *pcapServer) StopPCAPFileRecord(
+func (p *pcapServer) StopPCAPFileRecording(
 	_ context.Context,
-	request *v1.StopPCAPFileRecordRequest,
-) (resp *v1.StopPCAPFileRecordResponse, _ error) {
-	resp = new(v1.StopPCAPFileRecordResponse)
+	request *v1.StopPCAPFileRecordingRequest,
+) (resp *v1.StopPCAPFileRecordingResponse, _ error) {
+	resp = new(v1.StopPCAPFileRecordingResponse)
 	resp.Removed = p.recorder.StopRecording(request.ConsumerKey) == nil
 	return
 }

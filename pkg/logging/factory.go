@@ -50,8 +50,15 @@ func CreateLogger() (Logger, error) {
 }
 
 func CreateTestLogger(tb testing.TB) Logger {
-	return &testLogger{
-		tb:      tb,
-		encoder: zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig()),
+	logger := &testLogger{
+		testRunning: make(chan struct{}),
+		tb:          tb,
+		encoder:     zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig()),
 	}
+
+	tb.Cleanup(func() {
+		close(logger.testRunning)
+	})
+
+	return logger
 }

@@ -37,11 +37,11 @@ message StartPCAPFileRecordingResponse {
   string resolved_path = 1;
 }
 
-message StopPCAPFileRecordRequest {
+message StopPCAPFileRecordingRequest {
   string consumer_key = 1;
 }
 
-message StopPCAPFileRecordResponse {
+message StopPCAPFileRecordingResponse {
   bool removed = 1;
 }
 
@@ -49,5 +49,5 @@ service PCAPService {
   rpc ListAvailableDevices(ListAvailableDevicesRequest) returns (ListAvailableDevicesResponse);
   rpc ListActiveRecordings(ListActiveRecordingsRequest) returns (ListActiveRecordingsResponse);
   rpc StartPCAPFileRecording(StartPCAPFileRecordingRequest) returns (StartPCAPFileRecordingResponse);
-  rpc StopPCAPFileRecord(StopPCAPFileRecordRequest) returns (StopPCAPFileRecordResponse);
+  rpc StopPCAPFileRecording(StopPCAPFileRecordingRequest) returns (StopPCAPFileRecordingResponse);
 }

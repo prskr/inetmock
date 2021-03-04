@@ -243,8 +243,8 @@ func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
 	defer cancel()
 
-	var stopRecResp *rpcV1.StopPCAPFileRecordResponse
-	stopRecResp, err = pcapClient.StopPCAPFileRecord(ctx, &rpcV1.StopPCAPFileRecordRequest{
+	var stopRecResp *rpcV1.StopPCAPFileRecordingResponse
+	stopRecResp, err = pcapClient.StopPCAPFileRecording(ctx, &rpcV1.StopPCAPFileRecordingRequest{
 		ConsumerKey: args[0],
 	})
 

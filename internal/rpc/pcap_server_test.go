@@ -271,7 +271,7 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			gotResp, err := pcapClient.StopPCAPFileRecord(context.Background(), &rpcV1.StopPCAPFileRecordRequest{
+			gotResp, err := pcapClient.StopPCAPFileRecording(context.Background(), &rpcV1.StopPCAPFileRecordingRequest{
 				ConsumerKey: tt.keyToRemove,
 			})
 			if (err != nil) != tt.wantErr {

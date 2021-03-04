@@ -20,7 +20,7 @@ type PCAPServiceClient interface {
 	ListAvailableDevices(ctx context.Context, in *ListAvailableDevicesRequest, opts ...grpc.CallOption) (*ListAvailableDevicesResponse, error)
 	ListActiveRecordings(ctx context.Context, in *ListActiveRecordingsRequest, opts ...grpc.CallOption) (*ListActiveRecordingsResponse, error)
 	StartPCAPFileRecording(ctx context.Context, in *StartPCAPFileRecordingRequest, opts ...grpc.CallOption) (*StartPCAPFileRecordingResponse, error)
-	StopPCAPFileRecord(ctx context.Context, in *StopPCAPFileRecordRequest, opts ...grpc.CallOption) (*StopPCAPFileRecordResponse, error)
+	StopPCAPFileRecording(ctx context.Context, in *StopPCAPFileRecordingRequest, opts ...grpc.CallOption) (*StopPCAPFileRecordingResponse, error)
 }
 
 type pCAPServiceClient struct {
@@ -58,9 +58,9 @@ func (c *pCAPServiceClient) StartPCAPFileRecording(ctx context.Context, in *Star
 	return out, nil
 }
 
-func (c *pCAPServiceClient) StopPCAPFileRecord(ctx context.Context, in *StopPCAPFileRecordRequest, opts ...grpc.CallOption) (*StopPCAPFileRecordResponse, error) {
-	out := new(StopPCAPFileRecordResponse)
-	err := c.cc.Invoke(ctx, "/inetmock.rpc.v1.PCAPService/StopPCAPFileRecord", in, out, opts...)
+func (c *pCAPServiceClient) StopPCAPFileRecording(ctx context.Context, in *StopPCAPFileRecordingRequest, opts ...grpc.CallOption) (*StopPCAPFileRecordingResponse, error) {
+	out := new(StopPCAPFileRecordingResponse)
+	err := c.cc.Invoke(ctx, "/inetmock.rpc.v1.PCAPService/StopPCAPFileRecording", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ type PCAPServiceServer interface {
 	ListAvailableDevices(context.Context, *ListAvailableDevicesRequest) (*ListAvailableDevicesResponse, error)
 	ListActiveRecordings(context.Context, *ListActiveRecordingsRequest) (*ListActiveRecordingsResponse, error)
 	StartPCAPFileRecording(context.Context, *StartPCAPFileRecordingRequest) (*StartPCAPFileRecordingResponse, error)
-	StopPCAPFileRecord(context.Context, *StopPCAPFileRecordRequest) (*StopPCAPFileRecordResponse, error)
+	StopPCAPFileRecording(context.Context, *StopPCAPFileRecordingRequest) (*StopPCAPFileRecordingResponse, error)
 	mustEmbedUnimplementedPCAPServiceServer()
 }
 
@@ -91,8 +91,8 @@ func (UnimplementedPCAPServiceServer) ListActiveRecordings(context.Context, *Lis
 func (UnimplementedPCAPServiceServer) StartPCAPFileRecording(context.Context, *StartPCAPFileRecordingRequest) (*StartPCAPFileRecordingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartPCAPFileRecording not implemented")
 }
-func (UnimplementedPCAPServiceServer) StopPCAPFileRecord(context.Context, *StopPCAPFileRecordRequest) (*StopPCAPFileRecordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StopPCAPFileRecord not implemented")
+func (UnimplementedPCAPServiceServer) StopPCAPFileRecording(context.Context, *StopPCAPFileRecordingRequest) (*StopPCAPFileRecordingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StopPCAPFileRecording not implemented")
 }
 func (UnimplementedPCAPServiceServer) mustEmbedUnimplementedPCAPServiceServer() {}
 
@@ -161,20 +161,20 @@ func _PCAPService_StartPCAPFileRecording_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PCAPService_StopPCAPFileRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StopPCAPFileRecordRequest)
+func _PCAPService_StopPCAPFileRecording_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StopPCAPFileRecordingRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PCAPServiceServer).StopPCAPFileRecord(ctx, in)
+		return srv.(PCAPServiceServer).StopPCAPFileRecording(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/inetmock.rpc.v1.PCAPService/StopPCAPFileRecord",
+		FullMethod: "/inetmock.rpc.v1.PCAPService/StopPCAPFileRecording",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PCAPServiceServer).StopPCAPFileRecord(ctx, req.(*StopPCAPFileRecordRequest))
+		return srv.(PCAPServiceServer).StopPCAPFileRecording(ctx, req.(*StopPCAPFileRecordingRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -196,8 +196,8 @@ var _PCAPService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _PCAPService_StartPCAPFileRecording_Handler,
 		},
 		{
-			MethodName: "StopPCAPFileRecord",
-			Handler:    _PCAPService_StopPCAPFileRecord_Handler,
+			MethodName: "StopPCAPFileRecording",
+			Handler:    _PCAPService_StopPCAPFileRecording_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
