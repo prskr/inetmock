@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const wrapperCallFramesCount = 2
+const wrapperCallFramesCount = 4
 
 type testLogger struct {
 	name        string
@@ -51,13 +51,7 @@ func (t *testLogger) With(fields ...zap.Field) Logger {
 
 func (t *testLogger) Debug(msg string, fields ...zap.Field) {
 	t.tb.Helper()
-	buf, err := t.encoder.EncodeEntry(zapcore.Entry{
-		Level:      zapcore.DebugLevel,
-		Time:       time.Now(),
-		LoggerName: t.name,
-		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
-	}, append(t.fields, fields...))
+	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.DebugLevel, false), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
 		t.tb.Log(buf.String())
@@ -66,13 +60,7 @@ func (t *testLogger) Debug(msg string, fields ...zap.Field) {
 
 func (t *testLogger) Info(msg string, fields ...zap.Field) {
 	t.tb.Helper()
-	buf, err := t.encoder.EncodeEntry(zapcore.Entry{
-		Level:      zapcore.InfoLevel,
-		Time:       time.Now(),
-		LoggerName: t.name,
-		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
-	}, append(t.fields, fields...))
+	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.InfoLevel, false), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
 		t.tb.Log(buf.String())
@@ -81,13 +69,7 @@ func (t *testLogger) Info(msg string, fields ...zap.Field) {
 
 func (t *testLogger) Warn(msg string, fields ...zap.Field) {
 	t.tb.Helper()
-	buf, err := t.encoder.EncodeEntry(zapcore.Entry{
-		Level:      zapcore.WarnLevel,
-		Time:       time.Now(),
-		LoggerName: t.name,
-		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
-	}, append(t.fields, fields...))
+	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.WarnLevel, false), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
 		t.tb.Log(buf.String())
@@ -96,14 +78,7 @@ func (t *testLogger) Warn(msg string, fields ...zap.Field) {
 
 func (t *testLogger) Error(msg string, fields ...zap.Field) {
 	t.tb.Helper()
-	buf, err := t.encoder.EncodeEntry(zapcore.Entry{
-		Level:      zapcore.ErrorLevel,
-		Time:       time.Now(),
-		LoggerName: t.name,
-		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
-		Stack:      string(debug.Stack()),
-	}, append(t.fields, fields...))
+	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.ErrorLevel, true), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
 		t.tb.Log(buf.String())
@@ -112,14 +87,7 @@ func (t *testLogger) Error(msg string, fields ...zap.Field) {
 
 func (t *testLogger) Panic(msg string, fields ...zap.Field) {
 	t.tb.Helper()
-	buf, err := t.encoder.EncodeEntry(zapcore.Entry{
-		Level:      zapcore.PanicLevel,
-		Time:       time.Now(),
-		LoggerName: t.name,
-		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
-		Stack:      string(debug.Stack()),
-	}, append(t.fields, fields...))
+	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.PanicLevel, true), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
 		t.tb.Error(buf.String())
@@ -128,18 +96,25 @@ func (t *testLogger) Panic(msg string, fields ...zap.Field) {
 
 func (t *testLogger) Fatal(msg string, fields ...zap.Field) {
 	t.tb.Helper()
-	buf, err := t.encoder.EncodeEntry(zapcore.Entry{
-		Level:      zapcore.FatalLevel,
-		Time:       time.Now(),
-		LoggerName: t.name,
-		Message:    msg,
-		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
-		Stack:      string(debug.Stack()),
-	}, append(t.fields, fields...))
+	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.FatalLevel, true), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
 		t.tb.Error(buf.String())
 	}
+}
+
+func (t *testLogger) entry(msg string, lvl zapcore.Level, includeStack bool) zapcore.Entry {
+	e := zapcore.Entry{
+		Level:      lvl,
+		Time:       time.Now(),
+		LoggerName: t.name,
+		Message:    msg,
+		Caller:     zapcore.NewEntryCaller(runtime.Caller(wrapperCallFramesCount)),
+	}
+	if includeStack {
+		e.Stack = string(debug.Stack())
+	}
+	return e
 }
 
 func (t *testLogger) Sync() error {
