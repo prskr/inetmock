@@ -54,7 +54,7 @@ func ensureDataDir(dataDirPath string) (cleanedPath string, err error) {
 		}
 	}
 
-	err = os.MkdirAll(cleanedPath, 0640)
+	err = os.MkdirAll(cleanedPath, 0750)
 	return
 }
 
