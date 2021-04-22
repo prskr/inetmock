@@ -29,6 +29,11 @@ const (
 
 var (
 	availableExtensions = []string{"gif", "html", "ico", "jpg", "png", "txt"}
+	defaultUrlGenerator = func(endpoint string) *url.URL {
+		extension := availableExtensions[rand.Intn(len(availableExtensions))]
+		reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", endpoint, randomString(15), extension))
+		return reqURL
+	}
 )
 
 func init() {
@@ -37,20 +42,32 @@ func init() {
 
 func Benchmark_httpHandler(b *testing.B) {
 	type benchmark struct {
-		name   string
-		port   string
-		scheme string
+		name         string
+		port         string
+		scheme       string
+		urlGenerator func(endpoint string) *url.URL
 	}
 	benchmarks := []benchmark{
 		{
-			name:   "HTTP",
-			port:   "80/tcp",
-			scheme: "http",
+			name:         "HTTP",
+			port:         "80/tcp",
+			scheme:       "http",
+			urlGenerator: defaultUrlGenerator,
 		},
 		{
-			name:   "HTTPS",
-			port:   "443/tcp",
-			scheme: "https",
+			name:   "HTTP - ensure /index.html is handled correctly",
+			port:   "8080/tcp",
+			scheme: "http",
+			urlGenerator: func(endpoint string) *url.URL {
+				reqURL, _ := url.Parse(fmt.Sprintf("%s/index.html", endpoint))
+				return reqURL
+			},
+		},
+		{
+			name:         "HTTPS",
+			port:         "443/tcp",
+			scheme:       "https",
+			urlGenerator: defaultUrlGenerator,
 		},
 	}
 	for _, bc := range benchmarks {
@@ -59,7 +76,7 @@ func Benchmark_httpHandler(b *testing.B) {
 			var err error
 			var endpoint string
 			if endpoint, err = setupContainer(b, bm.scheme, bm.port); err != nil {
-				b.Errorf("setupContainer() error = %v", err)
+				b.Fatalf("setupContainer() error = %v", err)
 			}
 
 			var httpClient *http.Client
@@ -71,14 +88,9 @@ func Benchmark_httpHandler(b *testing.B) {
 
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					//nolint:gosec
-					extension := availableExtensions[rand.Intn(len(availableExtensions))]
-
-					reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", endpoint, randomString(15), extension))
-
 					req := &http.Request{
 						Method: http.MethodGet,
-						URL:    reqURL,
+						URL:    bc.urlGenerator(endpoint),
 						Close:  false,
 						Host:   "www.inetmock.com",
 					}

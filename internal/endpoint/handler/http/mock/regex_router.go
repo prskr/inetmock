@@ -1,8 +1,12 @@
 package mock
 
 import (
+	"math/rand"
 	"net/http"
+	"os"
+	"path"
 	"strconv"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
@@ -66,5 +70,12 @@ type emittingFileHandler struct {
 
 func (f emittingFileHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	f.emitter.Emit(imHttp.EventFromRequest(request, v1.AppProtocol_APP_PROTOCOL_HTTP))
-	http.ServeFile(writer, request, f.targetPath)
+	file, err := os.Open(f.targetPath)
+	if err != nil {
+		http.Error(writer, err.Error(), 500)
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+	http.ServeContent(writer, request, path.Base(request.RequestURI), time.Now().Add(-(time.Duration(rand.Int()) * time.Millisecond)), file)
 }
