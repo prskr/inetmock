@@ -113,7 +113,7 @@ func watchAuditEvents(_ *cobra.Command, _ []string) (err error) {
 
 func runListSinks(*cobra.Command, []string) (err error) {
 	auditClient := rpcV1.NewAuditServiceClient(conn)
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
 	var resp *rpcV1.ListSinksResponse
@@ -125,19 +125,19 @@ func runListSinks(*cobra.Command, []string) (err error) {
 		Name string
 	}
 
-	var sinks []printableSink
-	for _, s := range resp.Sinks {
-		sinks = append(sinks, printableSink{Name: s})
+	var sinks = make([]printableSink, len(resp.Sinks))
+	for i, s := range resp.Sinks {
+		sinks[i] = printableSink{Name: s}
 	}
 
-	writer := format.Writer(outputFormat, os.Stdout)
+	writer := format.Writer(cfg.Format, os.Stdout)
 	err = writer.Write(sinks)
 	return
 }
 
 func runAddFile(_ *cobra.Command, args []string) (err error) {
 	auditClient := rpcV1.NewAuditServiceClient(conn)
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
 	var resp *rpcV1.RegisterFileSinkResponse
@@ -154,7 +154,7 @@ func runAddFile(_ *cobra.Command, args []string) (err error) {
 
 func runRemoveFile(_ *cobra.Command, args []string) (err error) {
 	auditClient := rpcV1.NewAuditServiceClient(conn)
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
 	_, err = auditClient.RemoveFileSink(ctx, &rpcV1.RemoveFileSinkRequest{TargetPath: args[0]})

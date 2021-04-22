@@ -30,12 +30,10 @@ type Generator interface {
 	ServerCert(options GenerationOptions, ca *tls.Certificate) (*tls.Certificate, error)
 }
 
-//nolint:gocritic
 func NewDefaultGenerator(options Options) Generator {
 	return NewGenerator(options, NewTimeSource(), defaultKeyProvider(options))
 }
 
-//nolint:gocritic
 func NewGenerator(options Options, source TimeSource, provider KeyProvider) Generator {
 	return &generator{
 		options:    options,

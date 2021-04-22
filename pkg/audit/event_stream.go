@@ -62,7 +62,6 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (EventS
 	return underlying, err
 }
 
-//nolint:gocritic
 func (e *eventStream) Emit(ev Event) {
 	ev.ApplyDefaults(e.idGenerator.Generate().Int64())
 	select {

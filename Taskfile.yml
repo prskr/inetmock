@@ -16,15 +16,18 @@ env:
 
 tasks:
   clean:
+    desc: clean all generated files
     cmds:
       - find . -type f \( -name "*.pb.go" -or -name "*.mock.go" \) -exec rm -f {} \;
       - rm -rf ./main {{ .OUT_DIR }}
 
   format:
+    desc: format all source files
     cmds:
       - go fmt ./...
 
   deps:
+    desc: download dependencies
     sources:
       - go.mod
       - go.sum
@@ -32,6 +35,7 @@ tasks:
       - go mod download
 
   golangci-lint:
+    desc: run Go linter
     deps:
       - deps
       - generate
@@ -39,6 +43,7 @@ tasks:
       - golangci-lint run --timeout 5m
 
   protobuf-lint:
+    desc: run protobuf linter
     dir: api/
     sources:
       - "proto/**/*.proto"
@@ -46,11 +51,13 @@ tasks:
       - buf lint
 
   lint:
+    desc: run all linters
     deps:
       - golangci-lint
       - protobuf-lint
 
   protoc:
+    desc: generate Go files from protobuf files
     deps:
       - protobuf-lint
     sources:
@@ -61,6 +68,7 @@ tasks:
       - buf protoc --proto_path ./api/proto/ --go_out=./pkg/ --go_opt=paths=source_relative --go-grpc_out=./pkg/ --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
 
   go-generate:
+    desc: run all go:generate directives
     deps:
       - deps
     sources:
@@ -71,11 +79,13 @@ tasks:
       - go generate -x ./...
 
   generate:
+    desc: run all code generation steps
     deps:
       - go-generate
       - protoc
 
   test:
+    desc: run all unit tests
     sources:
       - "**/*.go"
     deps:
@@ -91,6 +101,7 @@ tasks:
       - rm -f {{ .OUT_DIR }}/cov-raw.out
 
   integration-test:
+    desc: run all benchmarks/integration tests
     deps:
       - deps
       - generate
@@ -101,18 +112,21 @@ tasks:
         {{ end }}
 
   cli-cover-report:
+    desc: generate a coverage report on the CLI
     deps:
       - test
     cmds:
       - go tool cover -func={{ .OUT_DIR }}/cov.out
 
   html-cover-report:
+    desc: generate a coverage report as HTML page
     deps:
       - test
     cmds:
       - go tool cover -html={{ .OUT_DIR }}/cov.out -o {{ .OUT_DIR }}/coverage.html
 
   build-inetmock:
+    desc: build the INetMock server part
     deps:
       - test
     cmds:
@@ -120,10 +134,12 @@ tasks:
       - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/inetmock {{ .INETMOCK_PKG }}
 
   debug-inetmock:
+    desc: run INetMock server with delve for remote debugging
     cmds:
       - dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient --output {{ .OUT_DIR }}/__debug_bin debug {{ .INETMOCK_PKG }} -- serve
 
   build-imctl:
+    desc: build the imctl INetMock client CLI
     deps:
       - test
     cmds:
@@ -131,11 +147,13 @@ tasks:
       - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/imctl {{ .IMCTL_PKG }}
 
   build-all:
+    desc: build all binaries
     deps:
       - build-inetmock
       - build-imctl
 
   snapshot-release:
+    desc: create a snapshot/test release without publishing any artifacts
     deps:
       - deps
       - generate
@@ -143,6 +161,7 @@ tasks:
       - goreleaser release --snapshot --skip-publish --rm-dist
 
   release:
+    desc: create a release - includes artifact publishing
     deps:
       - deps
       - generate
@@ -150,5 +169,6 @@ tasks:
       - goreleaser release
 
   docs:
+    desc: generate docs
     cmds:
       - mdbook build -d ./../public ./docs

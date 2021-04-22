@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // HealthServiceClient is the client API for HealthService service.
@@ -62,7 +63,7 @@ type UnsafeHealthServiceServer interface {
 }
 
 func RegisterHealthServiceServer(s grpc.ServiceRegistrar, srv HealthServiceServer) {
-	s.RegisterService(&_HealthService_serviceDesc, srv)
+	s.RegisterService(&HealthService_ServiceDesc, srv)
 }
 
 func _HealthService_GetHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -83,7 +84,10 @@ func _HealthService_GetHealth_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-var _HealthService_serviceDesc = grpc.ServiceDesc{
+// HealthService_ServiceDesc is the grpc.ServiceDesc for HealthService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var HealthService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "inetmock.rpc.v1.HealthService",
 	HandlerType: (*HealthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

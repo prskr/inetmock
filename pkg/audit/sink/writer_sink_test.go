@@ -56,6 +56,7 @@ var (
 )
 
 func Test_writerCloserSink_OnSubscribe(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		name   string
 		events []*audit.Event
@@ -70,13 +71,14 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 			events: testEvents,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			wg := new(sync.WaitGroup)
 			wg.Add(len(tt.events))
 
 			ctrl := gomock.NewController(t)
-			t.Cleanup(ctrl.Finish)
 
 			writerMock := audit_mock.NewMockWriter(ctrl)
 			writerMock.
@@ -111,10 +113,6 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 				t.Errorf("not all events recorded in time")
 			case <-wait.ForWaitGroupDone(wg):
 			}
-		}
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }

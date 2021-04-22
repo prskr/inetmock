@@ -20,6 +20,7 @@ type WriterCloserSyncer interface {
 }
 
 func Test_eventWriter_Write(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		evs []*audit.Event
 	}
@@ -44,10 +45,11 @@ func Test_eventWriter_Write(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
-			t.Cleanup(ctrl.Finish)
 			writerMock := audit_mock.NewMockWriterCloserSyncer(ctrl)
 			calls := make([]*gomock.Call, 0)
 			for i := 0; i < len(tt.args.evs); i++ {
@@ -79,10 +81,6 @@ func Test_eventWriter_Write(t *testing.T) {
 					t.Errorf("Write() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			}
-		}
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }

@@ -30,6 +30,7 @@ func (f fakeWriterCloser) Close() error {
 }
 
 func Test_recorder_Subscriptions(t *testing.T) {
+	t.Parallel()
 	type subscriptionRequest struct {
 		Name   string
 		Device string
@@ -82,8 +83,10 @@ func Test_recorder_Subscriptions(t *testing.T) {
 			},
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			r := pcap.NewRecorder()
 
 			t.Cleanup(func() {
@@ -101,14 +104,12 @@ func Test_recorder_Subscriptions(t *testing.T) {
 			if gotSubscriptions := sortSubscriptions(r.Subscriptions()); !reflect.DeepEqual(gotSubscriptions, tt.wantSubscriptions) {
 				t.Errorf("Subscriptions() = %v, want %v", gotSubscriptions, tt.wantSubscriptions)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func Test_recorder_StartRecordingWithOptions(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		device   string
 		consumer pcap.Consumer
@@ -155,8 +156,10 @@ func Test_recorder_StartRecordingWithOptions(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var err error
 			var recorder pcap.Recorder
 
@@ -174,14 +177,12 @@ func Test_recorder_StartRecordingWithOptions(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("StartRecordingWithOptions() error = %v, wantErr %v", err, tt.wantErr)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func Test_recorder_AvailableDevices(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		name    string
 		mtacher func(got []pcap.Device) error
@@ -209,8 +210,11 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			re := pcap.NewRecorder()
 			t.Cleanup(func() {
 				if err := re.Close(); err != nil {
@@ -225,14 +229,12 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 			if err := tt.mtacher(gotDevices); err != nil {
 				t.Errorf("AvailableDevices() matcher error = %v", err)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func Test_recorder_StopRecording(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		consumerKey string
 	}
@@ -249,6 +251,7 @@ func Test_recorder_StopRecording(t *testing.T) {
 				consumerKey: "lo:test.pcap",
 			},
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
+				t.Helper()
 				return pcap.NewRecorder(), nil
 			},
 			wantErr: true,
@@ -259,6 +262,7 @@ func Test_recorder_StopRecording(t *testing.T) {
 				consumerKey: "lo:test",
 			},
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
+				t.Helper()
 				recorder = pcap.NewRecorder()
 				err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test"))
 
@@ -272,6 +276,7 @@ func Test_recorder_StopRecording(t *testing.T) {
 				consumerKey: "lo:test",
 			},
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
+				t.Helper()
 				recorder = pcap.NewRecorder()
 				var writerConsumer pcap.Consumer
 				gotClosed := false
@@ -299,8 +304,10 @@ func Test_recorder_StopRecording(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var err error
 			var r pcap.Recorder
 			if r, err = tt.recorderSetup(t); err != nil {
@@ -316,14 +323,12 @@ func Test_recorder_StopRecording(t *testing.T) {
 			if err := r.StopRecording(tt.args.consumerKey); (err != nil) != tt.wantErr {
 				t.Errorf("StopRecording() error = %v, wantErr %v", err, tt.wantErr)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func Test_recorder_StopRecordingFromContext(t *testing.T) {
+	t.Parallel()
 	var err error
 	var writerConsumer pcap.Consumer
 	gotClosed := false

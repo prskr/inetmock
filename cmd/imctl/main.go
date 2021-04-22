@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 
 	"gitlab.com/inetmock/inetmock/internal/app"
@@ -15,34 +16,53 @@ const (
 )
 
 var (
-	inetMockSocketPath string
-	outputFormat       string
-	grpcTimeout        time.Duration
-	cliApp             app.App
-	conn               *grpc.ClientConn
+	cliApp app.App
+	conn   *grpc.ClientConn
+	cfg    config
 )
 
-//nolint:lll
+type config struct {
+	SocketPath  string
+	Format      string
+	GRPCTimeout time.Duration
+}
+
 func main() {
 	healthCmd.AddCommand(generalHealthCmd, containerHealthCmd)
+	cliApp = app.NewApp(
+		app.Spec{
+			Name:        "imctl",
+			Short:       "IMCTL is the CLI app to interact with an INetMock server",
+			Config:      &cfg,
+			SubCommands: []*cobra.Command{healthCmd, auditCmd, pcapCmd},
+			LateInitTasks: []func(cmd *cobra.Command, args []string) (err error){
+				initGRPCConnection,
+			},
+			IgnoreMissingConfigFile: true,
+			FlagBindings: map[string]func(flagSet *pflag.FlagSet) *pflag.Flag{
+				"grpctimeout": func(flagSet *pflag.FlagSet) *pflag.Flag {
+					return flagSet.Lookup("grpc-timeout")
+				},
+				"format": func(flagSet *pflag.FlagSet) *pflag.Flag {
+					return flagSet.Lookup("format")
+				},
+				"socketpath": func(flagSet *pflag.FlagSet) *pflag.Flag {
+					return flagSet.Lookup("socket-path")
+				},
+			},
+		},
+	)
 
-	cliApp = app.NewApp("imctl", "IMCTL is the CLI app to interact with an INetMock server").
-		WithCommands(healthCmd, auditCmd, pcapCmd).
-		WithInitTasks(func(_ *cobra.Command, _ []string) (err error) {
-			return initGRPCConnection()
-		}).
-		WithLogger()
-
-	cliApp.RootCommand().PersistentFlags().StringVar(&inetMockSocketPath, "socket-path", "unix:///var/run/inetmock.sock", "Path to the INetMock socket file")
-	cliApp.RootCommand().PersistentFlags().StringVarP(&outputFormat, "format", "f", "table", "Output format to use. Possible values: table, json, yaml")
-	cliApp.RootCommand().PersistentFlags().DurationVar(&grpcTimeout, "grpc-timeout", defaultGRPCTimeout, "Timeout to connect to the gRPC API")
+	cliApp.RootCommand().PersistentFlags().String("socket-path", "unix:///var/run/inetmock.sock", "Path to the INetMock socket file")
+	cliApp.RootCommand().PersistentFlags().StringP("format", "f", "table", "Output format to use. Possible values: table, json, yaml")
+	cliApp.RootCommand().PersistentFlags().Duration("grpc-timeout", defaultGRPCTimeout, "Timeout to connect to the gRPC API")
 
 	cliApp.MustRun()
 }
 
-func initGRPCConnection() (err error) {
-	dialCtx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
-	conn, err = grpc.DialContext(dialCtx, inetMockSocketPath, grpc.WithInsecure())
+func initGRPCConnection(*cobra.Command, []string) (err error) {
+	dialCtx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
+	conn, err = grpc.DialContext(dialCtx, cfg.SocketPath, grpc.WithInsecure())
 	cancel()
 
 	return

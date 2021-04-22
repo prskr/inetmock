@@ -53,8 +53,8 @@ func Benchmark_httpProxy(b *testing.B) {
 			scheme: "https",
 		},
 	}
-	scenario := func(bm benchmark) func(bm *testing.B) {
-		return func(b *testing.B) {
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
 			var err error
 			var endpoint string
 			if endpoint, err = setupContainer(b, bm.port); err != nil {
@@ -90,10 +90,7 @@ func Benchmark_httpProxy(b *testing.B) {
 					}
 				}
 			})
-		}
-	}
-	for _, bm := range benchmarks {
-		b.Run(bm.name, scenario(bm))
+		})
 	}
 }
 

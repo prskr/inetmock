@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"io"
-	"reflect"
 	"testing"
+
+	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 )
@@ -26,6 +27,7 @@ func mustDecodeHex(hexBytes string) io.Reader {
 }
 
 func Test_eventReader_Read(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		source io.Reader
 	}
@@ -53,8 +55,10 @@ func Test_eventReader_Read(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			e := audit.NewEventReader(tt.fields.source)
 			gotEv, err := e.Read()
 			if (err != nil) != tt.wantErr {
@@ -62,12 +66,7 @@ func Test_eventReader_Read(t *testing.T) {
 				return
 			}
 
-			if err == nil && !reflect.DeepEqual(gotEv, *tt.wantEv) {
-				t.Errorf("Read() gotEv = %v, want %v", gotEv, tt.wantEv)
-			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+			td.Cmp(t, gotEv, *tt.wantEv)
+		})
 	}
 }

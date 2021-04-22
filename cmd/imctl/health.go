@@ -44,21 +44,22 @@ func fromComponentsHealth(componentsHealth map[string]*rpcV1.ComponentHealth) in
 		Message   string
 	}
 
-	var componentsInfo []printableHealthInfo
-
+	var componentsInfo = make([]printableHealthInfo, len(componentsHealth))
+	var idx int
 	for componentName, component := range componentsHealth {
-		componentsInfo = append(componentsInfo, printableHealthInfo{
+		componentsInfo[idx] = printableHealthInfo{
 			Component: componentName,
 			State:     component.State.String(),
 			Message:   component.Message,
-		})
+		}
+		idx++
 	}
 	return componentsInfo
 }
 
 func getHealthResult() (healthResp *rpcV1.GetHealthResponse, err error) {
 	var healthClient = rpcV1.NewHealthServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.GRPCTimeout)
 	healthResp, err = healthClient.GetHealth(ctx, &rpcV1.GetHealthRequest{})
 	cancel()
 	return
@@ -75,7 +76,7 @@ func runGeneralHealth(_ *cobra.Command, _ []string) {
 
 	printable := fromComponentsHealth(healthResp.ComponentsHealth)
 
-	writer := format.Writer(outputFormat, os.Stdout)
+	writer := format.Writer(cfg.Format, os.Stdout)
 	if err = writer.Write(printable); err != nil {
 		fmt.Printf("Error occurred during writing response values: %v\n", err)
 	}

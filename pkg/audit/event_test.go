@@ -2,9 +2,9 @@ package audit
 
 import (
 	"net/http"
-	"reflect"
 	"testing"
 
+	"github.com/maxatome/go-testdeep/td"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -13,6 +13,7 @@ import (
 )
 
 func Test_guessDetailsFromApp(t *testing.T) {
+	t.Parallel()
 	mustAny := func(msg proto.Message) *anypb.Any {
 		a, err := anypb.New(msg)
 		if err != nil {
@@ -49,14 +50,12 @@ func Test_guessDetailsFromApp(t *testing.T) {
 			},
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
-			if got := guessDetailsFromApp(tt.args.any); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("guessDetailsFromApp() = %v, want %v", got, tt.want)
-			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := guessDetailsFromApp(tt.args.any)
+			td.Cmp(t, got, tt.want)
+		})
 	}
 }

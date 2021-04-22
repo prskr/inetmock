@@ -50,6 +50,7 @@ func CreateLogger() (Logger, error) {
 }
 
 func CreateTestLogger(tb testing.TB) Logger {
+	tb.Helper()
 	logger := &testLogger{
 		testRunning: make(chan struct{}),
 		tb:          tb,

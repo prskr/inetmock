@@ -4,100 +4,66 @@ import (
 	"context"
 	"errors"
 	"net"
-	"sync"
+	"testing"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/test/bufconn"
+)
+
+const (
+	bufconnBufferSize = 1024 * 1024
 )
 
 type APIRegistration func(registrar grpc.ServiceRegistrar)
 
 type GRPCServer struct {
-	mutex         sync.Mutex
-	serverRunning chan struct{}
-	cancel        context.CancelFunc
-	server        *grpc.Server
-	addr          *net.TCPAddr
-	listener      net.Listener
+	server   *grpc.Server
+	listener *bufconn.Listener
 }
 
-func NewTestGRPCServer(registrations ...APIRegistration) (srv *GRPCServer, err error) {
-	srv = new(GRPCServer)
-	if srv.listener, err = net.Listen("tcp", "127.0.0.1:0"); err != nil {
-		return
+func NewTestGRPCServer(tb testing.TB, registrations ...APIRegistration) (srv *GRPCServer) {
+	tb.Helper()
+	srv = &GRPCServer{
+		listener: bufconn.Listen(bufconnBufferSize),
+		server:   grpc.NewServer(),
 	}
-
-	var isTCPAddr bool
-	if srv.addr, isTCPAddr = srv.listener.Addr().(*net.TCPAddr); !isTCPAddr {
-		err = errors.New("expected TPC addr but wasn't")
-	}
-
-	srv.server = grpc.NewServer()
 
 	for _, reg := range registrations {
 		reg(srv.server)
 	}
 
-	return
-}
-
-func (t *GRPCServer) StartServer() (err error) {
-	t.mutex.Lock()
-	var ctx context.Context
-	ctx, t.cancel = context.WithCancel(context.Background())
-	t.mutex.Unlock()
-	errs := t.startServerAsync(ctx)
-	select {
-	case err = <-errs:
-	default:
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	tb.Cleanup(cancel)
+	go srv.startServerLifecycle(ctx, tb)
 
 	return
 }
 
-func (t *GRPCServer) Dial(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	opts = append(opts, grpc.WithInsecure())
-
-	return grpc.DialContext(ctx, t.addr.String(), opts...)
-}
-
-func (t *GRPCServer) StopServer() {
-	t.cancel()
-}
-
-func (t *GRPCServer) IsRunning() bool {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-
-	if t.serverRunning == nil {
-		return false
+func (t *GRPCServer) Dial(ctx context.Context, tb testing.TB, opts ...grpc.DialOption) *grpc.ClientConn {
+	tb.Helper()
+	opts = append(opts, grpc.WithInsecure(), grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+		return t.listener.Dial()
+	}))
+	conn, err := grpc.DialContext(ctx, "", opts...)
+	if err != nil {
+		tb.Fatalf("failed to connect to gRPC test server - error = %v", err)
 	}
-
-	select {
-	case _, more := <-t.serverRunning:
-		return more
-	default:
-		return true
-	}
+	tb.Cleanup(func() {
+		if err := conn.Close(); err != nil {
+			tb.Errorf("Failed to close bufconn connection error = %v", err)
+		}
+	})
+	return conn
 }
 
-func (t *GRPCServer) startServerAsync(ctx context.Context) (errs chan error) {
-	errs = make(chan error)
-	t.mutex.Lock()
-	t.serverRunning = make(chan struct{})
-	t.mutex.Unlock()
-	defer close(t.serverRunning)
-
+func (t *GRPCServer) startServerLifecycle(ctx context.Context, tb testing.TB) {
+	tb.Helper()
 	go func() {
 		<-ctx.Done()
-		if t.IsRunning() {
-			t.server.Stop()
-		}
+		t.server.Stop()
 	}()
 
-	go func() {
-		if err := t.server.Serve(t.listener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
-			errs <- err
-		}
-	}()
-	return
+	if err := t.server.Serve(t.listener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+		tb.Errorf("error occurred during running the gRPC test server - error - %v", err)
+	}
 }

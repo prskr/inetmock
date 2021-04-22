@@ -7,6 +7,7 @@ import (
 
 //nolint:funlen
 func Test_tblWriter_Write(t *testing.T) {
+	t.Parallel()
 	type s1 struct {
 		Name string
 		Age  int
@@ -139,8 +140,10 @@ func Test_tblWriter_Write(t *testing.T) {
 `,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			bldr := new(strings.Builder)
 
 			// hack to be able to format expected strings pretty
@@ -153,9 +156,6 @@ func Test_tblWriter_Write(t *testing.T) {
 			if bldr.String() != tt.wantResult {
 				t.Errorf("Write() got = %s, want %s", bldr.String(), tt.wantResult)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }

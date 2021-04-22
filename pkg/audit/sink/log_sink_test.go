@@ -18,6 +18,7 @@ import (
 
 //nolint:dupl
 func Test_logSink_OnSubscribe(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		loggerSetup func(t *testing.T, wg *sync.WaitGroup) logging.Logger
 	}
@@ -31,8 +32,8 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 			name: "Get a single log line",
 			fields: fields{
 				loggerSetup: func(t *testing.T, wg *sync.WaitGroup) logging.Logger {
+					t.Helper()
 					ctrl := gomock.NewController(t)
-					t.Cleanup(ctrl.Finish)
 					loggerMock := logging_mock.NewMockLogger(ctrl)
 
 					loggerMock.
@@ -57,8 +58,8 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 			name: "Get multiple events",
 			fields: fields{
 				loggerSetup: func(t *testing.T, wg *sync.WaitGroup) logging.Logger {
+					t.Helper()
 					ctrl := gomock.NewController(t)
-					t.Cleanup(ctrl.Finish)
 					loggerMock := logging_mock.NewMockLogger(ctrl)
 
 					loggerMock.
@@ -80,8 +81,10 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 			events: testEvents,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			wg := new(sync.WaitGroup)
 			wg.Add(len(tt.events))
 
@@ -107,10 +110,6 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 				t.Errorf("not all events recorded in time")
 			case <-wait.ForWaitGroupDone(wg):
 			}
-		}
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }

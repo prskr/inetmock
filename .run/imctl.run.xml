@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="imctl" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="inetmock" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="audit watch" />
+    <sudo value="true" />
+    <kind value="PACKAGE" />
+    <package value="gitlab.com/inetmock/inetmock/cmd/imctl" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/imctl/main.go" />
+    <method v="2" />
+  </configuration>
+</component>

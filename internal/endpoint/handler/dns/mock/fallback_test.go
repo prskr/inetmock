@@ -4,9 +4,12 @@ import (
 	"net"
 	"reflect"
 	"testing"
+
+	"github.com/maxatome/go-testdeep/td"
 )
 
 func Test_randomIPFallback_GetIP(t *testing.T) {
+	t.Parallel()
 	ra := randomIPFallback{}
 	for i := 0; i < 1000; i++ {
 		if got := ra.GetIP(); reflect.DeepEqual(got, net.IP{}) {
@@ -16,6 +19,7 @@ func Test_randomIPFallback_GetIP(t *testing.T) {
 }
 
 func Test_incrementalIPFallback_GetIP(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		latestIP uint32
 	}
@@ -59,24 +63,22 @@ func Test_incrementalIPFallback_GetIP(t *testing.T) {
 			},
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			i := &incrementalIPFallback{
 				latestIP: tt.fields.latestIP,
 			}
 			for k := 0; k < len(tt.want); k++ {
-				if got := i.GetIP(); !reflect.DeepEqual(got, tt.want[k]) {
-					t.Errorf("GetIP() = %v, want %v", got, tt.want[k])
-				}
+				td.Cmp(t, i.GetIP(), tt.want[k])
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func Test_ipToInt32(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		ip net.IP
 	}
@@ -101,14 +103,11 @@ func Test_ipToInt32(t *testing.T) {
 			want: 3232281098,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
-			if got := ipToInt32(tt.args.ip); got != tt.want {
-				t.Errorf("ipToInt32() = %v, want %v", got, tt.want)
-			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			td.Cmp(t, ipToInt32(tt.args.ip), tt.want)
+		})
 	}
 }

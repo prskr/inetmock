@@ -16,6 +16,7 @@ import (
 const containerShutdownTimeout = 5 * time.Second
 
 func SetupINetMockContainer(ctx context.Context, tb testing.TB, exposedPorts ...string) (testcontainers.Container, error) {
+	tb.Helper()
 	//nolint:dogsled
 	_, fileName, _, _ := runtime.Caller(0)
 

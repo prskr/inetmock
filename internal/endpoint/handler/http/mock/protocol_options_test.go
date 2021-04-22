@@ -2,11 +2,11 @@ package mock
 
 import (
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/maxatome/go-testdeep/td"
 	"github.com/mitchellh/mapstructure"
 
 	endpoint_mock "gitlab.com/inetmock/inetmock/internal/mock/endpoint"
@@ -14,6 +14,7 @@ import (
 
 //nolint:funlen
 func Test_loadFromConfig(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		config map[string]interface{}
 	}
@@ -159,10 +160,11 @@ func Test_loadFromConfig(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
-			t.Cleanup(ctrl.Finish)
 			lcMock := endpoint_mock.NewMockLifecycle(ctrl)
 
 			lcMock.EXPECT().UnmarshalOptions(gomock.Any()).Do(func(cfg interface{}) {
@@ -174,12 +176,7 @@ func Test_loadFromConfig(t *testing.T) {
 				t.Errorf("loadFromConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotOptions, tt.wantOptions) {
-				t.Errorf("loadFromConfig() gotOptions = %v, want %v", gotOptions, tt.wantOptions)
-			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+			td.Cmp(t, gotOptions, tt.wantOptions)
+		})
 	}
 }

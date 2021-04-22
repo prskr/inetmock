@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="inetmock" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="inetmock" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="serve" />
+    <sudo value="true" />
+    <kind value="PACKAGE" />
+    <package value="gitlab.com/inetmock/inetmock/cmd/inetmock" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/inetmock/main.go" />
+    <method v="2" />
+  </configuration>
+</component>

@@ -1,11 +1,13 @@
 package cert
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/maxatome/go-testdeep/td"
 )
 
 func Test_certOptionsDefaulter(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		name     string
 		arg      GenerationOptions
@@ -60,17 +62,14 @@ func Test_certOptionsDefaulter(t *testing.T) {
 			},
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if err := applyDefaultGenerationOptions(&tt.arg); err != nil {
 				t.Errorf("applyDefaultGenerationOptions() error = %v", err)
 			}
-			if !reflect.DeepEqual(tt.expected, tt.arg) {
-				t.Errorf("Apply defaulter expected=%v got=%v", tt.expected, tt.arg)
-			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+			td.Cmp(t, tt.arg, tt.expected)
+		})
 	}
 }

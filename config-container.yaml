@@ -59,7 +59,7 @@ api:
 
 tls:
   curve: P256
-  minTLSVersion: SSL3
+  minTLSVersion: TLS10
   includeInsecureCipherSuites: false
   validity:
     ca:

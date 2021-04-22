@@ -56,7 +56,7 @@ var (
 
 			var err error
 			pcapClient := rpcV1.NewPCAPServiceClient(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), cfg.GRPCTimeout)
 			defer cancel()
 			var resp *rpcV1.ListAvailableDevicesResponse
 			if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest)); err == nil {
@@ -91,7 +91,7 @@ var (
 		ValidArgsFunction: func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 			var err error
 			pcapClient := rpcV1.NewPCAPServiceClient(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), grpcTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), cfg.GRPCTimeout)
 			defer cancel()
 			var resp *rpcV1.ListActiveRecordingsResponse
 			if resp, err = pcapClient.ListActiveRecordings(ctx, new(rpcV1.ListActiveRecordingsRequest)); err == nil {
@@ -127,7 +127,7 @@ func init() {
 
 func runListAvailableDevices(*cobra.Command, []string) (err error) {
 	pcapClient := rpcV1.NewPCAPServiceClient(conn)
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
 	var resp *rpcV1.ListAvailableDevicesResponse
@@ -149,7 +149,7 @@ func runListAvailableDevices(*cobra.Command, []string) (err error) {
 		})
 	}
 
-	writer := format.Writer(outputFormat, os.Stdout)
+	writer := format.Writer(cfg.Format, os.Stdout)
 	err = writer.Write(availableDevs)
 	return
 }
@@ -163,7 +163,7 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 
 	pcapClient := rpcV1.NewPCAPServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
 	var err error
@@ -172,21 +172,21 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 		return err
 	}
 
-	var out []printableSubscription
-	for _, subscription := range resp.Subscriptions {
+	var out = make([]printableSubscription, len(resp.Subscriptions))
+	for idx, subscription := range resp.Subscriptions {
 		splitIdx := strings.Index(subscription, ":")
 		if splitIdx < 0 {
 			continue
 		}
 
-		out = append(out, printableSubscription{
+		out[idx] = printableSubscription{
 			Name:        subscription[splitIdx:],
 			Device:      subscription[:splitIdx],
 			ConsumerKey: subscription,
-		})
+		}
 	}
 
-	writer := format.Writer(outputFormat, os.Stdout)
+	writer := format.Writer(cfg.Format, os.Stdout)
 
 	return writer.Write(out)
 }
@@ -198,7 +198,7 @@ func runAddRecording(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
 	var resp *rpcV1.StartPCAPFileRecordingResponse
@@ -219,7 +219,7 @@ func runAddRecording(_ *cobra.Command, args []string) (err error) {
 func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
 	pcapClient := rpcV1.NewPCAPServiceClient(conn)
 
-	listRecsCtx, listRecsCancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	listRecsCtx, listRecsCancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer listRecsCancel()
 
 	var err error
@@ -240,7 +240,7 @@ func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("the given subscription is not known: %s", args[0])
 	}
 
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
 	var stopRecResp *rpcV1.StopPCAPFileRecordingResponse
@@ -259,7 +259,7 @@ func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
 }
 
 func isValidRecordDevice(device string, pcapClient rpcV1.PCAPServiceClient) (err error) {
-	ctx, cancel := context.WithTimeout(cliApp.Context(), grpcTimeout)
+	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 	var resp *rpcV1.ListAvailableDevicesResponse
 	if resp, err = pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest)); err != nil {

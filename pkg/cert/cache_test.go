@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/maxatome/go-testdeep/td"
 
 	certmock "gitlab.com/inetmock/inetmock/internal/mock/cert"
 )
@@ -27,11 +27,10 @@ var (
 )
 
 func Test_certShouldBeRenewed(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	t.Parallel()
 	type args struct {
-		timeSource TimeSource
-		cert       *x509.Certificate
+		timeSourceSetup func(ctrl *gomock.Controller) TimeSource
+		cert            *x509.Certificate
 	}
 	type testCase struct {
 		name string
@@ -42,7 +41,7 @@ func Test_certShouldBeRenewed(t *testing.T) {
 		{
 			name: "Expect cert should not be renewed right after creation",
 			args: args{
-				timeSource: func() TimeSource {
+				timeSourceSetup: func(ctrl *gomock.Controller) TimeSource {
 					tsMock := certmock.NewMockTimeSource(ctrl)
 					tsMock.
 						EXPECT().
@@ -50,7 +49,7 @@ func Test_certShouldBeRenewed(t *testing.T) {
 						Return(time.Now().UTC()).
 						Times(1)
 					return tsMock
-				}(),
+				},
 				cert: &x509.Certificate{
 					NotAfter:  time.Now().UTC().Add(serverRelativeValidity),
 					NotBefore: time.Now().UTC().Add(-serverRelativeValidity),
@@ -61,7 +60,7 @@ func Test_certShouldBeRenewed(t *testing.T) {
 		{
 			name: "Expect cert should be renewed if the remaining lifetime is less than a quarter of the total lifetime",
 			args: args{
-				timeSource: func() TimeSource {
+				timeSourceSetup: func(ctrl *gomock.Controller) TimeSource {
 					tsMock := certmock.NewMockTimeSource(ctrl)
 					tsMock.
 						EXPECT().
@@ -69,7 +68,7 @@ func Test_certShouldBeRenewed(t *testing.T) {
 						Return(time.Now().UTC().Add(serverRelativeValidity/2 + 1*time.Hour)).
 						Times(1)
 					return tsMock
-				}(),
+				},
 				cert: &x509.Certificate{
 					NotAfter:  time.Now().UTC().Add(serverRelativeValidity),
 					NotBefore: time.Now().UTC().Add(-serverRelativeValidity),
@@ -78,41 +77,51 @@ func Test_certShouldBeRenewed(t *testing.T) {
 			want: true,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
-			if got := certShouldBeRenewed(tt.args.timeSource, tt.args.cert); got != tt.want {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			if got := certShouldBeRenewed(tt.args.timeSourceSetup(ctrl), tt.args.cert); got != tt.want {
 				t.Errorf("certShouldBeRenewed() = %v, want %v", got, tt.want)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
-//nolint:funlen
 func Test_fileSystemCache_Get(t *testing.T) {
+	t.Parallel()
+
+	certGen := setupCertGen()
+
+	caCrt, _ := certGen.CACert(GenerationOptions{
+		CommonName: caCN,
+	})
+
+	srvCrt, _ := certGen.ServerCert(GenerationOptions{
+		CommonName: cnLocalhost,
+	}, caCrt)
+
 	type fields struct {
-		certCachePath string
-		inMemCache    map[string]*tls.Certificate
-		timeSource    TimeSource
+		inMemCache map[string]*tls.Certificate
+		timeSource TimeSource
 	}
 	type args struct {
 		cn string
 	}
 	type testCase struct {
-		name   string
-		fields fields
-		args   args
-		wantOk bool
+		name             string
+		fields           fields
+		polluteCertCache bool
+		args             args
+		wantOk           bool
 	}
 	tests := []testCase{
 		{
 			name: "Get a miss when no cert is present",
 			fields: fields{
-				certCachePath: os.TempDir(),
-				inMemCache:    make(map[string]*tls.Certificate),
-				timeSource:    NewTimeSource(),
+				inMemCache: make(map[string]*tls.Certificate),
+				timeSource: NewTimeSource(),
 			},
 			args: args{
 				cnLocalhost,
@@ -121,25 +130,12 @@ func Test_fileSystemCache_Get(t *testing.T) {
 		},
 		{
 			name: "Get a prepared certificate from the memory cache",
-			fields: func() fields {
-				certGen := setupCertGen()
-
-				caCrt, _ := certGen.CACert(GenerationOptions{
-					CommonName: caCN,
-				})
-
-				srvCrt, _ := certGen.ServerCert(GenerationOptions{
-					CommonName: cnLocalhost,
-				}, caCrt)
-
-				return fields{
-					certCachePath: os.TempDir(),
-					inMemCache: map[string]*tls.Certificate{
-						cnLocalhost: srvCrt,
-					},
-					timeSource: NewTimeSource(),
-				}
-			}(),
+			fields: fields{
+				inMemCache: map[string]*tls.Certificate{
+					cnLocalhost: srvCrt,
+				},
+				timeSource: NewTimeSource(),
+			},
 			args: args{
 				cn: cnLocalhost,
 			},
@@ -147,67 +143,50 @@ func Test_fileSystemCache_Get(t *testing.T) {
 		},
 		{
 			name: "Get a prepared certificate from the file system",
-			fields: func() fields {
-				certGen := setupCertGen()
-
-				caCrt, _ := certGen.CACert(GenerationOptions{
-					CommonName: "INetMock",
-				})
-
-				srvCrt, _ := certGen.ServerCert(GenerationOptions{
-					CommonName: serverCN,
-				}, caCrt)
-
-				pem := NewPEM(srvCrt)
-				if err := pem.Write(serverCN, os.TempDir()); err != nil {
-					panic(err)
-				}
-
-				t.Cleanup(func() {
-					for _, f := range []string{
-						path.Join(os.TempDir(), fmt.Sprintf("%s.pem", serverCN)),
-						path.Join(os.TempDir(), fmt.Sprintf("%s.key", serverCN)),
-					} {
-						_ = os.Remove(f)
-					}
-				})
-
-				return fields{
-					certCachePath: os.TempDir(),
-					inMemCache:    make(map[string]*tls.Certificate),
-					timeSource:    NewTimeSource(),
-				}
-			}(),
+			fields: fields{
+				inMemCache: make(map[string]*tls.Certificate),
+				timeSource: NewTimeSource(),
+			},
 			args: args{
 				cn: serverCN,
 			},
-			wantOk: true,
+			polluteCertCache: true,
+			wantOk:           true,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			dir := t.TempDir()
 			f := &fileSystemCache{
-				certCachePath: tt.fields.certCachePath,
+				certCachePath: dir,
 				inMemCache:    tt.fields.inMemCache,
 				timeSource:    tt.fields.timeSource,
 			}
+
+			if tt.polluteCertCache {
+				pem := NewPEM(srvCrt)
+				if err := pem.Write(serverCN, dir); err != nil {
+					t.Fatalf("polluteCertCache error = %v", err)
+				}
+			}
+
 			gotCrt, gotOk := f.Get(tt.args.cn)
 
-			if gotOk && (gotCrt == nil || !reflect.DeepEqual(reflect.TypeOf(new(tls.Certificate)), reflect.TypeOf(gotCrt))) {
+			if gotOk && (gotCrt == nil || !td.CmpIsa(t, gotCrt, new(tls.Certificate))) {
 				t.Errorf("Wanted propert certificate but got %v", gotCrt)
 			}
 
 			if gotOk != tt.wantOk {
 				t.Errorf("Get() gotOk = %v, want %v", gotOk, tt.wantOk)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func Test_fileSystemCache_Put(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		certCachePath string
 		inMemCache    map[string]*tls.Certificate
@@ -281,8 +260,10 @@ func Test_fileSystemCache_Put(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			f := &fileSystemCache{
 				certCachePath: tt.fields.certCachePath,
 				inMemCache:    tt.fields.inMemCache,
@@ -291,10 +272,7 @@ func Test_fileSystemCache_Put(t *testing.T) {
 			if err := f.Put(tt.args.cert); (err != nil) != tt.wantErr {
 				t.Errorf("Put() error = %v, wantErr %v", err, tt.wantErr)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 

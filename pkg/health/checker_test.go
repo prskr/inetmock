@@ -1,12 +1,14 @@
 package health
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/maxatome/go-testdeep/td"
 )
 
 //nolint:funlen
 func Test_checker_IsHealthy(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		componentChecks map[string]Check
 	}
@@ -145,17 +147,15 @@ func Test_checker_IsHealthy(t *testing.T) {
 			},
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			c := &checker{
 				componentChecks: tt.fields.componentChecks,
 			}
-			if gotR := c.IsHealthy(); !reflect.DeepEqual(gotR, tt.wantR) {
-				t.Errorf("IsHealthy() = %v, want %v", gotR, tt.wantR)
-			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+			gotR := c.IsHealthy()
+			td.Cmp(t, gotR, tt.wantR)
+		})
 	}
 }

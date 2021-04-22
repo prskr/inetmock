@@ -63,12 +63,7 @@ func (i *inetmockAPI) StartServer() (err error) {
 		checker: i.checker,
 	})
 
-	v1.RegisterAuditServiceServer(i.server, &auditServer{
-		logger:           i.logger,
-		eventStream:      i.eventStream,
-		auditDataDirPath: i.auditDataDir,
-	})
-
+	v1.RegisterAuditServiceServer(i.server, NewAuditServiceServer(i.logger, i.eventStream, i.auditDataDir))
 	v1.RegisterPCAPServiceServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 
 	reflection.Register(i.server)

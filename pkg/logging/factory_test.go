@@ -9,6 +9,7 @@ import (
 
 //nolint:funlen
 func TestParseLevel(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		levelString string
 	}
@@ -103,19 +104,19 @@ func TestParseLevel(t *testing.T) {
 			want: zap.NewAtomicLevelAt(zap.InfoLevel),
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := ParseLevel(tt.args.levelString); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseLevel() = %v, want %v", got, tt.want)
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func TestConfigureLogging(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		level              zap.AtomicLevel
 		developmentLogging bool
@@ -151,8 +152,10 @@ func TestConfigureLogging(t *testing.T) {
 			},
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ConfigureLogging(tt.args.level, tt.args.developmentLogging, tt.args.initialFields)
 			if loggingConfig.Development != tt.args.developmentLogging {
 				t.Errorf("loggingConfig.Development = %t, want %t", loggingConfig.Development, tt.args.developmentLogging)
@@ -168,9 +171,6 @@ func TestConfigureLogging(t *testing.T) {
 				t.Errorf("loggingConfig.InitialFields = %v, want %v", loggingConfig.InitialFields, tt.args.initialFields)
 				return
 			}
-		}
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }

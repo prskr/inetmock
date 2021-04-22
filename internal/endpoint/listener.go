@@ -54,14 +54,15 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 		}
 	}
 
-	var endpoints []Endpoint
 	if len(l.Endpoints) <= 1 {
 		for name, s := range l.Endpoints {
-			endpoints = append(endpoints, Endpoint{
-				name:   fmt.Sprintf("%s:%s", l.Name, name),
-				uplink: *l.Uplink,
-				Spec:   s,
-			})
+			endpoints := []Endpoint{
+				{
+					name:   fmt.Sprintf("%s:%s", l.Name, name),
+					uplink: *l.Uplink,
+					Spec:   s,
+				},
+			}
 			return endpoints, nil, nil
 		}
 	}
@@ -70,10 +71,12 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 		return nil, nil, ErrUDPMultiplexer
 	}
 
-	var epNames []string
+	var epNames = make([]string, len(l.Endpoints))
 	var multiplexEndpoints = make(map[string]MultiplexHandler)
+	var idx int
 	for name, spec := range l.Endpoints {
-		epNames = append(epNames, name)
+		epNames[idx] = name
+		idx++
 		if ep, ok := spec.Handler.(MultiplexHandler); !ok {
 			return nil, nil, fmt.Errorf("handler %s %w", spec.HandlerRef, ErrMultiplexingNotSupported)
 		} else {
@@ -90,7 +93,8 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 
 	var tlsRequired = false
 
-	for _, epName := range epNames {
+	var endpoints = make([]Endpoint, len(epNames))
+	for i, epName := range epNames {
 		epSpec := l.Endpoints[epName]
 		var epMux = plainMux
 		if epSpec.TLS {
@@ -106,7 +110,7 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 			Spec: epSpec,
 		}
 
-		endpoints = append(endpoints, epListener)
+		endpoints[i] = epListener
 	}
 
 	var muxes []cmux.CMux

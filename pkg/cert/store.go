@@ -33,7 +33,6 @@ type Store interface {
 	TLSConfig() *tls.Config
 }
 
-//nolint:gocritic
 func NewDefaultStore(
 	options Options,
 	logger logging.Logger,
@@ -47,7 +46,6 @@ func NewDefaultStore(
 	)
 }
 
-//nolint:gocritic
 func NewStore(
 	options Options,
 	cache Cache,
@@ -149,7 +147,6 @@ func (s *store) GetCertificate(serverName, ip string) (cert *tls.Certificate, er
 	return
 }
 
-//nolint:gocritic
 func privateKeyForCurve(options Options) (privateKey interface{}, err error) {
 	switch options.Curve {
 	case CurveTypeP224:

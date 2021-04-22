@@ -53,17 +53,19 @@ var (
 	}
 )
 
-func wgMockSink(t testing.TB, wg *sync.WaitGroup) audit.Sink {
+func wgMockSink(tb testing.TB, wg *sync.WaitGroup) audit.Sink {
+	tb.Helper()
 	return sink.NewGenericSink(
 		"WG mock sink",
 		func(event audit.Event) {
-			t.Logf("Got event = %v", event)
+			tb.Logf("Got event = %v", event)
 			wg.Done()
 		},
 	)
 }
 
 func Test_eventStream_RegisterSink(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s audit.Sink
 	}
@@ -92,8 +94,10 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var err error
 			var e audit.EventStream
 			if e, err = audit.NewEventStream(logging.CreateTestLogger(t)); err != nil {
@@ -121,15 +125,12 @@ func Test_eventStream_RegisterSink(t *testing.T) {
 			if !found {
 				t.Errorf("expected defaultSink name %s not found in registered sinks %v", tt.args.s.Name(), e.Sinks())
 			}
-		}
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
 
 func Test_eventStream_Emit(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		evs  []*audit.Event
 		opts []audit.EventStreamOption
@@ -165,9 +166,10 @@ func Test_eventStream_Emit(t *testing.T) {
 			subscribe: false,
 		},
 	}
-
-	scenario := func(tt testCase) func(t *testing.T) {
-		return func(t *testing.T) {
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var err error
 			var e audit.EventStream
 			if e, err = audit.NewEventStream(logging.CreateTestLogger(t), tt.args.opts...); err != nil {
@@ -208,10 +210,6 @@ func Test_eventStream_Emit(t *testing.T) {
 			case <-time.After(5 * time.Second):
 				t.Errorf("did not get all expected events in time")
 			}
-		}
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, scenario(tt))
+		})
 	}
 }
