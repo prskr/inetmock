@@ -18,22 +18,30 @@ import (
 )
 
 type route struct {
-	rule    targetRule
+	rule    TargetRule
 	handler http.Handler
 }
 
-type RegexpHandler struct {
+type RegexHandler struct {
 	handlerName string
 	logger      logging.Logger
 	routes      []*route
 	emitter     audit.Emitter
 }
 
-func (h *RegexpHandler) Handler(rule targetRule, handler http.Handler) {
+func NewRegexHandler(name string, logger logging.Logger, emitter audit.Emitter) *RegexHandler {
+	return &RegexHandler{
+		handlerName: name,
+		logger:      logger,
+		emitter:     emitter,
+	}
+}
+
+func (h *RegexHandler) Handler(rule TargetRule, handler http.Handler) {
 	h.routes = append(h.routes, &route{rule, handler})
 }
 
-func (h *RegexpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RegexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(h.handlerName))
 	defer timer.ObserveDuration()
 
@@ -50,7 +58,7 @@ func (h *RegexpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
-func (h *RegexpHandler) setupRoute(rule targetRule) {
+func (h *RegexHandler) AddRouteRule(rule TargetRule) {
 	h.logger.Info(
 		"setup routing",
 		zap.String("route", rule.Pattern().String()),
@@ -77,5 +85,6 @@ func (f emittingFileHandler) ServeHTTP(writer http.ResponseWriter, request *http
 	defer func() {
 		_ = file.Close()
 	}()
+	//nolint:gosec
 	http.ServeContent(writer, request, path.Base(request.RequestURI), time.Now().Add(-(time.Duration(rand.Int()) * time.Millisecond)), file)
 }

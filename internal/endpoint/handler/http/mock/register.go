@@ -12,7 +12,8 @@ var (
 	requestDurationHistogram *prometheus.HistogramVec
 )
 
-func AddHTTPMock(registry endpoint.HandlerRegistry) (err error) {
+func InitMetrics() error {
+	var err error
 	if totalRequestCounter == nil {
 		if totalRequestCounter, err = metrics.Counter(
 			name,
@@ -21,7 +22,7 @@ func AddHTTPMock(registry endpoint.HandlerRegistry) (err error) {
 			handlerNameLblName,
 			ruleMatchedLblName,
 		); err != nil {
-			return
+			return err
 		}
 	}
 
@@ -33,8 +34,15 @@ func AddHTTPMock(registry endpoint.HandlerRegistry) (err error) {
 			nil,
 			handlerNameLblName,
 		); err != nil {
-			return
+			return err
 		}
+	}
+	return nil
+}
+
+func AddHTTPMock(registry endpoint.HandlerRegistry) (err error) {
+	if err := InitMetrics(); err != nil {
+		return err
 	}
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {

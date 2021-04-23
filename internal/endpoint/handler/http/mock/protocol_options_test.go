@@ -44,7 +44,7 @@ func Test_loadFromConfig(t *testing.T) {
 				},
 			},
 			wantOptions: httpOptions{
-				Rules: []targetRule{
+				Rules: []TargetRule{
 					{
 						pattern: regexp.MustCompile(`.*\.(?i)exe`),
 						response: func() string {
@@ -76,7 +76,7 @@ func Test_loadFromConfig(t *testing.T) {
 				},
 			},
 			wantOptions: httpOptions{
-				Rules: []targetRule{
+				Rules: []TargetRule{
 					{
 						pattern: regexp.MustCompile(`.*\.(?i)exe`),
 						response: func() string {
@@ -110,7 +110,7 @@ func Test_loadFromConfig(t *testing.T) {
 				},
 			},
 			wantOptions: httpOptions{
-				Rules: []targetRule{
+				Rules: []TargetRule{
 					{
 						pattern: regexp.MustCompile("^application/octet-stream$"),
 						response: func() string {
@@ -145,7 +145,7 @@ func Test_loadFromConfig(t *testing.T) {
 				},
 			},
 			wantOptions: httpOptions{
-				Rules: []targetRule{
+				Rules: []TargetRule{
 					{
 						pattern: regexp.MustCompile("^application/octet-stream$"),
 						response: func() string {

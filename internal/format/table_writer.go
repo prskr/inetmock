@@ -13,6 +13,7 @@ type tblWriter struct {
 	tableWriter *tablewriter.Table
 }
 
+//nolint:exhaustive
 func (t *tblWriter) Write(in interface{}) (err error) {
 	v := reflect.ValueOf(in)
 
@@ -25,7 +26,6 @@ func (t *tblWriter) Write(in interface{}) (err error) {
 
 	data := make([][]string, 0)
 
-	//nolint:exhaustive
 	switch v.Kind() {
 	case reflect.Interface:
 		return errors.New("interface{} is not supported")
@@ -79,6 +79,7 @@ func (t *tblWriter) getData(val reflect.Value, numberOfFields int) (data []strin
 	return
 }
 
+//nolint:exhaustive
 func value(val reflect.Value) string {
 	if val.IsZero() || !val.IsValid() {
 		return ""
@@ -88,7 +89,6 @@ func value(val reflect.Value) string {
 		return stringer.String()
 	}
 
-	//nolint:exhaustive
 	switch val.Kind() {
 	case reflect.Ptr:
 		return value(val.Elem())

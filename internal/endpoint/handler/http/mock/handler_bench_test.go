@@ -29,7 +29,8 @@ const (
 
 var (
 	availableExtensions = []string{"gif", "html", "ico", "jpg", "png", "txt"}
-	defaultUrlGenerator = func(endpoint string) *url.URL {
+	defaultURLGenerator = func(endpoint string) *url.URL {
+		//nolint:gosec
 		extension := availableExtensions[rand.Intn(len(availableExtensions))]
 		reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", endpoint, randomString(15), extension))
 		return reqURL
@@ -52,7 +53,7 @@ func Benchmark_httpHandler(b *testing.B) {
 			name:         "HTTP",
 			port:         "80/tcp",
 			scheme:       "http",
-			urlGenerator: defaultUrlGenerator,
+			urlGenerator: defaultURLGenerator,
 		},
 		{
 			name:   "HTTP - ensure /index.html is handled correctly",
@@ -67,7 +68,7 @@ func Benchmark_httpHandler(b *testing.B) {
 			name:         "HTTPS",
 			port:         "443/tcp",
 			scheme:       "https",
-			urlGenerator: defaultUrlGenerator,
+			urlGenerator: defaultURLGenerator,
 		},
 	}
 	for _, bc := range benchmarks {

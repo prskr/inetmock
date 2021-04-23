@@ -44,7 +44,7 @@ func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) error {
 		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
-	router := &RegexpHandler{
+	router := &RegexHandler{
 		logger:      p.logger,
 		emitter:     lifecycle.Audit(),
 		handlerName: lifecycle.Name(),
@@ -55,7 +55,7 @@ func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) error {
 	}
 
 	for _, rule := range options.Rules {
-		router.setupRoute(rule)
+		router.AddRouteRule(rule)
 	}
 
 	go p.startServer(lifecycle.Uplink().Listener)

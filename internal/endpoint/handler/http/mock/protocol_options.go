@@ -1,4 +1,3 @@
-//go:generate go-enum -f $GOFILE --lower --marshal --names
 package mock
 
 import (
@@ -9,48 +8,10 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 )
 
-var (
-	ruleValueSelectors = map[RequestMatchTarget]ruleValueSelector{
-		RequestMatchTargetHeader: func(req *http.Request, targetKey string) string {
-			return req.Header.Get(targetKey)
-		},
-		RequestMatchTargetPath: func(req *http.Request, _ string) string {
-			return req.URL.Path
-		},
-	}
-)
-
-/* ENUM(
-Path,
-Header
-)
-*/
-type RequestMatchTarget int
-
-func (x RequestMatchTarget) Matches(req *http.Request, targetKey string, regex *regexp.Regexp) bool {
-	val := ruleValueSelectors[x](req, targetKey)
-	return regex.MatchString(val)
-}
-
 type ruleValueSelector func(req *http.Request, targetKey string) string
 
-type targetRule struct {
-	pattern            *regexp.Regexp
-	response           string
-	requestMatchTarget RequestMatchTarget
-	targetKey          string
-}
-
-func (tr targetRule) Pattern() *regexp.Regexp {
-	return tr.pattern
-}
-
-func (tr targetRule) Response() string {
-	return tr.response
-}
-
 type httpOptions struct {
-	Rules []targetRule
+	Rules []TargetRule
 }
 
 func loadFromConfig(lifecycle endpoint.Lifecycle) (httpOptions, error) {
@@ -87,7 +48,7 @@ func loadFromConfig(lifecycle endpoint.Lifecycle) (httpOptions, error) {
 			continue
 		}
 
-		options.Rules = append(options.Rules, targetRule{
+		options.Rules = append(options.Rules, TargetRule{
 			pattern:            rulePattern,
 			response:           absoluteResponsePath,
 			requestMatchTarget: matchTargetValue,
