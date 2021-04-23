@@ -14,7 +14,6 @@ import (
 	http "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/tls/interceptor"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 )
 
@@ -24,7 +23,6 @@ var (
 	registrations = []endpoint.Registration{
 		http.AddHTTPMock,
 		dns.AddDNSMock,
-		interceptor.AddTLSInterceptor,
 		proxy.AddHTTPProxy,
 		metrics.AddMetricsExporter,
 	}
