@@ -6,9 +6,9 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/elazarl/goproxy"
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
-	"gopkg.in/elazarl/goproxy.v1"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"

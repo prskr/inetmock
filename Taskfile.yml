@@ -18,7 +18,7 @@ tasks:
   clean:
     desc: clean all generated files
     cmds:
-      - find . -type f \( -name "*.pb.go" -or -name "*.mock.go" \) -exec rm -f {} \;
+      - find . -type f \( -name "*.pb.go" -or -name "*.mock.go" -or -name "*_enum.go" \) -exec rm -f {} \;
       - rm -rf ./main {{ .OUT_DIR }}
 
   format:
@@ -33,6 +33,15 @@ tasks:
       - go.sum
     cmds:
       - go mod download
+
+  dep-graph:
+    desc: generate dependency graph
+    sources:
+      - go.mod
+      - go.sum
+    cmds:
+      - mkdir -p {{ .OUT_DIR }}
+      - gomod graph "**" | dot -Gdpi=0 -T svg -o {{ .OUT_DIR }}/dependency_graph.svg
 
   golangci-lint:
     desc: run Go linter

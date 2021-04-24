@@ -2,14 +2,11 @@ package rpc_test
 
 import (
 	"context"
-	"errors"
-	"net"
-	"reflect"
-	"sort"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/maxatome/go-testdeep/td"
 	"google.golang.org/grpc"
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
@@ -82,11 +79,7 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 				return
 			}
 
-			sort.Strings(gotResp.Subscriptions)
-			sort.Strings(tt.wantSubscriptions)
-			if !reflect.DeepEqual(gotResp.Subscriptions, tt.wantSubscriptions) {
-				t.Errorf("ListActiveRecordings() gotResp = %v, want %v", gotResp.Subscriptions, tt.wantSubscriptions)
-			}
+			td.Cmp(t, gotResp.Subscriptions, tt.wantSubscriptions)
 		})
 	}
 }
@@ -95,50 +88,27 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
 		name    string
-		matcher func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error
+		want    interface{}
 		wantErr bool
 	}
 	tests := []testCase{
 		{
-			name: "Ensure that any device was found",
-			matcher: func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error {
-				if len(devs) > 0 {
-					return nil
-				}
-				return errors.New("didn't find loopback device")
-			},
+			name:    "Ensure that any device was found",
+			want:    td.NotEmpty(),
 			wantErr: false,
 		},
 		{
 			name: "Ensure that any device with an assigned IP was found",
-			matcher: func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error {
-				for _, dev := range devs {
-					for _, addr := range dev.Addresses {
-						if addr == nil {
-							continue
-						}
-						ip := net.IP(addr)
-						if !ip.IsUnspecified() {
-							return nil
-						}
-					}
-				}
-				return errors.New("didn't find loopback device")
-			},
+			want: td.Contains(td.Struct(new(rpcV1.ListAvailableDevicesResponse_PCAPDevice), td.StructFields{
+				"Addresses": td.NotEmpty(),
+			})),
 			wantErr: false,
 		},
 		{
 			name: "Ensure that loopback device was found",
-			matcher: func(devs []*rpcV1.ListAvailableDevicesResponse_PCAPDevice) error {
-				foundLoopback := false
-				for _, dev := range devs {
-					foundLoopback = foundLoopback || dev.Name == "lo"
-					if foundLoopback {
-						return nil
-					}
-				}
-				return errors.New("didn't find loopback device")
-			},
+			want: td.Contains(td.Struct(new(rpcV1.ListAvailableDevicesResponse_PCAPDevice), td.StructFields{
+				"Name": "lo",
+			})),
 			wantErr: false,
 		},
 	}
@@ -162,9 +132,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 				return
 			}
 			if (got != nil) != tt.wantErr {
-				if err := tt.matcher(got.AvailableDevices); err != nil {
-					t.Errorf("ListAvailableDevices() matcher error = %v", err)
-				}
+				td.Cmp(t, got.AvailableDevices, tt.want)
 			}
 		})
 	}
@@ -223,9 +191,8 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 				return
 			}
 
-			if currentSubs := recorder.Subscriptions(); !reflect.DeepEqual(currentSubs, tt.wantSubscriptions) {
-				t.Errorf("StartPCAPFileRecording() got = %v, want %v", currentSubs, tt.wantSubscriptions)
-			}
+			currentSubs := recorder.Subscriptions()
+			td.Cmp(t, currentSubs, tt.wantSubscriptions)
 		})
 	}
 }

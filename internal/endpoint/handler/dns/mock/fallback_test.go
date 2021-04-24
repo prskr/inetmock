@@ -2,7 +2,6 @@ package mock
 
 import (
 	"net"
-	"reflect"
 	"testing"
 
 	"github.com/maxatome/go-testdeep/td"
@@ -12,9 +11,8 @@ func Test_randomIPFallback_GetIP(t *testing.T) {
 	t.Parallel()
 	ra := randomIPFallback{}
 	for i := 0; i < 1000; i++ {
-		if got := ra.GetIP(); reflect.DeepEqual(got, net.IP{}) {
-			t.Errorf("GetIP() = %v", got)
-		}
+		got := ra.GetIP()
+		td.CmpNot(t, got, net.IP{})
 	}
 }
 

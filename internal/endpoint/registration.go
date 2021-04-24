@@ -6,25 +6,22 @@ import (
 )
 
 type Registration func(registry HandlerRegistry) error
+type HandlerProvider func() ProtocolHandler
 
 type HandlerRegistry interface {
-	RegisterHandler(handlerRef HandlerReference, handlerProvider func() ProtocolHandler)
+	RegisterHandler(handlerRef HandlerReference, handlerProvider HandlerProvider)
 	AvailableHandlers() []HandlerReference
 	HandlerForName(handlerRef HandlerReference) (ProtocolHandler, bool)
 }
 
 func NewHandlerRegistry() HandlerRegistry {
-	return &handlerRegistry{
-		handlers: make(map[HandlerReference]func() ProtocolHandler),
-	}
+	return &handlerRegistry{}
 }
 
-type handlerRegistry struct {
-	handlers map[HandlerReference]func() ProtocolHandler
-}
+type handlerRegistry map[HandlerReference]HandlerProvider
 
-func (h handlerRegistry) AvailableHandlers() (availableHandlers []HandlerReference) {
-	for s := range h.handlers {
+func (h *handlerRegistry) AvailableHandlers() (availableHandlers []HandlerReference) {
+	for s := range *h {
 		availableHandlers = append(availableHandlers, s)
 	}
 	return
@@ -32,16 +29,18 @@ func (h handlerRegistry) AvailableHandlers() (availableHandlers []HandlerReferen
 
 func (h *handlerRegistry) HandlerForName(handlerRef HandlerReference) (instance ProtocolHandler, ok bool) {
 	var provider func() ProtocolHandler
-	if provider, ok = h.handlers[handlerRef.ToLower()]; ok {
+	handlers := *h
+	if provider, ok = handlers[handlerRef.ToLower()]; ok {
 		instance = provider()
 	}
 	return
 }
 
-func (h *handlerRegistry) RegisterHandler(handlerRef HandlerReference, handlerProvider func() ProtocolHandler) {
+func (h *handlerRegistry) RegisterHandler(handlerRef HandlerReference, handlerProvider HandlerProvider) {
 	handlerRef = handlerRef.ToLower()
-	if _, exists := h.handlers[handlerRef]; exists {
+	handlers := *h
+	if _, exists := handlers[handlerRef]; exists {
 		panic(fmt.Sprintf("handler with name %s is already registered - there's something strange...in the neighborhood", handlerRef))
 	}
-	h.handlers[handlerRef] = handlerProvider
+	handlers[handlerRef] = handlerProvider
 }

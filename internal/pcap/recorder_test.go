@@ -4,11 +4,12 @@ package pcap_test
 
 import (
 	"context"
-	"errors"
-	"reflect"
+	"net"
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
@@ -101,9 +102,8 @@ func Test_recorder_Subscriptions(t *testing.T) {
 				}
 			}
 
-			if gotSubscriptions := sortSubscriptions(r.Subscriptions()); !reflect.DeepEqual(gotSubscriptions, tt.wantSubscriptions) {
-				t.Errorf("Subscriptions() = %v, want %v", gotSubscriptions, tt.wantSubscriptions)
-			}
+			gotSubscriptions := sortSubscriptions(r.Subscriptions())
+			td.Cmp(t, gotSubscriptions, tt.wantSubscriptions)
 		})
 	}
 }
@@ -185,28 +185,16 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
 		name    string
-		mtacher func(got []pcap.Device) error
+		want    interface{}
 		wantErr bool
 	}
 	tests := []testCase{
 		{
 			name: "Expect lo device",
-			mtacher: func(got []pcap.Device) error {
-				if len(got) < 1 {
-					return errors.New("expected at least one interface")
-				}
-
-				foundLoopbackDevice := false
-				for _, d := range got {
-					foundLoopbackDevice = foundLoopbackDevice || d.Name == "lo"
-				}
-
-				if !foundLoopbackDevice {
-					return errors.New("didn't find loopback device")
-				}
-
-				return nil
-			},
+			want: td.Contains(td.Struct(pcap.Device{}, td.StructFields{
+				"Name":        "lo",
+				"IPAddresses": td.Contains(net.IPv4(127, 0, 0, 1)),
+			})),
 			wantErr: false,
 		},
 	}
@@ -226,9 +214,7 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 				t.Errorf("AvailableDevices() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if err := tt.mtacher(gotDevices); err != nil {
-				t.Errorf("AvailableDevices() matcher error = %v", err)
-			}
+			td.Cmp(t, gotDevices, tt.want)
 		})
 	}
 }

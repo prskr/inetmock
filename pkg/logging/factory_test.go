@@ -1,9 +1,9 @@
 package logging
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/maxatome/go-testdeep/td"
 	"go.uber.org/zap"
 )
 
@@ -108,9 +108,8 @@ func TestParseLevel(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := ParseLevel(tt.args.levelString); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ParseLevel() = %v, want %v", got, tt.want)
-			}
+			got := ParseLevel(tt.args.levelString)
+			td.Cmp(t, got, tt.want)
 		})
 	}
 }
@@ -167,9 +166,8 @@ func TestConfigureLogging(t *testing.T) {
 				return
 			}
 
-			if tt.args.initialFields != nil && !reflect.DeepEqual(loggingConfig.InitialFields, tt.args.initialFields) {
-				t.Errorf("loggingConfig.InitialFields = %v, want %v", loggingConfig.InitialFields, tt.args.initialFields)
-				return
+			if tt.args.initialFields != nil {
+				td.Cmp(t, loggingConfig.InitialFields, tt.args.initialFields)
 			}
 		})
 	}

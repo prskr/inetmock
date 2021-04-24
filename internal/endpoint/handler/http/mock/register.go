@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
@@ -10,9 +12,13 @@ import (
 var (
 	totalRequestCounter      *prometheus.CounterVec
 	requestDurationHistogram *prometheus.HistogramVec
+	initLock                 sync.Locker = new(sync.Mutex)
 )
 
 func InitMetrics() error {
+	initLock.Lock()
+	defer initLock.Unlock()
+
 	var err error
 	if totalRequestCounter == nil {
 		if totalRequestCounter, err = metrics.Counter(
