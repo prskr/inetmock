@@ -12,6 +12,8 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -20,16 +22,18 @@ const (
 )
 
 type httpProxy struct {
-	logger logging.Logger
-	proxy  *goproxy.ProxyHttpServer
-	server *http.Server
+	logger    logging.Logger
+	proxy     *goproxy.ProxyHttpServer
+	certStore cert.Store
+	emitter   audit.Emitter
+	server    *http.Server
 }
 
 func (h *httpProxy) Matchers() []cmux.Matcher {
 	return []cmux.Matcher{cmux.HTTP1()}
 }
 
-func (h *httpProxy) Start(lifecycle endpoint.Lifecycle) error {
+func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
 	var opts httpProxyOptions
 	if err := lifecycle.UnmarshalOptions(&opts); err != nil {
 		return err
@@ -44,25 +48,25 @@ func (h *httpProxy) Start(lifecycle endpoint.Lifecycle) error {
 		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
-	tlsConfig := lifecycle.CertStore().TLSConfig()
+	tlsConfig := h.certStore.TLSConfig()
 
 	proxyHandler := &proxyHTTPHandler{
 		handlerName: lifecycle.Name(),
 		options:     opts,
 		logger:      h.logger,
-		emitter:     lifecycle.Audit(),
+		emitter:     h.emitter,
 	}
 
 	proxyHTTPSHandler := &proxyHTTPSHandler{
 		options:   opts,
 		tlsConfig: tlsConfig,
-		emitter:   lifecycle.Audit(),
+		emitter:   h.emitter,
 	}
 
 	h.proxy.OnRequest().Do(proxyHandler)
 	h.proxy.OnRequest().HandleConnect(proxyHTTPSHandler)
 	go h.startProxy(lifecycle.Uplink().Listener)
-	go h.shutdownOnContextDone(lifecycle.Context())
+	go h.shutdownOnContextDone(ctx)
 	return nil
 }
 

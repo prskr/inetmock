@@ -1,9 +1,10 @@
 package mock
 
 import (
+	"io"
+	"io/fs"
 	"math/rand"
 	"net/http"
-	"os"
 	"path"
 	"strconv"
 	"time"
@@ -27,13 +28,15 @@ type RegexHandler struct {
 	logger      logging.Logger
 	routes      []*route
 	emitter     audit.Emitter
+	fakeFileFS  fs.FS
 }
 
-func NewRegexHandler(name string, logger logging.Logger, emitter audit.Emitter) *RegexHandler {
+func NewRegexHandler(name string, logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) *RegexHandler {
 	return &RegexHandler{
 		handlerName: name,
 		logger:      logger,
 		emitter:     emitter,
+		fakeFileFS:  fakeFileFS,
 	}
 }
 
@@ -68,23 +71,32 @@ func (h *RegexHandler) AddRouteRule(rule TargetRule) {
 	h.Handler(rule, emittingFileHandler{
 		emitter:    h.emitter,
 		targetPath: rule.response,
+		fs:         h.fakeFileFS,
 	})
 }
 
 type emittingFileHandler struct {
 	emitter    audit.Emitter
 	targetPath string
+	fs         fs.FS
 }
 
 func (f emittingFileHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	f.emitter.Emit(imHttp.EventFromRequest(request, v1.AppProtocol_APP_PROTOCOL_HTTP))
-	file, err := os.Open(f.targetPath)
+	file, err := f.fs.Open(f.targetPath)
 	if err != nil {
 		http.Error(writer, err.Error(), 500)
 	}
+
+	var rs io.ReadSeeker
+	var ok bool
+	if rs, ok = file.(io.ReadSeeker); !ok {
+		http.Error(writer, "internal server error", 500)
+	}
+
 	defer func() {
 		_ = file.Close()
 	}()
 	//nolint:gosec
-	http.ServeContent(writer, request, path.Base(request.RequestURI), time.Now().Add(-(time.Duration(rand.Int()) * time.Millisecond)), file)
+	http.ServeContent(writer, request, path.Base(request.RequestURI), time.Now().Add(-(time.Duration(rand.Int()) * time.Millisecond)), rs)
 }

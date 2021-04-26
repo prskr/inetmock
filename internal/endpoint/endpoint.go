@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 const (
@@ -17,19 +19,19 @@ type Endpoint struct {
 	uplink Uplink
 }
 
-func (e *Endpoint) Start(lifecycle Lifecycle) (err error) {
+func (e *Endpoint) Start(ctx context.Context, logger logging.Logger, lifecycle Lifecycle) (err error) {
 	startupResult := make(chan error)
-	ctx, cancel := context.WithTimeout(lifecycle.Context(), startupTimeoutDuration)
+	ctx, cancel := context.WithTimeout(ctx, startupTimeoutDuration)
 	defer cancel()
 
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				lifecycle.Logger().Fatal("Startup error recovered", zap.Any("recovered", r))
+				logger.Fatal("Startup error recovered", zap.Any("recovered", r))
 			}
 		}()
 
-		startupResult <- e.Handler.Start(lifecycle)
+		startupResult <- e.Handler.Start(ctx, lifecycle)
 	}()
 
 	select {

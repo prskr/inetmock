@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -20,7 +21,7 @@ type metricsExporter struct {
 	server *http.Server
 }
 
-func (m *metricsExporter) Start(lifecycle endpoint.Lifecycle) error {
+func (m *metricsExporter) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
 	var exporterOptions metricsExporterOptions
 	if err := lifecycle.UnmarshalOptions(&exporterOptions); err != nil {
 		return err
@@ -47,7 +48,7 @@ func (m *metricsExporter) Start(lifecycle endpoint.Lifecycle) error {
 	}()
 
 	go func() {
-		<-lifecycle.Context().Done()
+		<-ctx.Done()
 		if err := m.server.Close(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			m.logger.Error("failed to stop metrics server", zap.Error(err))
 		}

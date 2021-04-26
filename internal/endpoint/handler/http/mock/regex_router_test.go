@@ -1,13 +1,14 @@
 package mock_test
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"strings"
 	"testing"
+	"testing/fstest"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/td"
@@ -19,6 +20,19 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
+var (
+	defaultHTMLContent = `<html>
+<head>
+    <title>INetSim default HTML page</title>
+</head>
+<body>
+<p></p>
+<p align="center">This is the default HTML page for INetMock HTTP mock handler.</p>
+<p align="center">This file is an HTML document.</p>
+</body>
+</html>`
+)
+
 //nolint:funlen
 func TestRegexpHandler_ServeHTTP(t *testing.T) {
 	t.Parallel()
@@ -28,25 +42,32 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 	type fields struct {
 		rules        []mock.TargetRule
 		emitterSetup func(tb testing.TB, ctrl *gomock.Controller) audit.Emitter
+		fakeFileFS   fs.FS
 	}
 	type args struct {
 		req *http.Request
 	}
 	tests := []struct {
-		name         string
-		fields       fields
-		args         args
-		wantErr      bool
-		wantStatus   interface{}
-		wantRespHash string
+		name       string
+		fields     fields
+		args       args
+		wantErr    bool
+		wantStatus interface{}
+		want       string
 	}{
 		{
 			name: "GET /index.html",
 			fields: fields{
 				rules: []mock.TargetRule{
-					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, filepath.Join("testdata", "default.html")),
+					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, "default.html"),
 				},
 				emitterSetup: defaultEmitter,
+				fakeFileFS: fstest.MapFS{
+					"default.html": &fstest.MapFile{
+						Data:    []byte(defaultHTMLContent),
+						ModTime: time.Now().Add(-1337 * time.Second),
+					},
+				},
 			},
 			args: args{
 				req: &http.Request{
@@ -54,16 +75,22 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 					Method: http.MethodGet,
 				},
 			},
-			wantRespHash: "c2a3f8995831dd1e79cb753619a55752692168f6cf846b07405f2070492f481c",
-			wantStatus:   td.Between(200, 299),
+			want:       defaultHTMLContent,
+			wantStatus: td.Between(200, 299),
 		},
 		{
 			name: "GET /profile.htm",
 			fields: fields{
 				rules: []mock.TargetRule{
-					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, filepath.Join("testdata", "default.html")),
+					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, "default.html"),
 				},
 				emitterSetup: defaultEmitter,
+				fakeFileFS: fstest.MapFS{
+					"default.html": &fstest.MapFile{
+						Data:    []byte(defaultHTMLContent),
+						ModTime: time.Now().Add(-1337 * time.Second),
+					},
+				},
 			},
 			args: args{
 				req: &http.Request{
@@ -71,17 +98,23 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 					Method: http.MethodGet,
 				},
 			},
-			wantRespHash: "c2a3f8995831dd1e79cb753619a55752692168f6cf846b07405f2070492f481c",
-			wantStatus:   td.Between(200, 299),
+			want:       defaultHTMLContent,
+			wantStatus: td.Between(200, 299),
 		},
 		{
 			name: "GET with Accept: text/html",
 			fields: fields{
 				rules: []mock.TargetRule{
-					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, filepath.Join("testdata", "default.html")),
-					mock.MustHeaderTargetRule("Accept", "(?i)text/html", filepath.Join("testdata", "default.html")),
+					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, "default.html"),
+					mock.MustHeaderTargetRule("Accept", "(?i)text/html", "default.html"),
 				},
 				emitterSetup: defaultEmitter,
+				fakeFileFS: fstest.MapFS{
+					"default.html": &fstest.MapFile{
+						Data:    []byte(defaultHTMLContent),
+						ModTime: time.Now().Add(-1337 * time.Second),
+					},
+				},
 			},
 			args: args{
 				req: &http.Request{
@@ -92,8 +125,8 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 					Method: http.MethodGet,
 				},
 			},
-			wantRespHash: "c2a3f8995831dd1e79cb753619a55752692168f6cf846b07405f2070492f481c",
-			wantStatus:   td.Between(200, 299),
+			want:       defaultHTMLContent,
+			wantStatus: td.Between(200, 299),
 		},
 	}
 	for _, tc := range tests {
@@ -102,7 +135,7 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 			t.Parallel()
 			logger := logging.CreateTestLogger(t)
 			ctrl := gomock.NewController(t)
-			h := mock.NewRegexHandler(t.Name(), logger, tt.fields.emitterSetup(t, ctrl))
+			h := mock.NewRegexHandler(t.Name(), logger, tt.fields.emitterSetup(t, ctrl), tt.fields.fakeFileFS)
 
 			for _, rule := range tt.fields.rules {
 				h.AddRouteRule(rule)
@@ -121,11 +154,10 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 
 			td.Cmp(t, resp.StatusCode, tt.wantStatus)
 
-			sha256Hash := sha256.New()
-			_, err = io.Copy(sha256Hash, resp.Body)
+			builder := new(strings.Builder)
+			_, err = io.Copy(builder, resp.Body)
 			td.CmpNoError(t, err)
-			computedHash := hex.EncodeToString(sha256Hash.Sum(nil))
-			td.Cmp(t, computedHash, tt.wantRespHash)
+			td.Cmp(t, builder.String(), tt.want)
 		})
 	}
 }

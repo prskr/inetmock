@@ -1,10 +1,17 @@
 package main
 
 import (
+	"io/fs"
+	"os"
+
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	dnsmock "gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	audit2 "gitlab.com/inetmock/inetmock/internal/pcap/consumers/audit"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
@@ -39,12 +46,7 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	for _, registration := range registrations {
-		if err = registration(registry); err != nil {
-			appLogger.Error("Failed to run registration", zap.Error(err))
-			return err
-		}
-	}
+	fakeFileFS := os.DirFS(cfg.Data.FakeFiles)
 
 	var certStore cert.Store
 	if certStore, err = cert.NewDefaultStore(cfg.TLS, appLogger.Named("CertStore")); err != nil {
@@ -57,8 +59,12 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if err = setupEndpointHandlers(registry, appLogger, eventStream, certStore, fakeFileFS); err != nil {
+		appLogger.Error("Failed to run registration", zap.Error(err))
+		return err
+	}
+
 	var endpointOrchestrator = endpoint.NewOrchestrator(
-		serverApp.Context(),
 		certStore,
 		registry,
 		eventStream,
@@ -86,7 +92,7 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	errChan := endpointOrchestrator.StartEndpoints()
+	errChan := endpointOrchestrator.StartEndpoints(serverApp.Context())
 	if err := rpcAPI.StartServer(); err != nil {
 		serverApp.Shutdown()
 		appLogger.Error(
@@ -146,6 +152,22 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 	}
 
 	return evenStream, nil
+}
+
+func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS) (err error) {
+	if err = mock.AddHTTPMock(registry, logger, emitter, fakeFileFS); err != nil {
+		return
+	}
+	if err = proxy.AddHTTPProxy(registry, logger, emitter, store); err != nil {
+		return
+	}
+	if err = dnsmock.AddDNSMock(registry, logger, emitter); err != nil {
+		return
+	}
+	if err = metrics.AddMetricsExporter(registry, logger); err != nil {
+		return
+	}
+	return nil
 }
 
 //nolint:deadcode

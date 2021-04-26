@@ -6,6 +6,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 )
 
@@ -21,7 +23,7 @@ var (
 	initLock                    sync.Locker = new(sync.Mutex)
 )
 
-func AddDNSMock(registry endpoint.HandlerRegistry) error {
+func AddDNSMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter) error {
 	initLock.Lock()
 	defer initLock.Unlock()
 
@@ -61,7 +63,10 @@ func AddDNSMock(registry endpoint.HandlerRegistry) error {
 	}
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
-		return &dnsHandler{}
+		return &dnsHandler{
+			logger:  logger,
+			emitter: emitter,
+		}
 	})
 
 	return nil

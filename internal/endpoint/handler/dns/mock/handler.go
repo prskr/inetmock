@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -15,17 +16,18 @@ const shutdownTimeout = 100 * time.Millisecond
 
 type dnsHandler struct {
 	logger    logging.Logger
+	emitter   audit.Emitter
 	dnsServer *dns.Server
 }
 
-func (d *dnsHandler) Start(lifecycle endpoint.Lifecycle) error {
+func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
 	var err error
 	var options dnsOptions
 	if options, err = loadFromConfig(lifecycle); err != nil {
 		return err
 	}
 
-	d.logger = lifecycle.Logger().With(
+	d.logger = d.logger.With(
 		zap.String("handler_name", lifecycle.Name()),
 		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
@@ -33,8 +35,8 @@ func (d *dnsHandler) Start(lifecycle endpoint.Lifecycle) error {
 	handler := &regexHandler{
 		handlerName:  lifecycle.Name(),
 		fallback:     options.Fallback,
-		logger:       lifecycle.Logger(),
-		auditEmitter: lifecycle.Audit(),
+		logger:       d.logger,
+		auditEmitter: d.emitter,
 	}
 
 	for _, rule := range options.Rules {
@@ -59,6 +61,7 @@ func (d *dnsHandler) Start(lifecycle endpoint.Lifecycle) error {
 	}
 
 	go d.startServer()
+	go d.shutdownOnEnd(ctx)
 	return nil
 }
 

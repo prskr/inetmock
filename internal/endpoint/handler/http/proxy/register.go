@@ -6,6 +6,8 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 )
@@ -15,11 +17,7 @@ var (
 	requestDurationHistogram *prometheus.HistogramVec
 )
 
-func AddHTTPProxy(registry endpoint.HandlerRegistry) (err error) {
-	var logger logging.Logger
-	if logger, err = logging.CreateLogger(); err != nil {
-		return
-	}
+func AddHTTPProxy(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store) (err error) {
 	logger = logger.With(
 		zap.String("protocol_handler", name),
 	)
@@ -30,8 +28,10 @@ func AddHTTPProxy(registry endpoint.HandlerRegistry) (err error) {
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return &httpProxy{
-			logger: logger,
-			proxy:  goproxy.NewProxyHttpServer(),
+			logger:    logger,
+			emitter:   emitter,
+			certStore: store,
+			proxy:     goproxy.NewProxyHttpServer(),
 		}
 	})
 

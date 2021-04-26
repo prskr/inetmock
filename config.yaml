@@ -1,45 +1,19 @@
 x-response-rules: &httpResponseRules
   rules:
-    - pattern: ".*\\.(?i)exe"
-      matcher: Path
-    - pattern: "^application/octet-stream$"
-      target: Accept
-      matcher: Header
-      response: ./assets/fakeFiles/sample.exe
-    - pattern: "^image/jpeg$"
-      target: Accept
-      matcher: Header
-      response: ./assets/fakeFiles/default.jpg
-    - pattern: ".*\\.(?i)(jpg|jpeg)"
-      matcher: Path
-      response: ./assets/fakeFiles/default.jpg
-    - pattern: "^image/png$"
-      target: Accept
-      matcher: Header
-      response: ./assets/fakeFiles/default.png
-    - pattern: ".*\\.(?i)png"
-      matcher: Path
-      response: ./assets/fakeFiles/default.png
-    - pattern: ".*\\.(?i)gif"
-      matcher: Path
-      response: ./assets/fakeFiles/default.gif
-    - pattern: ".*\\.(?i)ico"
-      matcher: Path
-      response: ./assets/fakeFiles/default.ico
-    - pattern: "^text/plain$"
-      target: Accept
-      matcher: Header
-      response: ./assets/fakeFiles/default.txt
-    - pattern: ".*\\.(?i)txt"
-      matcher: Path
-      response: ./assets/fakeFiles/default.txt
-    - pattern: "^text/html$"
-      target: Accept
-      matcher: Header
-      response: ./assets/fakeFiles/default.html
-    - pattern: ".*"
-      matcher: Path
-      response: ./assets/fakeFiles/default.html
+    - PathPattern("") => File("sample.exe")
+    - Header("Accept", "application/octet-stream") => File("sample.exe")
+    - Header("Accept", "image/jpeg") => File("default.jpg")
+    - PathPattern(".*\\.(?i)(jpg|jpeg)") => File("default.jpg")
+    - Header("Accept", "image/png") => File("default.png")
+    - PathPattern(".*\\.(?i)png") => File("default.png")
+    - Header("Accept", "image/gif") => File("default.gif")
+    - PathPattern(".*\\.(?i)gif") => File("default.gif")
+    - Header("Accept", "image/x-icon") => File("default.ico")
+    - PathPattern(".*\\.(?i)ico") => File("default.ico")
+    - Header("Accept", "text/plain") => File("default.txt")
+    - PathPattern(".*\\.(?i)txt") => File("default.txt")
+    - Header("Accept", "text/html") => File("default.html")
+    - PathPattern(".*") => File("default.html")
 
 x-http-handlers: &httpHandlers
   endpoints:
@@ -57,6 +31,7 @@ x-http-handlers: &httpHandlers
 data:
   pcap: /var/lib/inetmock/data/pcap
   audit: /var/lib/inetmock/data/audit
+  fakeFiles: ./assets/fakeFiles
 
 api:
   listen: unix:///var/run/inetmock.sock

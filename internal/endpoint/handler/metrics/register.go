@@ -7,11 +7,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-func AddMetricsExporter(registry endpoint.HandlerRegistry) (err error) {
-	var logger logging.Logger
-	if logger, err = logging.CreateLogger(); err != nil {
-		return
-	}
+func AddMetricsExporter(registry endpoint.HandlerRegistry, logger logging.Logger) (err error) {
 	logger = logger.With(
 		zap.String("protocol_handler", name),
 	)

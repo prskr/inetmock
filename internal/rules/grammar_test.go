@@ -22,11 +22,11 @@ func TestParse(t *testing.T) {
 		{
 			name: "Terminator only - string argument",
 			args: args{
-				rule: `=> ReturnFile("default.html")`,
+				rule: `=> File("default.html")`,
 			},
 			want: &Routing{
 				Terminator: &Method{
-					Name: "ReturnFile",
+					Name: "File",
 					Params: []Param{
 						{
 							String: stringRef("default.html"),
@@ -73,7 +73,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "path pattern and terminator",
 			args: args{
-				rule: `PathPattern("/index.html") => ReturnFile("default.html")`,
+				rule: `PathPattern(".*\\.(?i)png") => ReturnFile("default.html")`,
 			},
 			want: &Routing{
 				Terminator: &Method{
@@ -90,7 +90,7 @@ func TestParse(t *testing.T) {
 							Name: "PathPattern",
 							Params: []Param{
 								{
-									String: stringRef("/index.html"),
+									String: stringRef(`.*\.(?i)png`),
 								},
 							},
 						},

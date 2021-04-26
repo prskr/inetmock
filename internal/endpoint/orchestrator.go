@@ -18,18 +18,16 @@ var (
 
 type Orchestrator interface {
 	RegisterListener(spec ListenerSpec) error
-	StartEndpoints() (errChan chan error)
+	StartEndpoints(ctx context.Context) (errChan chan error)
 }
 
 func NewOrchestrator(
-	appCtx context.Context,
 	certStore cert.Store,
 	registry HandlerRegistry,
 	emitter audit.Emitter,
 	logger logging.Logger,
 ) Orchestrator {
 	return &orchestrator{
-		appCtx:    appCtx,
 		registry:  registry,
 		logger:    logger,
 		certStore: certStore,
@@ -38,7 +36,6 @@ func NewOrchestrator(
 }
 
 type orchestrator struct {
-	appCtx    context.Context
 	registry  HandlerRegistry
 	logger    logging.Logger
 	certStore cert.Store
@@ -68,24 +65,20 @@ func (e *orchestrator) RegisterListener(spec ListenerSpec) (err error) {
 	return
 }
 
-func (e *orchestrator) StartEndpoints() chan error {
+func (e *orchestrator) StartEndpoints(ctx context.Context) chan error {
 	var errChan = make(chan error)
 	for _, epListener := range e.endpointListeners {
 		endpointLogger := e.logger.With(
 			zap.String("epListener", epListener.name),
 		)
 		endpointLogger.Info("Starting epListener")
-		lifecycle := NewEndpointLifecycleFromContext(
+		lifecycle := NewEndpointLifecycle(
 			epListener.name,
-			e.appCtx,
-			e.logger.With(zap.String("epListener", epListener.name)),
-			e.certStore,
-			e.emitter,
 			epListener.uplink,
 			epListener.Options,
 		)
 
-		if err := epListener.Start(lifecycle); err == nil {
+		if err := epListener.Start(ctx, e.logger.With(zap.String("epListener", epListener.name)), lifecycle); err == nil {
 			endpointLogger.Info("successfully started epListener")
 		} else {
 			endpointLogger.Error("error occurred during epListener startup - will be skipped for now")

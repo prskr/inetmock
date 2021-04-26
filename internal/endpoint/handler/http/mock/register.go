@@ -1,11 +1,14 @@
 package mock
 
 import (
+	"io/fs"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 )
 
@@ -46,13 +49,16 @@ func InitMetrics() error {
 	return nil
 }
 
-func AddHTTPMock(registry endpoint.HandlerRegistry) (err error) {
+func AddHTTPMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) (err error) {
 	if err := InitMetrics(); err != nil {
 		return err
 	}
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
-		return &httpHandler{}
+		return &httpHandler{
+			emitter: emitter,
+			logger:  logger,
+		}
 	})
 
 	return

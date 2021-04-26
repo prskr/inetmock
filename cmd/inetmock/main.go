@@ -10,27 +10,18 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/app"
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	dns "gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
-	http "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 )
 
 var (
-	serverApp     app.App
-	cfg           appConfig
-	registrations = []endpoint.Registration{
-		http.AddHTTPMock,
-		dns.AddDNSMock,
-		proxy.AddHTTPProxy,
-		metrics.AddMetricsExporter,
-	}
+	serverApp app.App
+	cfg       appConfig
 )
 
 type Data struct {
-	PCAP  string
-	Audit string
+	PCAP      string
+	Audit     string
+	FakeFiles string
 }
 
 func (d *Data) setup() (err error) {

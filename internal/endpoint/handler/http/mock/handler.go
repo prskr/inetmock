@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"net"
 	"net/http"
 
@@ -11,6 +12,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
+	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -21,16 +23,18 @@ const (
 )
 
 type httpHandler struct {
-	logger logging.Logger
-	server *http.Server
+	logger     logging.Logger
+	fakeFileFS fs.FS
+	server     *http.Server
+	emitter    audit.Emitter
 }
 
 func (p *httpHandler) Matchers() []cmux.Matcher {
 	return []cmux.Matcher{cmux.HTTP1()}
 }
 
-func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) error {
-	p.logger = lifecycle.Logger().With(
+func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+	p.logger = p.logger.With(
 		zap.String("protocol_handler", name),
 	)
 
@@ -45,9 +49,10 @@ func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) error {
 	)
 
 	router := &RegexHandler{
-		logger:      p.logger,
-		emitter:     lifecycle.Audit(),
 		handlerName: lifecycle.Name(),
+		logger:      p.logger,
+		emitter:     p.emitter,
+		fakeFileFS:  p.fakeFileFS,
 	}
 	p.server = &http.Server{
 		Handler:     router,
@@ -59,7 +64,7 @@ func (p *httpHandler) Start(lifecycle endpoint.Lifecycle) error {
 	}
 
 	go p.startServer(lifecycle.Uplink().Listener)
-	go p.shutdownOnCancel(lifecycle.Context())
+	go p.shutdownOnCancel(ctx)
 	return nil
 }
 

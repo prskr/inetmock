@@ -6,24 +6,16 @@ import (
 	"context"
 
 	"github.com/soheilhy/cmux"
-
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/cert"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 type Lifecycle interface {
 	Name() string
-	Logger() logging.Logger
-	CertStore() cert.Store
-	Audit() audit.Emitter
-	Context() context.Context
 	Uplink() Uplink
 	UnmarshalOptions(cfg interface{}) error
 }
 
 type ProtocolHandler interface {
-	Start(ctx Lifecycle) error
+	Start(ctx context.Context, lifecycle Lifecycle) error
 }
 
 type MultiplexHandler interface {
