@@ -38,6 +38,7 @@ type Method struct {
 }
 
 type Param struct {
-	String *string `parser:"@String|RawString"`
-	Int    *int    `parser:"| @Int"`
+	String *string  `parser:"@String|RawString"`
+	Int    *int     `parser:"| @Int"`
+	Float  *float64 `parser:"| @Float"`
 }

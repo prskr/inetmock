@@ -7,13 +7,9 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 )
 
-var (
-	defaultHtml = "default.html"
-	defaultPath = "/index.html"
-	methodGet   = http.MethodGet
-)
-
+//nolint:funlen
 func TestParse(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		rule string
 	}
@@ -24,7 +20,7 @@ func TestParse(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Terminator only",
+			name: "Terminator only - string argument",
 			args: args{
 				rule: `=> ReturnFile("default.html")`,
 			},
@@ -33,7 +29,41 @@ func TestParse(t *testing.T) {
 					Name: "ReturnFile",
 					Params: []Param{
 						{
-							String: &defaultHtml,
+							String: stringRef("default.html"),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Terminator only - int argument",
+			args: args{
+				rule: `=> ReturnInt(1)`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Name: "ReturnInt",
+					Params: []Param{
+						{
+							Int: intRef(1),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Terminator only - float argument",
+			args: args{
+				rule: `=> ReturnFloat(13.37)`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Name: "ReturnFloat",
+					Params: []Param{
+						{
+							Float: floatRef(13.37),
 						},
 					},
 				},
@@ -50,7 +80,7 @@ func TestParse(t *testing.T) {
 					Name: "ReturnFile",
 					Params: []Param{
 						{
-							String: &defaultHtml,
+							String: stringRef("default.html"),
 						},
 					},
 				},
@@ -60,7 +90,7 @@ func TestParse(t *testing.T) {
 							Name: "PathPattern",
 							Params: []Param{
 								{
-									String: &defaultPath,
+									String: stringRef("/index.html"),
 								},
 							},
 						},
@@ -79,7 +109,7 @@ func TestParse(t *testing.T) {
 					Name: "ReturnFile",
 					Params: []Param{
 						{
-							String: &defaultHtml,
+							String: stringRef("default.html"),
 						},
 					},
 				},
@@ -89,7 +119,7 @@ func TestParse(t *testing.T) {
 							Name: "HTTPMethod",
 							Params: []Param{
 								{
-									String: &methodGet,
+									String: stringRef(http.MethodGet),
 								},
 							},
 						},
@@ -97,7 +127,7 @@ func TestParse(t *testing.T) {
 							Name: "PathPattern",
 							Params: []Param{
 								{
-									String: &defaultPath,
+									String: stringRef("/index.html"),
 								},
 							},
 						},
@@ -107,8 +137,10 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
+	for _, tc := range tests {
+		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := Parse(tt.args.rule)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
@@ -117,4 +149,16 @@ func TestParse(t *testing.T) {
 			td.Cmp(t, got, tt.want)
 		})
 	}
+}
+
+func stringRef(s string) *string {
+	return &s
+}
+
+func intRef(i int) *int {
+	return &i
+}
+
+func floatRef(f float64) *float64 {
+	return &f
 }
