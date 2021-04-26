@@ -22,6 +22,7 @@ variables:
 
 test:
   stage: test
+  needs: []
   script:
     - task cli-cover-report
   artifacts:
@@ -33,6 +34,7 @@ integration-test:
   stage: test
   services:
     - docker:dind
+  needs: []
   script:
     - task integration-test
 
@@ -45,6 +47,9 @@ snapshot-release:
   stage: build
   services:
     - docker:dind
+  needs:
+    - test
+    - integration-test
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
@@ -56,6 +61,9 @@ release:
   stage: release
   services:
     - docker:dind
+  needs:
+    - test
+    - integration-test
   only:
     - tags
   variables:
@@ -67,6 +75,7 @@ release:
 pages:
   stage: deploy
   image: registry.gitlab.com/inetmock/ci-image/mdbook
+  needs: []
   only:
     refs:
       - master
