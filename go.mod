@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
+	github.com/alecthomas/participle/v2 v2.0.0-alpha5 // indirect
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/containerd/cgroups v1.0.1 // indirect
 	github.com/containerd/containerd v1.5.0-rc.2 // indirect
