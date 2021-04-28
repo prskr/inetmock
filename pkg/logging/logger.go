@@ -1,7 +1,9 @@
 //go:generate mockgen -source=$GOFILE -destination=./../../internal/mock/logging/logger.mock.go -package=logging_mock
 package logging
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+)
 
 type Logger interface {
 	Named(s string) Logger
