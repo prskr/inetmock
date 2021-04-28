@@ -35,6 +35,7 @@ message StartPCAPFileRecordingRequest {
 
 message StartPCAPFileRecordingResponse {
   string resolved_path = 1;
+  string consumer_key = 2;
 }
 
 message StopPCAPFileRecordingRequest {

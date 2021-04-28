@@ -32,11 +32,20 @@ type RecordingOptions struct {
 	ReadTimeout time.Duration
 }
 
+type StartRecordingResult struct {
+	ConsumerKey string
+}
+
 type Recorder interface {
 	io.Closer
 	AvailableDevices() (devices []Device, err error)
 	Subscriptions() (subscriptions []Subscription)
-	StartRecording(ctx context.Context, device string, consumer Consumer) (err error)
-	StartRecordingWithOptions(ctx context.Context, device string, consumer Consumer, opts RecordingOptions) (err error)
+	StartRecording(ctx context.Context, device string, consumer Consumer) (result *StartRecordingResult, err error)
+	StartRecordingWithOptions(
+		ctx context.Context,
+		device string,
+		consumer Consumer,
+		opts RecordingOptions,
+	) (result *StartRecordingResult, err error)
 	StopRecording(consumerKey string) (err error)
 }

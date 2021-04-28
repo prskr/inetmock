@@ -154,5 +154,6 @@ func startAuditConsumer(eventStream audit.EventStream) error {
 
 	auditConsumer := audit2.NewAuditConsumer("audit", eventStream)
 
-	return recorder.StartRecording(serverApp.Context(), "lo", auditConsumer)
+	_, err := recorder.StartRecording(serverApp.Context(), "lo", auditConsumer)
+	return err
 }

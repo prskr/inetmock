@@ -41,7 +41,7 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
 				t.Helper()
 				recorder = pcap.NewRecorder()
-				err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test"))
+				_, err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test"))
 				return
 			},
 			wantSubscriptions: []string{"lo:test"},
@@ -143,6 +143,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 	type testCase struct {
 		name              string
 		req               *rpcV1.StartPCAPFileRecordingRequest
+		wantResp          interface{}
 		wantSubscriptions []pcap.Subscription
 		wantErr           bool
 	}
@@ -153,6 +154,9 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 				Device:     "lo",
 				TargetPath: "test.pcap",
 			},
+			wantResp: td.Struct(new(rpcV1.StartPCAPFileRecordingResponse), td.StructFields{
+				"ConsumerKey": "lo:test.pcap",
+			}),
 			wantSubscriptions: []pcap.Subscription{
 				{
 					ConsumerKey:  "lo:test.pcap",
@@ -167,6 +171,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 				Device:     uuid.NewString(),
 				TargetPath: "test.pcap",
 			},
+			wantResp:          td.Nil(),
 			wantSubscriptions: nil,
 			wantErr:           true,
 		},
@@ -186,9 +191,11 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 
 			pcapClient := setupTestPCAPServer(t, recorder)
 
-			if _, err := pcapClient.StartPCAPFileRecording(context.Background(), tt.req); (err != nil) != tt.wantErr {
+			if resp, err := pcapClient.StartPCAPFileRecording(context.Background(), tt.req); (err != nil) != tt.wantErr {
 				t.Errorf("StartPCAPFileRecording() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			} else {
+				td.Cmp(t, resp, tt.wantResp)
 			}
 
 			currentSubs := recorder.Subscriptions()
@@ -224,7 +231,7 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
 				t.Helper()
 				recorder = pcap.NewRecorder()
-				err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test.pcap"))
+				_, err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test.pcap"))
 				return
 			},
 			removedRecording: true,

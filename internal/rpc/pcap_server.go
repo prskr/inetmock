@@ -94,7 +94,8 @@ func (p *pcapServer) StartPCAPFileRecording(
 		ReadTimeout: readTimeout,
 	}
 
-	if err = p.recorder.StartRecordingWithOptions(context.Background(), req.Device, consumer, opts); err != nil {
+	var result *pcap.StartRecordingResult
+	if result, err = p.recorder.StartRecordingWithOptions(context.Background(), req.Device, consumer, opts); err != nil {
 		if errors.Is(err, pcap.ErrConsumerAlreadyRegistered) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
@@ -103,6 +104,7 @@ func (p *pcapServer) StartPCAPFileRecording(
 
 	return &v1.StartPCAPFileRecordingResponse{
 		ResolvedPath: targetPath,
+		ConsumerKey:  result.ConsumerKey,
 	}, nil
 }
 

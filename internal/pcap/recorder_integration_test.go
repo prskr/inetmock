@@ -11,6 +11,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
+	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
@@ -33,11 +34,14 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 
 	recordCtx, recordCancel := context.WithCancel(context.Background())
 	defer recordCancel()
-	if err = recorder.StartRecording(recordCtx, "lo", inMemConsumer); err != nil {
+	var result *pcap.StartRecordingResult
+	if result, err = recorder.StartRecording(recordCtx, "lo", inMemConsumer); err != nil {
 		t.Errorf("StartRecording() error = %v", err)
 		recordCancel()
 		return
 	}
+
+	td.Cmp(t, result, &pcap.StartRecordingResult{ConsumerKey: "lo:InMem"})
 
 	simulateCtx, simulateCancel := context.WithTimeout(context.Background(), simulateTimeout)
 	defer simulateCancel()

@@ -79,29 +79,36 @@ func (recorder) AvailableDevices() (devices []Device, err error) {
 	return
 }
 
-func (r recorder) StartRecordingWithOptions(ctx context.Context, device string, consumer Consumer, opts RecordingOptions) (err error) {
+func (r recorder) StartRecordingWithOptions(
+	ctx context.Context,
+	device string,
+	consumer Consumer,
+	opts RecordingOptions,
+) (result *StartRecordingResult, err error) {
 	r.locker.Lock()
 	defer r.locker.Unlock()
 
-	consumerKey := fmt.Sprintf("%s:%s", device, consumer.Name())
+	result = &StartRecordingResult{
+		ConsumerKey: fmt.Sprintf("%s:%s", device, consumer.Name()),
+	}
+
 	var openDev deviceConsumer
 	var alreadyOpened bool
-	if openDev, alreadyOpened = r.openDevices[consumerKey]; alreadyOpened {
-		err = ErrConsumerAlreadyRegistered
-		return
+	if openDev, alreadyOpened = r.openDevices[result.ConsumerKey]; alreadyOpened {
+		return nil, ErrConsumerAlreadyRegistered
 	}
 
 	if openDev, err = openDeviceForConsumers(ctx, device, consumer, opts); err != nil {
-		return
+		return nil, err
 	}
 	openDev.StartTransport()
-	r.openDevices[consumerKey] = openDev
-	go r.removeConsumerOnContextEnd(ctx, consumerKey)
+	r.openDevices[result.ConsumerKey] = openDev
+	go r.removeConsumerOnContextEnd(ctx, result.ConsumerKey)
 
-	return
+	return result, nil
 }
 
-func (r *recorder) StartRecording(ctx context.Context, device string, consumer Consumer) (err error) {
+func (r *recorder) StartRecording(ctx context.Context, device string, consumer Consumer) (result *StartRecordingResult, err error) {
 	return r.StartRecordingWithOptions(ctx, device, consumer, DefaultRecordingOptions)
 }
 
