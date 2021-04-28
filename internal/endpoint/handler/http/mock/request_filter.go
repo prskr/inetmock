@@ -117,7 +117,7 @@ func HeaderValueMatcher(args ...rules.Param) (RequestFilter, error) {
 
 func validateParameterCount(params []rules.Param, expected int) error {
 	if len(params) != expected {
-		return fmt.Errorf("%w: expected %d2 got %d", ErrAmbiguousParamCount, expected, len(params))
+		return fmt.Errorf("%w: expected %d got %d", ErrAmbiguousParamCount, expected, len(params))
 	}
 	return nil
 }
