@@ -48,19 +48,23 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
-	router := &RegexHandler{
-		handlerName: lifecycle.Name(),
-		logger:      p.logger,
-		emitter:     p.emitter,
-		fakeFileFS:  p.fakeFileFS,
+	router := &Router{
+		HandlerName: lifecycle.Name(),
+		Logger:      p.logger,
+		Emitter:     p.emitter,
+		FakeFileFS:  p.fakeFileFS,
 	}
+
 	p.server = &http.Server{
 		Handler:     router,
 		ConnContext: imHttp.StoreConnPropertiesInContext,
 	}
 
-	for _, rule := range options.Rules {
-		router.AddRouteRule(rule)
+	for idx := range options.Rules {
+		if err = router.RegisterRule(options.Rules[idx]); err != nil {
+			p.logger.Error("failed to setup rule", zap.String("rawRule", options.Rules[idx]), zap.Error(err))
+			return err
+		}
 	}
 
 	go p.startServer(lifecycle.Uplink().Listener)

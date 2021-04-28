@@ -2,15 +2,10 @@ package endpoint
 
 import (
 	"context"
-	"time"
 
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-)
-
-const (
-	startupTimeoutDuration = 100 * time.Millisecond
 )
 
 type Endpoint struct {
@@ -21,9 +16,6 @@ type Endpoint struct {
 
 func (e *Endpoint) Start(ctx context.Context, logger logging.Logger, lifecycle Lifecycle) (err error) {
 	startupResult := make(chan error)
-	ctx, cancel := context.WithTimeout(ctx, startupTimeoutDuration)
-	defer cancel()
-
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {

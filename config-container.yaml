@@ -1,45 +1,20 @@
 x-response-rules: &httpResponseRules
   rules:
-    - pattern: ".*\\.(?i)exe"
-      matcher: Path
-    - pattern: "^application/octet-stream$"
-      target: Accept
-      matcher: Header
-      response: /var/lib/inetmock/fakeFiles/sample.exe
-    - pattern: "^image/jpeg$"
-      target: Accept
-      matcher: Header
-      response: /var/lib/inetmock/fakeFiles/default.jpg
-    - pattern: ".*\\.(?i)(jpg|jpeg)"
-      matcher: Path
-      response: /var/lib/inetmock/fakeFiles/default.jpg
-    - pattern: "^image/png$"
-      target: Accept
-      matcher: Header
-      response: /var/lib/inetmock/fakeFiles/default.png
-    - pattern: ".*\\.(?i)png"
-      matcher: Path
-      response: /var/lib/inetmock/fakeFiles/default.png
-    - pattern: ".*\\.(?i)gif"
-      matcher: Path
-      response: /var/lib/inetmock/fakeFiles/default.gif
-    - pattern: ".*\\.(?i)ico"
-      matcher: Path
-      response: /var/lib/inetmock/fakeFiles/default.ico
-    - pattern: "^text/plain$"
-      target: Accept
-      matcher: Header
-      response: /var/lib/inetmock/fakeFiles/default.txt
-    - pattern: ".*\\.(?i)txt"
-      matcher: Path
-      response: /var/lib/inetmock/fakeFiles/default.txt
-    - pattern: "^text/html$"
-      target: Accept
-      matcher: Header
-      response: /var/lib/inetmock/fakeFiles/default.html
-    - pattern: ".*"
-      matcher: Path
-      response: /var/lib/inetmock/fakeFiles/default.html
+    - Method("GET") -> Header("Accept", "application/octet-stream") => File("sample.exe")
+    - Method("GET") -> Header("Accept", "image/jpeg") => File("default.jpg")
+    - Method("GET") -> PathPattern(".*\\.(?i)(jpg|jpeg)$") => File("default.jpg")
+    - Method("GET") -> Header("Accept", "image/png") => File("default.png")
+    - Method("GET") -> PathPattern(".*\\.(?i)png$") => File("default.png")
+    - Method("GET") -> Header("Accept", "image/gif") => File("default.gif")
+    - Method("GET") -> PathPattern(".*\\.(?i)gif$") => File("default.gif")
+    - Method("GET") -> Header("Accept", "image/x-icon") => File("default.ico")
+    - Method("GET") -> PathPattern(".*\\.(?i)ico$") => File("default.ico")
+    - Method("GET") -> Header("Accept", "text/plain") => File("default.txt")
+    - Method("GET") -> PathPattern(".*\\.(?i)txt$") => File("default.txt")
+    - Method("GET") -> Header("Accept", "text/html") => File("default.html")
+    - Method("GET") -> PathPattern(".*\\.(?i)htm(l)?$") => File("default.html")
+    - Method("GET") => File("default.html")
+    - => Status(204)
 
 x-http-handlers: &httpHandlers
   endpoints:
@@ -57,6 +32,7 @@ x-http-handlers: &httpHandlers
 data:
   pcap: /var/lib/inetmock/data/pcap
   audit: /var/lib/inetmock/data/audit
+  fakeFiles: /var/lib/inetmock/fakeFiles
 
 api:
   listen: unix:///var/run/inetmock/inetmock.sock

@@ -1,11 +1,15 @@
 package rules
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/alecthomas/participle/v2"
 )
 
 var (
-	parser *participle.Parser
+	ErrTypeMismatch = errors.New("param has a different type")
+	parser          *participle.Parser
 )
 
 func init() {
@@ -41,4 +45,25 @@ type Param struct {
 	String *string  `parser:"@String|RawString"`
 	Int    *int     `parser:"| @Int"`
 	Float  *float64 `parser:"| @Float"`
+}
+
+func (p Param) AsString() (string, error) {
+	if p.String == nil {
+		return "", fmt.Errorf("string is nil %w", ErrTypeMismatch)
+	}
+	return *p.String, nil
+}
+
+func (p Param) AsInt() (int, error) {
+	if p.Int == nil {
+		return 0, fmt.Errorf("int is nil %w", ErrTypeMismatch)
+	}
+	return *p.Int, nil
+}
+
+func (p Param) AsFloat() (float64, error) {
+	if p.Int == nil {
+		return 0, fmt.Errorf("float is nil %w", ErrTypeMismatch)
+	}
+	return *p.Float, nil
 }

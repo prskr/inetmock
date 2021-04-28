@@ -154,6 +154,7 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 	return evenStream, nil
 }
 
+//nolint:lll
 func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS) (err error) {
 	if err = mock.AddHTTPMock(registry, logger, emitter, fakeFileFS); err != nil {
 		return

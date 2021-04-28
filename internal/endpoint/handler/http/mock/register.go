@@ -56,8 +56,9 @@ func AddHTTPMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitt
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return &httpHandler{
-			emitter: emitter,
-			logger:  logger,
+			emitter:    emitter,
+			logger:     logger,
+			fakeFileFS: fakeFileFS,
 		}
 	})
 

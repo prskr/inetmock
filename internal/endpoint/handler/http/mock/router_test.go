@@ -34,13 +34,13 @@ var (
 )
 
 //nolint:funlen
-func TestRegexpHandler_ServeHTTP(t *testing.T) {
+func TestRouter_ServeHTTP(t *testing.T) {
 	t.Parallel()
 	if err := mock.InitMetrics(); !td.CmpNoError(t, err) {
 		return
 	}
 	type fields struct {
-		rules        []mock.TargetRule
+		rules        []string
 		emitterSetup func(tb testing.TB, ctrl *gomock.Controller) audit.Emitter
 		fakeFileFS   fs.FS
 	}
@@ -58,8 +58,8 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "GET /index.html",
 			fields: fields{
-				rules: []mock.TargetRule{
-					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, "default.html"),
+				rules: []string{
+					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 				},
 				emitterSetup: defaultEmitter,
 				fakeFileFS: fstest.MapFS{
@@ -81,8 +81,8 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "GET /profile.htm",
 			fields: fields{
-				rules: []mock.TargetRule{
-					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, "default.html"),
+				rules: []string{
+					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 				},
 				emitterSetup: defaultEmitter,
 				fakeFileFS: fstest.MapFS{
@@ -104,9 +104,9 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "GET with Accept: text/html",
 			fields: fields{
-				rules: []mock.TargetRule{
-					mock.MustPathTargetRule(`\.(?i)(htm|html)$`, "default.html"),
-					mock.MustHeaderTargetRule("Accept", "(?i)text/html", "default.html"),
+				rules: []string{
+					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
+					`Header("Accept", "text/html") => File("default.html")`,
 				},
 				emitterSetup: defaultEmitter,
 				fakeFileFS: fstest.MapFS{
@@ -135,13 +135,21 @@ func TestRegexpHandler_ServeHTTP(t *testing.T) {
 			t.Parallel()
 			logger := logging.CreateTestLogger(t)
 			ctrl := gomock.NewController(t)
-			h := mock.NewRegexHandler(t.Name(), logger, tt.fields.emitterSetup(t, ctrl), tt.fields.fakeFileFS)
 
-			for _, rule := range tt.fields.rules {
-				h.AddRouteRule(rule)
+			router := &mock.Router{
+				HandlerName: t.Name(),
+				Logger:      logger,
+				Emitter:     tt.fields.emitterSetup(t, ctrl),
+				FakeFileFS:  tt.fields.fakeFileFS,
 			}
 
-			client := setupHTTPServer(t, h)
+			for _, rule := range tt.fields.rules {
+				if err := router.RegisterRule(rule); !td.CmpNoError(t, err) {
+					return
+				}
+			}
+
+			client := setupHTTPServer(t, router)
 
 			resp, err := client.Do(tt.args.req)
 			if tt.wantErr == td.CmpNoError(t, err) {

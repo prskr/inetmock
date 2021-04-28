@@ -32,6 +32,10 @@ func (d *Data) setup() (err error) {
 		return
 	}
 
+	if !filepath.IsAbs(d.FakeFiles) {
+		d.FakeFiles, err = filepath.Abs(d.FakeFiles)
+	}
+
 	return
 }
 
