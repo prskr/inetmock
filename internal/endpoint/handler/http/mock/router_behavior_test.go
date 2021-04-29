@@ -107,11 +107,7 @@ func TestFileHandler(t *testing.T) {
 		{
 			name: "Get default HTML content",
 			args: args{
-				fakeFileFS: fstest.MapFS{
-					"default.html": &fstest.MapFile{
-						Data: []byte(defaultHTMLContent),
-					},
-				},
+				fakeFileFS: defaultFakeFileFS,
 				args: []rules.Param{
 					{
 						String: stringRef("default.html"),

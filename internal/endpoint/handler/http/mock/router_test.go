@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"testing/fstest"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/td"
@@ -18,19 +16,6 @@ import (
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-)
-
-var (
-	defaultHTMLContent = `<html>
-<head>
-    <title>INetSim default HTML page</title>
-</head>
-<body>
-<p></p>
-<p align="center">This is the default HTML page for INetMock HTTP mock handler.</p>
-<p align="center">This file is an HTML document.</p>
-</body>
-</html>`
 )
 
 //nolint:funlen
@@ -62,12 +47,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 				},
 				emitterSetup: defaultEmitter,
-				fakeFileFS: fstest.MapFS{
-					"default.html": &fstest.MapFile{
-						Data:    []byte(defaultHTMLContent),
-						ModTime: time.Now().Add(-1337 * time.Second),
-					},
-				},
+				fakeFileFS:   defaultFakeFileFS,
 			},
 			args: args{
 				req: &http.Request{
@@ -85,12 +65,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 				},
 				emitterSetup: defaultEmitter,
-				fakeFileFS: fstest.MapFS{
-					"default.html": &fstest.MapFile{
-						Data:    []byte(defaultHTMLContent),
-						ModTime: time.Now().Add(-1337 * time.Second),
-					},
-				},
+				fakeFileFS:   defaultFakeFileFS,
 			},
 			args: args{
 				req: &http.Request{
@@ -109,18 +84,13 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					`Header("Accept", "text/html") => File("default.html")`,
 				},
 				emitterSetup: defaultEmitter,
-				fakeFileFS: fstest.MapFS{
-					"default.html": &fstest.MapFile{
-						Data:    []byte(defaultHTMLContent),
-						ModTime: time.Now().Add(-1337 * time.Second),
-					},
-				},
+				fakeFileFS:   defaultFakeFileFS,
 			},
 			args: args{
 				req: &http.Request{
 					URL: mustParseURL("https://gitlab.com/profile"),
-					Header: map[string][]string{
-						"Accept": {"text/html"},
+					Header: http.Header{
+						"Accept": []string{"text/html"},
 					},
 					Method: http.MethodGet,
 				},

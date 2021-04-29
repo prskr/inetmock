@@ -42,7 +42,14 @@ func (i inMemListener) Accept() (net.Conn, error) {
 }
 
 func (i *inMemListener) Close() error {
-	close(i.state)
+	select {
+	case _, stillOpen := <-i.state:
+		if stillOpen {
+			close(i.state)
+		}
+	default:
+	}
+
 	return nil
 }
 

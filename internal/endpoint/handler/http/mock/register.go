@@ -49,17 +49,21 @@ func InitMetrics() error {
 	return nil
 }
 
+func New(logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) endpoint.ProtocolHandler {
+	return &httpHandler{
+		logger:     logger,
+		fakeFileFS: fakeFileFS,
+		emitter:    emitter,
+	}
+}
+
 func AddHTTPMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) (err error) {
 	if err := InitMetrics(); err != nil {
 		return err
 	}
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
-		return &httpHandler{
-			emitter:    emitter,
-			logger:     logger,
-			fakeFileFS: fakeFileFS,
-		}
+		return New(logger, emitter, fakeFileFS)
 	})
 
 	return
