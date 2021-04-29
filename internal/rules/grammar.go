@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/alecthomas/participle/v2/lexer/stateful"
 )
 
 var (
@@ -13,8 +15,19 @@ var (
 )
 
 func init() {
+	sqlLexer := lexer.Must(stateful.NewSimple([]stateful.Rule{
+		{Name: `Ident`, Pattern: `[a-zA-Z_][a-zA-Z0-9_]*`, Action: nil},
+		{Name: `Float`, Pattern: `\d+.\d+`, Action: nil},
+		{Name: `Int`, Pattern: `[-]?\d+`, Action: nil},
+		{Name: `String`, Pattern: `'[^']*'|"[^"]*"`, Action: nil},
+		{Name: `Arrows`, Pattern: `(->|=>)`, Action: nil},
+		{Name: "whitespace", Pattern: `\s+`, Action: nil},
+		{Name: "Punct", Pattern: `[-[!@#$%^&*()+_={}\|:;\."'<,>?/]|]`, Action: nil},
+	}))
+
 	parser = participle.MustBuild(
 		new(Routing),
+		participle.Lexer(sqlLexer),
 		participle.Unquote("String"),
 	)
 }
@@ -29,11 +42,11 @@ func Parse(rule string) (*Routing, error) {
 
 type Routing struct {
 	Filters    *Filters `parser:"@@*"`
-	Terminator *Method  `parser:"'=''>' @@"`
+	Terminator *Method  `parser:"'=>' @@"`
 }
 
 type Filters struct {
-	Chain []Method `parser:"@@ ('-''>' @@)*"`
+	Chain []Method `parser:"@@ ('->' @@)*"`
 }
 
 type Method struct {
@@ -42,7 +55,7 @@ type Method struct {
 }
 
 type Param struct {
-	String *string  `parser:"@String|RawString"`
+	String *string  `parser:"@String"`
 	Int    *int     `parser:"| @Int"`
 	Float  *float64 `parser:"| @Float"`
 }

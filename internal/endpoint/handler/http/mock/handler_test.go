@@ -134,7 +134,7 @@ func Test_httpHandler_Start(t *testing.T) {
 			args: args{
 				opts: map[string]interface{}{
 					"rules": []string{
-						`> File("default.html")`,
+						`= > File("default.html")`,
 					},
 				},
 			},
