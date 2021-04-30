@@ -17,7 +17,7 @@ var (
 func init() {
 	sqlLexer := lexer.Must(stateful.NewSimple([]stateful.Rule{
 		{Name: `Ident`, Pattern: `[a-zA-Z_][a-zA-Z0-9_]*`, Action: nil},
-		{Name: `Float`, Pattern: `\d+.\d+`, Action: nil},
+		{Name: `Float`, Pattern: `\d+\.\d+`, Action: nil},
 		{Name: `Int`, Pattern: `[-]?\d+`, Action: nil},
 		{Name: `String`, Pattern: `'[^']*'|"[^"]*"`, Action: nil},
 		{Name: `Arrows`, Pattern: `(->|=>)`, Action: nil},

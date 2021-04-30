@@ -98,6 +98,24 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			want:       defaultHTMLContent,
 			wantStatus: td.Between(200, 299),
 		},
+		{
+			name: "POST",
+			fields: fields{
+				rules: []string{
+					`METHOD("POST") => Status(204)`,
+				},
+				emitterSetup: defaultEmitter,
+			},
+			args: args{
+				req: &http.Request{
+					URL:    mustParseURL("https://gitlab.com/profile"),
+					Header: http.Header{},
+					Method: http.MethodPost,
+				},
+			},
+			want:       "",
+			wantStatus: 204,
+		},
 	}
 	for _, tc := range tests {
 		tt := tc

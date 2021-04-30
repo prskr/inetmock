@@ -54,6 +54,23 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Terminator only - int argument, multiple digits",
+			args: args{
+				rule: `=> ReturnInt(1337)`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Name: "ReturnInt",
+					Params: []Param{
+						{
+							Int: intRef(1337),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Terminator only - float argument",
 			args: args{
 				rule: `=> ReturnFloat(13.37)`,
