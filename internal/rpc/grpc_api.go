@@ -59,10 +59,7 @@ func (i *inetmockAPI) StartServer() (err error) {
 	}
 	i.server = grpc.NewServer()
 
-	v1.RegisterHealthServiceServer(i.server, &healthServer{
-		checker: i.checker,
-	})
-
+	v1.RegisterHealthServer(i.server, NewHealthServer(i.checker))
 	v1.RegisterAuditServiceServer(i.server, NewAuditServiceServer(i.logger, i.eventStream, i.auditDataDir))
 	v1.RegisterPCAPServiceServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 

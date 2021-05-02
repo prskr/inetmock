@@ -75,6 +75,8 @@ tasks:
       - "**/*.pb.go"
     cmds:
       - buf protoc --proto_path ./api/proto/ --go_out=./pkg/ --go_opt=paths=source_relative --go-grpc_out=./pkg/ --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
+      - mv pkg/grpc/health/v1/*.pb.go pkg/rpc/v1/
+      - rm -rf pkg/grpc
 
   go-generate:
     desc: run all go:generate directives

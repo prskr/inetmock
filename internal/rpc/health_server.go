@@ -2,33 +2,103 @@ package rpc
 
 import (
 	"context"
+	"errors"
+	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"gitlab.com/inetmock/inetmock/pkg/health"
-	v1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 var (
-	_ v1.HealthServiceServer = (*healthServer)(nil)
+	_ v1.HealthServer = (*healthServer)(nil)
 )
 
 type healthServer struct {
-	v1.UnimplementedHealthServiceServer
+	v1.UnimplementedHealthServer
 	checker health.Checker
 }
 
-func (h healthServer) GetHealth(_ context.Context, _ *v1.GetHealthRequest) (resp *v1.GetHealthResponse, err error) {
-	result := h.checker.IsHealthy()
+func NewHealthServer(checker health.Checker) v1.HealthServer {
+	return &healthServer{
+		checker: checker,
+	}
+}
 
-	resp = &v1.GetHealthResponse{
-		OverallHealthState: v1.HealthState(result.Status),
-		ComponentsHealth:   map[string]*v1.ComponentHealth{}}
+func (h healthServer) Check(ctx context.Context, request *v1.HealthCheckRequest) (resp *v1.HealthCheckResponse, err error) {
+	var result health.Result
+	if result, err = h.checker.Status(ctx); err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, status.Error(codes.DeadlineExceeded, err.Error())
+		}
+		if errors.Is(err, context.Canceled) {
+			return nil, status.Error(codes.Aborted, err.Error())
+		}
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
 
-	for component, status := range result.Components {
-		resp.ComponentsHealth[component] = &v1.ComponentHealth{
-			State:   v1.HealthState(status.Status),
-			Message: status.Message,
+	if request.Service != "" {
+		known, result := result.CheckResult(request.Service)
+		if !known {
+			return nil, status.Error(codes.NotFound, request.Service)
+		}
+
+		if result == nil {
+			return &v1.HealthCheckResponse{
+				Status: v1.HealthCheckResponse_SERVING,
+			}, nil
+		} else {
+			return &v1.HealthCheckResponse{
+				Status: v1.HealthCheckResponse_NOT_SERVING,
+			}, nil
 		}
 	}
 
-	return
+	if result.IsHealthy() {
+		return &v1.HealthCheckResponse{
+			Status: v1.HealthCheckResponse_SERVING,
+		}, nil
+	} else {
+		return &v1.HealthCheckResponse{
+			Status: v1.HealthCheckResponse_NOT_SERVING,
+		}, nil
+	}
+}
+
+func (h healthServer) Watch(request *v1.HealthCheckRequest, server v1.Health_WatchServer) error {
+	var latestStatus v1.HealthCheckResponse_ServingStatus
+	if resp, err := h.Check(server.Context(), request); err != nil {
+		return err
+	} else {
+		latestStatus = resp.Status
+		if err = server.Send(resp); err != nil {
+			return err
+		}
+	}
+
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	select {
+	case <-server.Context().Done():
+		if errors.Is(server.Context().Err(), context.Canceled) {
+			return status.Error(codes.Canceled, server.Context().Err().Error())
+		}
+		if errors.Is(server.Context().Err(), context.DeadlineExceeded) {
+			return status.Error(codes.DeadlineExceeded, server.Context().Err().Error())
+		}
+	case <-ticker.C:
+		if resp, err := h.Check(server.Context(), request); err != nil {
+			return err
+		} else if resp.Status != latestStatus {
+			latestStatus = resp.Status
+			if err = server.Send(resp); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
