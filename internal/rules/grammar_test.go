@@ -37,6 +37,57 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Terminator only - no argument",
+			args: args{
+				rule: `=> NoContent()`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Name: "NoContent",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Terminator with module - no argument",
+			args: args{
+				rule: `=> http.NoContent()`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Module: "http",
+					Name:   "NoContent",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Terminator only do not support method name not starting with capital letter",
+			args: args{
+				rule: `=> file("default.html")`,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Terminator with module - string argument",
+			args: args{
+				rule: `=> http.File("default.html")`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Module: "http",
+					Name:   "File",
+					Params: []Param{
+						{
+							String: stringRef("default.html"),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Terminator only - int argument",
 			args: args{
 				rule: `=> ReturnInt(1)`,
@@ -54,6 +105,24 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Terminator with module - int argument",
+			args: args{
+				rule: `=> http.ReturnInt(1)`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Module: "http",
+					Name:   "ReturnInt",
+					Params: []Param{
+						{
+							Int: intRef(1),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Terminator only - int argument, multiple digits",
 			args: args{
 				rule: `=> ReturnInt(1337)`,
@@ -61,6 +130,24 @@ func TestParse(t *testing.T) {
 			want: &Routing{
 				Terminator: &Method{
 					Name: "ReturnInt",
+					Params: []Param{
+						{
+							Int: intRef(1337),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Terminator with Module - int argument, multiple digits",
+			args: args{
+				rule: `=> http.ReturnInt(1337)`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Module: "http",
+					Name:   "ReturnInt",
 					Params: []Param{
 						{
 							Int: intRef(1337),
@@ -117,9 +204,40 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "path pattern and terminator with Modules",
+			args: args{
+				rule: `http.PathPattern(".*\\.(?i)png") => http.ReturnFile("default.html")`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Module: "http",
+					Name:   "ReturnFile",
+					Params: []Param{
+						{
+							String: stringRef("default.html"),
+						},
+					},
+				},
+				Filters: &Filters{
+					Chain: []Method{
+						{
+							Module: "http",
+							Name:   "PathPattern",
+							Params: []Param{
+								{
+									String: stringRef(`.*\.(?i)png`),
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "HTTP method, path pattern and terminator",
 			args: args{
-				rule: `HTTPMethod("GET") -> PathPattern("/index.html") => ReturnFile("default.html")`,
+				rule: `Method("GET") -> PathPattern("/index.html") => ReturnFile("default.html")`,
 			},
 			want: &Routing{
 				Terminator: &Method{
@@ -133,7 +251,7 @@ func TestParse(t *testing.T) {
 				Filters: &Filters{
 					Chain: []Method{
 						{
-							Name: "HTTPMethod",
+							Name: "Method",
 							Params: []Param{
 								{
 									String: stringRef(http.MethodGet),
@@ -142,6 +260,46 @@ func TestParse(t *testing.T) {
 						},
 						{
 							Name: "PathPattern",
+							Params: []Param{
+								{
+									String: stringRef("/index.html"),
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "HTTP method, path pattern and terminator with modules",
+			args: args{
+				rule: `http.Method("GET") -> http.PathPattern("/index.html") => http.ReturnFile("default.html")`,
+			},
+			want: &Routing{
+				Terminator: &Method{
+					Module: "http",
+					Name:   "ReturnFile",
+					Params: []Param{
+						{
+							String: stringRef("default.html"),
+						},
+					},
+				},
+				Filters: &Filters{
+					Chain: []Method{
+						{
+							Module: "http",
+							Name:   "Method",
+							Params: []Param{
+								{
+									String: stringRef(http.MethodGet),
+								},
+							},
+						},
+						{
+							Module: "http",
+							Name:   "PathPattern",
 							Params: []Param{
 								{
 									String: stringRef("/index.html"),

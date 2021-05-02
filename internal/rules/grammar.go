@@ -16,7 +16,8 @@ var (
 
 func init() {
 	sqlLexer := lexer.Must(stateful.NewSimple([]stateful.Rule{
-		{Name: `Ident`, Pattern: `[a-zA-Z_][a-zA-Z0-9_]*`, Action: nil},
+		{Name: `Module`, Pattern: `[a-z]+`, Action: nil},
+		{Name: `Ident`, Pattern: `[A-Z][a-zA-Z0-9_]*`, Action: nil},
 		{Name: `Float`, Pattern: `\d+\.\d+`, Action: nil},
 		{Name: `Int`, Pattern: `[-]?\d+`, Action: nil},
 		{Name: `String`, Pattern: `'[^']*'|"[^"]*"`, Action: nil},
@@ -50,8 +51,9 @@ type Filters struct {
 }
 
 type Method struct {
+	Module string  `parser:"(@Module'.')?"`
 	Name   string  `parser:"@Ident"`
-	Params []Param `parser:"'(' @@ ( ',' @@ )*')'"`
+	Params []Param `parser:"'(' @@? ( ',' @@ )*')'"`
 }
 
 type Param struct {
