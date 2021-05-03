@@ -1,13 +1,15 @@
-package rules
+//nolint:funlen,dupl
+package rules_test
 
 import (
 	"net/http"
 	"testing"
 
 	"github.com/maxatome/go-testdeep/td"
+
+	"gitlab.com/inetmock/inetmock/internal/rules"
 )
 
-//nolint:funlen
 func TestParse(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -16,18 +18,20 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *Routing
+		target  interface{}
+		want    interface{}
 		wantErr bool
 	}{
 		{
-			name: "Terminator only - string argument",
+			name: "Routing - Terminator only - string argument",
 			args: args{
 				rule: `=> File("default.html")`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Name: "File",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							String: stringRef("default.html"),
 						},
@@ -37,24 +41,26 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Terminator only - no argument",
+			name: "Routing - Terminator only - no argument",
 			args: args{
 				rule: `=> NoContent()`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Name: "NoContent",
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Terminator with module - no argument",
+			name: "Routing - Terminator with module - no argument",
 			args: args{
 				rule: `=> http.NoContent()`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Module: "http",
 					Name:   "NoContent",
 				},
@@ -62,23 +68,24 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Terminator only do not support method name not starting with capital letter",
+			name: "Routing - Terminator only do not support method name not starting with capital letter",
 			args: args{
 				rule: `=> file("default.html")`,
 			},
-			want:    nil,
+			target:  new(rules.Routing),
 			wantErr: true,
 		},
 		{
-			name: "Terminator with module - string argument",
+			name: "Routing - Terminator with module - string argument",
 			args: args{
 				rule: `=> http.File("default.html")`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Module: "http",
 					Name:   "File",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							String: stringRef("default.html"),
 						},
@@ -88,14 +95,15 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Terminator only - int argument",
+			name: "Routing - Terminator only - int argument",
 			args: args{
 				rule: `=> ReturnInt(1)`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Name: "ReturnInt",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							Int: intRef(1),
 						},
@@ -105,15 +113,16 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Terminator with module - int argument",
+			name: "Routing - Terminator with module - int argument",
 			args: args{
 				rule: `=> http.ReturnInt(1)`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Module: "http",
 					Name:   "ReturnInt",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							Int: intRef(1),
 						},
@@ -123,14 +132,15 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Terminator only - int argument, multiple digits",
+			name: "Routing - Terminator only - int argument, multiple digits",
 			args: args{
 				rule: `=> ReturnInt(1337)`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Name: "ReturnInt",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							Int: intRef(1337),
 						},
@@ -140,15 +150,16 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Terminator with Module - int argument, multiple digits",
+			name: "Routing - Terminator with Module - int argument, multiple digits",
 			args: args{
 				rule: `=> http.ReturnInt(1337)`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Module: "http",
 					Name:   "ReturnInt",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							Int: intRef(1337),
 						},
@@ -158,14 +169,15 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Terminator only - float argument",
+			name: "Routing - Terminator only - float argument",
 			args: args{
 				rule: `=> ReturnFloat(13.37)`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Name: "ReturnFloat",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							Float: floatRef(13.37),
 						},
@@ -175,24 +187,25 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "path pattern and terminator",
+			name: "Routing - path pattern and terminator",
 			args: args{
 				rule: `PathPattern(".*\\.(?i)png") => ReturnFile("default.html")`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Name: "ReturnFile",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							String: stringRef("default.html"),
 						},
 					},
 				},
-				Filters: &Filters{
-					Chain: []Method{
+				Filters: &rules.Filters{
+					Chain: []rules.Method{
 						{
 							Name: "PathPattern",
-							Params: []Param{
+							Params: []rules.Param{
 								{
 									String: stringRef(`.*\.(?i)png`),
 								},
@@ -204,26 +217,27 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "path pattern and terminator with Modules",
+			name: "Routing - path pattern and terminator with Modules",
 			args: args{
 				rule: `http.PathPattern(".*\\.(?i)png") => http.ReturnFile("default.html")`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Module: "http",
 					Name:   "ReturnFile",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							String: stringRef("default.html"),
 						},
 					},
 				},
-				Filters: &Filters{
-					Chain: []Method{
+				Filters: &rules.Filters{
+					Chain: []rules.Method{
 						{
 							Module: "http",
 							Name:   "PathPattern",
-							Params: []Param{
+							Params: []rules.Param{
 								{
 									String: stringRef(`.*\.(?i)png`),
 								},
@@ -235,24 +249,25 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "HTTP method, path pattern and terminator",
+			name: "Routing - HTTP method, path pattern and terminator",
 			args: args{
 				rule: `Method("GET") -> PathPattern("/index.html") => ReturnFile("default.html")`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Name: "ReturnFile",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							String: stringRef("default.html"),
 						},
 					},
 				},
-				Filters: &Filters{
-					Chain: []Method{
+				Filters: &rules.Filters{
+					Chain: []rules.Method{
 						{
 							Name: "Method",
-							Params: []Param{
+							Params: []rules.Param{
 								{
 									String: stringRef(http.MethodGet),
 								},
@@ -260,7 +275,7 @@ func TestParse(t *testing.T) {
 						},
 						{
 							Name: "PathPattern",
-							Params: []Param{
+							Params: []rules.Param{
 								{
 									String: stringRef("/index.html"),
 								},
@@ -272,26 +287,27 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "HTTP method, path pattern and terminator with modules",
+			name: "Routing - HTTP method, path pattern and terminator with modules",
 			args: args{
 				rule: `http.Method("GET") -> http.PathPattern("/index.html") => http.ReturnFile("default.html")`,
 			},
-			want: &Routing{
-				Terminator: &Method{
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
 					Module: "http",
 					Name:   "ReturnFile",
-					Params: []Param{
+					Params: []rules.Param{
 						{
 							String: stringRef("default.html"),
 						},
 					},
 				},
-				Filters: &Filters{
-					Chain: []Method{
+				Filters: &rules.Filters{
+					Chain: []rules.Method{
 						{
 							Module: "http",
 							Name:   "Method",
-							Params: []Param{
+							Params: []rules.Param{
 								{
 									String: stringRef(http.MethodGet),
 								},
@@ -300,9 +316,101 @@ func TestParse(t *testing.T) {
 						{
 							Module: "http",
 							Name:   "PathPattern",
-							Params: []Param{
+							Params: []rules.Param{
 								{
 									String: stringRef("/index.html"),
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Check - Initiator only - string argument",
+			args: args{
+				rule: `http.Get("https://www.microsoft.com/")`,
+			},
+			target: new(rules.Check),
+			want: &rules.Check{
+				Initiator: &rules.Method{
+					Module: "http",
+					Name:   "Get",
+					Params: []rules.Param{
+						{
+							String: stringRef("https://www.microsoft.com/"),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Check - Initiator and single filter",
+			args: args{
+				rule: `http.Get("https://www.microsoft.com/") => Status(200)`,
+			},
+			target: new(rules.Check),
+			want: &rules.Check{
+				Initiator: &rules.Method{
+					Module: "http",
+					Name:   "Get",
+					Params: []rules.Param{
+						{
+							String: stringRef("https://www.microsoft.com/"),
+						},
+					},
+				},
+				Validators: &rules.Filters{
+					Chain: []rules.Method{
+						{
+							Name: "Status",
+							Params: []rules.Param{
+								{
+									Int: intRef(200),
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Check - Initiator and multiple filters",
+			args: args{
+				rule: `http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text.html")`,
+			},
+			target: new(rules.Check),
+			want: &rules.Check{
+				Initiator: &rules.Method{
+					Module: "http",
+					Name:   "Get",
+					Params: []rules.Param{
+						{
+							String: stringRef("https://www.microsoft.com/"),
+						},
+					},
+				},
+				Validators: &rules.Filters{
+					Chain: []rules.Method{
+						{
+							Name: "Status",
+							Params: []rules.Param{
+								{
+									Int: intRef(200),
+								},
+							},
+						},
+						{
+							Name: "Header",
+							Params: []rules.Param{
+								{
+									String: stringRef("Content-Type"),
+								},
+								{
+									String: stringRef("text.html"),
 								},
 							},
 						},
@@ -316,12 +424,161 @@ func TestParse(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := Parse(tt.args.rule)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+			err := rules.Parse(tt.args.rule, tt.target)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+				}
 				return
 			}
-			td.Cmp(t, got, tt.want)
+			td.Cmp(t, tt.target, tt.want)
+		})
+	}
+}
+
+func TestParam_AsString(t *testing.T) {
+	t.Parallel()
+	type fields struct {
+		String *string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "Empty string",
+			fields: fields{
+				String: stringRef(""),
+			},
+			want: "",
+		},
+		{
+			name: "Any string",
+			fields: fields{
+				String: stringRef("Hello, world!"),
+			},
+			want: "Hello, world!",
+		},
+		{
+			name:    "nil value",
+			wantErr: true,
+		},
+	}
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := rules.Param{
+				String: tt.fields.String,
+			}
+			got, err := p.AsString()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsString() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("AsString() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParam_AsInt(t *testing.T) {
+	t.Parallel()
+	type fields struct {
+		Int *int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "zero value",
+			fields: fields{
+				Int: intRef(0),
+			},
+			want: 0,
+		},
+		{
+			name: "Any int",
+			fields: fields{
+				Int: intRef(42),
+			},
+			want: 42,
+		},
+		{
+			name:    "nil value",
+			wantErr: true,
+		},
+	}
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := rules.Param{
+				Int: tt.fields.Int,
+			}
+			got, err := p.AsInt()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsInt() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("AsInt() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParam_AsFloat(t *testing.T) {
+	t.Parallel()
+	type fields struct {
+		Float *float64
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    float64
+		wantErr bool
+	}{
+		{
+			name: "Zero value",
+			fields: fields{
+				Float: floatRef(0),
+			},
+			want: 0,
+		},
+		{
+			name: "Any value",
+			fields: fields{
+				Float: floatRef(13.37),
+			},
+			want: 13.37,
+		},
+		{
+			name:    "nil value",
+			wantErr: true,
+		},
+	}
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := rules.Param{
+				Float: tt.fields.Float,
+			}
+			got, err := p.AsFloat()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsFloat() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("AsFloat() got = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

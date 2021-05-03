@@ -38,12 +38,12 @@ type Router struct {
 
 func (r *Router) RegisterRule(rawRule string) error {
 	r.Logger.Info("Adding routing rule", zap.String("rawRule", rawRule))
-	var err error
-	var rule *rules.Routing
-	if rule, err = rules.Parse(rawRule); err != nil {
+	var rule = new(rules.Routing)
+	if err := rules.Parse(rawRule, rule); err != nil {
 		return err
 	}
 
+	var err error
 	var filters []RequestFilter
 	if filters, err = RequestFiltersForRoutingRule(rule); err != nil {
 		return err

@@ -3,6 +3,7 @@ package rules
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
@@ -10,12 +11,13 @@ import (
 )
 
 var (
+	ErrNoParser     = errors.New("no parser available for given type")
 	ErrTypeMismatch = errors.New("param has a different type")
-	parser          *participle.Parser
+	parsers         map[reflect.Type]*participle.Parser
 )
 
 func init() {
-	sqlLexer := lexer.Must(stateful.NewSimple([]stateful.Rule{
+	ruleLexer := lexer.Must(stateful.NewSimple([]stateful.Rule{
 		{Name: `Module`, Pattern: `[a-z]+`, Action: nil},
 		{Name: `Ident`, Pattern: `[A-Z][a-zA-Z0-9_]*`, Action: nil},
 		{Name: `Float`, Pattern: `\d+\.\d+`, Action: nil},
@@ -26,24 +28,39 @@ func init() {
 		{Name: "Punct", Pattern: `[-[!@#$%^&*()+_={}\|:;\."'<,>?/]|]`, Action: nil},
 	}))
 
-	parser = participle.MustBuild(
-		new(Routing),
-		participle.Lexer(sqlLexer),
-		participle.Unquote("String"),
-	)
+	parsers = map[reflect.Type]*participle.Parser{
+		reflect.TypeOf(new(Routing)): participle.MustBuild(
+			new(Routing),
+			participle.Lexer(ruleLexer),
+			participle.Unquote("String"),
+		),
+		reflect.TypeOf(new(Check)): participle.MustBuild(
+			new(Check),
+			participle.Lexer(ruleLexer),
+			participle.Unquote("String"),
+		),
+	}
 }
 
-func Parse(rule string) (*Routing, error) {
-	routing := new(Routing)
-	if err := parser.ParseString("", rule, routing); err != nil {
-		return nil, err
+func Parse(rule string, target interface{}) error {
+	parser, available := parsers[reflect.TypeOf(target)]
+	if !available {
+		return ErrNoParser
 	}
-	return routing, nil
+	if err := parser.ParseString("", rule, target); err != nil {
+		return err
+	}
+	return nil
 }
 
 type Routing struct {
 	Filters    *Filters `parser:"@@*"`
 	Terminator *Method  `parser:"'=>' @@"`
+}
+
+type Check struct {
+	Initiator  *Method  `parser:"@@"`
+	Validators *Filters `parser:"( '=>' @@)?"`
 }
 
 type Filters struct {
@@ -77,7 +94,7 @@ func (p Param) AsInt() (int, error) {
 }
 
 func (p Param) AsFloat() (float64, error) {
-	if p.Int == nil {
+	if p.Float == nil {
 		return 0, fmt.Errorf("float is nil %w", ErrTypeMismatch)
 	}
 	return *p.Float, nil
