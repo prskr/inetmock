@@ -1,36 +1,59 @@
 package health
 
 import (
+	"context"
 	"errors"
+	"fmt"
 )
 
-type Status uint8
+type Result map[string]error
 
-const (
-	HEALTHY      Status = 0
-	INITIALIZING Status = 1
-	UNHEALTHY    Status = 2
-	UNKNOWN      Status = 3
-)
+func (r Result) IsHealthy() (healthy bool) {
+	for _, e := range r {
+		if e != nil {
+			return false
+		}
+	}
+	return true
+}
 
-type CheckResult struct {
-	Status  Status
+func (r Result) CheckResult(name string) (knownCheck bool, result error) {
+	result, knownCheck = r[name]
+	return
+}
+
+type Checker interface {
+	AddCheck(check Check) error
+	Status(ctx context.Context) (Result, error)
+}
+
+type CheckError struct {
+	Check   string
 	Message string
+	Orig    error
 }
 
-type Result struct {
-	Status     Status
-	Components map[string]CheckResult
+func (c CheckError) Error() string {
+	return fmt.Sprintf("check %s failed: %s - %v", c.Check, c.Message, c.Orig)
 }
 
-type Check func() CheckResult
+func (c CheckError) Is(err error) bool {
+	return errors.Is(c.Orig, err)
+}
+
+func (c CheckError) Unwrap() error {
+	return c.Orig
+}
+
+type Check interface {
+	Name() string
+	Status(ctx context.Context) CheckError
+}
 
 var (
-	ErrCheckForComponentAlreadyRegistered = errors.New("a check for the requested component is already registered")
+	ErrAmbiguousCheckName = errors.New("a check with the same name is already registered")
 )
 
 func New() Checker {
-	return &checker{
-		componentChecks: map[string]Check{},
-	}
+	return &checker{}
 }

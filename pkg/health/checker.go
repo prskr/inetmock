@@ -1,45 +1,65 @@
 package health
 
-import "fmt"
+import (
+	"context"
+	"sync"
 
-type checker struct {
-	componentChecks map[string]Check
+	"golang.org/x/sync/errgroup"
+)
+
+type ResultWriter interface {
+	WriteResult(checkName string, result error)
+	GetResult() Result
 }
 
-type Checker interface {
-	RegisterCheck(component string, check Check) error
-	IsHealthy() Result
-}
-
-func (c *checker) RegisterCheck(component string, check Check) error {
-	if _, exists := c.componentChecks[component]; exists {
-		return fmt.Errorf("component: %s: %w", component, ErrCheckForComponentAlreadyRegistered)
+func NewResultWriter() ResultWriter {
+	return &resultWriter{
+		lock:   new(sync.Mutex),
+		result: Result{},
 	}
+}
 
-	c.componentChecks[component] = check
+type resultWriter struct {
+	lock   sync.Locker
+	result Result
+}
+
+func (r *resultWriter) WriteResult(checkName string, result error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	r.result[checkName] = result
+}
+
+func (r resultWriter) GetResult() Result {
+	return r.result
+}
+
+type checker map[string]Check
+
+func (c *checker) AddCheck(check Check) error {
+	self := *c
+	name := check.Name()
+	if _, ok := self[name]; ok {
+		return ErrAmbiguousCheckName
+	}
+	self[name] = check
 	return nil
 }
 
-func (c *checker) IsHealthy() (r Result) {
-	r.Status = HEALTHY
-	r.Components = make(map[string]CheckResult)
-	for component, componentCheck := range c.componentChecks {
-		r.Components[component] = componentCheck()
-		r.Status = max(r.Components[component].Status, r.Status)
+func (c checker) Status(ctx context.Context) (res Result, err error) {
+	rw := NewResultWriter()
+	grp, grpCtx := errgroup.WithContext(ctx)
+
+	for k, v := range c {
+		grp.Go(func() error {
+			checkErr := v.Status(grpCtx)
+			rw.WriteResult(k, checkErr)
+			return checkErr
+		})
 	}
+
+	err = grp.Wait()
+	res = rw.GetResult()
 	return
-}
-
-func max(s1, s2 Status) Status {
-	var max Status
-	if s1 > s2 {
-		max = s1
-	} else {
-		max = s2
-	}
-
-	if max > UNHEALTHY {
-		return UNHEALTHY
-	}
-	return max
 }

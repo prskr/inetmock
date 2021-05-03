@@ -6,9 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"gitlab.com/inetmock/inetmock/internal/format"
-	rpcV1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	v1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var (
@@ -37,36 +35,16 @@ The output contains information about each component and it's health state.
 	}
 )
 
-func fromComponentsHealth(componentsHealth map[string]*rpcV1.ComponentHealth) interface{} {
-	type printableHealthInfo struct {
-		Component string
-		State     string
-		Message   string
-	}
-
-	var componentsInfo = make([]printableHealthInfo, len(componentsHealth))
-	var idx int
-	for componentName, component := range componentsHealth {
-		componentsInfo[idx] = printableHealthInfo{
-			Component: componentName,
-			State:     component.State.String(),
-			Message:   component.Message,
-		}
-		idx++
-	}
-	return componentsInfo
-}
-
-func getHealthResult() (healthResp *rpcV1.GetHealthResponse, err error) {
-	var healthClient = rpcV1.NewHealthServiceClient(conn)
+func getHealthResult() (healthResp *v1.HealthCheckResponse, err error) {
+	var healthClient = v1.NewHealthClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.GRPCTimeout)
-	healthResp, err = healthClient.GetHealth(ctx, &rpcV1.GetHealthRequest{})
+	healthResp, err = healthClient.Check(ctx, new(v1.HealthCheckRequest))
 	cancel()
 	return
 }
 
 func runGeneralHealth(_ *cobra.Command, _ []string) {
-	var healthResp *rpcV1.GetHealthResponse
+	var healthResp *v1.HealthCheckResponse
 	var err error
 
 	if healthResp, err = getHealthResult(); err != nil {
@@ -74,11 +52,9 @@ func runGeneralHealth(_ *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	printable := fromComponentsHealth(healthResp.ComponentsHealth)
-
-	writer := format.Writer(cfg.Format, os.Stdout)
-	if err = writer.Write(printable); err != nil {
-		fmt.Printf("Error occurred during writing response values: %v\n", err)
+	fmt.Println(healthResp.Status.String())
+	if healthResp.Status != v1.HealthCheckResponse_SERVING {
+		os.Exit(1)
 	}
 }
 
@@ -86,7 +62,7 @@ func runContainerHealth(_ *cobra.Command, _ []string) {
 	if healthResp, err := getHealthResult(); err != nil {
 		fmt.Printf("Failed to get health information: %v", err)
 		os.Exit(1)
-	} else if healthResp.OverallHealthState != rpcV1.HealthState_HEALTH_STATE_HEALTHY {
+	} else if healthResp.GetStatus() != v1.HealthCheckResponse_SERVING {
 		fmt.Println("Overall health state is not healthy")
 		os.Exit(1)
 	}

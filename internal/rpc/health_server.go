@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"google.golang.org/grpc/codes"
+	v1 "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 
 	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 var (
@@ -18,12 +18,14 @@ var (
 
 type healthServer struct {
 	v1.UnimplementedHealthServer
-	checker health.Checker
+	checker          health.Checker
+	watchCheckPeriod time.Duration
 }
 
-func NewHealthServer(checker health.Checker) v1.HealthServer {
+func NewHealthServer(checker health.Checker, watchCheckPeriod time.Duration) v1.HealthServer {
 	return &healthServer{
-		checker: checker,
+		checker:          checker,
+		watchCheckPeriod: watchCheckPeriod,
 	}
 }
 
@@ -73,32 +75,32 @@ func (h healthServer) Watch(request *v1.HealthCheckRequest, server v1.Health_Wat
 		return err
 	} else {
 		latestStatus = resp.Status
-		if err = server.Send(resp); err != nil {
+		if err := server.Send(resp); err != nil {
 			return err
 		}
 	}
 
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(h.watchCheckPeriod)
 	defer ticker.Stop()
 
-	select {
-	case <-server.Context().Done():
-		if errors.Is(server.Context().Err(), context.Canceled) {
-			return status.Error(codes.Canceled, server.Context().Err().Error())
-		}
-		if errors.Is(server.Context().Err(), context.DeadlineExceeded) {
-			return status.Error(codes.DeadlineExceeded, server.Context().Err().Error())
-		}
-	case <-ticker.C:
-		if resp, err := h.Check(server.Context(), request); err != nil {
-			return err
-		} else if resp.Status != latestStatus {
-			latestStatus = resp.Status
-			if err = server.Send(resp); err != nil {
+	for {
+		select {
+		case <-server.Context().Done():
+			if errors.Is(server.Context().Err(), context.Canceled) {
+				return status.Error(codes.Canceled, server.Context().Err().Error())
+			}
+			if errors.Is(server.Context().Err(), context.DeadlineExceeded) {
+				return status.Error(codes.DeadlineExceeded, server.Context().Err().Error())
+			}
+		case <-ticker.C:
+			if resp, err := h.Check(server.Context(), request); err != nil {
 				return err
+			} else if resp.Status != latestStatus {
+				latestStatus = resp.Status
+				if err := server.Send(resp); err != nil {
+					return err
+				}
 			}
 		}
 	}
-
-	return nil
 }

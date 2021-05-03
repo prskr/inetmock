@@ -15,6 +15,7 @@ type Logger interface {
 	Panic(msg string, fields ...zap.Field)
 	Fatal(msg string, fields ...zap.Field)
 	Sync() error
+	ZapLogger() *zap.Logger
 }
 
 type logger struct {
@@ -59,4 +60,8 @@ func (l logger) Fatal(msg string, fields ...zap.Field) {
 
 func (l logger) Sync() error {
 	return l.underlyingLogger.Sync()
+}
+
+func (l logger) ZapLogger() *zap.Logger {
+	return l.underlyingLogger
 }

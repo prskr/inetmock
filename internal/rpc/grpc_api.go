@@ -6,8 +6,14 @@ import (
 	"os"
 	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	v1Health "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
@@ -57,9 +63,20 @@ func (i *inetmockAPI) StartServer() (err error) {
 	if lis, err = createListenerFromURL(i.url); err != nil {
 		return
 	}
-	i.server = grpc.NewServer()
+	i.server = grpc.NewServer(
+		grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				grpc_recovery.StreamServerInterceptor(),
+				grpc_prometheus.StreamServerInterceptor,
+				grpc_zap.StreamServerInterceptor(i.logger.ZapLogger()),
+			)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_recovery.UnaryServerInterceptor(),
+			grpc_prometheus.UnaryServerInterceptor,
+			grpc_zap.UnaryServerInterceptor(i.logger.ZapLogger()),
+		)))
 
-	v1.RegisterHealthServer(i.server, NewHealthServer(i.checker))
+	v1Health.RegisterHealthServer(i.server, NewHealthServer(i.checker, 1*time.Second))
 	v1.RegisterAuditServiceServer(i.server, NewAuditServiceServer(i.logger, i.eventStream, i.auditDataDir))
 	v1.RegisterPCAPServiceServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 

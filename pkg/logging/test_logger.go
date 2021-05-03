@@ -120,3 +120,7 @@ func (t *testLogger) entry(msg string, lvl zapcore.Level, includeStack bool) zap
 func (t *testLogger) Sync() error {
 	return nil
 }
+
+func (t *testLogger) ZapLogger() *zap.Logger {
+	panic("implement me")
+}
