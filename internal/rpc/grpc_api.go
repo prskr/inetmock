@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	reqlog "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
+	"gitlab.com/inetmock/inetmock/internal/rpc/middleware"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
@@ -65,15 +66,16 @@ func (i *inetmockAPI) StartServer() (err error) {
 	}
 	i.server = grpc.NewServer(
 		grpc.StreamInterceptor(
-			grpc_middleware.ChainStreamServer(
-				grpc_recovery.StreamServerInterceptor(),
-				grpc_prometheus.StreamServerInterceptor,
-				grpc_zap.StreamServerInterceptor(i.logger.ZapLogger()),
+			grpcmiddleware.ChainStreamServer(
+				recovery.StreamServerInterceptor(),
+				prometheus.StreamServerInterceptor,
+				reqlog.StreamServerInterceptor(i.logger.ZapLogger()),
 			)),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_recovery.UnaryServerInterceptor(),
-			grpc_prometheus.UnaryServerInterceptor,
-			grpc_zap.UnaryServerInterceptor(i.logger.ZapLogger()),
+		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
+			recovery.UnaryServerInterceptor(),
+			middleware.ContextErrorConverter,
+			prometheus.UnaryServerInterceptor,
+			reqlog.UnaryServerInterceptor(i.logger.ZapLogger()),
 		)))
 
 	v1Health.RegisterHealthServer(i.server, NewHealthServer(i.checker, 1*time.Second))
