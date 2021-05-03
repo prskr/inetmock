@@ -30,16 +30,7 @@ func NewHealthServer(checker health.Checker, watchCheckPeriod time.Duration) v1.
 }
 
 func (h healthServer) Check(ctx context.Context, request *v1.HealthCheckRequest) (resp *v1.HealthCheckResponse, err error) {
-	var result health.Result
-	if result, err = h.checker.Status(ctx); err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, status.Error(codes.DeadlineExceeded, err.Error())
-		}
-		if errors.Is(err, context.Canceled) {
-			return nil, status.Error(codes.Aborted, err.Error())
-		}
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
+	var result = h.checker.Status(ctx)
 
 	if request.Service != "" {
 		known, result := result.CheckResult(request.Service)

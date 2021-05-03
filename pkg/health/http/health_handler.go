@@ -16,14 +16,10 @@ type healthHandler struct {
 }
 
 func (h healthHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	var err error
-	var result health.Result
-	if result, err = h.checker.Status(request.Context()); err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	var result = h.checker.Status(request.Context())
 
 	if !result.IsHealthy() {
+		var err error
 		var data []byte
 		if data, err = json.Marshal(result); err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
