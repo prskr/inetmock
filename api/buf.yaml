@@ -14,8 +14,6 @@ lint:
     - DEFAULT
   except:
     - PACKAGE_DIRECTORY_MATCH
-  ignore:
-    - grpc/health/v1/
   allow_comment_ignores: true
 breaking:
   use:
