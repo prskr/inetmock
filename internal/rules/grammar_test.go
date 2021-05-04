@@ -347,6 +347,28 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Check - Initiator only - raw string argument",
+			args: args{
+				rule: "http.Post(\"https://www.microsoft.com/\", `{\"Name\":\"Ted.Tester\"}`)",
+			},
+			target: new(rules.Check),
+			want: &rules.Check{
+				Initiator: &rules.Method{
+					Module: "http",
+					Name:   "Post",
+					Params: []rules.Param{
+						{
+							String: stringRef("https://www.microsoft.com/"),
+						},
+						{
+							String: stringRef(`{"Name":"Ted.Tester"}`),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Check - Initiator and single filter",
 			args: args{
 				rule: `http.Get("https://www.microsoft.com/") => Status(200)`,

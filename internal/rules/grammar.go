@@ -22,6 +22,7 @@ func init() {
 		{Name: `Ident`, Pattern: `[A-Z][a-zA-Z0-9_]*`, Action: nil},
 		{Name: `Float`, Pattern: `\d+\.\d+`, Action: nil},
 		{Name: `Int`, Pattern: `[-]?\d+`, Action: nil},
+		{Name: `RawString`, Pattern: "`[^`]*`", Action: nil},
 		{Name: `String`, Pattern: `'[^']*'|"[^"]*"`, Action: nil},
 		{Name: `Arrows`, Pattern: `(->|=>)`, Action: nil},
 		{Name: "whitespace", Pattern: `\s+`, Action: nil},
@@ -33,11 +34,13 @@ func init() {
 			new(Routing),
 			participle.Lexer(ruleLexer),
 			participle.Unquote("String"),
+			participle.Unquote("RawString"),
 		),
 		reflect.TypeOf(new(Check)): participle.MustBuild(
 			new(Check),
 			participle.Lexer(ruleLexer),
 			participle.Unquote("String"),
+			participle.Unquote("RawString"),
 		),
 	}
 }
@@ -74,7 +77,7 @@ type Method struct {
 }
 
 type Param struct {
-	String *string  `parser:"@String"`
+	String *string  `parser:"@String | @RawString"`
 	Int    *int     `parser:"| @Int"`
 	Float  *float64 `parser:"| @Float"`
 }
