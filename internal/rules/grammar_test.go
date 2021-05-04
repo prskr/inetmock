@@ -1,4 +1,4 @@
-//nolint:funlen,dupl
+//nolint:dupl
 package rules_test
 
 import (
@@ -33,7 +33,7 @@ func TestParse(t *testing.T) {
 					Name: "File",
 					Params: []rules.Param{
 						{
-							String: stringRef("default.html"),
+							String: rules.StringP("default.html"),
 						},
 					},
 				},
@@ -87,7 +87,7 @@ func TestParse(t *testing.T) {
 					Name:   "File",
 					Params: []rules.Param{
 						{
-							String: stringRef("default.html"),
+							String: rules.StringP("default.html"),
 						},
 					},
 				},
@@ -105,7 +105,7 @@ func TestParse(t *testing.T) {
 					Name: "ReturnInt",
 					Params: []rules.Param{
 						{
-							Int: intRef(1),
+							Int: rules.IntP(1),
 						},
 					},
 				},
@@ -124,7 +124,7 @@ func TestParse(t *testing.T) {
 					Name:   "ReturnInt",
 					Params: []rules.Param{
 						{
-							Int: intRef(1),
+							Int: rules.IntP(1),
 						},
 					},
 				},
@@ -142,7 +142,7 @@ func TestParse(t *testing.T) {
 					Name: "ReturnInt",
 					Params: []rules.Param{
 						{
-							Int: intRef(1337),
+							Int: rules.IntP(1337),
 						},
 					},
 				},
@@ -161,7 +161,7 @@ func TestParse(t *testing.T) {
 					Name:   "ReturnInt",
 					Params: []rules.Param{
 						{
-							Int: intRef(1337),
+							Int: rules.IntP(1337),
 						},
 					},
 				},
@@ -179,7 +179,7 @@ func TestParse(t *testing.T) {
 					Name: "ReturnFloat",
 					Params: []rules.Param{
 						{
-							Float: floatRef(13.37),
+							Float: rules.FloatP(13.37),
 						},
 					},
 				},
@@ -197,7 +197,7 @@ func TestParse(t *testing.T) {
 					Name: "ReturnFile",
 					Params: []rules.Param{
 						{
-							String: stringRef("default.html"),
+							String: rules.StringP("default.html"),
 						},
 					},
 				},
@@ -207,7 +207,7 @@ func TestParse(t *testing.T) {
 							Name: "PathPattern",
 							Params: []rules.Param{
 								{
-									String: stringRef(`.*\.(?i)png`),
+									String: rules.StringP(`.*\.(?i)png`),
 								},
 							},
 						},
@@ -228,7 +228,7 @@ func TestParse(t *testing.T) {
 					Name:   "ReturnFile",
 					Params: []rules.Param{
 						{
-							String: stringRef("default.html"),
+							String: rules.StringP("default.html"),
 						},
 					},
 				},
@@ -239,7 +239,7 @@ func TestParse(t *testing.T) {
 							Name:   "PathPattern",
 							Params: []rules.Param{
 								{
-									String: stringRef(`.*\.(?i)png`),
+									String: rules.StringP(`.*\.(?i)png`),
 								},
 							},
 						},
@@ -259,7 +259,7 @@ func TestParse(t *testing.T) {
 					Name: "ReturnFile",
 					Params: []rules.Param{
 						{
-							String: stringRef("default.html"),
+							String: rules.StringP("default.html"),
 						},
 					},
 				},
@@ -269,7 +269,7 @@ func TestParse(t *testing.T) {
 							Name: "Method",
 							Params: []rules.Param{
 								{
-									String: stringRef(http.MethodGet),
+									String: rules.StringP(http.MethodGet),
 								},
 							},
 						},
@@ -277,7 +277,7 @@ func TestParse(t *testing.T) {
 							Name: "PathPattern",
 							Params: []rules.Param{
 								{
-									String: stringRef("/index.html"),
+									String: rules.StringP("/index.html"),
 								},
 							},
 						},
@@ -298,7 +298,7 @@ func TestParse(t *testing.T) {
 					Name:   "ReturnFile",
 					Params: []rules.Param{
 						{
-							String: stringRef("default.html"),
+							String: rules.StringP("default.html"),
 						},
 					},
 				},
@@ -309,7 +309,7 @@ func TestParse(t *testing.T) {
 							Name:   "Method",
 							Params: []rules.Param{
 								{
-									String: stringRef(http.MethodGet),
+									String: rules.StringP(http.MethodGet),
 								},
 							},
 						},
@@ -318,7 +318,7 @@ func TestParse(t *testing.T) {
 							Name:   "PathPattern",
 							Params: []rules.Param{
 								{
-									String: stringRef("/index.html"),
+									String: rules.StringP("/index.html"),
 								},
 							},
 						},
@@ -339,7 +339,7 @@ func TestParse(t *testing.T) {
 					Name:   "Get",
 					Params: []rules.Param{
 						{
-							String: stringRef("https://www.microsoft.com/"),
+							String: rules.StringP("https://www.microsoft.com/"),
 						},
 					},
 				},
@@ -358,10 +358,10 @@ func TestParse(t *testing.T) {
 					Name:   "Post",
 					Params: []rules.Param{
 						{
-							String: stringRef("https://www.microsoft.com/"),
+							String: rules.StringP("https://www.microsoft.com/"),
 						},
 						{
-							String: stringRef(`{"Name":"Ted.Tester"}`),
+							String: rules.StringP(`{"Name":"Ted.Tester"}`),
 						},
 					},
 				},
@@ -380,7 +380,7 @@ func TestParse(t *testing.T) {
 					Name:   "Get",
 					Params: []rules.Param{
 						{
-							String: stringRef("https://www.microsoft.com/"),
+							String: rules.StringP("https://www.microsoft.com/"),
 						},
 					},
 				},
@@ -390,7 +390,7 @@ func TestParse(t *testing.T) {
 							Name: "Status",
 							Params: []rules.Param{
 								{
-									Int: intRef(200),
+									Int: rules.IntP(200),
 								},
 							},
 						},
@@ -411,7 +411,7 @@ func TestParse(t *testing.T) {
 					Name:   "Get",
 					Params: []rules.Param{
 						{
-							String: stringRef("https://www.microsoft.com/"),
+							String: rules.StringP("https://www.microsoft.com/"),
 						},
 					},
 				},
@@ -421,7 +421,7 @@ func TestParse(t *testing.T) {
 							Name: "Status",
 							Params: []rules.Param{
 								{
-									Int: intRef(200),
+									Int: rules.IntP(200),
 								},
 							},
 						},
@@ -429,10 +429,10 @@ func TestParse(t *testing.T) {
 							Name: "Header",
 							Params: []rules.Param{
 								{
-									String: stringRef("Content-Type"),
+									String: rules.StringP("Content-Type"),
 								},
 								{
-									String: stringRef("text.html"),
+									String: rules.StringP("text.html"),
 								},
 							},
 						},
@@ -472,14 +472,14 @@ func TestParam_AsString(t *testing.T) {
 		{
 			name: "Empty string",
 			fields: fields{
-				String: stringRef(""),
+				String: rules.StringP(""),
 			},
 			want: "",
 		},
 		{
 			name: "Any string",
 			fields: fields{
-				String: stringRef("Hello, world!"),
+				String: rules.StringP("Hello, world!"),
 			},
 			want: "Hello, world!",
 		},
@@ -521,14 +521,14 @@ func TestParam_AsInt(t *testing.T) {
 		{
 			name: "zero value",
 			fields: fields{
-				Int: intRef(0),
+				Int: rules.IntP(0),
 			},
 			want: 0,
 		},
 		{
 			name: "Any int",
 			fields: fields{
-				Int: intRef(42),
+				Int: rules.IntP(42),
 			},
 			want: 42,
 		},
@@ -570,14 +570,14 @@ func TestParam_AsFloat(t *testing.T) {
 		{
 			name: "Zero value",
 			fields: fields{
-				Float: floatRef(0),
+				Float: rules.FloatP(0),
 			},
 			want: 0,
 		},
 		{
 			name: "Any value",
 			fields: fields{
-				Float: floatRef(13.37),
+				Float: rules.FloatP(13.37),
 			},
 			want: 13.37,
 		},
@@ -603,16 +603,4 @@ func TestParam_AsFloat(t *testing.T) {
 			}
 		})
 	}
-}
-
-func stringRef(s string) *string {
-	return &s
-}
-
-func intRef(i int) *int {
-	return &i
-}
-
-func floatRef(f float64) *float64 {
-	return &f
 }

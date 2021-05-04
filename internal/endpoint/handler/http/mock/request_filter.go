@@ -12,7 +12,6 @@ import (
 
 var (
 	ErrUnknownFilterMethod = errors.New("no filter with the given name is known")
-	ErrAmbiguousParamCount = errors.New("the supplied number of arguments does not match the expected one")
 
 	knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){
 		"method":      HTTPMethodMatcher,
@@ -52,7 +51,7 @@ func (r RequestFilterFunc) Matches(req *http.Request) bool {
 }
 
 func HTTPMethodMatcher(args ...rules.Param) (RequestFilter, error) {
-	if err := validateParameterCount(args, 1); err != nil {
+	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
 	}
 
@@ -69,7 +68,7 @@ func HTTPMethodMatcher(args ...rules.Param) (RequestFilter, error) {
 }
 
 func PathPatternMatcher(args ...rules.Param) (RequestFilter, error) {
-	if err := validateParameterCount(args, 1); err != nil {
+	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
 	}
 
@@ -90,7 +89,10 @@ func PathPatternMatcher(args ...rules.Param) (RequestFilter, error) {
 }
 
 func HeaderValueMatcher(args ...rules.Param) (RequestFilter, error) {
-	if err := validateParameterCount(args, 2); err != nil {
+	if err := rules.ValidateParameterCount(args, 2); err != nil {
+		return nil, err
+	}
+	if err := rules.ValidateParameterCount(args, 2); err != nil {
 		return nil, err
 	}
 
@@ -113,11 +115,4 @@ func HeaderValueMatcher(args ...rules.Param) (RequestFilter, error) {
 		}
 		return false
 	}), nil
-}
-
-func validateParameterCount(params []rules.Param, expected int) error {
-	if len(params) != expected {
-		return fmt.Errorf("%w: expected %d got %d", ErrAmbiguousParamCount, expected, len(params))
-	}
-	return nil
 }

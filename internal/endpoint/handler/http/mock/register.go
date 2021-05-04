@@ -18,7 +18,7 @@ var (
 	initLock                 sync.Locker = new(sync.Mutex)
 )
 
-func InitMetrics() error {
+func init() {
 	initLock.Lock()
 	defer initLock.Unlock()
 
@@ -31,7 +31,7 @@ func InitMetrics() error {
 			handlerNameLblName,
 			ruleMatchedLblName,
 		); err != nil {
-			return err
+			panic(err)
 		}
 	}
 
@@ -43,10 +43,9 @@ func InitMetrics() error {
 			nil,
 			handlerNameLblName,
 		); err != nil {
-			return err
+			panic(err)
 		}
 	}
-	return nil
 }
 
 func New(logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) endpoint.ProtocolHandler {
@@ -58,10 +57,6 @@ func New(logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) endpoin
 }
 
 func AddHTTPMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) (err error) {
-	if err := InitMetrics(); err != nil {
-		return err
-	}
-
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return New(logger, emitter, fakeFileFS)
 	})

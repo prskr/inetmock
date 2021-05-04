@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-//nolint:funlen
 func Test_tblWriter_Write(t *testing.T) {
 	t.Parallel()
 	type s1 struct {

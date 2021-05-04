@@ -40,7 +40,7 @@ func HandlerForRoutingRule(rule *rules.Routing, logger logging.Logger, fakeFileF
 }
 
 func FileHandler(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (http.Handler, error) {
-	if err := validateParameterCount(args, 1); err != nil {
+	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
 	}
 
@@ -81,7 +81,7 @@ func FileHandler(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (
 }
 
 func StatusHandler(logger logging.Logger, _ fs.FS, args ...rules.Param) (http.Handler, error) {
-	if err := validateParameterCount(args, 1); err != nil {
+	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
 	}
 

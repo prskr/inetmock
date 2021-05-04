@@ -18,12 +18,8 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-//nolint:funlen
 func TestRouter_ServeHTTP(t *testing.T) {
 	t.Parallel()
-	if err := mock.InitMetrics(); !td.CmpNoError(t, err) {
-		return
-	}
 	type fields struct {
 		rules        []string
 		emitterSetup func(tb testing.TB, ctrl *gomock.Controller) audit.Emitter

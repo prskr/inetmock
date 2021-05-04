@@ -1,4 +1,4 @@
-//nolint:dupl,funlen
+//nolint:dupl
 package mock_test
 
 import (
@@ -36,7 +36,7 @@ func TestStatusHandler(t *testing.T) {
 				fakeFileFS: nil,
 				args: []rules.Param{
 					{
-						Int: intRef(204),
+						Int: rules.IntP(204),
 					},
 				},
 				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
@@ -64,7 +64,7 @@ func TestStatusHandler(t *testing.T) {
 				fakeFileFS: nil,
 				args: []rules.Param{
 					{
-						String: stringRef("Hello, World"),
+						String: rules.StringP("Hello, World"),
 					},
 				},
 				request: new(http.Request),
@@ -110,7 +110,7 @@ func TestFileHandler(t *testing.T) {
 				fakeFileFS: defaultFakeFileFS,
 				args: []rules.Param{
 					{
-						String: stringRef("default.html"),
+						String: rules.StringP("default.html"),
 					},
 				},
 				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
@@ -131,7 +131,7 @@ func TestFileHandler(t *testing.T) {
 				fakeFileFS: fstest.MapFS{},
 				args: []rules.Param{
 					{
-						String: stringRef("default.html"),
+						String: rules.StringP("default.html"),
 					},
 				},
 				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
@@ -166,7 +166,7 @@ func TestFileHandler(t *testing.T) {
 				fakeFileFS: nil,
 				args: []rules.Param{
 					{
-						Int: intRef(42),
+						Int: rules.IntP(42),
 					},
 				},
 				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {

@@ -1,4 +1,3 @@
-//nolint:funlen
 package mock_test
 
 import (
@@ -25,9 +24,6 @@ import (
 
 func Test_httpHandler_Start(t *testing.T) {
 	t.Parallel()
-	if !td.CmpNoError(t, mock.InitMetrics()) {
-		return
-	}
 	type fields struct {
 		fakeFileFS fs.FS
 	}

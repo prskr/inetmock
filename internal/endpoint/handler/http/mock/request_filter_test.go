@@ -27,7 +27,7 @@ func TestHTTPMethodMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						String: stringRef("GET"),
+						String: rules.StringP("GET"),
 					},
 				},
 				req: &http.Request{
@@ -42,7 +42,7 @@ func TestHTTPMethodMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						String: stringRef("POST"),
+						String: rules.StringP("POST"),
 					},
 				},
 				req: &http.Request{
@@ -57,7 +57,7 @@ func TestHTTPMethodMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						Int: intRef(42),
+						Int: rules.IntP(42),
 					},
 				},
 				req: &http.Request{},
@@ -108,7 +108,7 @@ func TestPathPatternMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						String: stringRef(".*\\.(?i)htm(l)?$"),
+						String: rules.StringP(".*\\.(?i)htm(l)?$"),
 					},
 				},
 				req: &http.Request{
@@ -123,7 +123,7 @@ func TestPathPatternMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						String: stringRef("POST"),
+						String: rules.StringP("POST"),
 					},
 				},
 				req: &http.Request{
@@ -138,7 +138,7 @@ func TestPathPatternMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						Int: intRef(42),
+						Int: rules.IntP(42),
 					},
 				},
 				req: &http.Request{},
@@ -189,10 +189,10 @@ func TestHeaderValueMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						String: stringRef("Accept"),
+						String: rules.StringP("Accept"),
 					},
 					{
-						String: stringRef("text/html"),
+						String: rules.StringP("text/html"),
 					},
 				},
 				req: &http.Request{
@@ -209,10 +209,10 @@ func TestHeaderValueMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						String: stringRef("Accept"),
+						String: rules.StringP("Accept"),
 					},
 					{
-						String: stringRef("text/html"),
+						String: rules.StringP("text/html"),
 					},
 				},
 				req: &http.Request{
@@ -229,10 +229,10 @@ func TestHeaderValueMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						Int: intRef(42),
+						Int: rules.IntP(42),
 					},
 					{
-						String: stringRef("text/html"),
+						String: rules.StringP("text/html"),
 					},
 				},
 				req: &http.Request{},
@@ -245,7 +245,7 @@ func TestHeaderValueMatcher(t *testing.T) {
 			args: args{
 				args: []rules.Param{
 					{
-						Int: intRef(42),
+						Int: rules.IntP(42),
 					},
 				},
 				req: &http.Request{},
@@ -268,12 +268,4 @@ func TestHeaderValueMatcher(t *testing.T) {
 			td.Cmp(t, got.Matches(tt.args.req), tt.wantMatch)
 		})
 	}
-}
-
-func stringRef(s string) *string {
-	return &s
-}
-
-func intRef(i int) *int {
-	return &i
 }

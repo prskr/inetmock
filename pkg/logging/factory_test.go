@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//nolint:funlen
 func TestParseLevel(t *testing.T) {
 	t.Parallel()
 	type args struct {
