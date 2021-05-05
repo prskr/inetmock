@@ -103,6 +103,9 @@ issues:
 run:
   skip-dirs:
     - internal/mock
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*.mock.\\.go$"
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
