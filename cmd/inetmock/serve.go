@@ -68,10 +68,14 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		certStore,
 		registry,
 		eventStream,
-		appLogger,
+		appLogger.Named("orchestrator"),
 	)
 
-	checker := health.New()
+	var checker health.Checker
+	if checker, err = health.NewFromConfig(appLogger.Named("health"), cfg.Health, certStore.TLSConfig()); err != nil {
+		appLogger.Error("Failed to setup health checker", zap.Error(err))
+		return err
+	}
 
 	rpcAPI := rpc.NewINetMockAPI(
 		cfg.APIURL(),
@@ -156,16 +160,16 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 
 //nolint:lll
 func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS) (err error) {
-	if err = mock.AddHTTPMock(registry, logger, emitter, fakeFileFS); err != nil {
+	if err = mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS); err != nil {
 		return
 	}
-	if err = proxy.AddHTTPProxy(registry, logger, emitter, store); err != nil {
+	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, store); err != nil {
 		return
 	}
-	if err = dnsmock.AddDNSMock(registry, logger, emitter); err != nil {
+	if err = dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter); err != nil {
 		return
 	}
-	if err = metrics.AddMetricsExporter(registry, logger); err != nil {
+	if err = metrics.AddMetricsExporter(registry, logger.Named("metrics_exporter")); err != nil {
 		return
 	}
 	return nil

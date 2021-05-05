@@ -24,6 +24,10 @@ func NewInMemoryListener(tb testing.TB) InMemListener {
 		connections: make(chan net.Conn),
 	}
 
+	tb.Cleanup(func() {
+		_ = listener.Close()
+	})
+
 	return listener
 }
 
@@ -61,7 +65,7 @@ func (i inMemListener) DialContext(_ context.Context, network, addr string) (net
 	return i.Dial(network, addr)
 }
 
-func (i inMemListener) Dial(network, addr string) (net.Conn, error) {
+func (i inMemListener) Dial(_, _ string) (net.Conn, error) {
 	select {
 	case _, more := <-i.state:
 		if !more {

@@ -1,6 +1,7 @@
 package mock_test
 
 import (
+	"errors"
 	"io"
 	"io/fs"
 	"net/http"
@@ -164,18 +165,15 @@ func mustParseURL(urlToParse string) *url.URL {
 
 func setupHTTPServer(tb testing.TB, handler http.Handler) *http.Client {
 	tb.Helper()
-	srv := &http.Server{
-		Handler: handler,
-	}
 	listener := eptest.NewInMemoryListener(tb)
 
 	go func() {
-		td.Cmp(tb, srv.Serve(listener), http.ErrServerClosed)
+		switch err := http.Serve(listener, handler); {
+		case errors.Is(err, nil), errors.Is(err, http.ErrServerClosed):
+		default:
+			tb.Errorf("http.Serve() error = %v", err)
+		}
 	}()
-
-	tb.Cleanup(func() {
-		td.CmpNoError(tb, srv.Close())
-	})
 
 	return eptest.HTTPClientForInMemListener(listener)
 }

@@ -1,34 +1,30 @@
-package http
+package health
 
 import (
 	"encoding/json"
 	"net/http"
-
-	"gitlab.com/inetmock/inetmock/pkg/health"
 )
 
-func NewHealthHandler(checker health.Checker) http.Handler {
+func NewHealthHandler(checker Checker) http.Handler {
 	return &healthHandler{checker: checker}
 }
 
 type healthHandler struct {
-	checker health.Checker
+	checker Checker
 }
 
 func (h healthHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	var result = h.checker.Status(request.Context())
 
 	if !result.IsHealthy() {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusServiceUnavailable)
 		var err error
-		var data []byte
-		if data, err = json.Marshal(result); err != nil {
+		if err = json.NewEncoder(writer).Encode(result); err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		_, _ = writer.Write(data)
-		writer.WriteHeader(http.StatusServiceUnavailable)
-		writer.Header().Set("Content-Type", "application/json")
 		return
 	}
 	writer.WriteHeader(http.StatusNoContent)

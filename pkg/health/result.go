@@ -1,8 +1,19 @@
 package health
 
-import "sync"
+import (
+	"encoding/json"
+	"sync"
+)
 
 type Result map[string]error
+
+func (r Result) MarshalJSON() ([]byte, error) {
+	var tmp = make(map[string]string)
+	for s, err := range r {
+		tmp[s] = err.Error()
+	}
+	return json.Marshal(tmp)
+}
 
 func (r Result) IsHealthy() (healthy bool) {
 	for _, e := range r {

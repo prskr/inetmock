@@ -2,19 +2,22 @@ package health
 
 import (
 	"context"
+	"net/http"
 
 	"golang.org/x/sync/errgroup"
 )
 
-type checker map[string]Check
+type checker struct {
+	registeredChecks map[string]Check
+	checkClient      *http.Client
+}
 
 func (c *checker) AddCheck(check Check) error {
-	self := *c
 	name := check.Name()
-	if _, ok := self[name]; ok {
+	if _, ok := c.registeredChecks[name]; ok {
 		return ErrAmbiguousCheckName
 	}
-	self[name] = check
+	c.registeredChecks[name] = check
 	return nil
 }
 
@@ -22,7 +25,7 @@ func (c checker) Status(ctx context.Context) Result {
 	rw := NewResultWriter()
 	grp, grpCtx := errgroup.WithContext(ctx)
 
-	for k, v := range c {
+	for k, v := range c.registeredChecks {
 		// pin variables
 		checkName := k
 		check := v

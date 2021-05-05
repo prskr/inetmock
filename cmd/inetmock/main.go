@@ -11,6 +11,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/app"
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
+	"gitlab.com/inetmock/inetmock/pkg/health"
 )
 
 var (
@@ -57,7 +58,8 @@ type appConfig struct {
 	API       struct {
 		Listen string
 	}
-	Data Data
+	Health health.Config
+	Data   Data
 }
 
 func (c *appConfig) APIURL() *url.URL {

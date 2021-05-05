@@ -2,7 +2,7 @@
   <configuration default="false" name="imctl" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="inetmock" />
     <working_directory value="$PROJECT_DIR$" />
-    <parameters value="audit watch" />
+    <parameters value="health general" />
     <sudo value="true" />
     <kind value="PACKAGE" />
     <package value="gitlab.com/inetmock/inetmock/cmd/imctl" />
