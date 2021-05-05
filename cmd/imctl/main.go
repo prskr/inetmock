@@ -33,8 +33,9 @@ func main() {
 		app.Spec{
 			Name:        "imctl",
 			Short:       "IMCTL is the CLI app to interact with an INetMock server",
+			LogEncoding: "console",
 			Config:      &cfg,
-			SubCommands: []*cobra.Command{healthCmd, auditCmd, pcapCmd},
+			SubCommands: []*cobra.Command{healthCmd, auditCmd, pcapCmd, checkCmd},
 			LateInitTasks: []func(cmd *cobra.Command, args []string) (err error){
 				initGRPCConnection,
 			},

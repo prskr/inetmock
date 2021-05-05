@@ -22,12 +22,14 @@ import (
 var (
 	configFilePath  string
 	logLevel        string
+	logEncoding     string
 	developmentLogs bool
 )
 
 type Spec struct {
 	Name                    string
 	Short                   string
+	LogEncoding             string
 	Config                  interface{}
 	IgnoreMissingConfigFile bool
 	Defaults                map[string]interface{}
@@ -58,6 +60,7 @@ func (a *app) MustRun() {
 				"Failed to run inetmock",
 				zap.Error(err),
 			)
+			os.Exit(1)
 		} else {
 			panic(err)
 		}
@@ -104,6 +107,7 @@ func NewApp(spec Spec) App {
 			logging.ConfigureLogging(
 				logging.ParseLevel(logLevel),
 				developmentLogs,
+				logEncoding,
 				map[string]interface{}{
 					"cwd":  path.WorkingDirectory(),
 					"cmd":  cmd.Name(),
@@ -125,6 +129,7 @@ func NewApp(spec Spec) App {
 
 	a.rootCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "Path to config file that should be used")
 	a.rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "logging level to use")
+	a.rootCmd.PersistentFlags().StringVar(&logEncoding, "log-encoding", spec.LogEncoding, "Log encoding either 'json' or 'console'")
 	a.rootCmd.PersistentFlags().BoolVar(&developmentLogs, "development-logs", false, "Enable development mode logs")
 
 	a.rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) (err error) {

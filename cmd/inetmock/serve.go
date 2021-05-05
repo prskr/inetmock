@@ -28,10 +28,11 @@ const (
 
 var (
 	serveCmd = &cobra.Command{
-		Use:   "serve",
-		Short: "Starts the INetMock server",
-		Long:  ``,
-		RunE:  startINetMock,
+		Use:          "serve",
+		Short:        "Starts the INetMock server",
+		Long:         ``,
+		RunE:         startINetMock,
+		SilenceUsage: true,
 	}
 )
 

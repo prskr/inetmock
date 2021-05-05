@@ -37,10 +37,11 @@ var (
 //nolint:lll
 func init() {
 	generateCaCmd = &cobra.Command{
-		Use:   "generate-ca",
-		Short: "Generate a new CA certificate and corresponding key",
-		Long:  ``,
-		Run:   runGenerateCA,
+		Use:          "generate-ca",
+		Short:        "Generate a new CA certificate and corresponding key",
+		Long:         ``,
+		Run:          runGenerateCA,
+		SilenceUsage: true,
 	}
 
 	generateCaCmd.Flags().StringVar(&caCertOptions.CommonName, generateCACommonName, "INetMock", "Certificate Common Name that will also be used as file name during generation.")

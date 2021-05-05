@@ -75,6 +75,7 @@ func main() {
 	serverApp = app.NewApp(
 		app.Spec{
 			Name:        "inetmock",
+			LogEncoding: "json",
 			Short:       "INetMock is lightweight internet mock",
 			Config:      &cfg,
 			SubCommands: []*cobra.Command{serveCmd, generateCaCmd},

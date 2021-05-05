@@ -24,38 +24,43 @@ var (
 		Short: "Interact with the audit API",
 	}
 	watchEventsCmd = &cobra.Command{
-		Use:   "watch",
-		Short: "Watch all audit events",
-		RunE:  watchAuditEvents,
+		Use:          "watch",
+		Short:        "Watch all audit events",
+		RunE:         watchAuditEvents,
+		SilenceUsage: true,
 	}
 	listSinksCmd = &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"ls", "dir"},
-		Short:   "List all subscribed sinks",
-		RunE:    runListSinks,
+		Use:          "list",
+		Aliases:      []string{"ls", "dir"},
+		Short:        "List all subscribed sinks",
+		RunE:         runListSinks,
+		SilenceUsage: true,
 	}
 	addFileCmd = &cobra.Command{
-		Use:     "add-file",
-		Aliases: []string{"add"},
-		Short:   "subscribe events to a file",
-		Args:    cobra.ExactArgs(1),
-		RunE:    runAddFile,
+		Use:          "add-file",
+		Aliases:      []string{"add"},
+		Short:        "subscribe events to a file",
+		Args:         cobra.ExactArgs(1),
+		RunE:         runAddFile,
+		SilenceUsage: true,
 	}
 
 	removeFileCmd = &cobra.Command{
-		Use:     "remove-file",
-		Aliases: []string{"rm", "del"},
-		Short:   "remove file subscription",
-		Args:    cobra.ExactArgs(1),
-		RunE:    runRemoveFile,
+		Use:          "remove-file",
+		Aliases:      []string{"rm", "del"},
+		Short:        "remove file subscription",
+		Args:         cobra.ExactArgs(1),
+		RunE:         runRemoveFile,
+		SilenceUsage: true,
 	}
 
 	readFileCmd = &cobra.Command{
-		Use:     "read-file",
-		Aliases: []string{"cat"},
-		Short:   "reads an audit file and prints the events",
-		Args:    cobra.ExactArgs(1),
-		RunE:    runReadFile,
+		Use:          "read-file",
+		Aliases:      []string{"cat"},
+		Short:        "reads an audit file and prints the events",
+		Args:         cobra.ExactArgs(1),
+		RunE:         runReadFile,
+		SilenceUsage: true,
 	}
 
 	listenerName string

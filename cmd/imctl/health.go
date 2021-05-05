@@ -21,17 +21,19 @@ var (
 		Long: `
 Exit code 1 means the server is still initializing
 Exit code 2 means any component is unhealthy
-Exit code 10 means an error occurred while opening a connection to the API socket 
+Exit code 10 means an error occurred while opening a connection to the API socket
 
 The output contains information about each component and it's health state.
 `,
-		Run: runGeneralHealth,
+		Run:          runGeneralHealth,
+		SilenceUsage: true,
 	}
 
 	containerHealthCmd = &cobra.Command{
-		Use:   "container",
-		Short: "get the health in a container compatible way i.e. exit code 0 if okay otherwise exit code 1",
-		Run:   runContainerHealth,
+		Use:          "container",
+		Short:        "get the health in a container compatible way i.e. exit code 0 if okay otherwise exit code 1",
+		Run:          runContainerHealth,
+		SilenceUsage: true,
 	}
 )
 

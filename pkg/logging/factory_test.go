@@ -118,6 +118,7 @@ func TestConfigureLogging(t *testing.T) {
 	type args struct {
 		level              zap.AtomicLevel
 		developmentLogging bool
+		encoding           string
 		initialFields      map[string]interface{}
 	}
 	type testCase struct {
@@ -154,7 +155,7 @@ func TestConfigureLogging(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ConfigureLogging(tt.args.level, tt.args.developmentLogging, tt.args.initialFields)
+			ConfigureLogging(tt.args.level, tt.args.developmentLogging, tt.args.encoding, tt.args.initialFields)
 			if loggingConfig.Development != tt.args.developmentLogging {
 				t.Errorf("loggingConfig.Development = %t, want %t", loggingConfig.Development, tt.args.developmentLogging)
 				return

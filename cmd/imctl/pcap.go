@@ -27,16 +27,18 @@ var (
 		Short: "Interact with the PCAP API",
 	}
 	listAvailableDevicesCmd = &cobra.Command{
-		Use:     "list-devices",
-		Aliases: []string{"lis-dev", "ls-dev"},
-		Short:   "List all devices that might be monitored",
-		RunE:    runListAvailableDevices,
+		Use:          "list-devices",
+		Aliases:      []string{"lis-dev", "ls-dev"},
+		Short:        "List all devices that might be monitored",
+		RunE:         runListAvailableDevices,
+		SilenceUsage: true,
 	}
 	listCurrentlyRecordingsCmd = &cobra.Command{
-		Use:     "list-recordings",
-		Aliases: []string{"lis-rec", "ls-rec", "ls-recs"},
-		Short:   "List currently active recordings",
-		RunE:    runListActiveRecordings,
+		Use:          "list-recordings",
+		Aliases:      []string{"lis-rec", "ls-rec", "ls-recs"},
+		Short:        "List currently active recordings",
+		RunE:         runListActiveRecordings,
+		SilenceUsage: true,
 	}
 	promiscuousMode bool
 	readTimeout     time.Duration
@@ -80,7 +82,8 @@ var (
 			}
 			return nil
 		},
-		RunE: runAddRecording,
+		RunE:         runAddRecording,
+		SilenceUsage: true,
 	}
 	removeCurrentlyActiveRecording = &cobra.Command{
 		Use:     "stop-recording",
@@ -99,6 +102,7 @@ var (
 			}
 			return nil, cobra.ShellCompDirectiveError
 		},
+		SilenceUsage: true,
 	}
 )
 

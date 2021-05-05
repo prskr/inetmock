@@ -15,10 +15,12 @@ var (
 func ConfigureLogging(
 	level zap.AtomicLevel,
 	developmentLogging bool,
+	encoding string,
 	initialFields map[string]interface{},
 ) {
 	loggingConfig.Level = level
 	loggingConfig.Development = developmentLogging
+	loggingConfig.Encoding = encoding
 	if initialFields != nil {
 		loggingConfig.InitialFields = initialFields
 	}
