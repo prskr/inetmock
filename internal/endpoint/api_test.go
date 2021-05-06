@@ -13,7 +13,10 @@ func (p ProtocolHandlerDelegate) Start(ctx context.Context, lifecycle endpoint.L
 	return p(ctx, lifecycle)
 }
 
-func VerifiedProtocolHandler(tb testing.TB, delegate func(ctx context.Context, lifecycle endpoint.Lifecycle) error) endpoint.ProtocolHandler {
+func VerifiedProtocolHandler(
+	tb testing.TB,
+	delegate func(ctx context.Context, lifecycle endpoint.Lifecycle) error,
+) endpoint.ProtocolHandler {
 	tb.Helper()
 	var called bool
 	tb.Cleanup(func() {

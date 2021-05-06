@@ -3,6 +3,7 @@ package endpoint
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
@@ -13,11 +14,13 @@ import (
 )
 
 var (
-	ErrStartupTimeout = errors.New("endpoint did not start in time")
+	ErrStartupTimeout    = errors.New("endpoint did not start in time")
+	ErrUnknownHandlerRef = errors.New("no handler for given key registered")
 )
 
 type Orchestrator interface {
 	RegisterListener(spec ListenerSpec) error
+	Endpoints() []Endpoint
 	StartEndpoints(ctx context.Context) (errChan chan error)
 }
 
@@ -50,6 +53,8 @@ func (e *orchestrator) RegisterListener(spec ListenerSpec) (err error) {
 		if handler, registered := e.registry.HandlerForName(s.HandlerRef); registered {
 			s.Handler = handler
 			spec.Endpoints[name] = s
+		} else {
+			return fmt.Errorf("%s: %w", s.HandlerRef, ErrUnknownHandlerRef)
 		}
 	}
 
@@ -63,6 +68,10 @@ func (e *orchestrator) RegisterListener(spec ListenerSpec) (err error) {
 	e.muxes = append(e.muxes, muxes...)
 
 	return
+}
+
+func (e orchestrator) Endpoints() []Endpoint {
+	return e.endpointListeners
 }
 
 func (e *orchestrator) StartEndpoints(ctx context.Context) chan error {
