@@ -74,7 +74,7 @@ func FileHandler(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (
 			_ = file.Close()
 		}()
 
-		logger.Info("Returning file response")
+		logger.Debug("Returning file response")
 		//nolint:gosec
 		http.ServeContent(writer, request, path.Base(request.RequestURI), time.Now().Add(-(time.Duration(rand.Int()) * time.Millisecond)), rs)
 	}), nil
@@ -97,7 +97,7 @@ func StatusHandler(logger logging.Logger, _ fs.FS, args ...rules.Param) (http.Ha
 	)
 
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		logger.Info("Returning status code")
+		logger.Debug("Returning status code")
 		writer.WriteHeader(statusCodeToReturn)
 	}), nil
 }

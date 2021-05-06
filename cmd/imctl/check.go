@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -30,13 +32,32 @@ var (
 	runCheckCmd = &cobra.Command{
 		Use:     "run",
 		Short:   "Run a check script",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 		Aliases: []string{"exec"},
 		RunE: func(_ *cobra.Command, args []string) error {
-			if len(args) != 1 {
+			if len(args) > 1 {
 				return fmt.Errorf("expected 1 argument, got %d", len(args))
 			}
-			return runCheck(args[0])
+
+			switch len(args) {
+			case 0:
+				var stdinReader = bufio.NewReader(os.Stdin)
+				var script = make([]string, 0)
+				for {
+					if line, err := stdinReader.ReadString('\n'); err != nil {
+						if errors.Is(err, io.EOF) {
+							return runCheck(script)
+						}
+						return err
+					} else {
+						script = append(script, line)
+					}
+				}
+			case 1:
+				return runCheck(args)
+			default:
+				return errors.New("missing script")
+			}
 		},
 		SilenceUsage: true,
 	}
@@ -62,7 +83,7 @@ func init() {
 	checkCmd.AddCommand(runCheckCmd)
 }
 
-func runCheck(script string) error {
+func runCheck(script []string) error {
 	var healthCfg = health.Config{
 		Client: health.HTTPClientConfig{
 			HTTP: health.Server{
@@ -101,19 +122,23 @@ func runCheck(script string) error {
 	}
 
 	var client = health.HTTPClient(healthCfg, tlsConfig)
+	var check = new(rules.Check)
 
-	check := new(rules.Check)
-	if err := rules.Parse(script, check); err != nil {
-		return err
-	}
-
-	if compiledCheck, err := health.NewHTTPRuleCheck("CLI", client, cliApp.Logger().Named("check"), check); err != nil {
-		return err
-	} else {
-		ctx, cancel := context.WithTimeout(cliApp.Context(), runCheckArgs.Timeout)
-		defer cancel()
-		if err := compiledCheck.Status(ctx); err != nil {
+	for idx := range script {
+		rawRule := script[idx]
+		if err := rules.Parse(rawRule, check); err != nil {
 			return err
+		}
+
+		if compiledCheck, err := health.NewHTTPRuleCheck("CLI", client, cliApp.Logger().Named("check"), check); err != nil {
+			return err
+		} else {
+			ctx, cancel := context.WithTimeout(cliApp.Context(), runCheckArgs.Timeout)
+			err := compiledCheck.Status(ctx)
+			cancel()
+			if err != nil {
+				return err
+			}
 		}
 	}
 	cliApp.Logger().Info("Successfully executed")

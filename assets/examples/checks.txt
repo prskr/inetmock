@@ -1,0 +1,4 @@
+http.GET("https://stackoverflow.com/index.html") => Status(200) -> Header("Content-Type", "text/html") -> Contains(`<title>INetSim default HTML page</title>`)
+http.GET("https://google.com/favicon.ico") => Status(200) -> SHA256("cb3f33cb0c7bae881d13be647cb928aa7fec9e9fcd6ec758751374bf7436d41a")
+http.POST("https://api.icndb.com/jokes/new", `{"joke":"asdf","categories":[]}`) => Status(204)
+http.PUT("https://api.icndb.com/jokes/37", `{"joke":"asdf","categories":[]}`) => Status(204)

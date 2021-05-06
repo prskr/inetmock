@@ -106,7 +106,7 @@ func RequestInitiatorForMethod(method string) func(logger logging.Logger, params
 			zap.String("uri", uri),
 		)
 
-		logger.Info("Setup health initiator")
+		logger.Debug("Setup health initiator")
 
 		return &simpleRequest{
 			logger:     logger,

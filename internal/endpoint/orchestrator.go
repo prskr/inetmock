@@ -71,7 +71,7 @@ func (e *orchestrator) StartEndpoints(ctx context.Context) chan error {
 		endpointLogger := e.logger.With(
 			zap.String("epListener", epListener.name),
 		)
-		endpointLogger.Info("Starting epListener")
+		endpointLogger.Debug("Starting endpoint listener")
 		lifecycle := NewEndpointLifecycle(
 			epListener.name,
 			epListener.uplink,
@@ -79,7 +79,7 @@ func (e *orchestrator) StartEndpoints(ctx context.Context) chan error {
 		)
 
 		if err := epListener.Start(ctx, e.logger.With(zap.String("epListener", epListener.name)), lifecycle); err == nil {
-			endpointLogger.Info("successfully started epListener")
+			endpointLogger.Debug("Successfully started epListener")
 		} else {
 			endpointLogger.Error("error occurred during epListener startup - will be skipped for now")
 		}

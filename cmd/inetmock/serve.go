@@ -42,6 +42,8 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 	var err error
 	appLogger := serverApp.Logger()
 
+	appLogger.Info("Starting the server")
+
 	if err = cfg.Data.setup(); err != nil {
 		appLogger.Error("Failed to setup data directories", zap.Error(err))
 		return err

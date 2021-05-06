@@ -80,6 +80,7 @@ func (a *app) RootCommand() *cobra.Command {
 }
 
 func (a *app) Shutdown() {
+	a.logger.Info("Shutdown initiated")
 	a.cancel()
 }
 

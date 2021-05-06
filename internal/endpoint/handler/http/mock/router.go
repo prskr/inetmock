@@ -37,7 +37,7 @@ type Router struct {
 }
 
 func (r *Router) RegisterRule(rawRule string) error {
-	r.Logger.Info("Adding routing rule", zap.String("rawRule", rawRule))
+	r.Logger.Debug("Adding routing rule", zap.String("rawRule", rawRule))
 	var rule = new(rules.Routing)
 	if err := rules.Parse(rawRule, rule); err != nil {
 		return err
@@ -54,7 +54,7 @@ func (r *Router) RegisterRule(rawRule string) error {
 		return err
 	}
 
-	r.Logger.Info("Configure successfully parsed routing rule")
+	r.Logger.Debug("Configure successfully parsed routing rule")
 
 	r.handlers = append(r.handlers, ConditionalHandler{
 		Handler: handler,

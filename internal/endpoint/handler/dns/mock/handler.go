@@ -40,8 +40,8 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 	}
 
 	for _, rule := range options.Rules {
-		d.logger.Info(
-			"register DNS rule",
+		d.logger.Debug(
+			"Register DNS rule",
 			zap.String("pattern", rule.pattern.String()),
 			zap.String("response", rule.response.String()),
 		)
