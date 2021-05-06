@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 
@@ -16,15 +17,7 @@ type Endpoint struct {
 
 func (e *Endpoint) Start(ctx context.Context, logger logging.Logger, lifecycle Lifecycle) (err error) {
 	startupResult := make(chan error)
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				logger.Fatal("Startup error recovered", zap.Any("recovered", r))
-			}
-		}()
-
-		startupResult <- e.Handler.Start(ctx, lifecycle)
-	}()
+	go e.doStart(ctx, lifecycle, logger, startupResult)
 
 	select {
 	case err = <-startupResult:
@@ -33,4 +26,15 @@ func (e *Endpoint) Start(ctx context.Context, logger logging.Logger, lifecycle L
 	}
 
 	return
+}
+
+func (e *Endpoint) doStart(ctx context.Context, lifecycle Lifecycle, logger logging.Logger, startupResult chan error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Fatal("Startup error recovered", zap.Any("recovered", r))
+			startupResult <- fmt.Errorf("recovered: %v", r)
+		}
+	}()
+
+	startupResult <- e.Handler.Start(ctx, lifecycle)
 }

@@ -90,7 +90,7 @@ func (t *testLogger) Panic(msg string, fields ...zap.Field) {
 	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.PanicLevel, true), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
-		t.tb.Error(buf.String())
+		t.tb.Log(buf.String())
 	}
 }
 
@@ -99,7 +99,7 @@ func (t *testLogger) Fatal(msg string, fields ...zap.Field) {
 	buf, err := t.encoder.EncodeEntry(t.entry(msg, zapcore.FatalLevel, true), append(t.fields, fields...))
 
 	if err == nil && !t.testFinished() {
-		t.tb.Error(buf.String())
+		t.tb.Log(buf.String())
 	}
 }
 

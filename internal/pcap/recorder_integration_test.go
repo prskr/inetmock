@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	simulateTimeout = 30 * time.Second
+	simulateTimeout = 1 * time.Second
 )
 
 func Test_recorder_CompleteWorkflow(t *testing.T) {
