@@ -24,10 +24,10 @@ func (u Uplink) Addr() net.Addr {
 
 func (u Uplink) Close() (err error) {
 	if u.Listener != nil {
-		err = multierr.Append(err, u.Listener.Close())
+		multierr.AppendInvoke(&err, multierr.Close(u.Listener))
 	}
 	if u.PacketConn != nil {
-		err = multierr.Append(err, u.PacketConn.Close())
+		multierr.AppendInvoke(&err, multierr.Close(u.PacketConn))
 	}
 	return
 }

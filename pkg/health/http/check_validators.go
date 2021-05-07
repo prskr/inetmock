@@ -158,9 +158,7 @@ func ResponseBodyContainsFilter(args ...rules.Param) (Validator, error) {
 			searchBuffer = make([]byte, searchValueLength*windowSizeSearchBufferMultiplier)
 		}
 
-		defer func() {
-			err = multierr.Append(err, resp.Body.Close())
-		}()
+		defer multierr.AppendInvoke(&err, multierr.Close(resp.Body))
 
 		var read, idx int
 		var more = true
@@ -200,9 +198,7 @@ func ResponseBodyHashSHA256Filter(args ...rules.Param) (Validator, error) {
 		if resp == nil {
 			return ErrResponseEmpty
 		}
-		defer func() {
-			err = multierr.Append(err, resp.Body.Close())
-		}()
+		defer multierr.AppendInvoke(&err, multierr.Close(resp.Body))
 
 		hash := sha256.New()
 		if _, err = io.Copy(hash, resp.Body); err != nil {

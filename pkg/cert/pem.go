@@ -45,9 +45,7 @@ func (p pemCrt) Write(cn, outDir string) (err error) {
 	if certOut, err = os.Create(filepath.Join(outDir, fmt.Sprintf("%s.pem", cn))); err != nil {
 		return
 	}
-	defer func() {
-		err = multierr.Append(err, certOut.Close())
-	}()
+	defer multierr.AppendInvoke(&err, multierr.Close(certOut))
 	if err = pem.Encode(certOut, &pem.Block{Type: certificateBlockType, Bytes: p.crt.Certificate[0]}); err != nil {
 		return
 	}

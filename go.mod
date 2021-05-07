@@ -38,7 +38,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/testcontainers/testcontainers-go v0.10.0
 	go.opencensus.io v0.23.0 // indirect
-	go.uber.org/multierr v1.6.0
+	go.uber.org/multierr v1.7.0
 	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20210505024714-0287a6fb4125 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c

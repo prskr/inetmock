@@ -152,9 +152,7 @@ func addCACertToPool(pool *x509.CertPool) (err error) {
 		return err
 	}
 
-	defer func() {
-		err = multierr.Append(err, reader.Close())
-	}()
+	defer multierr.AppendInvoke(&err, multierr.Close(reader))
 
 	if _, err = io.Copy(buffer, reader); err != nil {
 		return err

@@ -49,7 +49,7 @@ func (f writerConsumer) Observe(pkg gopacket.Packet) {
 
 func (f *writerConsumer) Close() (err error) {
 	if closer, ok := f.origWriter.(io.Closer); ok {
-		err = multierr.Append(err, closer.Close())
+		multierr.AppendInvoke(&err, multierr.Close(closer))
 	}
 	f.packageWriter = nil
 	return
