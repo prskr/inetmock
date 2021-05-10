@@ -123,8 +123,9 @@ func (rh *regexHandler) recordRequest(m *dns.Msg, localAddr, remoteAddr net.Addr
 		ProtocolDetails: dnsDetails,
 	}
 
-	ev.SetSourceIPFromAddr(remoteAddr)
-	ev.SetDestinationIPFromAddr(localAddr)
+	// it's considered to be okay if these details are missing
+	_ = ev.SetSourceIPFromAddr(remoteAddr)
+	_ = ev.SetDestinationIPFromAddr(localAddr)
 
 	rh.auditEmitter.Emit(ev)
 }

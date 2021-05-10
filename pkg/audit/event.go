@@ -2,14 +2,13 @@ package audit
 
 import (
 	"net"
-	"strconv"
-	"strings"
 	"time"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"gitlab.com/inetmock/inetmock/internal/netuils"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
@@ -66,16 +65,24 @@ func (e *Event) ApplyDefaults(id int64) {
 	}
 }
 
-func (e *Event) SetSourceIPFromAddr(remoteAddr net.Addr) {
-	ip, port := parseIPPortFromAddr(remoteAddr)
-	e.SourceIP = ip
-	e.SourcePort = port
+func (e *Event) SetSourceIPFromAddr(remoteAddr net.Addr) error {
+	if ipPort, err := netuils.IPPortFromAddress(remoteAddr); err != nil {
+		return err
+	} else {
+		e.SourceIP = ipPort.IP
+		e.SourcePort = uint16(ipPort.Port)
+	}
+	return nil
 }
 
-func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) {
-	ip, port := parseIPPortFromAddr(localAddr)
-	e.DestinationIP = ip
-	e.DestinationPort = port
+func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) error {
+	if ipPort, err := netuils.IPPortFromAddress(localAddr); err != nil {
+		return err
+	} else {
+		e.DestinationIP = ipPort.IP
+		e.DestinationPort = uint16(ipPort.Port)
+	}
+	return nil
 }
 
 func NewEventFromProto(msg *v1.EventEntity) (ev Event) {
@@ -92,32 +99,6 @@ func NewEventFromProto(msg *v1.EventEntity) (ev Event) {
 		TLS:             NewTLSDetailsFromProto(msg.GetTls()),
 	}
 	return
-}
-
-func parseIPPortFromAddr(addr net.Addr) (ip net.IP, port uint16) {
-	const expectedIPPortSplitLength = 2
-	if addr == nil {
-		return
-	}
-	switch a := addr.(type) {
-	case *net.TCPAddr:
-		return a.IP, uint16(a.Port)
-	case *net.UDPAddr:
-		return a.IP, uint16(a.Port)
-	case *net.UnixAddr:
-		return
-	default:
-		ipPortSplit := strings.Split(addr.String(), ":")
-		if len(ipPortSplit) != expectedIPPortSplitLength {
-			return
-		}
-
-		ip = net.ParseIP(ipPortSplit[0])
-		if p, err := strconv.Atoi(ipPortSplit[1]); err == nil {
-			port = uint16(p)
-		}
-		return
-	}
 }
 
 func guessDetailsFromApp(any *anypb.Any) Details {

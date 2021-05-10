@@ -8,7 +8,6 @@ import (
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
@@ -27,14 +26,12 @@ type Orchestrator interface {
 func NewOrchestrator(
 	certStore cert.Store,
 	registry HandlerRegistry,
-	emitter audit.Emitter,
 	logger logging.Logger,
 ) Orchestrator {
 	return &orchestrator{
 		registry:  registry,
 		logger:    logger,
 		certStore: certStore,
-		emitter:   emitter,
 	}
 }
 
@@ -42,7 +39,6 @@ type orchestrator struct {
 	registry  HandlerRegistry
 	logger    logging.Logger
 	certStore cert.Store
-	emitter   audit.Emitter
 
 	endpointListeners []Endpoint
 	muxes             []cmux.CMux

@@ -70,7 +70,6 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 	var endpointOrchestrator = endpoint.NewOrchestrator(
 		certStore,
 		registry,
-		eventStream,
 		appLogger.Named("orchestrator"),
 	)
 

@@ -32,8 +32,9 @@ func EventFromRequest(request *http.Request, app v1.AppProtocol) audit.Event {
 		}
 	}
 
-	ev.SetDestinationIPFromAddr(localAddr(request.Context()))
-	ev.SetSourceIPFromAddr(remoteAddr(request.Context()))
+	// it's considered to be okay if these details are missing
+	_ = ev.SetDestinationIPFromAddr(localAddr(request.Context()))
+	_ = ev.SetSourceIPFromAddr(remoteAddr(request.Context()))
 
 	return ev
 }

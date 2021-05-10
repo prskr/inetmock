@@ -30,6 +30,14 @@ type registeredSink struct {
 	lock       sync.Locker
 }
 
+func MustNewEventStream(logger logging.Logger, options ...EventStreamOption) EventStream {
+	if stream, err := NewEventStream(logger, options...); err != nil {
+		panic(err)
+	} else {
+		return stream
+	}
+}
+
 func NewEventStream(logger logging.Logger, options ...EventStreamOption) (EventStream, error) {
 	cfg := newEventStreamCfg()
 

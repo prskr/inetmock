@@ -10,11 +10,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"gitlab.com/inetmock/inetmock/internal/netuils"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-)
-
-const (
-	ipv4Loopback = "127.0.0.1"
 )
 
 var (
@@ -23,14 +20,28 @@ var (
 			return privateKeyForCurve(options)
 		}
 	}
+
+	//nolint:gomnd // IPv4 loopback address is well known
+	ipv4LoopbackIP = net.IPv4(127, 0, 0, 1)
 )
 
 type KeyProvider func() (key interface{}, err error)
 
 type Store interface {
 	CACert() *tls.Certificate
-	GetCertificate(serverName string, ip string) (*tls.Certificate, error)
+	GetCertificate(serverName string, ip net.IP) (*tls.Certificate, error)
 	TLSConfig() *tls.Config
+}
+
+func MustDefaultStore(
+	options Options,
+	logger logging.Logger,
+) Store {
+	if store, err := NewDefaultStore(options, logger); err != nil {
+		panic(err)
+	} else {
+		return store
+	}
 }
 
 func NewDefaultStore(
@@ -98,16 +109,18 @@ func (s *store) TLSConfig() *tls.Config {
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
 		GetCertificate: func(info *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
-			var localIP string
-			if localIP, err = extractIPFromAddress(info.Conn.LocalAddr().String()); err != nil {
-				localIP = ipv4Loopback
+			var localIP *netuils.IPPort
+			if localIP, err = netuils.IPPortFromAddress(info.Conn.LocalAddr()); err != nil {
+				localIP = &netuils.IPPort{
+					IP: ipv4LoopbackIP,
+				}
 			}
 
-			if cert, err = s.GetCertificate(info.ServerName, localIP); err != nil {
+			if cert, err = s.GetCertificate(info.ServerName, localIP.IP); err != nil {
 				s.logger.Error(
 					"error while resolving certificate",
 					zap.String("serverName", info.ServerName),
-					zap.String("localAddr", localIP),
+					zap.String("localAddr", localIP.String()),
 					zap.Error(err),
 				)
 			}
@@ -131,7 +144,7 @@ func (s *store) CACert() *tls.Certificate {
 	return s.caCert
 }
 
-func (s *store) GetCertificate(serverName, ip string) (cert *tls.Certificate, err error) {
+func (s *store) GetCertificate(serverName string, ip net.IP) (cert *tls.Certificate, err error) {
 	if crt, ok := s.cache.Get(serverName); ok {
 		return crt, nil
 	}
@@ -139,7 +152,7 @@ func (s *store) GetCertificate(serverName, ip string) (cert *tls.Certificate, er
 	if cert, err = s.generator.ServerCert(GenerationOptions{
 		CommonName:  serverName,
 		DNSNames:    []string{serverName},
-		IPAddresses: []net.IP{net.ParseIP(ip)},
+		IPAddresses: []net.IP{ip},
 	}, s.caCert); err == nil {
 		_ = s.cache.Put(cert)
 	}
