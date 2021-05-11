@@ -10,7 +10,11 @@ type Result map[string]error
 func (r Result) MarshalJSON() ([]byte, error) {
 	var tmp = make(map[string]string)
 	for s, err := range r {
-		tmp[s] = err.Error()
+		if err != nil {
+			tmp[s] = err.Error()
+		} else {
+			tmp[s] = ""
+		}
 	}
 	return json.Marshal(tmp)
 }

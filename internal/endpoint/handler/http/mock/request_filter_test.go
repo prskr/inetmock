@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/maxatome/go-testdeep/helpers/tdhttp"
 	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
@@ -111,9 +112,7 @@ func TestPathPatternMatcher(t *testing.T) {
 						String: rules.StringP(".*\\.(?i)htm(l)?$"),
 					},
 				},
-				req: &http.Request{
-					URL: mustParseURL("https://www.reddit.com/index.htm"),
-				},
+				req: tdhttp.NewRequest(http.MethodGet, "https://www.reddit.com/index.htm", nil),
 			},
 			wantMatch: true,
 			wantErr:   false,
@@ -126,9 +125,11 @@ func TestPathPatternMatcher(t *testing.T) {
 						String: rules.StringP("POST"),
 					},
 				},
-				req: &http.Request{
-					URL: mustParseURL("https://www.reddit.com/idx.jpeg"),
-				},
+				req: tdhttp.NewRequest(
+					http.MethodGet,
+					"https://www.reddit.com/idx.jpeg",
+					nil,
+				),
 			},
 			wantMatch: false,
 			wantErr:   false,

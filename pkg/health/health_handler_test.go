@@ -3,63 +3,53 @@ package health_test
 import (
 	"context"
 	"errors"
-	"io"
 	"net/http"
-	"strings"
 	"testing"
-	"time"
 
+	"github.com/maxatome/go-testdeep/helpers/tdhttp"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint/eptest"
-	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 )
 
 func Test_healthHandler_ServeHTTP(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name     string
-		checks   []health.Check
-		want     interface{}
-		wantBody interface{}
+		name       string
+		checks     []health.Check
+		wantStatus int
+		wantBody   interface{}
 	}{
 		{
-			name: "Empty checker - no error",
-			want: td.Struct(new(http.Response), td.StructFields{
-				"StatusCode": td.Between(200, 299),
-			}),
-			wantBody: "",
+			name:       "Empty checker - no error",
+			wantStatus: 204,
+			wantBody:   nil,
 		},
 		{
-			name: "Checker with success check",
+			name:       "Checker with success check",
+			wantStatus: 204,
 			checks: []health.Check{
 				health.NewCheckFunc("Success", func(context.Context) error {
 					return nil
 				}),
 			},
-			want: td.Struct(new(http.Response), td.StructFields{
-				"StatusCode": td.Between(200, 299),
-			}),
-			wantBody: "",
+			wantBody: nil,
 		},
 		{
-			name: "Checker with error check",
+			name:       "Checker with error check",
+			wantStatus: 503,
 			checks: []health.Check{
 				health.NewCheckFunc("Error", func(context.Context) error {
 					return errors.New("there's something strange...in the neighborhood")
 				}),
 			},
-			want: td.Struct(new(http.Response), td.StructFields{
-				"StatusCode": 503,
-				"Header": td.SuperMapOf(http.Header{}, td.MapEntries{
-					"Content-Type": td.Contains("application/json"),
-				}),
+			wantBody: td.Map(make(map[string]string), td.MapEntries{
+				"Error": td.Contains("something strange"),
 			}),
-			wantBody: td.Contains("something strange"),
 		},
 		{
-			name: "Checker with multiple error checks",
+			name:       "Checker with multiple error checks",
+			wantStatus: 503,
 			checks: []health.Check{
 				health.NewCheckFunc("Err1", func(context.Context) error {
 					return errors.New("there's something strange...in the neighborhood")
@@ -68,13 +58,10 @@ func Test_healthHandler_ServeHTTP(t *testing.T) {
 					return errors.New("who you gonna call")
 				}),
 			},
-			want: td.Struct(new(http.Response), td.StructFields{
-				"StatusCode": 503,
-				"Header": td.SuperMapOf(http.Header{}, td.MapEntries{
-					"Content-Type": td.Contains("application/json"),
-				}),
+			wantBody: td.Map(make(map[string]string), td.MapEntries{
+				"Err1": td.Contains("something strange"),
+				"Err2": td.Contains("gonna call"),
 			}),
-			wantBody: td.Contains("something strange"),
 		},
 	}
 	for _, tc := range tests {
@@ -92,29 +79,16 @@ func Test_healthHandler_ServeHTTP(t *testing.T) {
 			}
 
 			var h = health.NewHealthHandler(checker)
-			var listener = eptest.NewInMemoryListener(t)
+			ta := tdhttp.NewTestAPI(t, h)
+			ta = ta.Get("/").
+				CmpStatus(tt.wantStatus)
 
-			go func() {
-				if err := http.Serve(listener, h); err != nil && !errors.Is(err, http.ErrServerClosed) {
-					t.Errorf("http.Serve() error = %v", err)
-				}
-			}()
-
-			var client = eptest.HTTPClientForInMemListener(listener)
-			ctx, cancel := context.WithTimeout(test.Context(t), 50*time.Millisecond)
-			t.Cleanup(cancel)
-			req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost/", nil)
-			if resp, err := client.Do(req); err != nil {
-				t.Errorf("failed to fetch health state = error %v", err)
-				return
-			} else {
-				var bodyBuilder = new(strings.Builder)
-				_, _ = io.Copy(bodyBuilder, resp.Body)
-				defer func() {
-					_ = resp.Body.Close()
-				}()
-				td.Cmp(t, resp, tt.want)
-				td.Cmp(t, bodyBuilder.String(), tt.wantBody)
+			if tt.wantBody != nil {
+				ta.
+					CmpHeader(td.SuperMapOf(http.Header{}, td.MapEntries{
+						"Content-Type": []string{"application/json"},
+					})).
+					CmpJSONBody(tt.wantBody)
 			}
 		})
 	}

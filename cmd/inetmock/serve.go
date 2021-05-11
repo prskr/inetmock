@@ -62,7 +62,13 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err = setupEndpointHandlers(registry, appLogger, eventStream, certStore, fakeFileFS); err != nil {
+	var checker health.Checker
+	if checker, err = health.NewFromConfig(appLogger.Named("health"), cfg.Health, certStore.TLSConfig()); err != nil {
+		appLogger.Error("Failed to setup health checker", zap.Error(err))
+		return err
+	}
+
+	if err = setupEndpointHandlers(registry, appLogger, eventStream, certStore, fakeFileFS, checker); err != nil {
 		appLogger.Error("Failed to run registration", zap.Error(err))
 		return err
 	}
@@ -72,12 +78,6 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		registry,
 		appLogger.Named("orchestrator"),
 	)
-
-	var checker health.Checker
-	if checker, err = health.NewFromConfig(appLogger.Named("health"), cfg.Health, certStore.TLSConfig()); err != nil {
-		appLogger.Error("Failed to setup health checker", zap.Error(err))
-		return err
-	}
 
 	rpcAPI := rpc.NewINetMockAPI(
 		cfg.APIURL(),
@@ -161,7 +161,7 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 }
 
 //nolint:lll
-func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS) (err error) {
+func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS, checker health.Checker) (err error) {
 	if err = mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS); err != nil {
 		return
 	}
@@ -171,7 +171,7 @@ func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Log
 	if err = dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter); err != nil {
 		return
 	}
-	if err = metrics.AddMetricsExporter(registry, logger.Named("metrics_exporter")); err != nil {
+	if err = metrics.AddMetricsExporter(registry, logger.Named("metrics_exporter"), checker); err != nil {
 		return
 	}
 	return nil

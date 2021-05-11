@@ -137,6 +137,16 @@ func Test_resultWriter_WriteResult(t *testing.T) {
 				"Sample": errors.New("critical error"),
 			}),
 		},
+		{
+			name: "Mixed result - simple error",
+			args: args{
+				checkName: "Sample",
+				result:    errors.New("critical error"),
+			},
+			want: td.Map(health.Result{}, map[interface{}]interface{}{
+				"Sample": errors.New("critical error"),
+			}),
+		},
 	}
 	for _, tc := range tests {
 		tt := tc
@@ -145,6 +155,63 @@ func Test_resultWriter_WriteResult(t *testing.T) {
 			r := health.NewResultWriter()
 			r.WriteResult(tt.args.checkName, tt.args.result)
 			td.Cmp(t, r.GetResult(), tt.want)
+		})
+	}
+}
+
+func TestResult_MarshalJSON(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		result  health.Result
+		want    interface{}
+		wantErr bool
+	}{
+		{
+			name:    "Empty result",
+			result:  health.Result{},
+			want:    td.JSON(`{}`),
+			wantErr: false,
+		},
+		{
+			name: "Single result - only success",
+			result: health.Result{
+				"Sample": nil,
+			},
+			want: td.JSON(
+				`{"Sample": "$^Empty"}`,
+			),
+			wantErr: false,
+		},
+		{
+			name: "Single result - only error",
+			result: health.Result{
+				"Sample": errors.New("there's something strange"),
+			},
+			want: td.JSON(
+				`{"Sample": "$error"}`,
+				td.Tag("error", "there's something strange"),
+			),
+			wantErr: false,
+		},
+		{
+			name: "Mixed result",
+			result: health.Result{
+				"Sample":         errors.New("there's something strange"),
+				"Another sample": nil,
+			},
+			want: td.JSON(
+				`{"Sample": "$error", "Another sample": $^Empty}`,
+				td.Tag("error", "there's something strange"),
+			),
+			wantErr: false,
+		},
+	}
+	for _, tc := range tests {
+		tt := tc
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			td.Cmp(t, tt.result, tt.want)
 		})
 	}
 }

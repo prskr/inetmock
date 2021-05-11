@@ -9,16 +9,19 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 const (
-	name = "metrics_exporter"
+	name        = "metrics_exporter"
+	healthRoute = "/health"
 )
 
 type metricsExporter struct {
-	logger logging.Logger
-	server *http.Server
+	logger  logging.Logger
+	checker health.Checker
+	server  *http.Server
 }
 
 func (m *metricsExporter) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
@@ -34,6 +37,8 @@ func (m *metricsExporter) Start(ctx context.Context, lifecycle endpoint.Lifecycl
 
 	mux := http.NewServeMux()
 	mux.Handle(exporterOptions.Route, promhttp.Handler())
+	mux.Handle(healthRoute, health.NewHealthHandler(m.checker))
+
 	m.server = &http.Server{
 		Handler: mux,
 	}

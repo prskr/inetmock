@@ -1,18 +1,14 @@
 package mock_test
 
 import (
-	"errors"
-	"io"
 	"io/fs"
 	"net/http"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/maxatome/go-testdeep/helpers/tdhttp"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint/eptest"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
@@ -47,10 +43,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				fakeFileFS:   defaultFakeFileFS,
 			},
 			args: args{
-				req: &http.Request{
-					URL:    mustParseURL("https://google.com/index.html"),
-					Method: http.MethodGet,
-				},
+				req: tdhttp.NewRequest(http.MethodGet, "https://google.com/index.html", nil),
 			},
 			want:       defaultHTMLContent,
 			wantStatus: td.Between(200, 299),
@@ -65,10 +58,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				fakeFileFS:   defaultFakeFileFS,
 			},
 			args: args{
-				req: &http.Request{
-					URL:    mustParseURL("https://gitlab.com/profile.htm"),
-					Method: http.MethodGet,
-				},
+				req: tdhttp.NewRequest(http.MethodGet, "https://gitlab.com/profile.htm", nil),
 			},
 			want:       defaultHTMLContent,
 			wantStatus: td.Between(200, 299),
@@ -84,13 +74,14 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				fakeFileFS:   defaultFakeFileFS,
 			},
 			args: args{
-				req: &http.Request{
-					URL: mustParseURL("https://gitlab.com/profile"),
-					Header: http.Header{
+				req: tdhttp.NewRequest(
+					http.MethodGet,
+					"https://gitlab.com/profile",
+					nil,
+					http.Header{
 						"Accept": []string{"text/html"},
 					},
-					Method: http.MethodGet,
-				},
+				),
 			},
 			want:       defaultHTMLContent,
 			wantStatus: td.Between(200, 299),
@@ -104,11 +95,14 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				emitterSetup: defaultEmitter,
 			},
 			args: args{
-				req: &http.Request{
-					URL:    mustParseURL("https://gitlab.com/profile"),
-					Header: http.Header{},
-					Method: http.MethodPost,
-				},
+				req: tdhttp.NewRequest(
+					http.MethodPost,
+					"https://gitlab.com/profile",
+					nil,
+					http.Header{
+						"Accept": []string{"text/html"},
+					},
+				),
 			},
 			want:       "",
 			wantStatus: 204,
@@ -134,48 +128,12 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				}
 			}
 
-			client := setupHTTPServer(t, router)
-
-			resp, err := client.Do(tt.args.req)
-			if tt.wantErr == td.CmpNoError(t, err) {
-				return
-			}
-
-			t.Cleanup(func() {
-				td.CmpNoError(t, resp.Body.Close())
-			})
-
-			td.Cmp(t, resp.StatusCode, tt.wantStatus)
-
-			builder := new(strings.Builder)
-			_, err = io.Copy(builder, resp.Body)
-			td.CmpNoError(t, err)
-			td.Cmp(t, builder.String(), tt.want)
+			tdhttp.NewTestAPI(t, router).
+				Request(tt.args.req).
+				CmpStatus(tt.wantStatus).
+				CmpBody(tt.want)
 		})
 	}
-}
-
-func mustParseURL(urlToParse string) *url.URL {
-	parsed, err := url.Parse(urlToParse)
-	if err != nil {
-		panic(err)
-	}
-	return parsed
-}
-
-func setupHTTPServer(tb testing.TB, handler http.Handler) *http.Client {
-	tb.Helper()
-	listener := eptest.NewInMemoryListener(tb)
-
-	go func() {
-		switch err := http.Serve(listener, handler); {
-		case errors.Is(err, nil), errors.Is(err, http.ErrServerClosed):
-		default:
-			tb.Errorf("http.Serve() error = %v", err)
-		}
-	}()
-
-	return eptest.HTTPClientForInMemListener(listener)
 }
 
 func defaultEmitter(tb testing.TB, ctrl *gomock.Controller) audit.Emitter {
