@@ -89,7 +89,8 @@ func NewApp(spec Spec) App {
 		spec.Defaults = make(map[string]interface{})
 	}
 
-	ctx, cancel := initAppContext()
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
 	a := &app{
 		rootCmd: &cobra.Command{
 			Use:          spec.Name,
@@ -143,20 +144,6 @@ func NewApp(spec Spec) App {
 	}
 
 	return a
-}
-
-func initAppContext() (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	go func() {
-		<-signals
-		cancel()
-	}()
-
-	return ctx, cancel
 }
 
 func (s Spec) readConfig(rootCmd *cobra.Command) error {
