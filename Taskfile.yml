@@ -32,7 +32,7 @@ tasks:
       - go.mod
       - go.sum
     cmds:
-      - go mod tidy
+      - go mod download
 
   dep-graph:
     desc: generate dependency graph
