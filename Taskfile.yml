@@ -32,7 +32,7 @@ tasks:
       - go.mod
       - go.sum
     cmds:
-      - go mod download
+      - go mod tidy
 
   dep-graph:
     desc: generate dependency graph
@@ -94,6 +94,19 @@ tasks:
       - protoc
 
   test:
+    desc: run short running unit tests that do not need sudo
+    sources:
+      - "**/*.go"
+    deps:
+      - deps
+      - generate
+    cmds:
+      - mkdir -p {{ .OUT_DIR }}
+      - go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./...
+      - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
+      - go tool cover -func={{ .OUT_DIR }}/cov.out
+
+  test-all:
     desc: run all unit tests
     sources:
       - "**/*.go"
@@ -102,7 +115,7 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - cmd: go test -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
+      - cmd: go test --tags sudo -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
         ignore_error: true
       - cat {{ .OUT_DIR }}/test_output | go-junit-report -set-exit-code > {{ .OUT_DIR }}/report.xml
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
@@ -123,21 +136,22 @@ tasks:
   cli-cover-report:
     desc: generate a coverage report on the CLI
     deps:
-      - test
+      - test-all
     cmds:
       - go tool cover -func={{ .OUT_DIR }}/cov.out
 
   html-cover-report:
     desc: generate a coverage report as HTML page
     deps:
-      - test
+      - test-all
     cmds:
       - go tool cover -html={{ .OUT_DIR }}/cov.out -o {{ .OUT_DIR }}/coverage.html
 
   build-inetmock:
     desc: build the INetMock server part
     deps:
-      - test
+      - deps
+      - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
       - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/inetmock {{ .INETMOCK_PKG }}
@@ -150,7 +164,8 @@ tasks:
   build-imctl:
     desc: build the imctl INetMock client CLI
     deps:
-      - test
+      - deps
+      - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
       - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/imctl {{ .IMCTL_PKG }}

@@ -1,3 +1,5 @@
+//+build sudo
+
 package pcap_test
 
 import (

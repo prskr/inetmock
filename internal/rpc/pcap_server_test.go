@@ -1,3 +1,5 @@
+//+build sudo
+
 package rpc_test
 
 import (

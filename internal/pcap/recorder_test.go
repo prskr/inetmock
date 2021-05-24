@@ -1,4 +1,4 @@
-// +build linux
+// +build linux,sudo
 
 package pcap_test
 

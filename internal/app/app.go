@@ -89,17 +89,15 @@ func NewApp(spec Spec) App {
 		spec.Defaults = make(map[string]interface{})
 	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
 	a := &app{
 		rootCmd: &cobra.Command{
 			Use:          spec.Name,
 			Short:        spec.Short,
 			SilenceUsage: true,
 		},
-		ctx:    ctx,
-		cancel: cancel,
 	}
+
+	a.ctx, a.cancel = signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	lateInitTasks := []func(cmd *cobra.Command, args []string) (err error){
 		func(*cobra.Command, []string) (err error) {
