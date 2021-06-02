@@ -1,4 +1,5 @@
-//+build sudo
+// +build sudo
+//go:build sudo
 
 package rpc_test
 

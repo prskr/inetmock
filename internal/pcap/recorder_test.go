@@ -1,4 +1,5 @@
 // +build linux,sudo
+//go:build linux && sudo
 
 package pcap_test
 
