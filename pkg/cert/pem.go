@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -41,7 +42,11 @@ func (p *pemCrt) Cert() *tls.Certificate {
 }
 
 func (p pemCrt) Write(cn, outDir string) (err error) {
-	var certOut *os.File
+	var (
+		certOut      io.WriteCloser
+		keyOut       io.WriteCloser
+		privKeyBytes []byte
+	)
 	if certOut, err = os.Create(filepath.Join(outDir, fmt.Sprintf("%s.pem", cn))); err != nil {
 		return
 	}
@@ -50,11 +55,9 @@ func (p pemCrt) Write(cn, outDir string) (err error) {
 		return
 	}
 
-	var keyOut *os.File
-	if keyOut, err = os.OpenFile(filepath.Join(outDir, fmt.Sprintf("%s.key", cn)), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
+	if keyOut, err = os.Create(filepath.Join(outDir, fmt.Sprintf("%s.key", cn))); err != nil {
 		return
 	}
-	var privKeyBytes []byte
 	privKeyBytes, err = x509.MarshalPKCS8PrivateKey(p.crt.PrivateKey)
 	err = pem.Encode(keyOut, &pem.Block{Type: privateKeyBlockType, Bytes: privKeyBytes})
 	return

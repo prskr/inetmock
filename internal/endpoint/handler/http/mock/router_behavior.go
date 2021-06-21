@@ -59,7 +59,7 @@ func FileHandler(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (
 		file, err := fakeFileFS.Open(filePath)
 		if err != nil {
 			logger.Error("failed to open file to return", zap.Error(err))
-			http.Error(writer, err.Error(), 500)
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -67,7 +67,7 @@ func FileHandler(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (
 		var ok bool
 		if rs, ok = file.(io.ReadSeeker); !ok {
 			logger.Warn("file returned from FS does not support seeking - returning error")
-			http.Error(writer, "internal server error", 500)
+			http.Error(writer, "internal server error", http.StatusInternalServerError)
 		}
 
 		defer func() {

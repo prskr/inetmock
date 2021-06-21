@@ -20,6 +20,10 @@ var (
 	}
 )
 
+const (
+	expectedHeaderValueParamCount = 2
+)
+
 type RequestFilter interface {
 	Matches(req *http.Request) bool
 }
@@ -89,10 +93,10 @@ func PathPatternMatcher(args ...rules.Param) (RequestFilter, error) {
 }
 
 func HeaderValueMatcher(args ...rules.Param) (RequestFilter, error) {
-	if err := rules.ValidateParameterCount(args, 2); err != nil {
+	if err := rules.ValidateParameterCount(args, expectedHeaderValueParamCount); err != nil {
 		return nil, err
 	}
-	if err := rules.ValidateParameterCount(args, 2); err != nil {
+	if err := rules.ValidateParameterCount(args, expectedHeaderValueParamCount); err != nil {
 		return nil, err
 	}
 

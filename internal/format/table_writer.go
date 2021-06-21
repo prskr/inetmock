@@ -81,6 +81,12 @@ func (t *tblWriter) getData(val reflect.Value, numberOfFields int) (data []strin
 
 //nolint:exhaustive
 func value(val reflect.Value) string {
+	const (
+		base10         = 10
+		floatPrecision = 6
+		longBitSize    = 64
+	)
+
 	if val.IsZero() || !val.IsValid() {
 		return ""
 	}
@@ -97,11 +103,11 @@ func value(val reflect.Value) string {
 	case reflect.Bool:
 		return strconv.FormatBool(val.Bool())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return strconv.FormatInt(val.Int(), 10)
+		return strconv.FormatInt(val.Int(), base10)
 	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return strconv.FormatUint(val.Uint(), 10)
+		return strconv.FormatUint(val.Uint(), base10)
 	case reflect.Float32, reflect.Float64:
-		return strconv.FormatFloat(val.Float(), 'f', 6, 64)
+		return strconv.FormatFloat(val.Float(), 'f', floatPrecision, longBitSize)
 	default:
 		return val.String()
 	}

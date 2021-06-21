@@ -41,6 +41,10 @@ func (d *Data) setup() (err error) {
 }
 
 func ensureDataDir(dataDirPath string) (cleanedPath string, err error) {
+	const (
+		defaultDirPerm = 0750
+	)
+
 	cleanedPath = dataDirPath
 	if !filepath.IsAbs(cleanedPath) {
 		if cleanedPath, err = filepath.Abs(cleanedPath); err != nil {
@@ -48,7 +52,7 @@ func ensureDataDir(dataDirPath string) (cleanedPath string, err error) {
 		}
 	}
 
-	err = os.MkdirAll(cleanedPath, 0750)
+	err = os.MkdirAll(cleanedPath, defaultDirPerm)
 	return
 }
 

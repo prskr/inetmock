@@ -36,6 +36,7 @@ var (
 
 const (
 	windowSizeSearchBufferMultiplier = 2
+	expectedResponseHeaderParamCount = 2
 	defaultSearchBufferSize          = 256 * windowSizeSearchBufferMultiplier
 )
 
@@ -96,7 +97,7 @@ func StatusCodeFilter(args ...rules.Param) (Validator, error) {
 }
 
 func ResponseHeaderFilter(args ...rules.Param) (Validator, error) {
-	if err := rules.ValidateParameterCount(args, 2); err != nil {
+	if err := rules.ValidateParameterCount(args, expectedResponseHeaderParamCount); err != nil {
 		return nil, err
 	}
 
