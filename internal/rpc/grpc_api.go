@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -32,6 +33,7 @@ type INetMockAPI interface {
 }
 
 type inetmockAPI struct {
+	lock          sync.Locker
 	url           *url.URL
 	server        *grpc.Server
 	logger        logging.Logger
@@ -50,6 +52,7 @@ func NewINetMockAPI(
 	auditDataDir, pcapDataDir string,
 ) INetMockAPI {
 	return &inetmockAPI{
+		lock:         new(sync.Mutex),
 		url:          u,
 		logger:       logger.Named("api"),
 		checker:      checker,
@@ -109,8 +112,15 @@ func (i *inetmockAPI) StopServer() {
 }
 
 func (i *inetmockAPI) startServerAsync(listener net.Listener) {
+	i.lock.Lock()
 	i.serverRunning = make(chan struct{})
-	defer close(i.serverRunning)
+	i.lock.Unlock()
+
+	defer func() {
+		i.lock.Lock()
+		close(i.serverRunning)
+		i.lock.Unlock()
+	}()
 	if err := i.server.Serve(listener); err != nil {
 		i.logger.Error(
 			"failed to start INetMock API",
@@ -120,6 +130,9 @@ func (i *inetmockAPI) startServerAsync(listener net.Listener) {
 }
 
 func (i *inetmockAPI) isRunning() bool {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
 	select {
 	case _, more := <-i.serverRunning:
 		return more

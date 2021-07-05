@@ -2,6 +2,7 @@ package endpoint_test
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
@@ -18,14 +19,14 @@ func VerifiedProtocolHandler(
 	delegate func(ctx context.Context, lifecycle endpoint.Lifecycle) error,
 ) endpoint.ProtocolHandler {
 	tb.Helper()
-	var called bool
+	var called int32
 	tb.Cleanup(func() {
-		if !called {
+		if atomic.LoadInt32(&called) < 1 {
 			tb.Error("ProtocolHandler got not called")
 		}
 	})
 	return ProtocolHandlerDelegate(func(ctx context.Context, lifecycle endpoint.Lifecycle) error {
-		called = true
+		atomic.AddInt32(&called, 1)
 		return delegate(ctx, lifecycle)
 	})
 }

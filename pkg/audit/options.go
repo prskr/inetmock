@@ -2,6 +2,7 @@ package audit
 
 import (
 	"runtime"
+	"sync/atomic"
 	"time"
 )
 
@@ -63,13 +64,12 @@ type eventStreamCfg struct {
 
 func newEventStreamCfg() eventStreamCfg {
 	cfg := eventStreamCfg{
-		generatorIndex:            generatorIdx,
+		generatorIndex:            atomic.AddInt64(&generatorIdx, 1),
 		sinkBuffersize:            defaultSinkBufferSize,
 		bufferSize:                defaultEventStreamBufferSize,
 		sinkConsumptionTimeout:    defaultSinkConsumptionTimeout,
 		distributeParallelization: defaultDistributeParallelization,
 	}
-	generatorIdx++
 
 	return cfg
 }

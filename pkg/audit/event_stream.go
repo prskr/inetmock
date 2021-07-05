@@ -3,12 +3,17 @@ package audit
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+)
+
+const (
+	emitTimeout = 10 * time.Millisecond
 )
 
 func init() {
@@ -19,7 +24,8 @@ type eventStream struct {
 	logger                 logging.Logger
 	buffer                 chan *Event
 	sinks                  map[string]*registeredSink
-	lock                   sync.Locker
+	readLock               sync.Locker
+	writeLock              sync.Locker
 	idGenerator            *snowflake.Node
 	sinkBufferSize         int
 	sinkConsumptionTimeout time.Duration
@@ -51,7 +57,8 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (EventS
 		return nil, err
 	}
 
-	generatorIdx++
+	rwMutex := new(sync.RWMutex)
+	atomic.AddInt64(&generatorIdx, 1)
 	underlying := &eventStream{
 		logger:                 logger,
 		sinks:                  make(map[string]*registeredSink),
@@ -59,7 +66,8 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (EventS
 		sinkBufferSize:         cfg.sinkBuffersize,
 		sinkConsumptionTimeout: cfg.sinkConsumptionTimeout,
 		idGenerator:            node,
-		lock:                   &sync.Mutex{},
+		writeLock:              rwMutex,
+		readLock:               rwMutex.RLocker(),
 	}
 
 	// start distribute workers
@@ -75,14 +83,14 @@ func (e *eventStream) Emit(ev Event) {
 	select {
 	case e.buffer <- &ev:
 		e.logger.Debug("pushed event to distribute loop")
-	default:
+	case <-time.After(emitTimeout):
 		e.logger.Warn("buffer is full")
 	}
 }
 
 func (e *eventStream) RemoveSink(name string) (exists bool) {
-	e.lock.Lock()
-	defer e.lock.Unlock()
+	e.writeLock.Lock()
+	defer e.writeLock.Unlock()
 
 	var sink *registeredSink
 	sink, exists = e.sinks[name]
@@ -98,9 +106,11 @@ func (e *eventStream) RemoveSink(name string) (exists bool) {
 }
 
 func (e *eventStream) RegisterSink(ctx context.Context, s Sink) error {
-	name := s.Name()
+	e.writeLock.Lock()
+	defer e.writeLock.Unlock()
 
-	if _, exists := e.sinks[name]; exists {
+	name := s.Name()
+	if _, present := e.sinks[name]; present {
 		return ErrSinkAlreadyRegistered
 	}
 
@@ -121,6 +131,9 @@ func (e *eventStream) RegisterSink(ctx context.Context, s Sink) error {
 }
 
 func (e eventStream) Sinks() (sinks []string) {
+	e.readLock.Lock()
+	defer e.readLock.Unlock()
+
 	for name := range e.sinks {
 		sinks = append(sinks, name)
 	}
@@ -128,6 +141,9 @@ func (e eventStream) Sinks() (sinks []string) {
 }
 
 func (e *eventStream) Close() error {
+	e.writeLock.Lock()
+	defer e.writeLock.Unlock()
+
 	close(e.buffer)
 	for _, rs := range e.sinks {
 		close(rs.downstream)
@@ -137,6 +153,7 @@ func (e *eventStream) Close() error {
 
 func (e *eventStream) distribute() {
 	for ev := range e.buffer {
+		e.readLock.Lock()
 		for name, rs := range e.sinks {
 			rs.lock.Lock()
 			e.logger.Debug("notify sink", zap.String("sink", name))
@@ -148,5 +165,6 @@ func (e *eventStream) distribute() {
 			}
 			rs.lock.Unlock()
 		}
+		e.readLock.Unlock()
 	}
 }

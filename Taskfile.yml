@@ -6,8 +6,6 @@ vars:
   IMCTL_PKG: gitlab.com/inetmock/inetmock/cmd/imctl
   PROTO_FILES:
     sh: find ./api/ -type f -name "*.proto" -printf "%p "
-  BENCHMARKS:
-    sh: find . -type f -name "*_bench_test.go"
 
 env:
   GOOS: linux
@@ -115,7 +113,7 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - cmd: go test --tags sudo -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
+      - cmd: go test --tags sudo -race -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode count -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
         ignore_error: true
       - cat {{ .OUT_DIR }}/test_output | go-junit-report -set-exit-code > {{ .OUT_DIR }}/report.xml
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
@@ -128,10 +126,7 @@ tasks:
       - deps
       - generate
     cmds:
-      - |
-        {{ range .BENCHMARKS | splitLines -}}
-        go test -bench=. {{ . }}
-        {{ end }}
+      - go test -bench=. ./...
 
   cli-cover-report:
     desc: generate a coverage report on the CLI
