@@ -1,13 +1,13 @@
 package mock
 
 import (
-	"encoding/binary"
 	"math"
 	"math/rand"
 	"net"
-	"unsafe"
 
 	"github.com/mitchellh/mapstructure"
+
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns"
 )
 
 const (
@@ -30,7 +30,7 @@ var (
 				startIP = defaultStartIPIncrementalStrategy
 			}
 			return &incrementalIPFallback{
-				latestIP: ipToInt32(startIP),
+				latestIP: dns.IPToInt32(startIP),
 			}
 		},
 		randomIPStrategyName: func(map[string]interface{}) ResolverFallback {
@@ -61,7 +61,7 @@ func (i *incrementalIPFallback) GetIP() net.IP {
 	if i.latestIP < math.MaxInt32 {
 		i.latestIP += 1
 	}
-	return uint32ToIP(i.latestIP)
+	return dns.Uint32ToIP(i.latestIP)
 }
 
 type randomIPFallback struct {
@@ -69,16 +69,5 @@ type randomIPFallback struct {
 
 func (randomIPFallback) GetIP() net.IP {
 	//nolint:gosec
-	return uint32ToIP(uint32(rand.Int31()))
-}
-
-func uint32ToIP(i uint32) net.IP {
-	bytes := (*[4]byte)(unsafe.Pointer(&i))[:]
-	return net.IPv4(bytes[3], bytes[2], bytes[1], bytes[0])
-}
-
-func ipToInt32(ip net.IP) uint32 {
-	v4 := ip.To4()
-	result := binary.BigEndian.Uint32(v4)
-	return result
+	return dns.Uint32ToIP(uint32(rand.Int31()))
 }
