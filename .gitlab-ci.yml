@@ -15,8 +15,18 @@ variables:
   DOCKER_IMAGE: registry.gitlab.com/inetmock/inetmock:latest
   DOCKERFILE_PATH: build/docker/inetmock.dockerfile
 
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
 test:
   stage: test
+  extends: .go-cache
   needs: []
   script:
     - task cli-cover-report
@@ -27,6 +37,7 @@ test:
 
 integration-test:
   stage: test
+  extends: .go-cache
   services:
     - docker:dind
   needs: []
@@ -35,11 +46,13 @@ integration-test:
 
 lint:
   stage: test
+  extends: .go-cache
   script:
     - task lint
 
 snapshot-release:
   stage: build
+  extends: .go-cache
   services:
     - docker:dind
   needs:
@@ -54,6 +67,7 @@ snapshot-release:
 
 release:
   stage: release
+  extends: .go-cache
   services:
     - docker:dind
   needs:
