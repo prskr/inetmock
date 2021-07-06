@@ -130,7 +130,7 @@ tasks:
       - deps
       - generate
     cmds:
-      - go test -bench=. ./...
+      - go test -tags integration -bench=. ./...
 
   cli-cover-report:
     desc: generate a coverage report on the CLI

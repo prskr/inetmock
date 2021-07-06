@@ -5,13 +5,10 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
-
-const containerShutdownTimeout = 5 * time.Second
 
 func SetupINetMockContainer(ctx context.Context, exposedPorts ...string) (testcontainers.Container, error) {
 	//nolint:dogsled

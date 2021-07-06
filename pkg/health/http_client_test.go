@@ -3,7 +3,6 @@ package health_test
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"net"
 	"net/http"
 	"testing"
@@ -110,11 +109,7 @@ func setupServer(tb testing.TB, rules []string) health.Config {
 	}
 
 	go func(lis net.Listener, handler http.Handler) {
-		switch err := http.Serve(lis, handler); {
-		case errors.Is(err, nil), errors.Is(err, http.ErrServerClosed):
-		default:
-			tb.Logf("http.Serve() - error = %v", err)
-		}
+		_ = http.Serve(lis, handler)
 	}(listener, &router)
 
 	var ok bool

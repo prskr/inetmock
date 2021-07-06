@@ -113,8 +113,8 @@ func TestParseLevel(t *testing.T) {
 	}
 }
 
+//nolint:paralleltest
 func TestConfigureLogging(t *testing.T) {
-	t.Parallel()
 	type args struct {
 		level              zap.AtomicLevel
 		developmentLogging bool
@@ -154,7 +154,6 @@ func TestConfigureLogging(t *testing.T) {
 	for _, tc := range tests {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			ConfigureLogging(tt.args.level, tt.args.developmentLogging, tt.args.encoding, tt.args.initialFields)
 			if loggingConfig.Development != tt.args.developmentLogging {
 				t.Errorf("loggingConfig.Development = %t, want %t", loggingConfig.Development, tt.args.developmentLogging)
