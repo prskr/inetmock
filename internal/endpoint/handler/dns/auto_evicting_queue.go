@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	defaultTimerDuration = 500 * time.Millisecond
+	defaultTimerDuration  = 500 * time.Millisecond
+	timerDurationRounding = 50 * time.Millisecond
 )
 
 type autoEvictingQueue struct {
@@ -55,14 +56,13 @@ func (a autoEvictingQueue) Len() int {
 
 func (a *autoEvictingQueue) startEvictionTimer() {
 	go func() {
-		<-time.After(50 * time.Millisecond)
 		for {
 			<-a.timer.C
 			a.backing.Evict()
 			if front := a.backing.PeekFront(); front == nil {
 				a.timer.Reset(defaultTimerDuration)
 			} else if front.timeout.After(time.Now().UTC()) {
-				a.timer.Reset(front.timeout.Sub(time.Now().UTC()).Round(50 * time.Millisecond))
+				a.timer.Reset(front.timeout.Sub(time.Now().UTC()).Round(timerDurationRounding))
 			} else {
 				a.timer.Reset(defaultTimerDuration)
 			}

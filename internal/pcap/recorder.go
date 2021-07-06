@@ -33,13 +33,13 @@ var (
 func NewRecorder() Recorder {
 	return &recorder{
 		locker:      new(sync.Mutex),
-		openDevices: make(map[string]deviceConsumer),
+		openDevices: make(map[string]*deviceConsumer),
 	}
 }
 
 type recorder struct {
 	locker      sync.Locker
-	openDevices map[string]deviceConsumer
+	openDevices map[string]*deviceConsumer
 }
 
 func (r recorder) Subscriptions() (subscriptions []Subscription) {
@@ -93,16 +93,19 @@ func (r recorder) StartRecordingWithOptions(
 		ConsumerKey: fmt.Sprintf("%s:%s", device, consumer.Name()),
 	}
 
-	var openDev deviceConsumer
-	var alreadyOpened bool
-	if openDev, alreadyOpened = r.openDevices[result.ConsumerKey]; alreadyOpened {
+	var (
+		openDev       *deviceConsumer
+		alreadyOpened bool
+	)
+
+	if _, alreadyOpened = r.openDevices[result.ConsumerKey]; alreadyOpened {
 		return nil, ErrConsumerAlreadyRegistered
 	}
 
-	if openDev, err = openDeviceForConsumers(ctx, device, consumer, opts); err != nil {
+	if openDev, err = openDeviceForConsumers(device, consumer, opts); err != nil {
 		return nil, err
 	}
-	openDev.StartTransport()
+	openDev.StartTransport(ctx)
 	r.openDevices[result.ConsumerKey] = openDev
 	go r.removeConsumerOnContextEnd(ctx, result.ConsumerKey)
 
@@ -113,22 +116,21 @@ func (r *recorder) StartRecording(ctx context.Context, device string, consumer C
 	return r.StartRecordingWithOptions(ctx, device, consumer, DefaultRecordingOptions)
 }
 
-func (r *recorder) StopRecording(consumerKey string) (err error) {
+func (r *recorder) StopRecording(consumerKey string) error {
 	r.locker.Lock()
 	defer r.locker.Unlock()
 
-	var dev deviceConsumer
-	var known bool
+	var (
+		dev   *deviceConsumer
+		known bool
+	)
+
 	if dev, known = r.openDevices[consumerKey]; !known {
-		err = ErrNoMatchingConsumerRegistered
-		return
+		return ErrNoMatchingConsumerRegistered
 	}
 
 	delete(r.openDevices, consumerKey)
-
-	err = dev.Close()
-
-	return
+	return dev.Close()
 }
 
 func (r recorder) Close() (err error) {

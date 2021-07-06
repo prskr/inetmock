@@ -15,6 +15,7 @@ const (
 	minimumCapIncrease float64 = 5.0
 	minimumCapReserve  float64 = 5.0
 	minimumCapacity    int     = 10
+	evictionCacheSized int     = 10
 )
 
 var (
@@ -151,7 +152,7 @@ func (t *ttlQueue) OnEvicted(callback EvictionCallback) {
 		close(t.evictionCache)
 	}
 
-	t.evictionCache = make(chan []*Entry, 10)
+	t.evictionCache = make(chan []*Entry, evictionCacheSized)
 	go func(in <-chan []*Entry, callback EvictionCallback) {
 		for e := range in {
 			callback.OnEvicted(e)

@@ -5,55 +5,76 @@ package pcap
 
 import (
 	"context"
+	"errors"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 )
 
-func openDeviceForConsumers(ctx context.Context, device string, consumer Consumer, opts RecordingOptions) (deviceConsumer, error) {
-	var err error
-	var handle *pcapgo.EthernetHandle
+var (
+	ErrTransportStillRunning = errors.New("transport to consumers did not stop in time")
+)
+
+const (
+	transportClosingTimeout = 100 * time.Millisecond
+)
+
+func openDeviceForConsumers(device string, consumer Consumer, opts RecordingOptions) (*deviceConsumer, error) {
+	var (
+		handle *pcapgo.EthernetHandle
+		err    error
+	)
+
 	if handle, err = pcapgo.NewEthernetHandle(device); err != nil {
-		return deviceConsumer{}, err
+		return nil, err
 	}
 
-	//nolint:govet // either govet or gocritic have their opinions about why the other one is wrong
 	if err := handle.SetPromiscuous(opts.Promiscuous); err != nil {
-		return deviceConsumer{}, err
+		return nil, err
 	}
 
-	err = consumer.Init()
-
-	if err != nil {
-		return deviceConsumer{}, err
+	if err := consumer.Init(); err != nil {
+		return nil, err
 	}
-	consumerCtx, cancel := context.WithCancel(ctx)
-	var dev = deviceConsumer{
-		locker:       new(sync.Mutex),
-		ctx:          consumerCtx,
-		cancel:       cancel,
-		handle:       handle,
-		packetSource: gopacket.NewPacketSource(handle, layers.LinkTypeEthernet),
-		consumer:     consumer,
+
+	var packetSrc = gopacket.NewPacketSource(handle, layers.LinkTypeEthernet)
+	var dev = &deviceConsumer{
+		locker:        new(sync.Mutex),
+		handle:        handle,
+		packetSource:  packetSrc,
+		consumer:      consumer,
+		transportStat: make(chan struct{}),
 	}
 
 	return dev, nil
 }
 
 type deviceConsumer struct {
-	ctx          context.Context
-	cancel       context.CancelFunc
-	consumer     Consumer
-	locker       sync.Locker
-	handle       *pcapgo.EthernetHandle
-	packetSource *gopacket.PacketSource
+	locker        sync.Locker
+	consumer      Consumer
+	cancel        context.CancelFunc
+	handle        *pcapgo.EthernetHandle
+	packetSource  *gopacket.PacketSource
+	transportStat chan struct{}
 }
 
 func (o *deviceConsumer) Close() error {
+	o.locker.Lock()
+	defer o.locker.Unlock()
+
 	o.cancel()
+	select {
+	case _, more := <-o.transportStat:
+		if more {
+			return ErrTransportStillRunning
+		}
+	case <-time.After(transportClosingTimeout):
+	}
+
 	o.handle.Close()
 	if closer, ok := o.consumer.(io.Closer); ok {
 		return closer.Close()
@@ -61,21 +82,25 @@ func (o *deviceConsumer) Close() error {
 	return nil
 }
 
-func (o *deviceConsumer) StartTransport() {
-	go o.transportToConsumers()
+func (o *deviceConsumer) StartTransport(ctx context.Context) {
+	o.locker.Lock()
+	defer o.locker.Unlock()
+	ctx, o.cancel = context.WithCancel(ctx)
+	go o.transportToConsumers(ctx)
 }
 
-func (o *deviceConsumer) transportToConsumers() {
+func (o *deviceConsumer) transportToConsumers(ctx context.Context) {
+	defer close(o.transportStat)
 	for {
 		select {
-		case pkg, more := <-o.packetSource.Packets():
+		case pkg, more := <-o.packetSource.PacketsCtx(ctx):
 			if !more {
 				return
 			}
 			o.locker.Lock()
 			o.consumer.Observe(pkg)
 			o.locker.Unlock()
-		case <-o.ctx.Done():
+		case <-ctx.Done():
 			return
 		}
 	}

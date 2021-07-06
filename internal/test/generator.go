@@ -753,6 +753,7 @@ func GenerateDomain() string {
 	domain := Names[rand.Intn(len(Names))]
 	suffix := TLDs[rand.Intn(len(TLDs))]
 
+	//nolint:gomnd // there are just 2 points in a hostname of the form www.google.de
 	buf := make([]byte, 0, len(prefix)+len(domain)+len(suffix)+2)
 	buf = append(buf, []byte(prefix)...)
 	buf = append(buf, []byte(".")...)

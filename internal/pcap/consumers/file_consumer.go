@@ -41,11 +41,20 @@ func (f writerConsumer) Name() string {
 	return f.name
 }
 
-func (f writerConsumer) Observe(pkg gopacket.Packet) {
+func (f *writerConsumer) Observe(pkg gopacket.Packet) {
 	if f.packageWriter == nil {
 		return
 	}
-	_ = f.packageWriter.WritePacket(pkg.Metadata().CaptureInfo, pkg.Data())
+	/*
+	 * copy data and metadata
+	 * this avoids the risk of manipulation before they are written
+	 */
+	var (
+		buf = make([]byte, len(pkg.Data()))
+		ci  = pkg.Metadata().CaptureInfo
+	)
+	copy(buf, pkg.Data())
+	_ = f.packageWriter.WritePacket(ci, buf)
 }
 
 func (f *writerConsumer) Close() (err error) {
