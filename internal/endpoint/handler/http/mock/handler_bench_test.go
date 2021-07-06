@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -24,11 +25,15 @@ import (
 )
 
 const (
-	charSet = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
+	charSet         = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
+	startupTimeout  = 5 * time.Minute
+	shutdownTimeout = 5 * time.Second
 )
 
 var (
 	availableExtensions = []string{"gif", "html", "ico", "jpg", "png", "txt"}
+	httpEndpoint        string
+	httpsEndpoint       string
 	defaultURLGenerator = func(endpoint string) *url.URL {
 		//nolint:gosec
 		extension := availableExtensions[rand.Intn(len(availableExtensions))]
@@ -37,28 +42,65 @@ var (
 	}
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	rand.Seed(time.Now().Unix())
+	var (
+		code              int
+		inetMockContainer testcontainers.Container
+		httpPort          = nat.Port("80/tcp")
+		httpsPort         = nat.Port("443/tcp")
+		err               error
+		errorHandler      = func(err error) bool {
+			if err != nil {
+				fmt.Println(err.Error())
+				code = 1
+				return true
+			}
+			return false
+		}
+		terminate = func() {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+			errorHandler(inetMockContainer.Terminate(shutdownCtx))
+			cancel()
+		}
+	)
+
+	defer func() {
+		terminate()
+		os.Exit(code)
+	}()
+
+	startupCtx, cancel := context.WithTimeout(context.Background(), startupTimeout)
+	inetMockContainer, err = integration.SetupINetMockContainer(startupCtx, string(httpPort), string(httpsPort))
+	errorHandler(err)
+	httpEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, httpPort, "http")
+	errorHandler(err)
+	httpsEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, httpsPort, "https")
+	errorHandler(err)
+	cancel()
+
+	if code != 0 {
+		return
+	}
+
+	code = m.Run()
 }
 
 func Benchmark_httpHandler(b *testing.B) {
 	type benchmark struct {
 		name         string
-		port         string
-		scheme       string
+		endpoint     string
 		urlGenerator func(endpoint string) *url.URL
 	}
 	benchmarks := []benchmark{
 		{
 			name:         "HTTP",
-			port:         "80/tcp",
-			scheme:       "http",
+			endpoint:     httpEndpoint,
 			urlGenerator: defaultURLGenerator,
 		},
 		{
-			name:   "HTTP - ensure /index.html is handled correctly",
-			port:   "8080/tcp",
-			scheme: "http",
+			name:     "HTTP - ensure /index.html is handled correctly",
+			endpoint: httpEndpoint,
 			urlGenerator: func(endpoint string) *url.URL {
 				reqURL, _ := url.Parse(fmt.Sprintf("%s/index.html", endpoint))
 				return reqURL
@@ -66,21 +108,18 @@ func Benchmark_httpHandler(b *testing.B) {
 		},
 		{
 			name:         "HTTPS",
-			port:         "443/tcp",
-			scheme:       "https",
+			endpoint:     httpsEndpoint,
 			urlGenerator: defaultURLGenerator,
 		},
 	}
 	for _, bc := range benchmarks {
 		bm := bc
 		b.Run(bm.name, func(b *testing.B) {
-			var err error
-			var endpoint string
-			if endpoint, err = setupContainer(b, bm.scheme, bm.port); err != nil {
-				b.Fatalf("setupContainer() error = %v", err)
-			}
+			var (
+				err        error
+				httpClient *http.Client
+			)
 
-			var httpClient *http.Client
 			if httpClient, err = setupHTTPClient(); err != nil {
 				return
 			}
@@ -91,7 +130,7 @@ func Benchmark_httpHandler(b *testing.B) {
 				for pb.Next() {
 					req := &http.Request{
 						Method: http.MethodGet,
-						URL:    bc.urlGenerator(endpoint),
+						URL:    bc.urlGenerator(bm.endpoint),
 						Close:  false,
 						Host:   "www.inetmock.com",
 					}
@@ -113,20 +152,6 @@ func randomString(length int) (result string) {
 		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
 	}
 	return buffer.String()
-}
-
-func setupContainer(b *testing.B, scheme, port string) (httpEndpoint string, err error) {
-	b.Helper()
-
-	startupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	var inetMockContainer testcontainers.Container
-	if inetMockContainer, err = integration.SetupINetMockContainer(startupCtx, b, port); err != nil {
-		return
-	}
-
-	httpEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, nat.Port(port), scheme)
-	return
 }
 
 func setupHTTPClient() (*http.Client, error) {

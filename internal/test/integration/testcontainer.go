@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -14,8 +13,7 @@ import (
 
 const containerShutdownTimeout = 5 * time.Second
 
-func SetupINetMockContainer(ctx context.Context, tb testing.TB, exposedPorts ...string) (testcontainers.Container, error) {
-	tb.Helper()
+func SetupINetMockContainer(ctx context.Context, exposedPorts ...string) (testcontainers.Container, error) {
 	//nolint:dogsled
 	_, fileName, _, _ := runtime.Caller(0)
 
@@ -38,8 +36,9 @@ func SetupINetMockContainer(ctx context.Context, tb testing.TB, exposedPorts ...
 
 	req := testcontainers.ContainerRequest{
 		FromDockerfile: testcontainers.FromDockerfile{
-			Context:    repoRoot,
-			Dockerfile: filepath.Join(".", "testdata", "integration.dockerfile"),
+			Context:       repoRoot,
+			Dockerfile:    filepath.Join(".", "testdata", "integration.dockerfile"),
+			PrintBuildLog: true,
 		},
 		ExposedPorts: exposedPorts,
 		SkipReaper:   true,
@@ -55,12 +54,6 @@ func SetupINetMockContainer(ctx context.Context, tb testing.TB, exposedPorts ...
 	if err != nil {
 		return nil, err
 	}
-
-	tb.Cleanup(func() {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), containerShutdownTimeout)
-		defer cancel()
-		_ = imContainer.Terminate(shutdownCtx)
-	})
 
 	return imContainer, nil
 }

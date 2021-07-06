@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -24,45 +25,82 @@ import (
 )
 
 const (
-	charSet = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
+	charSet         = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
+	startupTimeout  = 5 * time.Minute
+	shutdownTimeout = 5 * time.Second
 )
 
 var (
 	availableExtensions = []string{"gif", "html", "ico", "jpg", "png", "txt"}
+	proxyHTTPEndpoint   string
+	proxyHTTPSEndpoint  string
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	rand.Seed(time.Now().Unix())
+	var (
+		inetMockContainer testcontainers.Container
+		httpPort          = nat.Port("3128/tcp")
+		httpsPort         = nat.Port("3128/tcp")
+		code              int
+		err               error
+		errorHandler      = func(err error) bool {
+			if err != nil {
+				fmt.Println(err.Error())
+				code = 1
+				return true
+			}
+			return false
+		}
+		terminate = func() {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+			errorHandler(inetMockContainer.Terminate(shutdownCtx))
+			cancel()
+		}
+	)
+
+	defer func() {
+		terminate()
+		os.Exit(code)
+	}()
+
+	startupCtx, cancel := context.WithTimeout(context.Background(), startupTimeout)
+	inetMockContainer, err = integration.SetupINetMockContainer(startupCtx, string(httpPort), string(httpsPort))
+	errorHandler(err)
+	proxyHTTPEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, httpPort, "http")
+	errorHandler(err)
+	proxyHTTPSEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, httpsPort, "https")
+	errorHandler(err)
+	cancel()
+
+	if code != 0 {
+		return
+	}
+
+	code = m.Run()
 }
 
 func Benchmark_httpProxy(b *testing.B) {
 	type benchmark struct {
-		name   string
-		port   string
-		scheme string
+		name     string
+		endpoint string
 	}
 	benchmarks := []benchmark{
 		{
-			name:   "HTTP",
-			port:   "3128/tcp",
-			scheme: "http",
+			name:     "HTTP",
+			endpoint: proxyHTTPEndpoint,
 		},
 		{
-			name:   "HTTPS",
-			port:   "3128/tcp",
-			scheme: "https",
+			name:     "HTTPS",
+			endpoint: proxyHTTPSEndpoint,
 		},
 	}
 	for _, bm := range benchmarks {
 		b.Run(bm.name, func(b *testing.B) {
 			var err error
-			var endpoint string
-			if endpoint, err = setupContainer(b, bm.port); err != nil {
-				b.Errorf("setupContainer() error = %v", err)
-			}
 
 			var httpClient *http.Client
-			if httpClient, err = setupHTTPClient(fmt.Sprintf("http://%s", endpoint), fmt.Sprintf("https://%s", endpoint)); err != nil {
+			if httpClient, err = setupHTTPClient(proxyHTTPEndpoint, proxyHTTPSEndpoint); err != nil {
 				return
 			}
 
@@ -74,9 +112,7 @@ func Benchmark_httpProxy(b *testing.B) {
 				for pb.Next() {
 					//nolint:gosec
 					extension := availableExtensions[rand.Intn(len(availableExtensions))]
-
-					reqURL, _ := url.Parse(fmt.Sprintf("%s://%s/%s.%s", bm.scheme, endpoint, randomString(15), extension))
-
+					reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", bm.endpoint, randomString(15), extension))
 					req := &http.Request{
 						Method: http.MethodGet,
 						URL:    reqURL,
@@ -101,20 +137,6 @@ func randomString(length int) (result string) {
 		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
 	}
 	return buffer.String()
-}
-
-func setupContainer(b *testing.B, port string) (httpEndpoint string, err error) {
-	b.Helper()
-
-	startupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	var inetMockContainer testcontainers.Container
-	if inetMockContainer, err = integration.SetupINetMockContainer(startupCtx, b, port); err != nil {
-		return
-	}
-
-	httpEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, nat.Port(port), "")
-	return
 }
 
 func setupHTTPClient(httpEndpoint, httpsEndpoint string) (*http.Client, error) {

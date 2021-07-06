@@ -1,10 +1,11 @@
-package mock
+package mock_test
 
 import (
 	"context"
 	"fmt"
 	"math/rand"
 	"net"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -16,23 +17,59 @@ import (
 )
 
 const (
-	charSet = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
+	charSet         = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
+	startupTimeout  = 5 * time.Minute
+	shutdownTimeout = 5 * time.Second
 )
 
-func init() {
+var (
+	dnsEndpoint string
+)
+
+func TestMain(m *testing.M) {
 	rand.Seed(time.Now().Unix())
+	var (
+		code              int
+		inetMockContainer testcontainers.Container
+		port              = nat.Port("53/udp")
+		err               error
+		errorHandler      = func(err error) bool {
+			if err != nil {
+				fmt.Println(err.Error())
+				code = 1
+				return true
+			}
+			return false
+		}
+		terminate = func() {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+			errorHandler(inetMockContainer.Terminate(shutdownCtx))
+			cancel()
+		}
+	)
+
+	defer func() {
+		terminate()
+		os.Exit(code)
+	}()
+
+	startupCtx, cancel := context.WithTimeout(context.Background(), startupTimeout)
+	inetMockContainer, err = integration.SetupINetMockContainer(startupCtx, string(port))
+	errorHandler(err)
+	dnsEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, port, "")
+	errorHandler(err)
+	cancel()
+
+	if code != 0 {
+		return
+	}
+
+	code = m.Run()
 }
 
 func Benchmark_dnsHandler(b *testing.B) {
-	var err error
-	var endpoint string
-	if endpoint, err = setupContainer(b, "53/udp"); err != nil {
-		b.Errorf("setupContainer() error = %v", err)
-	}
-
-	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		resolv := resolver(endpoint)
+		resolv := resolver(dnsEndpoint)
 		for pb.Next() {
 			lookupCtx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			_, err := resolv.LookupHost(lookupCtx, fmt.Sprintf("www.%s.com", randomString(8)))
@@ -51,20 +88,6 @@ func randomString(length int) (result string) {
 		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
 	}
 	return buffer.String()
-}
-
-func setupContainer(b *testing.B, port string) (httpEndpoint string, err error) {
-	b.Helper()
-
-	startupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	var inetMockContainer testcontainers.Container
-	if inetMockContainer, err = integration.SetupINetMockContainer(startupCtx, b, port); err != nil {
-		return
-	}
-
-	httpEndpoint, err = inetMockContainer.PortEndpoint(startupCtx, nat.Port(port), "")
-	return
 }
 
 func resolver(endpoint string) net.Resolver {
