@@ -1,11 +1,5 @@
 image: registry.gitlab.com/inetmock/ci-image/go
 
-include:
-  - template: Security/Dependency-Scanning.gitlab-ci.yml
-  - template: Security/License-Scanning.gitlab-ci.yml
-  - template: Security/SAST.gitlab-ci.yml
-  - template: Security/Secret-Detection.gitlab-ci.yml
-
 stages:
   - test
   - build
@@ -18,7 +12,8 @@ variables:
   DOCKER_TLS_VERIFY: 1
   DOCKER_HOST: 'tcp://docker:2376'
   SAST_EXCLUDED_ANALYZERS: "eslint"
-
+  DOCKER_IMAGE: registry.gitlab.com/inetmock/inetmock:latest
+  DOCKERFILE_PATH: build/docker/inetmock.dockerfile
 
 test:
   stage: test
@@ -71,6 +66,13 @@ release:
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - goreleaser release --rm-dist
+
+include:
+  - template: Dependency-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
 
 pages:
   stage: deploy
