@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha6
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e
 	github.com/golang/mock v1.6.0
