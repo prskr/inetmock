@@ -176,3 +176,134 @@ func Test_ttlQueue_Push(t *testing.T) {
 		})
 	}
 }
+
+func Test_ttlQueue_UpdateTTL(t1 *testing.T) {
+	t1.Parallel()
+	type seedEntry struct {
+		host string
+		ip   net.IP
+		ttl  time.Duration
+	}
+	type fields struct {
+		initialCapacity int
+		seeds           []seedEntry
+	}
+	type args struct {
+		idxToUpdate int
+		newTTL      time.Duration
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name: "Single element",
+			fields: fields{
+				initialCapacity: 10,
+				seeds: []seedEntry{
+					{
+						host: "mail.gogle.ru",
+						ip:   net.ParseIP("1.2.3.4"),
+						ttl:  100 * time.Millisecond,
+					},
+				},
+			},
+			args: args{
+				idxToUpdate: 0,
+				newTTL:      200 * time.Millisecond,
+			},
+		},
+		{
+			name: "Last element",
+			fields: fields{
+				initialCapacity: 10,
+				seeds: []seedEntry{
+					{
+						host: "mail.gogle.ru",
+						ip:   net.ParseIP("1.2.3.4"),
+						ttl:  100 * time.Millisecond,
+					},
+					{
+						host: "asdf.gogle.ru",
+						ip:   net.ParseIP("1.2.3.5"),
+						ttl:  120 * time.Millisecond,
+					},
+				},
+			},
+			args: args{
+				idxToUpdate: 1,
+				newTTL:      200 * time.Millisecond,
+			},
+		},
+		{
+			name: "Switch elements",
+			fields: fields{
+				initialCapacity: 10,
+				seeds: []seedEntry{
+					{
+						host: "mail.gogle.ru",
+						ip:   net.ParseIP("1.2.3.4"),
+						ttl:  50 * time.Millisecond,
+					},
+					{
+						host: "asdf.gogle.ru",
+						ip:   net.ParseIP("1.2.3.5"),
+						ttl:  150 * time.Millisecond,
+					},
+				},
+			},
+			args: args{
+				idxToUpdate: 0,
+				newTTL:      500 * time.Millisecond,
+			},
+		},
+		{
+			name: "Switch elements",
+			fields: fields{
+				initialCapacity: 10,
+				seeds: []seedEntry{
+					{
+						host: "mail.gogle.ru",
+						ip:   net.ParseIP("1.2.3.4"),
+						ttl:  50 * time.Millisecond,
+					},
+					{
+						host: "honey.gogle.ru",
+						ip:   net.ParseIP("1.2.3.4"),
+						ttl:  100 * time.Millisecond,
+					},
+					{
+						host: "asdf.gogle.ru",
+						ip:   net.ParseIP("1.2.3.5"),
+						ttl:  150 * time.Millisecond,
+					},
+				},
+			},
+			args: args{
+				idxToUpdate: 1,
+				newTTL:      500 * time.Millisecond,
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t1.Run(tt.name, func(t1 *testing.T) {
+			t1.Parallel()
+			var queue = dns.NewQueue(tt.fields.initialCapacity)
+			for i := range tt.fields.seeds {
+				seed := tt.fields.seeds[i]
+				_ = queue.Push(seed.host, seed.ip, seed.ttl)
+			}
+			var entry = queue.Get(tt.args.idxToUpdate)
+			queue.UpdateTTL(entry, tt.args.newTTL)
+
+			var current = queue.PeekFront().TTL()
+			for i := 0; i < queue.Len(); i++ {
+				if current.After(queue.Get(i).TTL()) {
+					t1.Errorf("TTLs in wrong order got = %v, current = %v", queue.Get(i).TTL(), current)
+				}
+			}
+		})
+	}
+}

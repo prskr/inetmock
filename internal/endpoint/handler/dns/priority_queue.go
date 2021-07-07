@@ -44,6 +44,7 @@ func (f EvictionCallbackFunc) OnEvicted(evictedEntries []*Entry) {
 
 type TTLQueue interface {
 	Push(name string, address net.IP, ttl time.Duration) *Entry
+	Get(idx int) *Entry
 	UpdateTTL(e *Entry, newTTL time.Duration)
 	Evict()
 	PeekFront() *Entry
@@ -99,7 +100,29 @@ func (t *ttlQueue) Get(idx int) *Entry {
 }
 
 func (t *ttlQueue) UpdateTTL(e *Entry, newTTL time.Duration) {
+	t.modLock.Lock()
+	defer t.modLock.Unlock()
+
+	var (
+		length    = len(t.virtual)
+		insertIdx int
+	)
+
 	e.timeout = time.Now().UTC().Add(newTTL)
+	insertIdx = sort.Search(length, func(i int) bool {
+		return t.virtual[i].timeout.After(e.timeout)
+	})
+
+	if insertIdx == e.index {
+		return
+	}
+
+	for idx := e.index; idx+1 < insertIdx; idx++ {
+		t.virtual[idx] = t.virtual[idx+1]
+		t.virtual[idx].index = idx
+	}
+
+	t.virtual[insertIdx-1] = e
 }
 
 func (t *ttlQueue) Evict() {
@@ -120,6 +143,7 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 			Name:    name,
 			Address: address,
 			timeout: time.Now().UTC().Add(ttl),
+			index:   length,
 		}
 	)
 
@@ -146,6 +170,7 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 		t.virtual = append(t.virtual, nil)
 		copy(t.virtual[insertIdx+1:], t.virtual[insertIdx:])
 		t.virtual[insertIdx] = entry
+		entry.index = insertIdx
 	}
 
 	return entry
