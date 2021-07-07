@@ -98,17 +98,8 @@ func (t *ttlQueue) Get(idx int) *Entry {
 	return t.virtual[idx]
 }
 
-func (t *ttlQueue) Sort() {
-	t.modLock.Lock()
-	defer t.modLock.Unlock()
-	sort.Slice(t.virtual, func(i, j int) bool {
-		return t.virtual[i].timeout.Before(t.virtual[j].timeout)
-	})
-}
-
 func (t *ttlQueue) UpdateTTL(e *Entry, newTTL time.Duration) {
 	e.timeout = time.Now().UTC().Add(newTTL)
-	t.Sort()
 }
 
 func (t *ttlQueue) Evict() {
@@ -120,18 +111,42 @@ func (t *ttlQueue) Evict() {
 
 func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 	t.modLock.Lock()
-	defer t.Sort()
 	defer t.modLock.Unlock()
 
-	entry := &Entry{
-		Name:    name,
-		Address: address,
-		timeout: time.Now().UTC().Add(ttl),
-	}
-	if len(t.virtual) == cap(t.virtual) {
+	var (
+		length   = len(t.virtual)
+		capacity = cap(t.virtual)
+		entry    = &Entry{
+			Name:    name,
+			Address: address,
+			timeout: time.Now().UTC().Add(ttl),
+		}
+	)
+
+	if length == capacity {
 		t.doEvict()
+		length = len(t.virtual)
 	}
-	t.virtual = append(t.virtual, entry)
+
+	/*
+	 * Shortcut if the TTL is already the latest one
+	 */
+	if length == 0 || entry.timeout.After(t.virtual[length-1].timeout) {
+		t.virtual = append(t.virtual, entry)
+		return entry
+	}
+
+	var insertIdx = sort.Search(length, func(i int) bool {
+		return t.virtual[i].timeout.After(entry.timeout)
+	})
+
+	if insertIdx >= length {
+		t.virtual = append(t.virtual, entry)
+	} else {
+		t.virtual = append(t.virtual, nil)
+		copy(t.virtual[insertIdx+1:], t.virtual[insertIdx:])
+		t.virtual[insertIdx] = entry
+	}
 
 	return entry
 }

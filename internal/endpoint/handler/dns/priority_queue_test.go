@@ -136,6 +136,31 @@ func Test_ttlQueue_Push(t *testing.T) {
 			expectedLength:   2,
 			expectedCapacity: 10,
 		},
+		{
+			name: "Push multiple elements with unsorted TTLs",
+			fields: fields{
+				initialCapacity: 10,
+			},
+			args: []args{
+				{
+					name:    "mail.google.ru",
+					address: net.ParseIP("192.168.199.10"),
+					ttl:     100 * time.Millisecond,
+				},
+				{
+					name:    "first.google.ru",
+					address: net.ParseIP("192.168.199.10"),
+					ttl:     10 * time.Millisecond,
+				},
+				{
+					name:    "www.google.ru",
+					address: net.ParseIP("192.168.199.11"),
+					ttl:     200 * time.Millisecond,
+				},
+			},
+			expectedLength:   3,
+			expectedCapacity: 10,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
