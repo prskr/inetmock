@@ -2,6 +2,7 @@
 package rules_test
 
 import (
+	"net"
 	"net/http"
 	"testing"
 
@@ -180,6 +181,42 @@ func TestParse(t *testing.T) {
 					Params: []rules.Param{
 						{
 							Float: rules.FloatP(13.37),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Routing - Terminator only - IP argument",
+			args: args{
+				rule: `=> IP(8.8.8.8)`,
+			},
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
+					Name: "IP",
+					Params: []rules.Param{
+						{
+							IP: net.ParseIP("8.8.8.8"),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Routing - Terminator only - CIDR argument",
+			args: args{
+				rule: `=> IP(8.8.8.8/32)`,
+			},
+			target: new(rules.Routing),
+			want: &rules.Routing{
+				Terminator: &rules.Method{
+					Name: "IP",
+					Params: []rules.Param{
+						{
+							CIDR: rules.MustParseCIDR("8.8.8.8/32"),
 						},
 					},
 				},

@@ -3,6 +3,7 @@ package rules
 import (
 	"errors"
 	"fmt"
+	"net"
 	"reflect"
 
 	"github.com/alecthomas/participle/v2"
@@ -16,10 +17,13 @@ var (
 	parsers         map[reflect.Type]*participle.Parser
 )
 
+// nolint:lll
 func init() {
 	ruleLexer := lexer.Must(stateful.NewSimple([]stateful.Rule{
 		{Name: `Module`, Pattern: `[a-z]+`, Action: nil},
 		{Name: `Ident`, Pattern: `[A-Z][a-zA-Z0-9_]*`, Action: nil},
+		{Name: `CIDR`, Pattern: `(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}/(3[0-2]|[1-2][0-9]|[1-9])`, Action: nil},
+		{Name: `IP`, Pattern: `(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`, Action: nil},
 		{Name: `Float`, Pattern: `\d+\.\d+`, Action: nil},
 		{Name: `Int`, Pattern: `[-]?\d+`, Action: nil},
 		{Name: `RawString`, Pattern: "`[^`]*`", Action: nil},
@@ -80,6 +84,8 @@ type Param struct {
 	String *string  `parser:"@String | @RawString"`
 	Int    *int     `parser:"| @Int"`
 	Float  *float64 `parser:"| @Float"`
+	IP     net.IP   `parser:"| @IP"`
+	CIDR   *CIDR    `parser:"| @CIDR"`
 }
 
 func (p Param) AsString() (string, error) {
@@ -101,4 +107,18 @@ func (p Param) AsFloat() (float64, error) {
 		return 0, fmt.Errorf("float is nil %w", ErrTypeMismatch)
 	}
 	return *p.Float, nil
+}
+
+func (p Param) AsIP() (net.IP, error) {
+	if p.IP == nil {
+		return nil, fmt.Errorf("IP is nil %w", ErrTypeMismatch)
+	}
+	return p.IP, nil
+}
+
+func (p Param) AsCIDR() (*CIDR, error) {
+	if p.CIDR == nil {
+		return nil, fmt.Errorf("IP is nil %w", ErrTypeMismatch)
+	}
+	return p.CIDR, nil
 }
