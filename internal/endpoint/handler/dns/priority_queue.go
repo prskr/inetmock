@@ -56,6 +56,7 @@ type TTLQueue interface {
 type ttlQueue struct {
 	modLock       sync.Locker
 	readLock      sync.Locker
+	offset        Offset
 	backing       []*Entry
 	virtual       []*Entry
 	evictionCache chan []*Entry
@@ -113,16 +114,13 @@ func (t *ttlQueue) UpdateTTL(e *Entry, newTTL time.Duration) {
 		return t.virtual[i].timeout.After(e.timeout)
 	})
 
-	if insertIdx == e.index {
+	if insertIdx == e.index-t.offset.CurrentOffset {
 		return
 	}
-
-	for idx := e.index; idx+1 < insertIdx; idx++ {
-		t.virtual[idx] = t.virtual[idx+1]
-		t.virtual[idx].index = idx
-	}
+	t.move(e.index, insertIdx, 1)
 
 	t.virtual[insertIdx-1] = e
+	e.index = insertIdx + t.offset.CurrentOffset
 }
 
 func (t *ttlQueue) Evict() {
@@ -143,7 +141,7 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 			Name:    name,
 			Address: address,
 			timeout: time.Now().UTC().Add(ttl),
-			index:   length,
+			index:   length + t.offset.CurrentOffset,
 		}
 	)
 
@@ -170,7 +168,7 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 		t.virtual = append(t.virtual, nil)
 		copy(t.virtual[insertIdx+1:], t.virtual[insertIdx:])
 		t.virtual[insertIdx] = entry
-		entry.index = insertIdx
+		entry.index = insertIdx + t.offset.CurrentOffset
 	}
 
 	return entry
@@ -225,6 +223,8 @@ func (t *ttlQueue) doEvict() {
 	}
 	t.virtual = t.virtual[firstToNotEvict:]
 
+	var newOffset, overflow = t.offset.Inc(firstToNotEvict)
+
 	var (
 		minimumReserve = int(math.Max(math.Ceil((1.0-stretchFactor)*float64(len(t.virtual))), minimumCapReserve))
 		virtualReserve = cap(t.virtual) - len(t.virtual)
@@ -246,7 +246,6 @@ func (t *ttlQueue) doEvict() {
 		t.backing = append(t.backing, t.virtual...)
 		t.virtual = t.backing
 		t.backing = t.backing[0:0]
-		return
 	/*
 	 * if neither the actual/virtual reserve nor the backing reserve are enough to
 	 * get a buffer of 20% back increase the underlying structures and then do the same as above
@@ -257,6 +256,21 @@ func (t *ttlQueue) doEvict() {
 		t.backing = append(t.backing, t.virtual...)
 		t.virtual = t.backing
 		t.backing = t.backing[0:0]
-		return
+	}
+	/*
+	 * if the offset variable overflowed it is necessary to reset all cached indices to ensure the 'touch' functionality still works
+	 */
+	if overflow {
+		virtualLength = len(t.virtual)
+		for idx := 0; idx < virtualLength; idx++ {
+			t.virtual[idx].index = idx + newOffset
+		}
+	}
+}
+
+func (t *ttlQueue) move(startIdx, endIdx, offset int) {
+	for idx := startIdx; idx+offset < endIdx; idx += offset {
+		t.virtual[idx] = t.virtual[idx+1]
+		t.virtual[idx].index = idx + t.offset.CurrentOffset
 	}
 }
