@@ -1,8 +1,7 @@
-package dns
+package queue
 
 import (
 	"math"
-	"net"
 	"sort"
 	"sync"
 	"time"
@@ -42,9 +41,10 @@ func (f EvictionCallbackFunc) OnEvicted(evictedEntries []*Entry) {
 	f(evictedEntries)
 }
 
-type TTLQueue interface {
-	Push(name string, address net.IP, ttl time.Duration) *Entry
+type TTL interface {
+	Push(name string, value interface{}, ttl time.Duration) *Entry
 	Get(idx int) *Entry
+	IndexOf(e *Entry) int
 	UpdateTTL(e *Entry, newTTL time.Duration)
 	Evict()
 	PeekFront() *Entry
@@ -53,7 +53,7 @@ type TTLQueue interface {
 	Len() int
 }
 
-type ttlQueue struct {
+type ttl struct {
 	modLock       sync.Locker
 	readLock      sync.Locker
 	offset        Offset
@@ -62,9 +62,14 @@ type ttlQueue struct {
 	evictionCache chan []*Entry
 }
 
-func NewFromSeed(seed []*Entry) TTLQueue {
+func NewTTLFromSeed(seed []*Entry) TTL {
 	var mutex = new(sync.RWMutex)
-	return &ttlQueue{
+
+	for idx := range seed {
+		seed[idx].index = idx
+	}
+
+	return &ttl{
 		modLock:  mutex,
 		readLock: mutex.RLocker(),
 		backing:  seed,
@@ -72,26 +77,26 @@ func NewFromSeed(seed []*Entry) TTLQueue {
 	}
 }
 
-func NewQueue(capacity int) TTLQueue {
+func NewTTL(capacity int) TTL {
 	if capacity < minimumCapacity {
 		capacity = minimumCapacity
 	}
-	return NewFromSeed(make([]*Entry, 0, capacity))
+	return NewTTLFromSeed(make([]*Entry, 0, capacity))
 }
 
-func (t *ttlQueue) Len() int {
+func (t *ttl) Len() int {
 	t.readLock.Lock()
 	defer t.readLock.Unlock()
 	return len(t.virtual)
 }
 
-func (t *ttlQueue) Cap() int {
+func (t *ttl) Cap() int {
 	t.readLock.Lock()
 	defer t.readLock.Unlock()
 	return cap(t.virtual)
 }
 
-func (t *ttlQueue) Get(idx int) *Entry {
+func (t *ttl) Get(idx int) *Entry {
 	t.readLock.Lock()
 	defer t.readLock.Unlock()
 	if idx >= len(t.virtual) {
@@ -100,7 +105,11 @@ func (t *ttlQueue) Get(idx int) *Entry {
 	return t.virtual[idx]
 }
 
-func (t *ttlQueue) UpdateTTL(e *Entry, newTTL time.Duration) {
+func (t *ttl) IndexOf(e *Entry) int {
+	return e.index - t.offset.CurrentOffset
+}
+
+func (t *ttl) UpdateTTL(e *Entry, newTTL time.Duration) {
 	t.modLock.Lock()
 	defer t.modLock.Unlock()
 
@@ -114,23 +123,28 @@ func (t *ttlQueue) UpdateTTL(e *Entry, newTTL time.Duration) {
 		return t.virtual[i].timeout.After(e.timeout)
 	})
 
+	if insertIdx == length {
+		insertIdx -= 1
+	}
+
 	if insertIdx == e.index-t.offset.CurrentOffset {
 		return
 	}
-	t.move(e.index, insertIdx, 1)
 
-	t.virtual[insertIdx-1] = e
+	t.move(e.index-t.offset.CurrentOffset, insertIdx, 1)
+
+	t.virtual[insertIdx] = e
 	e.index = insertIdx + t.offset.CurrentOffset
 }
 
-func (t *ttlQueue) Evict() {
+func (t *ttl) Evict() {
 	t.modLock.Lock()
 	defer t.modLock.Unlock()
 
 	t.doEvict()
 }
 
-func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
+func (t *ttl) Push(name string, value interface{}, ttl time.Duration) *Entry {
 	t.modLock.Lock()
 	defer t.modLock.Unlock()
 
@@ -138,8 +152,8 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 		length   = len(t.virtual)
 		capacity = cap(t.virtual)
 		entry    = &Entry{
-			Name:    name,
-			Address: address,
+			Key:     name,
+			Value:   value,
 			timeout: time.Now().UTC().Add(ttl),
 			index:   length + t.offset.CurrentOffset,
 		}
@@ -148,6 +162,7 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 	if length == capacity {
 		t.doEvict()
 		length = len(t.virtual)
+		entry.index = length + t.offset.CurrentOffset
 	}
 
 	/*
@@ -166,7 +181,7 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 		t.virtual = append(t.virtual, entry)
 	} else {
 		t.virtual = append(t.virtual, nil)
-		copy(t.virtual[insertIdx+1:], t.virtual[insertIdx:])
+		t.move(length, insertIdx, -1)
 		t.virtual[insertIdx] = entry
 		entry.index = insertIdx + t.offset.CurrentOffset
 	}
@@ -174,7 +189,7 @@ func (t *ttlQueue) Push(name string, address net.IP, ttl time.Duration) *Entry {
 	return entry
 }
 
-func (t *ttlQueue) PeekFront() *Entry {
+func (t *ttl) PeekFront() *Entry {
 	t.readLock.Lock()
 	defer t.readLock.Unlock()
 	if len(t.virtual) > 0 {
@@ -183,7 +198,7 @@ func (t *ttlQueue) PeekFront() *Entry {
 	return nil
 }
 
-func (t *ttlQueue) OnEvicted(callback EvictionCallback) {
+func (t *ttl) OnEvicted(callback EvictionCallback) {
 	t.modLock.Lock()
 	defer t.modLock.Unlock()
 	if t.evictionCache != nil {
@@ -198,7 +213,7 @@ func (t *ttlQueue) OnEvicted(callback EvictionCallback) {
 	}(t.evictionCache, callback)
 }
 
-func (t *ttlQueue) doEvict() {
+func (t *ttl) doEvict() {
 	var (
 		virtualLength   = len(t.virtual)
 		now             = time.Now().UTC()
@@ -268,9 +283,12 @@ func (t *ttlQueue) doEvict() {
 	}
 }
 
-func (t *ttlQueue) move(startIdx, endIdx, offset int) {
-	for idx := startIdx; idx+offset < endIdx; idx += offset {
-		t.virtual[idx] = t.virtual[idx+1]
-		t.virtual[idx].index = idx + t.offset.CurrentOffset
+func (t *ttl) move(startIdx, endIdx, offset int) {
+	length := len(t.virtual)
+	for idx := startIdx; idx != endIdx && idx < length; idx += offset {
+		t.virtual[idx] = t.virtual[idx+offset]
+		if t.virtual[idx] != nil {
+			t.virtual[idx].index = idx + t.offset.CurrentOffset
+		}
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"gitlab.com/inetmock/inetmock/internal/queue"
 )
 
 const (
@@ -29,20 +31,9 @@ var (
 	}
 )
 
-type Entry struct {
+type Record struct {
 	Name    string
 	Address net.IP
-	timeout time.Time
-	index   int
-}
-
-func (e Entry) WithTTL(ttl time.Duration) *Entry {
-	e.timeout = time.Now().UTC().Add(ttl)
-	return &e
-}
-
-func (e Entry) TTL() time.Time {
-	return e.timeout
 }
 
 type Cache interface {
@@ -78,12 +69,12 @@ func NewCache(opts ...CacheOption) Cache {
 		cfg:          cfg,
 		readLock:     rwMutex.RLocker(),
 		writeLock:    rwMutex,
-		forwardIndex: make(map[string]*Entry),
-		reverseIndex: make(map[uint32]*Entry),
-		queue:        WrapToAutoEvict(NewQueue(cfg.initialSize)),
+		forwardIndex: make(map[string]*queue.Entry),
+		reverseIndex: make(map[uint32]*queue.Entry),
+		queue:        queue.WrapToAutoEvict(queue.NewTTL(cfg.initialSize)),
 	}
 
-	cache.queue.OnEvicted(EvictionCallbackFunc(cache.onCacheEvicted))
+	cache.queue.OnEvicted(queue.EvictionCallbackFunc(cache.onCacheEvicted))
 
 	return cache
 }
@@ -97,20 +88,20 @@ type cache struct {
 	cfg          cacheConfig
 	readLock     sync.Locker
 	writeLock    sync.Locker
-	forwardIndex map[string]*Entry
-	reverseIndex map[uint32]*Entry
-	queue        TTLQueue
+	forwardIndex map[string]*queue.Entry
+	reverseIndex map[uint32]*queue.Entry
+	queue        queue.TTL
 }
 
 func (c *cache) PutRecord(host string, address net.IP) {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
-	e := &Entry{
+	rec := &Record{
 		Name:    host,
 		Address: address,
-		timeout: time.Now().UTC().Add(c.cfg.ttl),
 	}
 	i := IPToInt32(address)
+	e := c.queue.Push(host, rec, c.cfg.ttl)
 	c.forwardIndex[host] = e
 	c.reverseIndex[i] = e
 }
@@ -120,10 +111,14 @@ func (c *cache) ForwardLookup(host string, resolver IPResolver) net.IP {
 	if e, cached := c.forwardIndex[host]; cached {
 		c.queue.UpdateTTL(e, c.cfg.ttl)
 		c.readLock.Unlock()
-		return e.Address
+		return e.Value.(*Record).Address
 	} else {
 		ip := resolver.Lookup(host)
-		e = c.queue.Push(host, ip, c.cfg.ttl)
+		rec := &Record{
+			Name:    host,
+			Address: ip,
+		}
+		e = c.queue.Push(host, rec, c.cfg.ttl)
 		/* need to update the indexes - acquire write-lock */
 		c.readLock.Unlock()
 		c.writeLock.Lock()
@@ -139,17 +134,18 @@ func (c *cache) ReverseLookup(address net.IP) (host string, miss bool) {
 	defer c.readLock.Unlock()
 	if e, cached := c.reverseIndex[IPToInt32(address)]; cached {
 		c.queue.UpdateTTL(e, c.cfg.ttl)
-		return e.Name, false
+		return e.Value.(*Record).Name, false
 	} else {
 		return "", true
 	}
 }
 
-func (c *cache) onCacheEvicted(evictedItems []*Entry) {
+func (c *cache) onCacheEvicted(evictedItems []*queue.Entry) {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	for idx := range evictedItems {
-		delete(c.forwardIndex, evictedItems[idx].Name)
-		delete(c.reverseIndex, IPToInt32(evictedItems[idx].Address))
+		var record = evictedItems[idx].Value.(*Record)
+		delete(c.forwardIndex, record.Name)
+		delete(c.reverseIndex, IPToInt32(record.Address))
 	}
 }

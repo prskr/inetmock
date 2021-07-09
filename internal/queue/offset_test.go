@@ -1,4 +1,4 @@
-package dns_test
+package queue_test
 
 import (
 	"math"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns"
+	"gitlab.com/inetmock/inetmock/internal/queue"
 )
 
 func TestOffset_Next(t *testing.T) {
@@ -50,7 +50,7 @@ func TestOffset_Next(t *testing.T) {
 		t.Run(tt.name, func(t1 *testing.T) {
 			t1.Parallel()
 			t := td.NewT(t1)
-			o := &dns.Offset{
+			o := &queue.Offset{
 				CurrentOffset: tt.fields.CurrentOffset,
 			}
 			gotOffset, gotOverflow := o.Next()
@@ -118,7 +118,7 @@ func TestOffset_Inc(t *testing.T) {
 		t.Run(tt.name, func(t1 *testing.T) {
 			t1.Parallel()
 			t := td.NewT(t1)
-			o := &dns.Offset{
+			o := &queue.Offset{
 				CurrentOffset: tt.fields.CurrentOffset,
 			}
 			gotNewVal, gotOverflow := o.Inc(tt.args.val)

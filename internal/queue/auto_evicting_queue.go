@@ -1,4 +1,4 @@
-package dns
+package queue
 
 import (
 	"time"
@@ -10,14 +10,14 @@ const (
 )
 
 type autoEvictingQueue struct {
-	TTLQueue
+	TTL
 	timer *time.Timer
 }
 
-func WrapToAutoEvict(existing TTLQueue) TTLQueue {
+func WrapToAutoEvict(existing TTL) TTL {
 	queue := &autoEvictingQueue{
-		timer:    time.NewTimer(defaultTimerDuration),
-		TTLQueue: existing,
+		timer: time.NewTimer(defaultTimerDuration),
+		TTL:   existing,
 	}
 
 	queue.startEvictionTimer()
@@ -29,8 +29,8 @@ func (a *autoEvictingQueue) startEvictionTimer() {
 	go func() {
 		for {
 			<-a.timer.C
-			a.TTLQueue.Evict()
-			if front := a.TTLQueue.PeekFront(); front == nil {
+			a.TTL.Evict()
+			if front := a.TTL.PeekFront(); front == nil {
 				a.timer.Reset(defaultTimerDuration)
 			} else if front.timeout.After(time.Now().UTC()) {
 				a.timer.Reset(front.timeout.Sub(time.Now().UTC()).Round(timerDurationRounding))
