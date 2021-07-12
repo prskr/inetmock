@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/miekg/dns"
+	mdns "github.com/miekg/dns"
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
@@ -17,7 +18,8 @@ const shutdownTimeout = 100 * time.Millisecond
 type dnsHandler struct {
 	logger    logging.Logger
 	emitter   audit.Emitter
-	dnsServer *dns.Server
+	dnsServer *mdns.Server
+	cache     *dns.Cache
 }
 
 func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
@@ -33,8 +35,8 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 	)
 
 	handler := &regexHandler{
-		handlerName:  lifecycle.Name(),
-		fallback:     options.Fallback,
+		handlerName: lifecycle.Name(),
+		//fallback:     options.Default,
 		logger:       d.logger,
 		auditEmitter: d.emitter,
 	}
@@ -42,19 +44,20 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 	for _, rule := range options.Rules {
 		d.logger.Debug(
 			"Register DNS rule",
-			zap.String("pattern", rule.pattern.String()),
-			zap.String("response", rule.response.String()),
+			zap.String("raw", rule),
 		)
-		handler.AddRule(rule)
+		if err := handler.AddRule(rule); err != nil {
+			return err
+		}
 	}
 
 	if lifecycle.Uplink().Listener != nil {
-		d.dnsServer = &dns.Server{
+		d.dnsServer = &mdns.Server{
 			Listener: lifecycle.Uplink().Listener,
 			Handler:  handler,
 		}
 	} else {
-		d.dnsServer = &dns.Server{
+		d.dnsServer = &mdns.Server{
 			PacketConn: lifecycle.Uplink().PacketConn,
 			Handler:    handler,
 		}

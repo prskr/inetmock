@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
+	"gitlab.com/inetmock/inetmock/internal/rules"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
@@ -15,14 +16,20 @@ import (
 
 type regexHandler struct {
 	handlerName  string
-	routes       []resolverRule
-	fallback     ResolverFallback
 	auditEmitter audit.Emitter
 	logger       logging.Logger
 }
 
-func (rh *regexHandler) AddRule(rule resolverRule) {
-	rh.routes = append(rh.routes, rule)
+func (rh *regexHandler) AddRule(rawRule string) error {
+	var (
+		parsedRule = new(rules.Routing)
+	)
+
+	if err := rules.Parse(rawRule, parsedRule); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (rh *regexHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
@@ -53,7 +60,7 @@ func (rh *regexHandler) handleQuery(m *dns.Msg) {
 		switch q.Qtype {
 		case dns.TypeA:
 			totalHandledRequestsCounter.WithLabelValues(rh.handlerName).Inc()
-			for _, rule := range rh.routes {
+			/*for _, rule := range rh.routes {
 				if !rule.pattern.MatchString(q.Name) {
 					continue
 				}
@@ -74,7 +81,7 @@ func (rh *regexHandler) handleQuery(m *dns.Msg) {
 					zap.String("response", rule.response.String()),
 				)
 				return
-			}
+			}*/
 			rh.handleFallbackForMessage(m, q)
 		default:
 			unhandledRequestsCounter.WithLabelValues(rh.handlerName).Inc()
@@ -87,7 +94,8 @@ func (rh *regexHandler) handleQuery(m *dns.Msg) {
 }
 
 func (rh *regexHandler) handleFallbackForMessage(m *dns.Msg, q dns.Question) {
-	fallbackIP := rh.fallback.GetIP()
+	// nolint:gomnd
+	fallbackIP := net.IPv4(127, 0, 0, 1)
 	answer := &dns.A{
 		Hdr: dns.RR_Header{
 			Name:   q.Name,

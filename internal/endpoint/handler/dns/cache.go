@@ -36,12 +36,6 @@ type Record struct {
 	Address net.IP
 }
 
-type Cache interface {
-	PutRecord(host string, address net.IP)
-	ForwardLookup(host string, resolver IPResolver) net.IP
-	ReverseLookup(address net.IP) (host string, miss bool)
-}
-
 type IPResolver interface {
 	Lookup(host string) net.IP
 }
@@ -54,7 +48,7 @@ func (f IPResolverFunc) Lookup(host string) net.IP {
 
 type CacheOption func(cfg *cacheConfig)
 
-func NewCache(opts ...CacheOption) Cache {
+func NewCache(opts ...CacheOption) *Cache {
 	var cfg = cacheConfig{
 		ttl:         defaultTTL,
 		initialSize: defaultInitialSize,
@@ -65,7 +59,7 @@ func NewCache(opts ...CacheOption) Cache {
 
 	var rwMutex = new(sync.RWMutex)
 
-	var cache = &cache{
+	var cache = &Cache{
 		cfg:          cfg,
 		readLock:     rwMutex.RLocker(),
 		writeLock:    rwMutex,
@@ -84,16 +78,22 @@ type cacheConfig struct {
 	initialSize int
 }
 
-type cache struct {
+type cacheQueue interface {
+	Push(name string, value interface{}, ttl time.Duration) *queue.Entry
+	UpdateTTL(e *queue.Entry, newTTL time.Duration)
+	OnEvicted(callback queue.EvictionCallback)
+}
+
+type Cache struct {
 	cfg          cacheConfig
 	readLock     sync.Locker
 	writeLock    sync.Locker
 	forwardIndex map[string]*queue.Entry
 	reverseIndex map[uint32]*queue.Entry
-	queue        queue.TTL
+	queue        cacheQueue
 }
 
-func (c *cache) PutRecord(host string, address net.IP) {
+func (c *Cache) PutRecord(host string, address net.IP) {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	rec := &Record{
@@ -106,7 +106,7 @@ func (c *cache) PutRecord(host string, address net.IP) {
 	c.reverseIndex[i] = e
 }
 
-func (c *cache) ForwardLookup(host string, resolver IPResolver) net.IP {
+func (c *Cache) ForwardLookup(host string, resolver IPResolver) net.IP {
 	c.readLock.Lock()
 	if e, cached := c.forwardIndex[host]; cached {
 		c.queue.UpdateTTL(e, c.cfg.ttl)
@@ -129,7 +129,7 @@ func (c *cache) ForwardLookup(host string, resolver IPResolver) net.IP {
 	}
 }
 
-func (c *cache) ReverseLookup(address net.IP) (host string, miss bool) {
+func (c *Cache) ReverseLookup(address net.IP) (host string, miss bool) {
 	c.readLock.Lock()
 	defer c.readLock.Unlock()
 	if e, cached := c.reverseIndex[IPToInt32(address)]; cached {
@@ -140,7 +140,7 @@ func (c *cache) ReverseLookup(address net.IP) (host string, miss bool) {
 	}
 }
 
-func (c *cache) onCacheEvicted(evictedItems []*queue.Entry) {
+func (c *Cache) onCacheEvicted(evictedItems []*queue.Entry) {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	for idx := range evictedItems {

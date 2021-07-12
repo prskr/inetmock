@@ -9,13 +9,13 @@ const (
 	timerDurationRounding = 50 * time.Millisecond
 )
 
-type autoEvictingQueue struct {
-	TTL
+type AutoEvicting struct {
+	*TTL
 	timer *time.Timer
 }
 
-func WrapToAutoEvict(existing TTL) TTL {
-	queue := &autoEvictingQueue{
+func WrapToAutoEvict(existing *TTL) *AutoEvicting {
+	queue := &AutoEvicting{
 		timer: time.NewTimer(defaultTimerDuration),
 		TTL:   existing,
 	}
@@ -25,7 +25,7 @@ func WrapToAutoEvict(existing TTL) TTL {
 	return queue
 }
 
-func (a *autoEvictingQueue) startEvictionTimer() {
+func (a *AutoEvicting) startEvictionTimer() {
 	go func() {
 		for {
 			<-a.timer.C

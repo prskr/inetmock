@@ -31,7 +31,7 @@ func Test_TTL_Evict(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name             string
-		t                queue.TTL
+		t                *queue.TTL
 		wantEvicted      int
 		expectedLength   int
 		expectedCapacity int
@@ -445,7 +445,7 @@ func Test_TTL_PushAfterEviction(t1 *testing.T) {
 	}
 }
 
-func validateQueue(t *td.T, q queue.TTL) {
+func validateQueue(t *td.T, q *queue.TTL) {
 	t.Helper()
 	if q.Len() < 1 {
 		return
