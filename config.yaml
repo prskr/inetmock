@@ -16,6 +16,22 @@ x-response-rules: &httpResponseRules
     - Method("GET") => File("default.html")
     - => Status(204)
 
+x-dns-respond-rules: &dnsRespondRules
+  options:
+    ttl: 30s
+    cache:
+      type: ttl
+      ttl: 30s
+      initialCapacity: 500
+    rules:
+      - A(`.*\\.google\\.com`) => IP(1.1.1.1)
+      - A(`.*\\.reddit\\.com`) => IP(2.2.2.2)
+      - A(`.*\\.cloudflare\\.com`) => Incremental(10.0.0.0/16)
+      - => Random(10.1.0.0/16)
+    default:
+      type: incremental
+      cidr: 10.10.0.0/16
+
 x-http-handlers: &httpHandlers
   endpoints:
     plainHttp:
@@ -80,16 +96,7 @@ listeners:
     endpoints:
       plainDns:
         handler: dns_mock
-        options:
-          rules:
-            - pattern: ".*\\.google\\.com"
-              response: 1.1.1.1
-            - pattern: ".*\\.reddit\\.com"
-              response: 2.2.2.2
-          fallback:
-            strategy: incremental
-            args:
-              startIP: 10.0.10.0
+        <<: *dnsRespondRules
   tcp_80:
     name: ''
     protocol: tcp
@@ -111,16 +118,7 @@ listeners:
       DoT:
         handler: dns_mock
         tls: true
-        options:
-          rules:
-            - pattern: ".*\\.google\\.com"
-              response: 1.1.1.1
-            - pattern: ".*\\.reddit\\.com"
-              response: 2.2.2.2
-          fallback:
-            strategy: incremental
-            args:
-              startIP: 10.0.10.0
+        <<: *dnsRespondRules
   tcp_3128:
     name: ''
     protocol: tcp

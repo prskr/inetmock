@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
@@ -19,14 +18,14 @@ type dnsHandler struct {
 	logger    logging.Logger
 	emitter   audit.Emitter
 	dnsServer *mdns.Server
-	cache     *dns.Cache
 }
 
 func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
-	var err error
 	var options dnsOptions
-	if options, err = loadFromConfig(lifecycle); err != nil {
+	if opts, err := loadFromConfig(lifecycle); err != nil {
 		return err
+	} else {
+		options = opts
 	}
 
 	d.logger = d.logger.With(
@@ -34,11 +33,13 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
-	handler := &regexHandler{
-		handlerName: lifecycle.Name(),
-		//fallback:     options.Default,
-		logger:       d.logger,
-		auditEmitter: d.emitter,
+	handler := &RuleHandler{
+		Cache:       options.Cache,
+		TTL:         options.TTL,
+		HandlerName: lifecycle.Name(),
+		Logger:      d.logger,
+		Emitter:     d.emitter,
+		Fallback:    options.Default,
 	}
 
 	for _, rule := range options.Rules {
@@ -46,7 +47,7 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 			"Register DNS rule",
 			zap.String("raw", rule),
 		)
-		if err := handler.AddRule(rule); err != nil {
+		if err := handler.RegisterRule(rule); err != nil {
 			return err
 		}
 	}

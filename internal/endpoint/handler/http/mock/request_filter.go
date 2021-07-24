@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -11,8 +10,6 @@ import (
 )
 
 var (
-	ErrUnknownFilterMethod = errors.New("no filter with the given name is known")
-
 	knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){
 		"method":      HTTPMethodMatcher,
 		"pathpattern": PathPatternMatcher,
@@ -35,7 +32,7 @@ func RequestFiltersForRoutingRule(rule *rules.Routing) (filters []RequestFilter,
 	filters = make([]RequestFilter, len(rule.Filters.Chain))
 	for idx := range rule.Filters.Chain {
 		if constructor, ok := knownRequestFilters[strings.ToLower(rule.Filters.Chain[idx].Name)]; !ok {
-			return nil, fmt.Errorf("%w %s", ErrUnknownFilterMethod, rule.Filters.Chain[idx].Name)
+			return nil, fmt.Errorf("%w %s", rules.ErrUnknownFilterMethod, rule.Filters.Chain[idx].Name)
 		} else {
 			var instance RequestFilter
 			instance, err = constructor(rule.Filters.Chain[idx].Params...)
@@ -59,9 +56,11 @@ func HTTPMethodMatcher(args ...rules.Param) (RequestFilter, error) {
 		return nil, err
 	}
 
-	var err error
+	var (
+		err            error
+		expectedMethod string
+	)
 
-	var expectedMethod string
 	if expectedMethod, err = args[0].AsString(); err != nil {
 		return nil, err
 	}
@@ -76,8 +75,10 @@ func PathPatternMatcher(args ...rules.Param) (RequestFilter, error) {
 		return nil, err
 	}
 
-	var err error
-	var rawPattern string
+	var (
+		err        error
+		rawPattern string
+	)
 	if rawPattern, err = args[0].AsString(); err != nil {
 		return nil, err
 	}
@@ -100,12 +101,14 @@ func HeaderValueMatcher(args ...rules.Param) (RequestFilter, error) {
 		return nil, err
 	}
 
-	var err error
-	var headerName, expectedValue string
+	var (
+		err                       error
+		headerName, expectedValue string
+	)
+
 	if headerName, err = args[0].AsString(); err != nil {
 		return nil, err
 	}
-
 	if expectedValue, err = args[1].AsString(); err != nil {
 		return nil, err
 	}

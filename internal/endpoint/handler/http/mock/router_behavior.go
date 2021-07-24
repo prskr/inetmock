@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -18,9 +17,6 @@ import (
 )
 
 var (
-	ErrNoTerminatorDefined = errors.New("no terminator defined")
-	ErrUnknownTerminator   = errors.New("no terminator with the given name is known")
-
 	knownResponseHandlers = map[string]func(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (http.Handler, error){
 		"file":   FileHandler,
 		"status": StatusHandler,
@@ -29,11 +25,11 @@ var (
 
 func HandlerForRoutingRule(rule *rules.Routing, logger logging.Logger, fakeFileFS fs.FS) (http.Handler, error) {
 	if rule.Terminator == nil {
-		return nil, ErrNoTerminatorDefined
+		return nil, rules.ErrNoTerminatorDefined
 	}
 
 	if constructor, ok := knownResponseHandlers[strings.ToLower(rule.Terminator.Name)]; !ok {
-		return nil, fmt.Errorf("%w %s", ErrUnknownTerminator, rule.Terminator.Name)
+		return nil, fmt.Errorf("%w %s", rules.ErrUnknownTerminator, rule.Terminator.Name)
 	} else {
 		return constructor(logger, fakeFileFS, rule.Terminator.Params...)
 	}

@@ -162,13 +162,9 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 
 //nolint:lll
 func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS, checker health.Checker) (err error) {
-	if err = mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS); err != nil {
-		return
-	}
+	mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS)
+	dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter)
 	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, store); err != nil {
-		return
-	}
-	if err = dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter); err != nil {
 		return
 	}
 	if err = metrics.AddMetricsExporter(registry, logger.Named("metrics_exporter"), checker); err != nil {

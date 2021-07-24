@@ -56,10 +56,8 @@ func New(logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) endpoin
 	}
 }
 
-func AddHTTPMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) (err error) {
+func AddHTTPMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, fakeFileFS fs.FS) {
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return New(logger, emitter, fakeFileFS)
 	})
-
-	return
 }

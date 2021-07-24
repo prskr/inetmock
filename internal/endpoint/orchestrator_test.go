@@ -70,7 +70,7 @@ func Test_orchestrator_RegisterListener(t *testing.T) {
 			handlerRegistrySetup: func(t *testing.T) endpoint.HandlerRegistry {
 				t.Helper()
 				registry := endpoint.NewHandlerRegistry()
-				_ = mock.AddHTTPMock(registry, logging.CreateTestLogger(t), nil, nil)
+				mock.AddHTTPMock(registry, logging.CreateTestLogger(t), nil, nil)
 				return registry
 			},
 			wantErr: false,
@@ -99,7 +99,7 @@ func Test_orchestrator_RegisterListener(t *testing.T) {
 			handlerRegistrySetup: func(t *testing.T) endpoint.HandlerRegistry {
 				t.Helper()
 				registry := endpoint.NewHandlerRegistry()
-				_ = mock.AddHTTPMock(registry, logging.CreateTestLogger(t), nil, nil)
+				mock.AddHTTPMock(registry, logging.CreateTestLogger(t), nil, nil)
 				return registry
 			},
 			wantErr: false,
@@ -180,7 +180,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 			handlerRegistrySetup: func(t *testing.T, emitter audit.Emitter) endpoint.HandlerRegistry {
 				t.Helper()
 				registry := endpoint.NewHandlerRegistry()
-				_ = mock.AddHTTPMock(registry, logging.CreateTestLogger(t), emitter, fstest.MapFS{})
+				mock.AddHTTPMock(registry, logging.CreateTestLogger(t), emitter, fstest.MapFS{})
 				return registry
 			},
 			orchestratorSetup: func(t *testing.T, orchestrator endpoint.Orchestrator, uplink *endpoint.Uplink) {
@@ -218,7 +218,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 			handlerRegistrySetup: func(t *testing.T, emitter audit.Emitter) endpoint.HandlerRegistry {
 				t.Helper()
 				registry := endpoint.NewHandlerRegistry()
-				_ = mock.AddHTTPMock(registry, logging.CreateTestLogger(t), emitter, fstest.MapFS{})
+				mock.AddHTTPMock(registry, logging.CreateTestLogger(t), emitter, fstest.MapFS{})
 				return registry
 			},
 			orchestratorSetup: func(t *testing.T, orchestrator endpoint.Orchestrator, uplink *endpoint.Uplink) {

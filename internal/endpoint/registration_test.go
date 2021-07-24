@@ -35,9 +35,7 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 				registry := endpoint.NewHandlerRegistry()
 				logger := logging.CreateTestLogger(tb)
 				emitter := audit_mock.NewMockEmitter(ctrl)
-				if err := httpmock.AddHTTPMock(registry, logger, emitter, new(fstest.MapFS)); err != nil {
-					tb.Fatalf("AddHTTPMock() error = %v", err)
-				}
+				httpmock.AddHTTPMock(registry, logger, emitter, new(fstest.MapFS))
 				return registry
 			},
 			wantAvailableHandlers: td.Set(endpoint.HandlerReference("http_mock")),
@@ -49,12 +47,8 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 				registry := endpoint.NewHandlerRegistry()
 				logger := logging.CreateTestLogger(tb)
 				emitter := audit_mock.NewMockEmitter(ctrl)
-				if err := httpmock.AddHTTPMock(registry, logger, emitter, new(fstest.MapFS)); err != nil {
-					tb.Fatalf("AddHTTPMock() error = %v", err)
-				}
-				if err := dnsmock.AddDNSMock(registry, logger, emitter); err != nil {
-					tb.Fatalf("AddHTTPMock() error = %v", err)
-				}
+				httpmock.AddHTTPMock(registry, logger, emitter, new(fstest.MapFS))
+				dnsmock.AddDNSMock(registry, logger, emitter)
 				return registry
 			},
 			wantAvailableHandlers: td.Set(
@@ -100,9 +94,7 @@ func Test_handlerRegistry_HandlerForName(t *testing.T) {
 				registry := endpoint.NewHandlerRegistry()
 				logger := logging.CreateTestLogger(tb)
 				emitter := audit_mock.NewMockEmitter(ctrl)
-				if err := httpmock.AddHTTPMock(registry, logger, emitter, new(fstest.MapFS)); err != nil {
-					tb.Fatalf("AddHTTPMock() error = %v", err)
-				}
+				httpmock.AddHTTPMock(registry, logger, emitter, new(fstest.MapFS))
 				return registry
 			},
 			handlerRef:   "http_mock",

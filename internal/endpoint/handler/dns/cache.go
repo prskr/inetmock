@@ -106,26 +106,15 @@ func (c *Cache) PutRecord(host string, address net.IP) {
 	c.reverseIndex[i] = e
 }
 
-func (c *Cache) ForwardLookup(host string, resolver IPResolver) net.IP {
+func (c *Cache) ForwardLookup(host string) net.IP {
 	c.readLock.Lock()
 	if e, cached := c.forwardIndex[host]; cached {
 		c.queue.UpdateTTL(e, c.cfg.ttl)
 		c.readLock.Unlock()
 		return e.Value.(*Record).Address
 	} else {
-		ip := resolver.Lookup(host)
-		rec := &Record{
-			Name:    host,
-			Address: ip,
-		}
-		e = c.queue.Push(host, rec, c.cfg.ttl)
-		/* need to update the indexes - acquire write-lock */
 		c.readLock.Unlock()
-		c.writeLock.Lock()
-		defer c.writeLock.Unlock()
-		c.forwardIndex[host] = e
-		c.reverseIndex[IPToInt32(ip)] = e
-		return ip
+		return nil
 	}
 }
 

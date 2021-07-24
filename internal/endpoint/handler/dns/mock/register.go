@@ -23,7 +23,7 @@ var (
 	initLock                    sync.Locker = new(sync.Mutex)
 )
 
-func AddDNSMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter) error {
+func init() {
 	initLock.Lock()
 	defer initLock.Unlock()
 
@@ -35,7 +35,7 @@ func AddDNSMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitte
 			"",
 			handlerNameLblName,
 		); err != nil {
-			return err
+			panic(err)
 		}
 	}
 
@@ -46,7 +46,7 @@ func AddDNSMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitte
 			"",
 			handlerNameLblName,
 		); err != nil {
-			return err
+			panic(err)
 		}
 	}
 
@@ -58,16 +58,20 @@ func AddDNSMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitte
 			nil,
 			handlerNameLblName,
 		); err != nil {
-			return err
+			panic(err)
 		}
 	}
+}
 
+func New(logger logging.Logger, emitter audit.Emitter) endpoint.ProtocolHandler {
+	return &dnsHandler{
+		logger:  logger,
+		emitter: emitter,
+	}
+}
+
+func AddDNSMock(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter) {
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
-		return &dnsHandler{
-			logger:  logger,
-			emitter: emitter,
-		}
+		return New(logger, emitter)
 	})
-
-	return nil
 }

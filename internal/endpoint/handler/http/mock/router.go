@@ -43,23 +43,22 @@ func (r *Router) RegisterRule(rawRule string) error {
 		return err
 	}
 
-	var err error
-	var filters []RequestFilter
-	if filters, err = RequestFiltersForRoutingRule(rule); err != nil {
+	var (
+		conditionalHandler ConditionalHandler
+		err                error
+	)
+
+	if conditionalHandler.Filters, err = RequestFiltersForRoutingRule(rule); err != nil {
 		return err
 	}
 
-	var handler http.Handler
-	if handler, err = HandlerForRoutingRule(rule, r.Logger, r.FakeFileFS); err != nil {
+	if conditionalHandler.Handler, err = HandlerForRoutingRule(rule, r.Logger, r.FakeFileFS); err != nil {
 		return err
 	}
 
 	r.Logger.Debug("Configure successfully parsed routing rule")
 
-	r.handlers = append(r.handlers, ConditionalHandler{
-		Handler: handler,
-		Filters: filters,
-	})
+	r.handlers = append(r.handlers, conditionalHandler)
 
 	return nil
 }

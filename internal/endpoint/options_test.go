@@ -41,14 +41,17 @@ func Test_OptionByTypeDecoderBuilder_DecodeHook(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		mappings map[string]reflect.Type
+		mappings map[string]endpoint.Mapping
 		input    interface{}
 		want     interface{}
 	}{
 		{
 			name: "Single mapping",
-			mappings: map[string]reflect.Type{
-				"friendly": reflect.TypeOf(friendlyGreeter{}),
+			mappings: map[string]endpoint.Mapping{
+				"friendly": endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+					i := new(friendlyGreeter)
+					return i, mapstructure.Decode(in, i)
+				}),
 			},
 			input: map[string]interface{}{
 				"greeting": "Tom",
@@ -63,9 +66,15 @@ func Test_OptionByTypeDecoderBuilder_DecodeHook(t *testing.T) {
 		},
 		{
 			name: "Simple mapping with multiple mappings",
-			mappings: map[string]reflect.Type{
-				"friendly":  reflect.TypeOf(friendlyGreeter{}),
-				"insulting": reflect.TypeOf(anotherGreeter{}),
+			mappings: map[string]endpoint.Mapping{
+				"friendly": endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+					i := new(friendlyGreeter)
+					return i, mapstructure.Decode(in, i)
+				}),
+				"insulting": endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+					i := new(anotherGreeter)
+					return i, mapstructure.Decode(in, i)
+				}),
 			},
 			input: map[string]interface{}{
 				"greeting": "Tom",

@@ -2,12 +2,24 @@ package mock
 
 import (
 	"net"
-
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns"
 )
 
-type cache interface {
+type Cache interface {
 	PutRecord(host string, address net.IP)
-	ForwardLookup(host string, resolver dns.IPResolver) net.IP
+	ForwardLookup(host string) net.IP
 	ReverseLookup(address net.IP) (host string, miss bool)
+}
+
+type NoOpCache struct {
+}
+
+func (n NoOpCache) PutRecord(string, net.IP) {
+}
+
+func (n NoOpCache) ForwardLookup(string) net.IP {
+	return nil
+}
+
+func (n NoOpCache) ReverseLookup(net.IP) (host string, miss bool) {
+	return "", true
 }

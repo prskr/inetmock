@@ -43,7 +43,7 @@ func Test_cache_PutRecord(t *testing.T) {
 			t := td.NewT(tb)
 			c := dns.NewCache(dns.WithTTL(100*time.Millisecond), dns.WithInitialSize(500))
 			c.PutRecord(tt.args.host, tt.args.address)
-			t.Cmp(c.ForwardLookup(tt.args.host, nil), tt.args.address)
+			t.Cmp(c.ForwardLookup(tt.args.host), tt.args.address)
 			host, miss := c.ReverseLookup(tt.args.address)
 			t.Cmp(host, tt.args.host)
 			t.Cmp(miss, false)
@@ -92,28 +92,6 @@ func Test_cache_ForwardLookup(t *testing.T) {
 			},
 			want: td.NotNil(),
 		},
-		{
-			name: "Lookup with resolver",
-			args: args{
-				host: "dns9.quad9.net",
-				resolver: dns.IPResolverFunc(func(host string) net.IP {
-					return net.IPv4(9, 9, 9, 9)
-				}),
-			},
-			times: 3,
-			want:  net.IPv4(9, 9, 9, 9),
-		},
-		{
-			name: "Lookup with resolver - ensure result is cached",
-			args: args{
-				host: "mail.gogle.ru",
-				resolver: dns.IPResolverFunc(func(host string) net.IP {
-					return dns.Uint32ToIP(rand.Uint32())
-				}),
-			},
-			times: 5,
-			want:  td.NotNil(),
-		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -126,7 +104,7 @@ func Test_cache_ForwardLookup(t *testing.T) {
 			}
 			var resolved net.IP
 			for i := 0; i < tt.times; i++ {
-				got := c.ForwardLookup(tt.args.host, tt.args.resolver)
+				got := c.ForwardLookup(tt.args.host)
 				t.Cmp(got, tt.want)
 				if resolved != nil {
 					t.Cmp(got, resolved)
