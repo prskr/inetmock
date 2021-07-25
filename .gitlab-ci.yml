@@ -29,8 +29,12 @@ test:
   extends: .go-cache
   needs: []
   script:
-    - task cli-cover-report
+    - task cli-cover-report html-cover-report
   artifacts:
+    paths:
+      - out/coverage.html
+    expire_in: 7 days
+    expose_as: Coverage Report
     reports:
       junit: out/report.xml
       cobertura: out/coverage.xml

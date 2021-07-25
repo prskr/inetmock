@@ -170,8 +170,10 @@ func Test_eventStream_Emit(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var err error
-			var e audit.EventStream
+			var (
+				err error
+				e   audit.EventStream
+			)
 			if e, err = audit.NewEventStream(logging.CreateTestLogger(t), tt.args.opts...); err != nil {
 				t.Errorf("NewEventStream() error = %v", err)
 			}
@@ -209,6 +211,70 @@ func Test_eventStream_Emit(t *testing.T) {
 			case <-wait.ForWaitGroupDone(receivedWaitGroup):
 			case <-time.After(5 * time.Second):
 				t.Errorf("did not get all expected events in time")
+			}
+		})
+	}
+}
+
+func Test_eventStream_RemoveSink(t *testing.T) {
+	t.Parallel()
+	type fields struct {
+		opts            []audit.EventStreamOption
+		sinksToRegister []audit.Sink
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantExists bool
+	}{
+		{
+			name: "Remove existing sink",
+			fields: fields{
+				sinksToRegister: []audit.Sink{
+					noOpSink,
+				},
+			},
+			args: args{
+				name: noOpSink.Name(),
+			},
+			wantExists: true,
+		},
+		{
+			name: "Remove non-existing sink",
+			args: args{
+				name: noOpSink.Name(),
+			},
+			wantExists: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var (
+				err error
+				e   audit.EventStream
+			)
+			if e, err = audit.NewEventStream(logging.CreateTestLogger(t), tt.fields.opts...); err != nil {
+				t.Errorf("NewEventStream() error = %v", err)
+			}
+
+			t.Cleanup(func() {
+				_ = e.Close()
+			})
+
+			for i := range tt.fields.sinksToRegister {
+				if err := e.RegisterSink(context.Background(), tt.fields.sinksToRegister[i]); err != nil {
+					t.Fatalf("RegisterSink() error = %v", err)
+				}
+			}
+
+			if gotExists := e.RemoveSink(tt.args.name); gotExists != tt.wantExists {
+				t.Errorf("RemoveSink() = %v, want %v", gotExists, tt.wantExists)
 			}
 		})
 	}
