@@ -1,7 +1,6 @@
 package mock_test
 
 import (
-	"math/rand"
 	"net"
 	"testing"
 	"time"
@@ -100,7 +99,7 @@ func TestRuleHandler_ServeDNS(t *testing.T) {
 		{
 			name: "Resolve anything to ",
 			fields: fields{
-				Cache: new(mock.NoOpCache),
+				Cache: new(mock.DelegateCache),
 			},
 			args: args{
 				req: new(mdns.Msg).SetQuestion("google.com.", mdns.TypeA),
@@ -129,7 +128,7 @@ func TestRuleHandler_ServeDNS(t *testing.T) {
 				Fallback: dns.IPResolverFunc(func(string) net.IP {
 					return net.IPv4(192, 168, 0, 1)
 				}),
-				Cache: new(mock.NoOpCache),
+				Cache: new(mock.DelegateCache),
 			},
 			args: args{
 				req: new(mdns.Msg).SetQuestion("google.com.", mdns.TypeA),
@@ -152,8 +151,8 @@ func TestRuleHandler_ServeDNS(t *testing.T) {
 		{
 			name: "Resolve A request with Cache",
 			fields: fields{
-				Cache: &mockCache{
-					forwardLookup: func(host string) net.IP {
+				Cache: &mock.DelegateCache{
+					OnForwardLookup: func(host string) net.IP {
 						if ip, ok := recordsMap[host]; ok {
 							return ip
 						}
@@ -182,8 +181,8 @@ func TestRuleHandler_ServeDNS(t *testing.T) {
 		{
 			name: "Resolve PTR request with Cache",
 			fields: fields{
-				Cache: &mockCache{
-					reverseLookup: func(address net.IP) (host string, miss bool) {
+				Cache: &mock.DelegateCache{
+					OnReverseLookup: func(address net.IP) (host string, miss bool) {
 						for h, i := range recordsMap {
 							if address.Equal(i) {
 								return h, false
@@ -251,11 +250,10 @@ func mockEmitter(tb testing.TB, expectedEvent interface{}) audit.Emitter {
 	return emitter
 }
 
-// nolint:gosec // random is safe enough for tests
 func mockResponseWriter(tb testing.TB, expectedMsg interface{}) mdns.ResponseWriter {
 	tb.Helper()
 	ctrl := gomock.NewController(tb)
-	resolver := mock.RandomIPResolver{Random: rand.New(rand.NewSource(time.Now().Unix())), CIDR: mustParseCIDR("10.10.0.0/8")}
+	resolver := mock.NewRandomIPResolver(mustParseCIDR("10.10.0.0/8"))
 
 	w := dnsmock.NewMockResponseWriter(ctrl)
 	w.EXPECT().
@@ -271,26 +269,4 @@ func mockResponseWriter(tb testing.TB, expectedMsg interface{}) mdns.ResponseWri
 		Return(&net.UDPAddr{IP: resolver.Lookup("")})
 
 	return w
-}
-
-type mockCache struct {
-	forwardLookup func(host string) net.IP
-	reverseLookup func(address net.IP) (host string, miss bool)
-}
-
-func (m *mockCache) PutRecord(string, net.IP) {
-}
-
-func (m *mockCache) ForwardLookup(host string) net.IP {
-	if m != nil && m.forwardLookup != nil {
-		return m.forwardLookup(host)
-	}
-	return net.IPv4(127, 0, 0, 1)
-}
-
-func (m *mockCache) ReverseLookup(address net.IP) (host string, miss bool) {
-	if m != nil && m.reverseLookup != nil {
-		return m.reverseLookup(address)
-	}
-	return "", true
 }

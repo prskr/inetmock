@@ -2,10 +2,8 @@ package mock
 
 import (
 	"fmt"
-	"math/rand"
 	"net"
 	"strings"
-	"time"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns"
 	"gitlab.com/inetmock/inetmock/internal/rules"
@@ -75,7 +73,6 @@ func IncrementalHandlerForArgs(args ...rules.Param) (dns.IPResolver, error) {
 	return resolver, nil
 }
 
-// nolint:gosec // insecure random is fine here because there's no crypto done here
 func RandomHandlerForArgs(args ...rules.Param) (dns.IPResolver, error) {
 	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
@@ -85,10 +82,7 @@ func RandomHandlerForArgs(args ...rules.Param) (dns.IPResolver, error) {
 	if cidr, err := args[0].AsCIDR(); err != nil {
 		return nil, err
 	} else {
-		resolver = &RandomIPResolver{
-			CIDR:   cidr.IPNet,
-			Random: rand.New(rand.NewSource(time.Now().Unix())),
-		}
+		resolver = NewRandomIPResolver(cidr.IPNet)
 	}
 
 	return resolver, nil

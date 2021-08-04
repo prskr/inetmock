@@ -31,7 +31,7 @@ func Test_noOpCache_ForwardLookup(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			n := NoOpCache{}
+			n := DelegateCache{}
 			if got := n.ForwardLookup(tt.args.host); got != nil {
 				t.Errorf("ForwardLookup() = %v, want nil", got)
 			}
@@ -65,7 +65,7 @@ func Test_noOpCache_ReverseLookup(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			n := NoOpCache{}
+			n := DelegateCache{}
 			gotHost, gotMiss := n.ReverseLookup(tt.args.ip)
 			if gotHost != "" {
 				t.Errorf("ReverseLookup() gotHost = %v, want ''", gotHost)

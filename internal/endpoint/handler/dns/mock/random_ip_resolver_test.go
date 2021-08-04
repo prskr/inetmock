@@ -1,15 +1,12 @@
 package mock_test
 
 import (
-	"math/rand"
 	"net"
 	"testing"
-	"time"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
 )
 
-// nolint:gosec
 func TestRandomIPResolver_Lookup(t *testing.T) {
 	t.Parallel()
 	type fields struct {
@@ -42,10 +39,7 @@ func TestRandomIPResolver_Lookup(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			r := &mock.RandomIPResolver{
-				Random: rand.New(rand.NewSource(time.Now().Unix())),
-				CIDR:   tt.fields.CIDR,
-			}
+			r := mock.NewRandomIPResolver(tt.fields.CIDR)
 			got := r.Lookup("")
 			if !tt.fields.CIDR.Contains(got) {
 				t.Errorf("Lookup() = %v, not in expected CIDR", got)

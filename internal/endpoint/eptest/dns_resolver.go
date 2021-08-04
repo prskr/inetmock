@@ -6,7 +6,8 @@ import (
 
 func DNSResolverForInMemListener(lis InMemListener) *net.Resolver {
 	return &net.Resolver{
-		PreferGo: true,
-		Dial:     lis.DialContext,
+		PreferGo:     true,
+		Dial:         lis.DialContext,
+		StrictErrors: true,
 	}
 }

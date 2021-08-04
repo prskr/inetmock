@@ -10,16 +10,28 @@ type Cache interface {
 	ReverseLookup(address net.IP) (host string, miss bool)
 }
 
-type NoOpCache struct {
+type DelegateCache struct {
+	OnForwardLookup func(host string) net.IP
+	OnReverseLookup func(address net.IP) (host string, miss bool)
+	OnPutRecord     func(host string, address net.IP)
 }
 
-func (n NoOpCache) PutRecord(string, net.IP) {
+func (n *DelegateCache) PutRecord(host string, ip net.IP) {
+	if n != nil && n.OnPutRecord != nil {
+		n.OnPutRecord(host, ip)
+	}
 }
 
-func (n NoOpCache) ForwardLookup(string) net.IP {
+func (n *DelegateCache) ForwardLookup(host string) net.IP {
+	if n != nil && n.OnForwardLookup != nil {
+		return n.OnForwardLookup(host)
+	}
 	return nil
 }
 
-func (n NoOpCache) ReverseLookup(net.IP) (host string, miss bool) {
+func (n *DelegateCache) ReverseLookup(address net.IP) (host string, miss bool) {
+	if n != nil && n.OnReverseLookup != nil {
+		return n.OnReverseLookup(address)
+	}
 	return "", true
 }

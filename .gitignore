@@ -11,6 +11,7 @@
 /imctl
 ./main
 **/*.mock.go
+.go/
 
 ###############
 # directories #

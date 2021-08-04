@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"gopkg.in/yaml.v3"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/eptest"
@@ -19,7 +20,7 @@ import (
 func Test_dnsHandler_Start(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		opts map[string]interface{}
+		opts string
 		host string
 	}
 	tests := []struct {
@@ -31,19 +32,17 @@ func Test_dnsHandler_Start(t *testing.T) {
 		{
 			name: "Resolve all to 1.1.1.1",
 			args: args{
-				opts: map[string]interface{}{
-					"ttl": "30s",
-					"cache": map[string]interface{}{
-						"type": "none",
-					},
-					"rules": []string{
-						`=> IP(1.1.1.1)`,
-					},
-					"default": map[string]interface{}{
-						"type": "incremental",
-						"cidr": "10.10.0.0/16",
-					},
-				},
+				// language=yaml
+				opts: `
+ttl: 30s
+cache:
+  type: none
+rules:
+- => IP(1.1.1.1)
+default:
+  type: incremental
+  cidr: 10.10.0.0/16
+`,
 				host: "google.com",
 			},
 			want: []net.IP{
@@ -54,17 +53,16 @@ func Test_dnsHandler_Start(t *testing.T) {
 		{
 			name: "Resolve with fallback",
 			args: args{
-				opts: map[string]interface{}{
-					"ttl": "30s",
-					"cache": map[string]interface{}{
-						"type": "none",
-					},
-					"rules": make([]string, 0),
-					"default": map[string]interface{}{
-						"type": "incremental",
-						"cidr": "10.10.0.0/16",
-					},
-				},
+				// language=yaml
+				opts: `
+ttl: 30s
+cache:
+  type: none
+rules: []
+default:
+  type: incremental
+  cidr: 10.10.0.0/16
+`,
 				host: "google.com",
 			},
 			want: []net.IP{
@@ -75,19 +73,17 @@ func Test_dnsHandler_Start(t *testing.T) {
 		{
 			name: "Resolve google.com domain",
 			args: args{
-				opts: map[string]interface{}{
-					"ttl": "30s",
-					"cache": map[string]interface{}{
-						"type": "none",
-					},
-					"rules": []string{
-						`A(".*\\.google\\.com\\.$") => IP(1.1.1.1)`,
-					},
-					"default": map[string]interface{}{
-						"type": "incremental",
-						"cidr": "10.10.0.0/16",
-					},
-				},
+				// language=yaml
+				opts: `
+ttl: 30s
+cache:
+  type: none
+rules:
+- A(".*\\.google\\.com\\.$") => IP(1.1.1.1)
+default:
+  type: incremental
+  cidr: 10.10.0.0/16
+`,
 				host: "mail.google.com",
 			},
 			want: []net.IP{
@@ -98,20 +94,18 @@ func Test_dnsHandler_Start(t *testing.T) {
 		{
 			name: "Resolve stackoverflow.com domain",
 			args: args{
-				opts: map[string]interface{}{
-					"ttl": "30s",
-					"cache": map[string]interface{}{
-						"type": "none",
-					},
-					"rules": []string{
-						`A(".*\\.google\\.com\\.$") => IP(1.1.1.1)`,
-						`A(".*\\.stackoverflow\\.com\\.$") => IP(1.2.3.4)`,
-					},
-					"default": map[string]interface{}{
-						"type": "incremental",
-						"cidr": "10.10.0.0/16",
-					},
-				},
+				// language=yaml
+				opts: `
+ttl: 30s
+cache:
+  type: none
+rules:
+- A(".*\\.google\\.com\\.$") => IP(1.1.1.1)
+- A(".*\\.stackoverflow\\.com\\.$") => IP(1.2.3.4)
+default:
+  type: incremental
+  cidr: 10.10.0.0/16
+`,
 				host: "www.stackoverflow.com",
 			},
 			want: []net.IP{
@@ -124,12 +118,17 @@ func Test_dnsHandler_Start(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			var optsMap = make(map[string]interface{})
+			if err := yaml.Unmarshal([]byte(tt.args.opts), optsMap); err != nil {
+				t.Errorf("yaml.Unmarshal() err = %v", err)
+				return
+			}
 			ctrl := gomock.NewController(t)
 			listener := eptest.NewInMemoryListener(t)
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
 			emitter := auditmock.NewMockEmitter(ctrl)
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.Uplink{Listener: listener}, tt.args.opts)
+			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.Uplink{Listener: listener}, optsMap)
 			if !tt.wantErr {
 				emitter.EXPECT().
 					Emit(gomock.Any()).
@@ -144,7 +143,7 @@ func Test_dnsHandler_Start(t *testing.T) {
 			}
 
 			resolver := eptest.DNSResolverForInMemListener(listener)
-			requestCtx, requestCancel := context.WithTimeout(ctx, 50*time.Millisecond)
+			requestCtx, requestCancel := context.WithTimeout(ctx, 250*time.Millisecond)
 			t.Cleanup(requestCancel)
 			if ips, err := resolver.LookupIP(requestCtx, "ip", tt.args.host); err != nil {
 				if !tt.wantErr {

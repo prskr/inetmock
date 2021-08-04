@@ -5,10 +5,13 @@ package app
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/signal"
 	"strings"
+	"sync/atomic"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -24,7 +27,13 @@ var (
 	logLevel        string
 	logEncoding     string
 	developmentLogs bool
+	randomSeed      int64
 )
+
+func RandomSource() rand.Source {
+	atomic.CompareAndSwapInt64(&randomSeed, 0, time.Now().UTC().UnixNano())
+	return rand.NewSource(atomic.LoadInt64(&randomSeed))
+}
 
 type Spec struct {
 	Name                    string
@@ -120,6 +129,10 @@ func NewApp(spec Spec) App {
 			}
 			return
 		},
+		func(*cobra.Command, []string) (err error) {
+			a.logger.Info("Random seed", zap.Int64("seed", randomSeed))
+			return nil
+		},
 	}
 
 	lateInitTasks = append(lateInitTasks, spec.LateInitTasks...)
@@ -131,6 +144,12 @@ func NewApp(spec Spec) App {
 	a.rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "logging level to use")
 	a.rootCmd.PersistentFlags().StringVar(&logEncoding, "log-encoding", spec.LogEncoding, "Log encoding either 'json' or 'console'")
 	a.rootCmd.PersistentFlags().BoolVar(&developmentLogs, "development-logs", false, "Enable development mode logs")
+	a.rootCmd.PersistentFlags().Int64Var(
+		&randomSeed,
+		"random-seed",
+		time.Now().UTC().UnixNano(),
+		"Seed used for all random instances - defaults to UTC unix timestamp in nanoseconds when the application is started",
+	)
 
 	a.rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) (err error) {
 		for _, initTask := range lateInitTasks {

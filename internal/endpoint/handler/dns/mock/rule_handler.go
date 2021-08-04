@@ -59,11 +59,12 @@ func (r *RuleHandler) ServeDNS(w mdns.ResponseWriter, req *mdns.Msg) {
 
 	r.recordRequest(req, w.LocalAddr(), w.RemoteAddr())
 
-	resp := new(mdns.Msg)
+	var (
+		resp    = new(mdns.Msg)
+		seconds = r.ttlSeconds()
+		matched bool
+	)
 	resp = resp.SetReply(req)
-	seconds := r.ttlSeconds()
-
-	var matched bool
 
 questionLoop:
 	for qIdx := range req.Question {

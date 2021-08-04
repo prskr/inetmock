@@ -300,7 +300,7 @@ func setupTestListener(tb testing.TB, tlsConfig *tls.Config) (uplink *endpoint.U
 
 	tb.Cleanup(func() {
 		if err := uplink.Listener.Close(); err != nil {
-			tb.Errorf("listener.Close() error = %v", err)
+			tb.Logf("listener.Close() error = %v", err)
 		}
 	})
 

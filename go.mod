@@ -9,6 +9,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e
 	github.com/golang/mock v1.6.0
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v0.0.0-00010101000000-000000000000 // indirect

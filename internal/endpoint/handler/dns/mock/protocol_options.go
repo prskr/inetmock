@@ -2,7 +2,6 @@ package mock
 
 import (
 	"errors"
-	"math/rand"
 	"net"
 	"reflect"
 	"time"
@@ -18,6 +17,7 @@ const (
 	noneCacheType           = "none"
 	incrementalResolverType = "incremental"
 	randomResolverType      = "random"
+	cidrKey                 = "cidr"
 )
 
 var (
@@ -37,16 +37,12 @@ var (
 	})
 	randomIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
 		if m, ok := in.(map[string]interface{}); ok {
-			if cidr, ok := m["cidr"].(string); ok {
+			if cidr, ok := m[cidrKey].(string); ok {
 				_, n, err := net.ParseCIDR(cidr)
 				if err != nil {
 					return nil, err
 				}
-				// nolint:gosec // pseudo-ramdom is good enough here
-				return &RandomIPResolver{
-					Random: rand.New(rand.NewSource(time.Now().Unix())),
-					CIDR:   n,
-				}, nil
+				return NewRandomIPResolver(n), nil
 			}
 		}
 		return nil, errors.New("couldn't convert to map structure")
@@ -89,7 +85,7 @@ func loadFromConfig(lifecycle endpoint.Lifecycle) (dnsOptions, error) {
 	)
 
 	cacheDecodeHook.AddMappingToMapper(ttlCacheType, ttlCacheMapping)
-	cacheDecodeHook.AddMappingToType(noneCacheType, reflect.TypeOf(NoOpCache{}))
+	cacheDecodeHook.AddMappingToType(noneCacheType, reflect.TypeOf(DelegateCache{}))
 
 	ipResolverHook.AddMappingToMapper(incrementalResolverType, incrementalIPMapping)
 	ipResolverHook.AddMappingToMapper(randomResolverType, randomIPMapping)

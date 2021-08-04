@@ -35,7 +35,7 @@ func Test_loadFromConfig(t *testing.T) {
 				},
 			},
 			want: td.Struct(dnsOptions{}, td.StructFields{
-				"Cache": td.Isa(new(NoOpCache)),
+				"Cache": td.Isa(new(DelegateCache)),
 			}),
 		},
 		{
