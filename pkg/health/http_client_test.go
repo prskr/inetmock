@@ -12,7 +12,6 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
@@ -91,15 +90,10 @@ func setupServer(tb testing.TB, rules []string) health.Config {
 	})
 
 	logger := logging.CreateTestLogger(tb)
-	var stream audit.EventStream
-	if stream, err = audit.NewEventStream(logger); err != nil {
-		tb.Fatalf("audit.NewEventStream() error = %v", err)
-	}
 
 	var router = mock.Router{
 		HandlerName: "Test",
 		Logger:      logger,
-		Emitter:     stream,
 	}
 
 	for idx := range rules {

@@ -106,8 +106,11 @@ func Test_recorder_Subscriptions(t *testing.T) {
 				}
 			})
 
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+
 			for _, req := range tt.requests {
-				if result, err := r.StartRecording(context.Background(), req.Device, consumers.NewNoOpConsumerWithName(req.Name)); err != nil {
+				if result, err := r.StartRecording(ctx, req.Device, consumers.NewNoOpConsumerWithName(req.Name)); err != nil {
 					t.Errorf("StartRecording() error = %v", err)
 				} else {
 					td.Cmp(t, result, tt.wantResult)

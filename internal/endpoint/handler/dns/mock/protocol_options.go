@@ -28,9 +28,7 @@ var (
 				if err != nil {
 					return nil, err
 				}
-				return &IncrementalIPResolver{
-					CIDR: n,
-				}, nil
+				return NewIncrementalIPResolver(n), nil
 			}
 		}
 		return nil, errors.New("couldn't convert to map structure")

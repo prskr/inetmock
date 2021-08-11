@@ -1,4 +1,4 @@
-package http
+package audit
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func addTLSConnectionStateToContext(ctx context.Context, c net.Conn) context.Con
 	}
 }
 
-func tlsConnectionState(ctx context.Context) (tls.ConnectionState, bool) {
+func TLSConnectionState(ctx context.Context) (tls.ConnectionState, bool) {
 	val := ctx.Value(tlsStateKey)
 	if val == nil {
 		return tls.ConnectionState{}, false
@@ -42,7 +42,7 @@ func tlsConnectionState(ctx context.Context) (tls.ConnectionState, bool) {
 	return val.(tls.ConnectionState), true
 }
 
-func localAddr(ctx context.Context) net.Addr {
+func LocalAddr(ctx context.Context) net.Addr {
 	val := ctx.Value(localAddrKey)
 	if val == nil {
 		return nil
@@ -50,7 +50,7 @@ func localAddr(ctx context.Context) net.Addr {
 	return val.(net.Addr)
 }
 
-func remoteAddr(ctx context.Context) net.Addr {
+func RemoteAddr(ctx context.Context) net.Addr {
 	val := ctx.Value(remoteAddrKey)
 	if val == nil {
 		return nil

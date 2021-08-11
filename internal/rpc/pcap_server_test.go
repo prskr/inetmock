@@ -20,6 +20,10 @@ import (
 	rpcV1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
+const (
+	rpcMethodTimeout = 5 * time.Second
+)
+
 func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
@@ -43,8 +47,10 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 			name: "Listening to lo interface",
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
 				t.Helper()
+				var ctx, cancel = context.WithCancel(context.Background())
+				t.Cleanup(cancel)
 				recorder = pcap.NewRecorder()
-				_, err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test"))
+				_, err = recorder.StartRecording(ctx, "lo", consumers.NewNoOpConsumerWithName("test"))
 				return
 			},
 			wantSubscriptions: []string{"lo:test"},
@@ -70,19 +76,31 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 
 			pcapClient := setupTestPCAPServer(t, recorder)
 
-			gotResp, err := pcapClient.ListActiveRecordings(context.Background(), new(rpcV1.ListActiveRecordingsRequest))
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ListActiveRecordings() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotResp == nil {
-				if !tt.wantErr {
-					t.Errorf("response was nil")
+			var done = make(chan struct{})
+			ctx, cancel := context.WithTimeout(context.Background(), rpcMethodTimeout)
+			t.Cleanup(cancel)
+			go func() {
+				defer close(done)
+				gotResp, err := pcapClient.ListActiveRecordings(ctx, new(rpcV1.ListActiveRecordingsRequest))
+				if (err != nil) != tt.wantErr {
+					t.Errorf("ListActiveRecordings() error = %v, wantErr %v", err, tt.wantErr)
+					return
 				}
-				return
-			}
+				if gotResp == nil {
+					if !tt.wantErr {
+						t.Errorf("response was nil")
+					}
+					return
+				}
 
-			td.Cmp(t, gotResp.Subscriptions, tt.wantSubscriptions)
+				td.Cmp(t, gotResp.Subscriptions, tt.wantSubscriptions)
+			}()
+
+			select {
+			case <-ctx.Done():
+				t.Error("ListActiveRecordings did not complete in time")
+			case <-done:
+			}
 		})
 	}
 }
@@ -129,13 +147,24 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			got, err := pcapClient.ListAvailableDevices(context.Background(), new(rpcV1.ListAvailableDevicesRequest))
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ListAvailableDevices() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if (got != nil) != tt.wantErr {
-				td.Cmp(t, got.AvailableDevices, tt.want)
+			var ctx, cancel = context.WithTimeout(context.Background(), rpcMethodTimeout)
+			t.Cleanup(cancel)
+			var done = make(chan struct{})
+			go func() {
+				defer close(done)
+				got, err := pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest))
+				if (err != nil) != tt.wantErr {
+					t.Errorf("ListAvailableDevices() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if (got != nil) != tt.wantErr {
+					td.Cmp(t, got.AvailableDevices, tt.want)
+				}
+			}()
+			select {
+			case <-ctx.Done():
+				t.Error("ListAvailableDevices() did not complete in time")
+			case <-done:
 			}
 		})
 	}
@@ -157,9 +186,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 				Device:     "lo",
 				TargetPath: "test.pcap",
 			},
-			wantResp: td.Struct(new(rpcV1.StartPCAPFileRecordingResponse), td.StructFields{
-				"ConsumerKey": "lo:test.pcap",
-			}),
+			wantResp: td.Struct(&rpcV1.StartPCAPFileRecordingResponse{ConsumerKey: "lo:test.pcap"}, td.StructFields{}),
 			wantSubscriptions: []pcap.Subscription{
 				{
 					ConsumerKey:  "lo:test.pcap",
@@ -193,16 +220,28 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
+			var ctx, cancel = context.WithTimeout(context.Background(), rpcMethodTimeout)
+			t.Cleanup(cancel)
+			var done = make(chan struct{})
 
-			if resp, err := pcapClient.StartPCAPFileRecording(context.Background(), tt.req); (err != nil) != tt.wantErr {
-				t.Errorf("StartPCAPFileRecording() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			} else {
-				td.Cmp(t, resp, tt.wantResp)
+			go func() {
+				defer close(done)
+				if resp, err := pcapClient.StartPCAPFileRecording(ctx, tt.req); (err != nil) != tt.wantErr {
+					t.Errorf("StartPCAPFileRecording() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				} else {
+					td.Cmp(t, resp, tt.wantResp)
+				}
+
+				currentSubs := recorder.Subscriptions()
+				td.Cmp(t, currentSubs, tt.wantSubscriptions)
+			}()
+
+			select {
+			case <-ctx.Done():
+				t.Error("StartPCAPFileRecording() did not complete in time")
+			case <-done:
 			}
-
-			currentSubs := recorder.Subscriptions()
-			td.Cmp(t, currentSubs, tt.wantSubscriptions)
 		})
 	}
 }
@@ -234,7 +273,9 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
 				t.Helper()
 				recorder = pcap.NewRecorder()
-				_, err = recorder.StartRecording(context.Background(), "lo", consumers.NewNoOpConsumerWithName("test.pcap"))
+				var ctx, cancel = context.WithCancel(context.Background())
+				t.Cleanup(cancel)
+				_, err = recorder.StartRecording(ctx, "lo", consumers.NewNoOpConsumerWithName("test.pcap"))
 				return
 			},
 			removedRecording: true,
@@ -259,15 +300,27 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			gotResp, err := pcapClient.StopPCAPFileRecording(context.Background(), &rpcV1.StopPCAPFileRecordingRequest{
-				ConsumerKey: tt.keyToRemove,
-			})
-			if (err != nil) != tt.wantErr {
-				t.Errorf("StopPCAPFileRecord() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotResp.Removed != tt.removedRecording {
-				t.Errorf("StopPCAPFileRecord() removed = %v, want %v", gotResp.Removed, tt.removedRecording)
+			var ctx, cancel = context.WithTimeout(context.Background(), rpcMethodTimeout)
+			t.Cleanup(cancel)
+			var done = make(chan struct{})
+			go func() {
+				defer close(done)
+				gotResp, err := pcapClient.StopPCAPFileRecording(ctx, &rpcV1.StopPCAPFileRecordingRequest{
+					ConsumerKey: tt.keyToRemove,
+				})
+				if (err != nil) != tt.wantErr {
+					t.Errorf("StopPCAPFileRecord() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if gotResp.Removed != tt.removedRecording {
+					t.Errorf("StopPCAPFileRecord() removed = %v, want %v", gotResp.Removed, tt.removedRecording)
+				}
+			}()
+
+			select {
+			case <-ctx.Done():
+				t.Error("StopPCAPFileRecord() did not complete in tim")
+			case <-done:
 			}
 		})
 	}

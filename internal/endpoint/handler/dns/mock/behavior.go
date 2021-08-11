@@ -65,9 +65,7 @@ func IncrementalHandlerForArgs(args ...rules.Param) (dns.IPResolver, error) {
 	if cidr, err := args[0].AsCIDR(); err != nil {
 		return nil, err
 	} else {
-		resolver = &IncrementalIPResolver{
-			CIDR: cidr.IPNet,
-		}
+		resolver = NewIncrementalIPResolver(cidr.IPNet)
 	}
 
 	return resolver, nil

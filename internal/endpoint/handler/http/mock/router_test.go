@@ -5,22 +5,18 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/helpers/tdhttp"
 	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 func TestRouter_ServeHTTP(t *testing.T) {
 	t.Parallel()
 	type fields struct {
-		rules        []string
-		emitterSetup func(tb testing.TB, ctrl *gomock.Controller) audit.Emitter
-		fakeFileFS   fs.FS
+		rules      []string
+		fakeFileFS fs.FS
 	}
 	type args struct {
 		req *http.Request
@@ -39,8 +35,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				rules: []string{
 					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 				},
-				emitterSetup: defaultEmitter,
-				fakeFileFS:   defaultFakeFileFS,
+				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
 				req: tdhttp.NewRequest(http.MethodGet, "https://google.com/index.html", nil),
@@ -54,8 +49,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				rules: []string{
 					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 				},
-				emitterSetup: defaultEmitter,
-				fakeFileFS:   defaultFakeFileFS,
+				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
 				req: tdhttp.NewRequest(http.MethodGet, "https://gitlab.com/profile.htm", nil),
@@ -70,8 +64,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 					`Header("Accept", "text/html") => File("default.html")`,
 				},
-				emitterSetup: defaultEmitter,
-				fakeFileFS:   defaultFakeFileFS,
+				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
 				req: tdhttp.NewRequest(
@@ -92,7 +85,6 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				rules: []string{
 					`METHOD("POST") => Status(204)`,
 				},
-				emitterSetup: defaultEmitter,
 			},
 			args: args{
 				req: tdhttp.NewRequest(
@@ -113,12 +105,10 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			logger := logging.CreateTestLogger(t)
-			ctrl := gomock.NewController(t)
 
 			router := &mock.Router{
 				HandlerName: t.Name(),
 				Logger:      logger,
-				Emitter:     tt.fields.emitterSetup(t, ctrl),
 				FakeFileFS:  tt.fields.fakeFileFS,
 			}
 
@@ -134,14 +124,4 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				CmpBody(tt.want)
 		})
 	}
-}
-
-func defaultEmitter(tb testing.TB, ctrl *gomock.Controller) audit.Emitter {
-	tb.Helper()
-	emitter := audit_mock.NewMockEmitter(ctrl)
-	emitter.
-		EXPECT().
-		Emit(gomock.Any()).
-		Times(1)
-	return emitter
 }

@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
@@ -40,8 +40,8 @@ func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) err
 	}
 
 	h.server = &http.Server{
-		Handler:     h.proxy,
-		ConnContext: imHttp.StoreConnPropertiesInContext,
+		Handler:     audit.EmittingHandler(h.emitter, v1.AppProtocol_APP_PROTOCOL_HTTP_PROXY, h.proxy),
+		ConnContext: audit.StoreConnPropertiesInContext,
 	}
 	h.logger = h.logger.With(
 		zap.String("handler_name", lifecycle.Name()),
@@ -54,13 +54,11 @@ func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) err
 		handlerName: lifecycle.Name(),
 		options:     opts,
 		logger:      h.logger,
-		emitter:     h.emitter,
 	}
 
 	proxyHTTPSHandler := &proxyHTTPSHandler{
 		options:   opts,
 		tlsConfig: tlsConfig,
-		emitter:   h.emitter,
 	}
 
 	h.proxy.OnRequest().Do(proxyHandler)

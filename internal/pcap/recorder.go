@@ -42,7 +42,7 @@ type recorder struct {
 	openDevices map[string]*deviceConsumer
 }
 
-func (r recorder) Subscriptions() (subscriptions []Subscription) {
+func (r *recorder) Subscriptions() (subscriptions []Subscription) {
 	r.locker.Lock()
 	defer r.locker.Unlock()
 
@@ -80,7 +80,7 @@ func (recorder) AvailableDevices() (devices []Device, err error) {
 	return
 }
 
-func (r recorder) StartRecordingWithOptions(
+func (r *recorder) StartRecordingWithOptions(
 	ctx context.Context,
 	device string,
 	consumer Consumer,
@@ -127,13 +127,15 @@ func (r *recorder) StopRecording(consumerKey string) error {
 
 	if dev, known = r.openDevices[consumerKey]; !known {
 		return ErrNoMatchingConsumerRegistered
+	} else if err := dev.Close(); err != nil {
+		return err
 	}
 
 	delete(r.openDevices, consumerKey)
-	return dev.Close()
+	return nil
 }
 
-func (r recorder) Close() (err error) {
+func (r *recorder) Close() (err error) {
 	r.locker.Lock()
 	defer r.locker.Unlock()
 

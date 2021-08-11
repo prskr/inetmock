@@ -9,7 +9,6 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v0.0.0-00010101000000-000000000000 // indirect
@@ -38,7 +37,7 @@ require (
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.5.2
 	github.com/docker/docker => github.com/docker/docker v20.10.7+incompatible
-	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20210706120642-46ea161b4332
+	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20210811071216-a2eed1ae149e
 	github.com/gorilla/mux => github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
 	golang.org/x/text => golang.org/x/text v0.3.6

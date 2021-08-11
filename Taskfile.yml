@@ -23,6 +23,7 @@ tasks:
     desc: format all source files
     cmds:
       - go fmt ./...
+      - goimports -local gitlab.com/inetmock/inetmock -w ./
 
   deps:
     desc: download dependencies
@@ -102,7 +103,7 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - go test -race -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic -v ./...
+      - go test -race -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./...
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
       - go tool cover -func={{ .OUT_DIR }}/cov.out
 
@@ -117,7 +118,7 @@ tasks:
       CGO_ENABLED: 1
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - cmd: go test --tags sudo -race -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic -v ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
+      - cmd: go test --tags sudo -race -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
         ignore_error: true
       - cat {{ .OUT_DIR }}/test_output | go-junit-report -set-exit-code > {{ .OUT_DIR }}/report.xml
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out

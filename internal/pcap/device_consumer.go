@@ -13,6 +13,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
+	"go.uber.org/multierr"
 )
 
 var (
@@ -66,7 +67,11 @@ func (o *deviceConsumer) Close() error {
 	o.locker.Lock()
 	defer o.locker.Unlock()
 
-	o.cancel()
+	var err = o.handle.Close()
+
+	if o.cancel != nil {
+		o.cancel()
+	}
 	select {
 	case _, more := <-o.transportStat:
 		if more {
@@ -75,11 +80,10 @@ func (o *deviceConsumer) Close() error {
 	case <-time.After(transportClosingTimeout):
 	}
 
-	o.handle.Close()
 	if closer, ok := o.consumer.(io.Closer); ok {
-		return closer.Close()
+		return multierr.Append(err, closer.Close())
 	}
-	return nil
+	return err
 }
 
 func (o *deviceConsumer) StartTransport(ctx context.Context) {

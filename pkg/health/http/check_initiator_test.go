@@ -403,7 +403,6 @@ func setupServer(tb testing.TB, routingRules []string) *gohttp.Client {
 	router := mock.Router{
 		HandlerName: "HealthMockHandler",
 		Logger:      logger,
-		Emitter:     stream,
 	}
 
 	for _, rule := range routingRules {

@@ -7,10 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -31,7 +28,6 @@ func (c *ConditionalHandler) Matches(req *http.Request) bool {
 type Router struct {
 	HandlerName string
 	Logger      logging.Logger
-	Emitter     audit.Emitter
 	FakeFileFS  fs.FS
 	handlers    []ConditionalHandler
 }
@@ -66,8 +62,6 @@ func (r *Router) RegisterRule(rawRule string) error {
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(r.HandlerName))
 	defer timer.ObserveDuration()
-
-	r.Emitter.Emit(imHttp.EventFromRequest(request, v1.AppProtocol_APP_PROTOCOL_HTTP))
 
 	for idx := range r.handlers {
 		if r.handlers[idx].Matches(request) {

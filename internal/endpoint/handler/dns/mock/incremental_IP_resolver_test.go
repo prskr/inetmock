@@ -50,10 +50,9 @@ func TestIncrementalIPResolver_Lookup(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			i := mock.IncrementalIPResolver{
-				CIDR:   tt.fields.cidr,
-				Offset: tt.fields.offset,
-			}
+
+			i := mock.NewIncrementalIPResolver(tt.fields.cidr)
+			i.Offset = tt.fields.offset
 
 			got := i.Lookup("")
 			if !tt.fields.cidr.Contains(got) {

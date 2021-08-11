@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	imHttp "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
+	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -51,13 +51,12 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 	router := &Router{
 		HandlerName: lifecycle.Name(),
 		Logger:      p.logger,
-		Emitter:     p.emitter,
 		FakeFileFS:  p.fakeFileFS,
 	}
 
 	p.server = &http.Server{
-		Handler:     router,
-		ConnContext: imHttp.StoreConnPropertiesInContext,
+		Handler:     audit.EmittingHandler(p.emitter, v1.AppProtocol_APP_PROTOCOL_HTTP, router),
+		ConnContext: audit.StoreConnPropertiesInContext,
 	}
 
 	for idx := range options.Rules {
@@ -86,13 +85,10 @@ func (p *httpHandler) shutdownOnCancel(ctx context.Context) {
 func (p *httpHandler) startServer(listener net.Listener) {
 	defer func() {
 		if err := listener.Close(); err != nil {
-			p.logger.Warn("failed to close listener", zap.Error(err))
+			p.logger.Warn("Failed to close listener", zap.Error(err))
 		}
 	}()
 	if err := p.server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		p.logger.Error(
-			"failed to start http listener",
-			zap.Error(err),
-		)
+		p.logger.Error("Failed to start HTTP listener", zap.Error(err))
 	}
 }

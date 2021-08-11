@@ -160,3 +160,11 @@ listeners:
         handler: metrics_exporter
         options:
           route: /metrics
+  tcp_9010:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 9010
+    endpoints:
+      traces:
+        handler: go_pprof

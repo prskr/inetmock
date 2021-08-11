@@ -12,6 +12,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
 	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/pprof"
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	audit2 "gitlab.com/inetmock/inetmock/internal/pcap/consumers/audit"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
@@ -164,6 +165,7 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS, checker health.Checker) (err error) {
 	mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS)
 	dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter)
+	pprof.AddPPROF(registry, logger.Named("pprof"), emitter)
 	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, store); err != nil {
 		return
 	}

@@ -67,6 +67,7 @@ default:
 			},
 			want: []net.IP{
 				net.IPv4(10, 10, 0, 1),
+				net.IPv4(10, 10, 0, 2),
 			},
 			wantErr: false,
 		},

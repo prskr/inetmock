@@ -22,6 +22,7 @@ enum AppProtocol {
   APP_PROTOCOL_DNS = 1;
   APP_PROTOCOL_HTTP = 2;
   APP_PROTOCOL_HTTP_PROXY = 3;
+  APP_PROTOCOL_PPROF = 4;
 }
 
 enum TLSVersion {

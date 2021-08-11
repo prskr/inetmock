@@ -17,12 +17,11 @@ import (
 const (
 	numberArgsWithoutBody = 1
 	numberArgsWithBody    = 2
+	expectedModuleName    = "http"
 )
 
 var (
-	ErrNotAnHTTPInitiator = errors.New("the given initiator is not an HTTP initator")
-	ErrNoInitiatorDefined = errors.New("no initiator defined")
-	ErrUnknownInitiator   = errors.New("no initiator with the given name is known")
+	ErrNotAnHTTPInitiator = errors.New("the given initiator is not an HTTP initiator")
 
 	knownInitiators = map[string]func(logger logging.Logger, args ...rules.Param) (Initiator, error){
 		"get":     RequestInitiatorForMethod(http.MethodGet),
@@ -39,17 +38,17 @@ type Initiator interface {
 }
 
 func InitiatorForRule(rule *rules.Check, logger logging.Logger) (Initiator, error) {
-	initiator := rule.Initiator
+	var initiator = rule.Initiator
 	if initiator == nil {
-		return nil, ErrNoInitiatorDefined
+		return nil, rules.ErrNoInitiatorDefined
 	}
 
-	if !strings.EqualFold(strings.ToLower(initiator.Module), "http") {
+	if !strings.EqualFold(strings.ToLower(initiator.Module), expectedModuleName) {
 		return nil, ErrNotAnHTTPInitiator
 	}
 
 	if constructor, ok := knownInitiators[strings.ToLower(initiator.Name)]; !ok {
-		return nil, fmt.Errorf("%w %s", ErrUnknownInitiator, initiator.Name)
+		return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, initiator.Name)
 	} else {
 		return constructor(logger, initiator.Params...)
 	}
