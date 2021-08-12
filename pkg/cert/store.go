@@ -10,7 +10,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/netuils"
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -109,9 +109,9 @@ func (s *store) TLSConfig() *tls.Config {
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
 		GetCertificate: func(info *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
-			var localIP *netuils.IPPort
-			if localIP, err = netuils.IPPortFromAddress(info.Conn.LocalAddr()); err != nil {
-				localIP = &netuils.IPPort{
+			var localIP *netutils.IPPort
+			if localIP, err = netutils.IPPortFromAddress(info.Conn.LocalAddr()); err != nil {
+				localIP = &netutils.IPPort{
 					IP: ipv4LoopbackIP,
 				}
 			}

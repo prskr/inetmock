@@ -1,4 +1,4 @@
-package netuils
+package netutils
 
 import (
 	"errors"

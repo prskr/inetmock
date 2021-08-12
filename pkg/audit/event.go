@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"gitlab.com/inetmock/inetmock/internal/netuils"
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
@@ -66,7 +66,7 @@ func (e *Event) ApplyDefaults(id int64) {
 }
 
 func (e *Event) SetSourceIPFromAddr(remoteAddr net.Addr) error {
-	if ipPort, err := netuils.IPPortFromAddress(remoteAddr); err != nil {
+	if ipPort, err := netutils.IPPortFromAddress(remoteAddr); err != nil {
 		return err
 	} else {
 		e.SourceIP = ipPort.IP
@@ -76,7 +76,7 @@ func (e *Event) SetSourceIPFromAddr(remoteAddr net.Addr) error {
 }
 
 func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) error {
-	if ipPort, err := netuils.IPPortFromAddress(localAddr); err != nil {
+	if ipPort, err := netutils.IPPortFromAddress(localAddr); err != nil {
 		return err
 	} else {
 		e.DestinationIP = ipPort.IP

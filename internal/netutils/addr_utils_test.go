@@ -1,10 +1,10 @@
-package netuils_test
+package netutils_test
 
 import (
 	"net"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/internal/netuils"
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 )
 
 type myVerySpecialAddress string
@@ -85,7 +85,7 @@ func Test_extractIPFromAddress(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := netuils.IPPortFromAddress(tt.args.addr)
+			got, err := netutils.IPPortFromAddress(tt.args.addr)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("extractIPFromAddress() error = %v, wantErr %v", err, tt.wantErr)
