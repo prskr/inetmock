@@ -20,7 +20,7 @@ import (
 
 var (
 	recordsMap = map[string]net.IP{
-		"google.com.": net.IPv4(142, 250, 185, 174),
+		"google.com.": net.IPv4(142, 250, 185, 174).To4(),
 	}
 )
 
@@ -117,7 +117,7 @@ func TestRuleHandler_ServeDNS(t *testing.T) {
 							Name:   "google.com.",
 							Rrtype: mdns.TypeA,
 						},
-						A: net.IPv4(1, 1, 1, 1),
+						A: net.IPv4(1, 1, 1, 1).To4(),
 					},
 				},
 			}, td.StructFields{}),
@@ -143,7 +143,7 @@ func TestRuleHandler_ServeDNS(t *testing.T) {
 							Name:   "google.com.",
 							Rrtype: mdns.TypeA,
 						},
-						A: net.IPv4(192, 168, 0, 1),
+						A: net.IPv4(192, 168, 0, 1).To4(),
 					},
 				},
 			}, td.StructFields{}),

@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	ErrUnknownCheckFilter     = errors.New("no check filter with the given name is known")
 	ErrResponseNil            = errors.New("response must not be nil")
 	ErrResponseEmpty          = errors.New("neither hosts nor addresses are set in the response")
 	ErrUnmatchedResolvedHosts = errors.New("resolved hosts do not match")
@@ -21,6 +20,7 @@ var (
 		"notempty":     NotEmtpyResponseFilter,
 		"resolvedhost": ResolvedHostResponseFilter,
 		"resolvedip":   ResolvedIPResponseFilter,
+		"incidr":       InCIDRResponseFilter,
 	}
 )
 
@@ -142,5 +142,33 @@ func ResolvedIPResponseFilter(args ...rules.Param) (Validator, error) {
 			}
 		}
 		return fmt.Errorf("%w: %s", ErrUnmatchedResolvedIPs, expectedIP.String())
+	}), nil
+}
+
+func InCIDRResponseFilter(args ...rules.Param) (Validator, error) {
+	if err := rules.ValidateParameterCount(args, 1); err != nil {
+		return nil, err
+	}
+
+	var cidr, err = args[0].AsCIDR()
+	if err != nil {
+		return nil, err
+	}
+
+	return CheckFilterFunc(func(resp *Response) error {
+		switch {
+		case resp == nil:
+			return ErrResponseNil
+		case len(resp.Addresses) == 0:
+			return ErrResponseEmpty
+		}
+
+		for idx := range resp.Addresses {
+			if cidr.IPNet.Contains(resp.Addresses[idx]) {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("%w: %s", ErrUnmatchedResolvedIPs, cidr.IPNet.String())
 	}), nil
 }

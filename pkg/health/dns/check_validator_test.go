@@ -62,18 +62,18 @@ func TestResponseFilters(t *testing.T) {
 			wantMatchErr:      false,
 		},
 		{
-			name: "ResolvedHost - nil param",
+			name: "ResolvedHost - Missing host name param",
 			args: args{
-				args: make([]rules.Param, 1),
+				args: make([]rules.Param, 0),
 			},
 			validatorProvider: dns.ResolvedHostResponseFilter,
 			wantErr:           true,
 			wantMatchErr:      false,
 		},
 		{
-			name: "ResolvedHost - Missing host name param",
+			name: "ResolvedHost - nil param",
 			args: args{
-				args: make([]rules.Param, 0),
+				args: make([]rules.Param, 1),
 			},
 			validatorProvider: dns.ResolvedHostResponseFilter,
 			wantErr:           true,
@@ -189,19 +189,20 @@ func TestResponseFilters(t *testing.T) {
 			wantErr:           false,
 			wantMatchErr:      false,
 		},
+
 		{
-			name: "ResolvedIP - nil param",
+			name: "ResolvedIP - Missing host name param",
 			args: args{
-				args: make([]rules.Param, 1),
+				args: make([]rules.Param, 0),
 			},
 			validatorProvider: dns.ResolvedIPResponseFilter,
 			wantErr:           true,
 			wantMatchErr:      false,
 		},
 		{
-			name: "ResolvedIP - Missing host name param",
+			name: "ResolvedIP - nil param",
 			args: args{
-				args: make([]rules.Param, 0),
+				args: make([]rules.Param, 1),
 			},
 			validatorProvider: dns.ResolvedIPResponseFilter,
 			wantErr:           true,
@@ -316,6 +317,136 @@ func TestResponseFilters(t *testing.T) {
 				},
 			},
 			validatorProvider: dns.ResolvedIPResponseFilter,
+			wantErr:           false,
+			wantMatchErr:      false,
+		},
+		{
+			name: "InCIDR - Missing CIDR param",
+			args: args{
+				args: make([]rules.Param, 0),
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           true,
+			wantMatchErr:      false,
+		},
+		{
+			name: "InCIDR - nil param",
+			args: args{
+				args: make([]rules.Param, 1),
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           true,
+			wantMatchErr:      false,
+		},
+		{
+			name: "InCIDR - Wrong param type",
+			args: args{
+				args: []rules.Param{
+					{
+						Int: rules.IntP(42),
+					},
+				},
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           true,
+			wantMatchErr:      false,
+		},
+		{
+			name: "InCIDR - Response nil - expect error",
+			args: args{
+				args: []rules.Param{
+					{
+						CIDR: rules.MustParseCIDR("10.1.0.0/16"),
+					},
+				},
+				resp: nil,
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           false,
+			wantMatchErr:      true,
+		},
+		{
+			name: "InCIDR - Response completely empty - expect error",
+			args: args{
+				args: []rules.Param{
+					{
+						CIDR: rules.MustParseCIDR("10.1.0.0/16"),
+					},
+				},
+				resp: new(dns.Response),
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           false,
+			wantMatchErr:      true,
+		},
+		{
+			name: "InCIDR - Response addresses empty",
+			args: args{
+				args: []rules.Param{
+					{
+						CIDR: rules.MustParseCIDR("10.1.0.0/16"),
+					},
+				},
+				resp: &dns.Response{
+					Hosts: make([]string, 1),
+				},
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           false,
+			wantMatchErr:      true,
+		},
+		{
+			name: "InCIDR - Response does not match",
+			args: args{
+				args: []rules.Param{
+					{
+						CIDR: rules.MustParseCIDR("10.1.0.0/16"),
+					},
+				},
+				resp: &dns.Response{
+					Addresses: []net.IP{
+						net.IPv4(192, 168, 1, 1),
+					},
+				},
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           false,
+			wantMatchErr:      true,
+		},
+		{
+			name: "InCIDR - First response matches",
+			args: args{
+				args: []rules.Param{
+					{
+						CIDR: rules.MustParseCIDR("10.1.0.0/16"),
+					},
+				},
+				resp: &dns.Response{
+					Addresses: []net.IP{
+						net.IPv4(10, 1, 0, 10),
+					},
+				},
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
+			wantErr:           false,
+			wantMatchErr:      false,
+		},
+		{
+			name: "InCIDR - Second response matches",
+			args: args{
+				args: []rules.Param{
+					{
+						CIDR: rules.MustParseCIDR("10.1.0.0/16"),
+					},
+				},
+				resp: &dns.Response{
+					Addresses: []net.IP{
+						net.IPv4(192, 168, 0, 42),
+						net.IPv4(10, 1, 0, 10),
+					},
+				},
+			},
+			validatorProvider: dns.InCIDRResponseFilter,
 			wantErr:           false,
 			wantMatchErr:      false,
 		},
