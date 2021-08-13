@@ -49,6 +49,8 @@ func init() {
 	}
 }
 
+// Parse takes a raw rule and parses it into the given target instance
+// currently only Routing and Check are supported for parsing
 func Parse(rule string, target interface{}) error {
 	parser, available := parsers[reflect.TypeOf(target)]
 	if !available {
@@ -60,6 +62,10 @@ func Parse(rule string, target interface{}) error {
 	return nil
 }
 
+// Routing describes how DNS or HTTP requests are handled
+// A routing is described as a optional chain of Filters like: filter1() -> filter2()
+// and a Terminator which determines how the request should be handled e.g. http.Status(204)
+// a full chain might look like so: GET() -> Header("Accept", "application/json") -> http.Status(200).
 type Routing struct {
 	Filters    *Filters `parser:"@@*"`
 	Terminator *Method  `parser:"'=>' @@"`
