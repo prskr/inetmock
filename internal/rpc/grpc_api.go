@@ -81,7 +81,7 @@ func (i *inetmockAPI) StartServer() (err error) {
 			reqlog.UnaryServerInterceptor(i.logger.ZapLogger()),
 		)))
 
-	v1Health.RegisterHealthServer(i.server, NewHealthServer(i.checker, 1*time.Second))
+	v1Health.RegisterHealthServer(i.server, NewHealthServer(i.checker, 1*time.Second, i.logger))
 	v1.RegisterAuditServiceServer(i.server, NewAuditServiceServer(i.logger, i.eventStream, i.auditDataDir))
 	v1.RegisterPCAPServiceServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 

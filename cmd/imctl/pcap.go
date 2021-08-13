@@ -144,12 +144,12 @@ func runListAvailableDevices(*cobra.Command, []string) (err error) {
 		Addresses string
 	}
 
-	availableDevs := make([]printableDevice, 0)
+	availableDevs := make([]printableDevice, 0, len(resp.AvailableDevices))
 
-	for _, dev := range resp.AvailableDevices {
+	for idx := range resp.AvailableDevices {
 		availableDevs = append(availableDevs, printableDevice{
-			Name:      dev.Name,
-			Addresses: byteArraysToPrintableIPAddresses(dev.Addresses),
+			Name:      resp.AvailableDevices[idx].Name,
+			Addresses: byteArraysToPrintableIPAddresses(resp.AvailableDevices[idx].Addresses),
 		})
 	}
 
@@ -176,18 +176,19 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 		return err
 	}
 
-	var out = make([]printableSubscription, len(resp.Subscriptions))
-	for idx, subscription := range resp.Subscriptions {
+	var out = make([]printableSubscription, 0, len(resp.Subscriptions))
+	for idx := range resp.Subscriptions {
+		var subscription = resp.Subscriptions[idx]
 		splitIdx := strings.Index(subscription, ":")
 		if splitIdx < 0 {
 			continue
 		}
 
-		out[idx] = printableSubscription{
+		out = append(out, printableSubscription{
 			Name:        subscription[splitIdx:],
 			Device:      subscription[:splitIdx],
 			ConsumerKey: subscription,
-		}
+		})
 	}
 
 	writer := format.Writer(cfg.Format, os.Stdout)
@@ -280,7 +281,7 @@ func isValidRecordDevice(device string, pcapClient rpcV1.PCAPServiceClient) (err
 }
 
 func byteArraysToPrintableIPAddresses(addresses [][]byte) string {
-	ipsArr := make([]string, 0)
+	ipsArr := make([]string, 0, len(addresses))
 	for _, b := range addresses {
 		ip := net.IP(b)
 		ipsArr = append(ipsArr, ip.String())

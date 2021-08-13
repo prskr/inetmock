@@ -539,3 +539,130 @@ func TestCheckFiltersForRule(t *testing.T) {
 		})
 	}
 }
+
+func TestValidationChain_Matches(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		resp *gohttp.Response
+	}
+	tests := []struct {
+		name       string
+		chainSetup func(tb testing.TB) http.ValidationChain
+		args       args
+		wantErr    bool
+	}{
+		{
+			name: "nil chain",
+			chainSetup: func(tb testing.TB) http.ValidationChain {
+				tb.Helper()
+				return nil
+			},
+			wantErr: false,
+		},
+		{
+			name: "Empty chain",
+			chainSetup: func(tb testing.TB) http.ValidationChain {
+				tb.Helper()
+				return make(http.ValidationChain, 0)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Matching chain",
+			chainSetup: func(tb testing.TB) http.ValidationChain {
+				tb.Helper()
+				var params = []rules.Param{{Int: rules.IntP(200)}}
+				if validator, err := http.StatusCodeFilter(params...); err != nil {
+					tb.Errorf("dns.NotEmtpyResponseFilter() error = %v", err)
+					return nil
+				} else {
+					return http.ValidationChain{
+						validator,
+					}
+				}
+			},
+			args: args{
+				resp: &gohttp.Response{
+					StatusCode: gohttp.StatusOK,
+				},
+			},
+		},
+		{
+			name: "Not matching chain",
+			chainSetup: func(tb testing.TB) http.ValidationChain {
+				tb.Helper()
+				var params = []rules.Param{{Int: rules.IntP(200)}}
+				if validator, err := http.StatusCodeFilter(params...); err != nil {
+					tb.Errorf("dns.NotEmtpyResponseFilter() error = %v", err)
+					return nil
+				} else {
+					return http.ValidationChain{
+						validator,
+					}
+				}
+			},
+			args: args{
+				resp: &gohttp.Response{
+					StatusCode: gohttp.StatusNotFound,
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var chain = tt.chainSetup(t)
+			if err := chain.Matches(tt.args.resp); (err != nil) != tt.wantErr {
+				t.Errorf("ValidationChain.Matches() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidationChain_Add(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		v http.Validator
+	}
+	tests := []struct {
+		name            string
+		chain           http.ValidationChain
+		args            args
+		wantFinalLength int
+	}{
+		{
+			name:  "Empty chain",
+			chain: nil,
+			args: args{
+				v: nil,
+			},
+			wantFinalLength: 1,
+		},
+		{
+			name: "Non-empty chain",
+			args: args{
+				v: nil,
+			},
+			chain: func() http.ValidationChain {
+				f, err := http.StatusCodeFilter([]rules.Param{{Int: rules.IntP(200)}}...)
+				if err != nil {
+					panic(err)
+				}
+				return http.ValidationChain{f}
+			}(),
+			wantFinalLength: 2,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tt.chain.Add(tt.args.v)
+			if newLength := tt.chain.Len(); tt.wantFinalLength != newLength {
+				t.Errorf("Current length %d did not match actual length %d", newLength, tt.wantFinalLength)
+			}
+		})
+	}
+}

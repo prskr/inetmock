@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	gohttp "net/http"
 	"strings"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
@@ -13,22 +12,22 @@ import (
 )
 
 var (
+	ErrEmptyCheckName     = errors.New("name of the check must not be empty")
 	ErrAmbiguousCheckName = errors.New("a check with the same name is already registered")
 )
 
 func New() Checker {
 	return &checker{
 		registeredChecks: map[string]Check{},
-		checkClient:      gohttp.DefaultClient,
 	}
 }
 
 func NewFromConfig(logger logging.Logger, cfg Config, tlsConfig *tls.Config) (Checker, error) {
-	var client = HTTPClient(cfg, tlsConfig)
+	var httpClient = HTTPClient(cfg, tlsConfig)
+	var dnsResolver = DNSResolver(cfg)
 
 	var checker = &checker{
 		registeredChecks: make(map[string]Check),
-		checkClient:      client,
 	}
 
 	for idx := range cfg.Rules {
@@ -41,7 +40,13 @@ func NewFromConfig(logger logging.Logger, cfg Config, tlsConfig *tls.Config) (Ch
 		case "":
 			return nil, fmt.Errorf("initiator of check '%s' has no module", rawRule.Name)
 		case "http":
-			if compiledCheck, err := NewHTTPRuleCheck(rawRule.Name, client, logger, check); err != nil {
+			if compiledCheck, err := NewHTTPRuleCheck(rawRule.Name, httpClient, logger, check); err != nil {
+				return nil, err
+			} else if err := checker.AddCheck(compiledCheck); err != nil {
+				return nil, err
+			}
+		case "dns":
+			if compiledCheck, err := NewDNSRuleCheck(rawRule.Name, dnsResolver, logger, check); err != nil {
 				return nil, err
 			} else if err := checker.AddCheck(compiledCheck); err != nil {
 				return nil, err

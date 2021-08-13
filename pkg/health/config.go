@@ -1,13 +1,15 @@
 package health
 
 type Server struct {
-	IP   string
-	Port uint16
+	IP    string
+	Port  uint16
+	Proto string
 }
 
-type HTTPClientConfig struct {
+type ClientsConfig struct {
 	HTTP  Server
 	HTTPS Server
+	DNS   Server
 }
 
 type ValidationRule struct {
@@ -16,6 +18,6 @@ type ValidationRule struct {
 }
 
 type Config struct {
-	Client HTTPClientConfig
+	Client ClientsConfig
 	Rules  []ValidationRule
 }

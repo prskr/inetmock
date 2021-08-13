@@ -5,11 +5,13 @@ import (
 	"errors"
 	"time"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	v1 "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 
 	"gitlab.com/inetmock/inetmock/pkg/health"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 var (
@@ -18,18 +20,20 @@ var (
 
 type healthServer struct {
 	v1.UnimplementedHealthServer
+	logger           logging.Logger
 	checker          health.Checker
 	watchCheckPeriod time.Duration
 }
 
-func NewHealthServer(checker health.Checker, watchCheckPeriod time.Duration) v1.HealthServer {
+func NewHealthServer(checker health.Checker, watchCheckPeriod time.Duration, logger logging.Logger) v1.HealthServer {
 	return &healthServer{
 		checker:          checker,
 		watchCheckPeriod: watchCheckPeriod,
+		logger:           logger,
 	}
 }
 
-func (h healthServer) Check(ctx context.Context, request *v1.HealthCheckRequest) (resp *v1.HealthCheckResponse, err error) {
+func (h *healthServer) Check(ctx context.Context, request *v1.HealthCheckRequest) (resp *v1.HealthCheckResponse, err error) {
 	var result = h.checker.Status(ctx)
 
 	if request.Service != "" {
@@ -54,13 +58,20 @@ func (h healthServer) Check(ctx context.Context, request *v1.HealthCheckRequest)
 			Status: v1.HealthCheckResponse_SERVING,
 		}, nil
 	} else {
+		var fields []zap.Field
+		for k, e := range result {
+			if e != nil {
+				fields = append(fields, zap.NamedError(k, e))
+			}
+		}
+		h.logger.Warn("Health check failed", fields...)
 		return &v1.HealthCheckResponse{
 			Status: v1.HealthCheckResponse_NOT_SERVING,
 		}, nil
 	}
 }
 
-func (h healthServer) Watch(request *v1.HealthCheckRequest, server v1.Health_WatchServer) error {
+func (h *healthServer) Watch(request *v1.HealthCheckRequest, server v1.Health_WatchServer) error {
 	var latestStatus v1.HealthCheckResponse_ServingStatus
 	if resp, err := h.Check(server.Context(), request); err != nil {
 		return err

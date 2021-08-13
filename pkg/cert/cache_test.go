@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sync"
 	"testing"
 	"time"
 
@@ -159,10 +160,14 @@ func Test_fileSystemCache_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			dir := t.TempDir()
+
+			var m = new(sync.RWMutex)
 			f := &fileSystemCache{
 				certCachePath: dir,
 				inMemCache:    tt.fields.inMemCache,
 				timeSource:    tt.fields.timeSource,
+				readLock:      m.RLocker(),
+				writeLock:     m,
 			}
 
 			if tt.polluteCertCache {
@@ -264,10 +269,13 @@ func Test_fileSystemCache_Put(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			var m = new(sync.RWMutex)
 			f := &fileSystemCache{
 				certCachePath: tt.fields.certCachePath,
 				inMemCache:    tt.fields.inMemCache,
 				timeSource:    tt.fields.timeSource,
+				readLock:      m.RLocker(),
+				writeLock:     m,
 			}
 			if err := f.Put(tt.args.cert); (err != nil) != tt.wantErr {
 				t.Errorf("Put() error = %v, wantErr %v", err, tt.wantErr)

@@ -60,6 +60,8 @@ func ValidatorsForRule(rule *rules.Check) (filters ValidationChain, err error) {
 		return nil, nil
 	}
 
+	filters = make(ValidationChain, 0, len(rule.Validators.Chain))
+
 	for idx := range rule.Validators.Chain {
 		var validator = rule.Validators.Chain[idx]
 		if provider, ok := knownCheckFilters[strings.ToLower(validator.Name)]; !ok {
@@ -96,9 +98,7 @@ func ResolvedHostResponseFilter(args ...rules.Param) (Validator, error) {
 		return nil, err
 	}
 
-	if !mdns.IsFqdn(expectedHost) {
-		expectedHost = mdns.Fqdn(expectedHost)
-	}
+	expectedHost = mdns.Fqdn(expectedHost)
 
 	return CheckFilterFunc(func(resp *Response) error {
 		switch {

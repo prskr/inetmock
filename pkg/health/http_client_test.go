@@ -118,7 +118,7 @@ func setupServer(tb testing.TB, rules []string) health.Config {
 	}
 
 	return health.Config{
-		Client: health.HTTPClientConfig{
+		Client: health.ClientsConfig{
 			HTTP:  srv,
 			HTTPS: srv,
 		},

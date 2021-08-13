@@ -18,13 +18,13 @@ import (
 )
 
 type RuleHandler struct {
+	handlers    []ConditionHandler
 	Cache       Cache
 	TTL         time.Duration
 	HandlerName string
 	Logger      logging.Logger
 	Emitter     audit.Emitter
 	Fallback    dns.IPResolver
-	handlers    []ConditionHandler
 }
 
 func (r *RuleHandler) RegisterRule(rawRule string) error {
@@ -60,9 +60,9 @@ func (r *RuleHandler) ServeDNS(w mdns.ResponseWriter, req *mdns.Msg) {
 	r.recordRequest(req, w.LocalAddr(), w.RemoteAddr())
 
 	var (
-		resp    = new(mdns.Msg)
-		seconds = r.ttlSeconds()
-		matched bool
+		resp             = new(mdns.Msg)
+		seconds          = r.ttlSeconds()
+		matchedQuestions = make(map[int]bool)
 	)
 	resp = resp.SetReply(req)
 
@@ -75,14 +75,15 @@ questionLoop:
 		switch question.Qtype {
 		case mdns.TypeA, mdns.TypeAAAA:
 			if ip = r.Cache.ForwardLookup(question.Name); ip != nil {
-				matched = true
+				ip = formatIP(ip, question.Qtype)
+				matchedQuestions[qIdx] = true
 				addARecordAnswer(resp, question, ip, question.Name, seconds)
 				continue
 			}
 		case mdns.TypePTR:
 			ip = dns.ParseInAddrArpa(question.Name)
 			if host, miss := r.Cache.ReverseLookup(ip); !miss {
-				matched = true
+				matchedQuestions[qIdx] = true
 				addPTRRecordAnswer(resp, question, host, seconds)
 				continue
 			}
@@ -91,8 +92,8 @@ questionLoop:
 		for idx := range r.handlers {
 			var handler = r.handlers[idx]
 			if handler.Matches(&question) {
-				matched = true
-				ip = handler.Lookup(question.Name)
+				matchedQuestions[qIdx] = true
+				ip = formatIP(handler.Lookup(question.Name), question.Qtype)
 				r.Cache.PutRecord(question.Name, ip)
 				addARecordAnswer(resp, question, ip, question.Name, seconds)
 				continue questionLoop
@@ -100,26 +101,16 @@ questionLoop:
 		}
 	}
 
-	if matched {
-		if err := w.WriteMsg(resp); err != nil {
-			r.Logger.Error("Failed to write response", zap.Error(err))
-		}
-		return
-	}
-
 	for qIdx := range req.Question {
-		q := req.Question[qIdx]
-		ip := r.Fallback.Lookup(q.Name)
+		var q = req.Question[qIdx]
+
+		if matchedQuestions[qIdx] {
+			continue
+		}
+
+		var ip = formatIP(r.Fallback.Lookup(q.Name), q.Qtype)
 		r.Cache.PutRecord(q.Name, ip)
-		resp.Answer = append(resp.Answer, &mdns.A{
-			A: ip,
-			Hdr: mdns.RR_Header{
-				Name:   q.Name,
-				Class:  mdns.ClassINET,
-				Rrtype: q.Qtype,
-				Ttl:    seconds,
-			},
-		})
+		addARecordAnswer(resp, q, ip, q.Name, seconds)
 	}
 
 	if err := w.WriteMsg(resp); err != nil {
@@ -190,4 +181,15 @@ func addARecordAnswer(msg *mdns.Msg, q mdns.Question, ip net.IP, host string, tt
 			Ttl:    ttl,
 		},
 	})
+}
+
+func formatIP(ip net.IP, qType uint16) net.IP {
+	switch qType {
+	case mdns.TypeA:
+		return ip.To4()
+	case mdns.TypeAAAA:
+		return ip.To16()
+	default:
+		return ip
+	}
 }

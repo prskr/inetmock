@@ -40,13 +40,13 @@ const (
 	defaultSearchBufferSize          = 256 * windowSizeSearchBufferMultiplier
 )
 
-func ValidatorsForRule(rule *rules.Check) (filters []Validator, err error) {
+func ValidatorsForRule(rule *rules.Check) (chain ValidationChain, err error) {
 	if rule.Validators == nil || len(rule.Validators.Chain) == 0 {
 		return nil, nil
 	}
 
 	filterRules := rule.Validators.Chain
-	filters = make([]Validator, len(filterRules))
+	chain = make(ValidationChain, 0, len(filterRules))
 
 	for idx := range filterRules {
 		rawRule := filterRules[idx]
@@ -58,7 +58,7 @@ func ValidatorsForRule(rule *rules.Check) (filters []Validator, err error) {
 			if err != nil {
 				return
 			}
-			filters[idx] = instance
+			chain.Add(instance)
 		}
 	}
 	return
@@ -66,6 +66,27 @@ func ValidatorsForRule(rule *rules.Check) (filters []Validator, err error) {
 
 type Validator interface {
 	Matches(resp *http.Response) error
+}
+
+type ValidationChain []Validator
+
+func (c *ValidationChain) Add(v Validator) {
+	var arr = *c
+	arr = append(arr, v)
+	*c = arr
+}
+
+func (c ValidationChain) Len() int {
+	return len([]Validator(c))
+}
+
+func (c ValidationChain) Matches(resp *http.Response) error {
+	for idx := range c {
+		if err := c[idx].Matches(resp); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type CheckFilterFunc func(resp *http.Response) error

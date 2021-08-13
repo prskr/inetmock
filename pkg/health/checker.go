@@ -2,14 +2,12 @@ package health
 
 import (
 	"context"
-	"net/http"
 
 	"golang.org/x/sync/errgroup"
 )
 
 type checker struct {
 	registeredChecks map[string]Check
-	checkClient      *http.Client
 }
 
 func (c *checker) AddCheck(check Check) error {

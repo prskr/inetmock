@@ -7,7 +7,10 @@ import (
 	"net"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"gitlab.com/inetmock/inetmock/internal/rules"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 const (
@@ -15,10 +18,9 @@ const (
 )
 
 var (
-	ErrNotADNSPInitiator          = errors.New("the given initiator is not a DNS initiator")
-	DefaultResolver      Resolver = new(net.Resolver)
+	ErrNotADNSPInitiator = errors.New("the given initiator is not a DNS initiator")
 
-	knownInitiators = map[string]func(args ...rules.Param) (Initiator, error){
+	knownInitiators = map[string]func(logger logging.Logger, args ...rules.Param) (Initiator, error){
 		"a":    AorAAAAInitiator,
 		"aaaa": AorAAAAInitiator,
 		"ptr":  PTRInitiator,
@@ -54,7 +56,7 @@ func (f InitiatorFunc) Do(ctx context.Context, resolver Resolver) (*Response, er
 	return f(ctx, resolver)
 }
 
-func CheckForRule(rule *rules.Check) (Initiator, error) {
+func CheckForRule(rule *rules.Check, logger logging.Logger) (Initiator, error) {
 	var initiator = rule.Initiator
 	if initiator == nil {
 		return nil, rules.ErrNoInitiatorDefined
@@ -67,11 +69,11 @@ func CheckForRule(rule *rules.Check) (Initiator, error) {
 	if constructor, ok := knownInitiators[strings.ToLower(initiator.Name)]; !ok {
 		return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, initiator.Name)
 	} else {
-		return constructor(initiator.Params...)
+		return constructor(logger, initiator.Params...)
 	}
 }
 
-func AorAAAAInitiator(args ...rules.Param) (Initiator, error) {
+func AorAAAAInitiator(logger logging.Logger, args ...rules.Param) (Initiator, error) {
 	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
 	}
@@ -80,7 +82,13 @@ func AorAAAAInitiator(args ...rules.Param) (Initiator, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	logger = logger.With(
+		zap.String("request_target", host),
+	)
+
 	return InitiatorFunc(func(ctx context.Context, resolver Resolver) (*Response, error) {
+		logger.Debug("Setup health initiator")
 		var addrs, err = resolver.LookupHost(ctx, host)
 		if err != nil {
 			return nil, err
@@ -99,17 +107,26 @@ func AorAAAAInitiator(args ...rules.Param) (Initiator, error) {
 	}), nil
 }
 
-func PTRInitiator(args ...rules.Param) (Initiator, error) {
+func PTRInitiator(logger logging.Logger, args ...rules.Param) (Initiator, error) {
 	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
 	}
 
-	var ip, err = args[0].AsIP()
-	if err != nil {
+	var (
+		ip  net.IP
+		err error
+	)
+
+	if ip, err = args[0].AsIP(); err != nil {
 		return nil, err
 	}
 
+	logger = logger.With(
+		zap.String("request_target", ip.String()),
+	)
+
 	return InitiatorFunc(func(ctx context.Context, resolver Resolver) (*Response, error) {
+		logger.Debug("Setup health initiator")
 		var names, err = resolver.LookupAddr(ctx, ip.String())
 		if err != nil {
 			return nil, err

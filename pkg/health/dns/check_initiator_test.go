@@ -10,28 +10,8 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
 	"gitlab.com/inetmock/inetmock/pkg/health/dns"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
-
-var _ dns.Resolver = (*mockResolver)(nil)
-
-type mockResolver struct {
-	LookupAddrDelegate func(ctx context.Context, addr string) (names []string, err error)
-	LookupHostDelegate func(ctx context.Context, host string) (addrs []string, err error)
-}
-
-func (r *mockResolver) LookupHost(ctx context.Context, host string) (addrs []string, err error) {
-	if r == nil || r.LookupHostDelegate == nil {
-		return nil, nil
-	}
-	return r.LookupHostDelegate(ctx, host)
-}
-
-func (r *mockResolver) LookupAddr(ctx context.Context, addr string) (names []string, err error) {
-	if r == nil || r.LookupAddrDelegate == nil {
-		return nil, nil
-	}
-	return r.LookupAddrDelegate(ctx, addr)
-}
 
 func TestCheckForRule(t *testing.T) {
 	t.Parallel()
@@ -51,7 +31,7 @@ func TestCheckForRule(t *testing.T) {
 			name: "A record lookup initiator",
 			args: args{
 				rule: `dns.A("gitlab.com")`,
-				resolver: &mockResolver{
+				resolver: &dns.MockResolver{
 					LookupHostDelegate: func(context.Context, string) (addrs []string, err error) {
 						return []string{"192.168.0.11"}, nil
 					},
@@ -68,7 +48,7 @@ func TestCheckForRule(t *testing.T) {
 			name: "PTR lookup initiator",
 			args: args{
 				rule: `dns.PTR(192.168.0.11)`,
-				resolver: &mockResolver{
+				resolver: &dns.MockResolver{
 					LookupAddrDelegate: func(ctx context.Context, addr string) (names []string, err error) {
 						return []string{"google.com"}, nil
 					},
@@ -126,7 +106,8 @@ func TestCheckForRule(t *testing.T) {
 				return
 			}
 
-			if initiator, err = dns.CheckForRule(parsedRule); err != nil {
+			var logger = logging.CreateTestLogger(t)
+			if initiator, err = dns.CheckForRule(parsedRule, logger); err != nil {
 				if !tt.wantErr {
 					t.Errorf("CheckForRule() error = %v, wantErr %v", err, tt.wantErr)
 				}
@@ -167,7 +148,7 @@ func TestPTRInitiator(t *testing.T) {
 						IP: net.IPv4(192, 168, 0, 10),
 					},
 				},
-				resolver: new(mockResolver),
+				resolver: new(dns.MockResolver),
 			},
 			wantResp: td.Struct(new(dns.Response), td.StructFields{
 				"Hosts": td.Empty(),
@@ -183,7 +164,7 @@ func TestPTRInitiator(t *testing.T) {
 						IP: net.IPv4(192, 168, 0, 10),
 					},
 				},
-				resolver: &mockResolver{
+				resolver: &dns.MockResolver{
 					LookupAddrDelegate: func(context.Context, string) (names []string, err error) {
 						return []string{"my-laptop.fritz.box"}, nil
 					},
@@ -221,7 +202,7 @@ func TestPTRInitiator(t *testing.T) {
 						IP: net.IPv4(192, 168, 0, 10),
 					},
 				},
-				resolver: &mockResolver{
+				resolver: &dns.MockResolver{
 					LookupAddrDelegate: func(context.Context, string) (names []string, err error) {
 						return nil, errors.New("some random error")
 					},
@@ -243,7 +224,7 @@ func TestPTRInitiator(t *testing.T) {
 				resp      *dns.Response
 				err       error
 			)
-			initiator, err = dns.PTRInitiator(tt.args.args...)
+			initiator, err = dns.PTRInitiator(logging.CreateTestLogger(t), tt.args.args...)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("PTRInitiator() error = %v, wantErr %t", err, tt.wantErr)
@@ -285,7 +266,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 						String: rules.StringP("gitlab.com"),
 					},
 				},
-				resolver: new(mockResolver),
+				resolver: new(dns.MockResolver),
 			},
 			wantResp: td.Struct(new(dns.Response), td.StructFields{
 				"Addresses": td.Empty(),
@@ -301,7 +282,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 						String: rules.StringP("gitlab.com"),
 					},
 				},
-				resolver: &mockResolver{
+				resolver: &dns.MockResolver{
 					LookupHostDelegate: func(ctx context.Context, host string) (addrs []string, err error) {
 						return []string{"192.168.0.12"}, nil
 					},
@@ -321,7 +302,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 						String: rules.StringP("gitlab.com"),
 					},
 				},
-				resolver: &mockResolver{
+				resolver: &dns.MockResolver{
 					LookupHostDelegate: func(ctx context.Context, host string) (addrs []string, err error) {
 						return []string{
 							"192.168.0.12",
@@ -365,7 +346,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 						String: rules.StringP("gitlab.com"),
 					},
 				},
-				resolver: &mockResolver{
+				resolver: &dns.MockResolver{
 					LookupHostDelegate: func(ctx context.Context, host string) (addrs []string, err error) {
 						if host == "gitlab.com" {
 							return nil, errors.New("expected error")
@@ -388,7 +369,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 				resp      *dns.Response
 				err       error
 			)
-			initiator, err = dns.AorAAAAInitiator(tt.args.args...)
+			initiator, err = dns.AorAAAAInitiator(logging.CreateTestLogger(t), tt.args.args...)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("AorAAAAInitiator() error = %v, wantErr %v", err, tt.wantErr)

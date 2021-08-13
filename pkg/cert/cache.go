@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"sync"
 )
 
 type Cache interface {
@@ -14,20 +15,27 @@ type Cache interface {
 }
 
 func NewFileSystemCache(certCachePath string, source TimeSource) Cache {
+	var m = new(sync.RWMutex)
 	return &fileSystemCache{
 		certCachePath: certCachePath,
 		inMemCache:    make(map[string]*tls.Certificate),
 		timeSource:    source,
+		readLock:      m.RLocker(),
+		writeLock:     m,
 	}
 }
 
 type fileSystemCache struct {
 	certCachePath string
+	readLock      sync.Locker
+	writeLock     sync.Locker
 	inMemCache    map[string]*tls.Certificate
 	timeSource    TimeSource
 }
 
 func (f *fileSystemCache) Put(cert *tls.Certificate) (err error) {
+	f.writeLock.Lock()
+	defer f.writeLock.Unlock()
 	if cert == nil {
 		err = errors.New("cert may not be nil")
 		return
@@ -51,6 +59,9 @@ func (f *fileSystemCache) Put(cert *tls.Certificate) (err error) {
 }
 
 func (f *fileSystemCache) Get(cn string) (*tls.Certificate, bool) {
+	f.readLock.Lock()
+	defer f.readLock.Unlock()
+
 	if crt, ok := f.inMemCache[cn]; ok {
 		return crt, true
 	}

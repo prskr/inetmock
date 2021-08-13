@@ -85,7 +85,7 @@ func init() {
 
 func runCheck(script []string) error {
 	var healthCfg = health.Config{
-		Client: health.HTTPClientConfig{
+		Client: health.ClientsConfig{
 			HTTP: health.Server{
 				IP:   runCheckArgs.TargetIP.String(),
 				Port: runCheckArgs.HTTPPort,
