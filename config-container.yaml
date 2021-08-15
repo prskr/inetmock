@@ -25,9 +25,12 @@ x-dns-respond-rules: &dnsRespondRules
       initialCapacity: 500
     rules:
       - A(`.*\\.google\\.com`) => IP(1.1.1.1)
+      - AAAA(`.*\\.google\\.com`) => IP(1.1.1.1)
       - A(`.*\\.reddit\\.com`) => IP(2.2.2.2)
-      - A(`.*\\.cloudflare\\.com`) => Incremental(10.0.0.0/16)
-      - => Random(10.1.0.0/16)
+      - AAAA(`.*\\.reddit\\.com`) => IP(2.2.2.2)
+      - A(`.*\\.cloudflare\\.com`) => Random(10.1.0.0/16)
+      - AAAA(`.*\\.cloudflare\\.com`) => Random(10.1.0.0/16)
+      - A(`.*\\.stackoverflow\\.com`) => Incremental(10.20.0.0/16)
     default:
       type: incremental
       cidr: 10.10.0.0/16
@@ -71,6 +74,16 @@ health:
       rule: http.POST("https://api.icndb.com/jokes/new", `{"joke":"asdf","categories":[]}`) => Status(204)
     - name: HTTP PUT - Status 204
       rule: http.PUT("https://api.icndb.com/jokes/37", `{"joke":"asdf","categories":[]}`) => Status(204)
+    - name: Ensure that the Google DNS fake works
+      rule: dns.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
+    - name: Ensure the Google reverse entry is in the cache
+      rule: dns.PTR(1.1.1.1) => NotEmpty() -> ResolvedHost("mail.google.com")
+    - name: Ensure that the Reddit DNS fake works
+      rule: dns.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
+    - name: Ensure the Reddit reverse entry is in the cache
+      rule: dns.PTR(2.2.2.2) => NotEmpty() -> ResolvedHost("www.reddit.com")
+    - name: Ensure the CloudFlare IPs are from the same CIDR
+      rule: dns.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
 
 tls:
   curve: P256
