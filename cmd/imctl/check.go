@@ -23,6 +23,17 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/health"
 )
 
+type runCheckArgs struct {
+	TargetIP      net.IP
+	HTTPPort      uint16
+	HTTPSPort     uint16
+	DNSPort       uint16
+	DNSProto      string
+	Timeout       time.Duration
+	TLSSkipVerify bool
+	CACertPath    string
+}
+
 var (
 	checkCmd = &cobra.Command{
 		Use:   "check",
@@ -34,27 +45,31 @@ var (
 		Short:   "Run a check script",
 		Args:    cobra.MaximumNArgs(1),
 		Aliases: []string{"exec"},
-		RunE: func(_ *cobra.Command, args []string) error {
-			if len(args) > 1 {
-				return fmt.Errorf("expected 1 argument, got %d", len(args))
+		RunE: func(_ *cobra.Command, params []string) error {
+			const (
+				noArgs = iota
+				singleArg
+			)
+			if len(params) > 1 {
+				return fmt.Errorf("expected 1 argument, got %d", len(params))
 			}
 
-			switch len(args) {
-			case 0:
+			switch len(params) {
+			case noArgs:
 				var stdinReader = bufio.NewReader(os.Stdin)
 				var script = make([]string, 0)
 				for {
 					if line, err := stdinReader.ReadString('\n'); err != nil {
 						if errors.Is(err, io.EOF) {
-							return runCheck(script)
+							return runCheck(script, args)
 						}
 						return err
 					} else {
 						script = append(script, line)
 					}
 				}
-			case 1:
-				return runCheck(args)
+			case singleArg:
+				return runCheck(params, args)
 			default:
 				return errors.New("missing script")
 			}
@@ -62,43 +77,58 @@ var (
 		SilenceUsage: true,
 	}
 
-	runCheckArgs = &struct {
-		TargetIP      net.IP
-		HTTPPort      uint16
-		HTTPSPort     uint16
-		Timeout       time.Duration
-		TLSSkipVerify bool
-		CACertPath    string
-	}{}
+	args = new(runCheckArgs)
 )
 
-//nolint:gomnd // 127.0.0.1 is well known
+// nolint:lll // still better readable than breaking these lines
 func init() {
-	runCheckCmd.Flags().IPVar(&runCheckArgs.TargetIP, "target-ip", net.IPv4(127, 0, 0, 1), "target IP used to connect for the check execution")
-	runCheckCmd.Flags().Uint16Var(&runCheckArgs.HTTPPort, "http-port", 80, "Port to connect to for 'http://' requests")
-	runCheckCmd.Flags().Uint16Var(&runCheckArgs.HTTPSPort, "https-port", 443, "Port to connect to for 'https://' requests")
-	runCheckCmd.Flags().DurationVar(&runCheckArgs.Timeout, "check-timeout", 1*time.Second, "timeout to execute the check")
-	runCheckCmd.Flags().StringVar(&runCheckArgs.CACertPath, "ca-cert", "", "Path to CA cert file to trust additionally to system cert pool")
-	runCheckCmd.Flags().BoolVarP(&runCheckArgs.TLSSkipVerify, "insecure", "i", false, "Skip TLS server certificate verification")
+	const (
+		defaultHTTPPort  int = 80
+		defaultHTTPSPort     = 443
+		defaultDNSPort       = 53
+		defaultTimeout       = 1 * time.Second
+	)
+
+	//nolint:gomnd // 127.0.0.1 is well known
+	runCheckCmd.Flags().IPVar(&args.TargetIP, "target-ip", net.IPv4(127, 0, 0, 1), "target IP used to connect for the check execution")
+	runCheckCmd.Flags().Uint16Var(&args.HTTPPort, "http-port", uint16(defaultHTTPPort), "Port to connect to for 'http://' requests")
+	runCheckCmd.Flags().Uint16Var(&args.HTTPSPort, "https-port", defaultHTTPSPort, "Port to connect to for 'https://' requests")
+	runCheckCmd.Flags().Uint16Var(&args.DNSPort, "dns-port", defaultDNSPort, "Port to connect to for DNS requests")
+	runCheckCmd.Flags().StringVar(&args.DNSProto, "dns-proto", "udp", "Protocol to use for DNS requests one of [tcp, tcp4, tcp6, udp, udp4, udp6]")
+	runCheckCmd.Flags().DurationVar(&args.Timeout, "check-timeout", defaultTimeout, "timeout to execute the check")
+	runCheckCmd.Flags().StringVar(&args.CACertPath, "ca-cert", "", "Path to CA cert file to trust additionally to system cert pool")
+	runCheckCmd.Flags().BoolVarP(&args.TLSSkipVerify, "insecure", "i", false, "Skip TLS server certificate verification")
 	checkCmd.AddCommand(runCheckCmd)
 }
 
-func runCheck(script []string) error {
+func runCheck(script []string, args *runCheckArgs) error {
 	var healthCfg = health.Config{
 		Client: health.ClientsConfig{
 			HTTP: health.Server{
-				IP:   runCheckArgs.TargetIP.String(),
-				Port: runCheckArgs.HTTPPort,
+				IP:   args.TargetIP.String(),
+				Port: args.HTTPPort,
 			},
 			HTTPS: health.Server{
-				IP:   runCheckArgs.TargetIP.String(),
-				Port: runCheckArgs.HTTPSPort,
+				IP:   args.TargetIP.String(),
+				Port: args.HTTPSPort,
+			},
+			DNS: health.Server{
+				IP:   args.TargetIP.String(),
+				Port: args.DNSPort,
 			},
 		},
 	}
 
-	var certPool *x509.CertPool
+	switch proto := strings.ToLower(args.DNSProto); proto {
+	case "tcp", "tcp4", "tcp6":
+		healthCfg.Client.DNS.Proto = proto
+	case "udp", "udp4", "udp6":
+		fallthrough
+	default:
+		healthCfg.Client.DNS.Proto = proto
+	}
 
+	var certPool *x509.CertPool
 	switch strings.ToLower(runtime.GOOS) {
 	case "linux", "darwin", "freebsd", "netbsd", "openbsd", "solaris":
 		var err error
@@ -109,7 +139,7 @@ func runCheck(script []string) error {
 		certPool = x509.NewCertPool()
 	}
 
-	if runCheckArgs.CACertPath != "" {
+	if args.CACertPath != "" {
 		if err := addCACertToPool(certPool); err != nil {
 			cliApp.Logger().Warn("failed to load CA cert", zap.Error(err))
 		}
@@ -118,27 +148,42 @@ func runCheck(script []string) error {
 	var tlsConfig = &tls.Config{
 		RootCAs: certPool,
 		//nolint:gosec
-		InsecureSkipVerify: runCheckArgs.TLSSkipVerify,
+		InsecureSkipVerify: args.TLSSkipVerify,
 	}
 
 	var client = health.HTTPClient(healthCfg, tlsConfig)
+	var resolver = health.DNSResolver(healthCfg)
 	var check = new(rules.Check)
+	var checkLogger = cliApp.Logger().Named("check")
 
 	for idx := range script {
-		rawRule := script[idx]
+		var rawRule = script[idx]
+
 		if err := rules.Parse(rawRule, check); err != nil {
 			return err
 		}
 
-		if compiledCheck, err := health.NewHTTPRuleCheck("CLI", client, cliApp.Logger().Named("check"), check); err != nil {
-			return err
-		} else {
-			ctx, cancel := context.WithTimeout(cliApp.Context(), runCheckArgs.Timeout)
-			err := compiledCheck.Status(ctx)
-			cancel()
-			if err != nil {
+		var (
+			compiledCheck health.Check
+			err           error
+		)
+
+		switch module := strings.ToLower(check.Initiator.Module); module {
+		case "http":
+			if compiledCheck, err = health.NewHTTPRuleCheck("CLI", client, checkLogger, check); err != nil {
 				return err
 			}
+		case "dns":
+			if compiledCheck, err = health.NewDNSRuleCheck("CLI", resolver, checkLogger, check); err != nil {
+				return err
+			}
+		}
+
+		var ctx, cancel = context.WithTimeout(cliApp.Context(), args.Timeout)
+		err = compiledCheck.Status(ctx)
+		cancel()
+		if err != nil {
+			return err
 		}
 	}
 	cliApp.Logger().Info("Successfully executed")
@@ -148,7 +193,7 @@ func runCheck(script []string) error {
 func addCACertToPool(pool *x509.CertPool) (err error) {
 	var buffer = bytes.NewBuffer(nil)
 	var reader io.ReadCloser
-	if reader, err = os.Open(runCheckArgs.CACertPath); err != nil {
+	if reader, err = os.Open(args.CACertPath); err != nil {
 		return err
 	}
 
