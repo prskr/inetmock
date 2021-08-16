@@ -52,7 +52,13 @@ lint:
   stage: test
   extends: .go-cache
   script:
-    - task lint
+    - task deps generate protobuf-lint
+    - golangci-lint run --timeout 5m --issues-exit-code 0 --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
 
 snapshot-release:
   stage: build
