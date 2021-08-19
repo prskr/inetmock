@@ -1,4 +1,6 @@
+//go:build integration
 // +build integration
+
 // go:build integration
 
 package mock_test
@@ -178,7 +180,7 @@ func setupHTTPClient() (*http.Client, error) {
 	}
 
 	//nolint:gosec
-	var client = &http.Client{
+	client := &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
 				Timeout:   30 * time.Second,

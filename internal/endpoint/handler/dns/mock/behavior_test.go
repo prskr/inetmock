@@ -8,12 +8,10 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/rules"
 )
 
-var (
-	sampleCIDR = net.IPNet{
-		IP:   net.IPv4(192, 168, 0, 0),
-		Mask: net.CIDRMask(24, 32),
-	}
-)
+var sampleCIDR = net.IPNet{
+	IP:   net.IPv4(192, 168, 0, 0),
+	Mask: net.CIDRMask(24, 32),
+}
 
 func TestIPHandlerForArgs(t *testing.T) {
 	t.Parallel()

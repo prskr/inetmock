@@ -7,10 +7,11 @@
 package v1
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -282,14 +283,17 @@ func file_audit_v1_http_details_proto_rawDescGZIP() []byte {
 	return file_audit_v1_http_details_proto_rawDescData
 }
 
-var file_audit_v1_http_details_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_audit_v1_http_details_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_audit_v1_http_details_proto_goTypes = []interface{}{
-	(HTTPMethod)(0),           // 0: inetmock.audit.v1.HTTPMethod
-	(*HTTPHeaderValue)(nil),   // 1: inetmock.audit.v1.HTTPHeaderValue
-	(*HTTPDetailsEntity)(nil), // 2: inetmock.audit.v1.HTTPDetailsEntity
-	nil,                       // 3: inetmock.audit.v1.HTTPDetailsEntity.HeadersEntry
-}
+var (
+	file_audit_v1_http_details_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+	file_audit_v1_http_details_proto_msgTypes  = make([]protoimpl.MessageInfo, 3)
+	file_audit_v1_http_details_proto_goTypes   = []interface{}{
+		(HTTPMethod)(0),           // 0: inetmock.audit.v1.HTTPMethod
+		(*HTTPHeaderValue)(nil),   // 1: inetmock.audit.v1.HTTPHeaderValue
+		(*HTTPDetailsEntity)(nil), // 2: inetmock.audit.v1.HTTPDetailsEntity
+		nil,                       // 3: inetmock.audit.v1.HTTPDetailsEntity.HeadersEntry
+	}
+)
+
 var file_audit_v1_http_details_proto_depIdxs = []int32{
 	0, // 0: inetmock.audit.v1.HTTPDetailsEntity.method:type_name -> inetmock.audit.v1.HTTPMethod
 	3, // 1: inetmock.audit.v1.HTTPDetailsEntity.headers:type_name -> inetmock.audit.v1.HTTPDetailsEntity.HeadersEntry

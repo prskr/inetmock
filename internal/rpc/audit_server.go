@@ -17,9 +17,7 @@ import (
 	v1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
-var (
-	_ v1.AuditServiceServer = (*auditServer)(nil)
-)
+var _ v1.AuditServiceServer = (*auditServer)(nil)
 
 type auditServer struct {
 	v1.UnimplementedAuditServiceServer
@@ -43,7 +41,7 @@ func (a *auditServer) ListSinks(context.Context, *v1.ListSinksRequest) (*v1.List
 }
 
 func (a *auditServer) WatchEvents(req *v1.WatchEventsRequest, srv v1.AuditService_WatchEventsServer) (err error) {
-	var logger = a.logger
+	logger := a.logger
 	logger.Info("watcher attached", zap.String("name", req.WatcherName))
 	err = a.eventStream.RegisterSink(srv.Context(), sink.NewGenericSink(req.WatcherName, func(ev audit.Event) {
 		if err = srv.Send(&v1.WatchEventsResponse{Entity: ev.ProtoMessage()}); err != nil {
@@ -61,7 +59,7 @@ func (a *auditServer) WatchEvents(req *v1.WatchEventsRequest, srv v1.AuditServic
 }
 
 func (a *auditServer) RegisterFileSink(_ context.Context, req *v1.RegisterFileSinkRequest) (*v1.RegisterFileSinkResponse, error) {
-	var targetPath = req.TargetPath
+	targetPath := req.TargetPath
 	if !filepath.IsAbs(targetPath) {
 		targetPath = filepath.Join(a.auditDataDirPath, req.TargetPath)
 	}

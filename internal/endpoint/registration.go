@@ -5,8 +5,10 @@ import (
 	"fmt"
 )
 
-type Registration func(registry HandlerRegistry) error
-type HandlerProvider func() ProtocolHandler
+type (
+	Registration    func(registry HandlerRegistry) error
+	HandlerProvider func() ProtocolHandler
+)
 
 type HandlerRegistry interface {
 	RegisterHandler(handlerRef HandlerReference, handlerProvider HandlerProvider)

@@ -38,7 +38,7 @@ The output contains information about each component and it's health state.
 )
 
 func getHealthResult() (healthResp *v1.HealthCheckResponse, err error) {
-	var healthClient = v1.NewHealthClient(conn)
+	healthClient := v1.NewHealthClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.GRPCTimeout)
 	healthResp, err = healthClient.Check(ctx, new(v1.HealthCheckRequest))
 	cancel()

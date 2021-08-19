@@ -15,7 +15,7 @@ type Cache interface {
 }
 
 func NewFileSystemCache(certCachePath string, source TimeSource) Cache {
-	var m = new(sync.RWMutex)
+	m := new(sync.RWMutex)
 	return &fileSystemCache{
 		certCachePath: certCachePath,
 		inMemCache:    make(map[string]*tls.Certificate),

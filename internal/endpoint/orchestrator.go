@@ -71,7 +71,7 @@ func (e orchestrator) Endpoints() []Endpoint {
 }
 
 func (e *orchestrator) StartEndpoints(ctx context.Context) chan error {
-	var errChan = make(chan error)
+	errChan := make(chan error)
 	for _, epListener := range e.endpointListeners {
 		endpointLogger := e.logger.With(
 			zap.String("epListener", epListener.name),

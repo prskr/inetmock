@@ -8,9 +8,7 @@ import (
 	"io"
 )
 
-var (
-	ErrSinkAlreadyRegistered = errors.New("sink with same name already registered")
-)
+var ErrSinkAlreadyRegistered = errors.New("sink with same name already registered")
 
 type Emitter interface {
 	Emit(ev Event)

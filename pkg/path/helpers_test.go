@@ -1,4 +1,4 @@
-package path
+package path_test
 
 import (
 	"os"
@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/maxatome/go-testdeep/td"
+
+	"gitlab.com/inetmock/inetmock/pkg/path"
 )
 
 func TestFileExists(t *testing.T) {
@@ -29,7 +31,7 @@ func TestFileExists(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			tempDir := t.TempDir()
-			var filePath = filepath.Join(tempDir, "nonexistent")
+			filePath := filepath.Join(tempDir, "nonexistent")
 			if tt.want {
 				tmpFile, err := os.CreateTemp(tempDir, "testFileExists.*.tmp")
 				if td.CmpNoError(t, err) {
@@ -39,7 +41,7 @@ func TestFileExists(t *testing.T) {
 					filePath = filepath.Join(tempDir, filepath.Base(tmpFile.Name()))
 				}
 			}
-			if got := FileExists(filePath); got != tt.want {
+			if got := path.FileExists(filePath); got != tt.want {
 				t.Errorf("FileExists() = %v, want %v", got, tt.want)
 			}
 		})

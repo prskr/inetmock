@@ -1,5 +1,5 @@
-// +build linux
 //go:build linux
+// +build linux
 
 package pcap
 
@@ -16,9 +16,7 @@ import (
 	"go.uber.org/multierr"
 )
 
-var (
-	ErrTransportStillRunning = errors.New("transport to consumers did not stop in time")
-)
+var ErrTransportStillRunning = errors.New("transport to consumers did not stop in time")
 
 const (
 	transportClosingTimeout = 100 * time.Millisecond
@@ -42,8 +40,8 @@ func openDeviceForConsumers(device string, consumer Consumer, opts RecordingOpti
 		return nil, err
 	}
 
-	var packetSrc = gopacket.NewPacketSource(handle, layers.LinkTypeEthernet)
-	var dev = &deviceConsumer{
+	packetSrc := gopacket.NewPacketSource(handle, layers.LinkTypeEthernet)
+	dev := &deviceConsumer{
 		locker:        new(sync.Mutex),
 		handle:        handle,
 		packetSource:  packetSrc,
@@ -67,7 +65,7 @@ func (o *deviceConsumer) Close() error {
 	o.locker.Lock()
 	defer o.locker.Unlock()
 
-	var err = o.handle.Close()
+	err := o.handle.Close()
 
 	if o.cancel != nil {
 		o.cancel()

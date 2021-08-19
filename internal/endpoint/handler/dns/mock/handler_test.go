@@ -17,6 +17,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
+//nolint:gocognit
 func Test_dnsHandler_Start(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -119,7 +120,7 @@ default:
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var optsMap = make(map[string]interface{})
+			optsMap := make(map[string]interface{})
 			if err := yaml.Unmarshal([]byte(tt.args.opts), optsMap); err != nil {
 				t.Errorf("yaml.Unmarshal() err = %v", err)
 				return

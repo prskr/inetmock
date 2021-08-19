@@ -455,7 +455,7 @@ func TestResponseFilters(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var validator, err = tt.validatorProvider(tt.args.args...)
+			validator, err := tt.validatorProvider(tt.args.args...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ResolvedHostResponseFilter() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -551,7 +551,7 @@ func TestValidatorsForRule(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var rule = new(rules.Check)
+			rule := new(rules.Check)
 			if err := rules.Parse(tt.args.rule, rule); err != nil {
 				if !tt.wantErr {
 					t.Errorf("rules.Parse() error = %v", err)
@@ -648,7 +648,7 @@ func TestValidationChain_Matches(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var chain = tt.chainSetup(t)
+			chain := tt.chainSetup(t)
 			if err := chain.Matches(tt.args.resp); (err != nil) != tt.wantErr {
 				t.Errorf("ValidationChain.Matches() error = %v, wantErr %v", err, tt.wantErr)
 			}

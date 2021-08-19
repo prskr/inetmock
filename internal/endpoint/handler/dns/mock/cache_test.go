@@ -1,8 +1,10 @@
-package mock
+package mock_test
 
 import (
 	"net"
 	"testing"
+
+	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
 )
 
 func Test_noOpCache_ForwardLookup(t *testing.T) {
@@ -31,7 +33,7 @@ func Test_noOpCache_ForwardLookup(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			n := DelegateCache{}
+			n := mock.DelegateCache{}
 			if got := n.ForwardLookup(tt.args.host); got != nil {
 				t.Errorf("ForwardLookup() = %v, want nil", got)
 			}
@@ -65,7 +67,7 @@ func Test_noOpCache_ReverseLookup(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			n := DelegateCache{}
+			n := mock.DelegateCache{}
 			gotHost, gotMiss := n.ReverseLookup(tt.args.ip)
 			if gotHost != "" {
 				t.Errorf("ReverseLookup() gotHost = %v, want ''", gotHost)

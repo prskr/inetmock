@@ -27,15 +27,13 @@ const (
 	defaultEventBufferSize = 10
 )
 
-var (
-	serveCmd = &cobra.Command{
-		Use:          "serve",
-		Short:        "Starts the INetMock server",
-		Long:         ``,
-		RunE:         startINetMock,
-		SilenceUsage: true,
-	}
-)
+var serveCmd = &cobra.Command{
+	Use:          "serve",
+	Short:        "Starts the INetMock server",
+	Long:         ``,
+	RunE:         startINetMock,
+	SilenceUsage: true,
+}
 
 func startINetMock(_ *cobra.Command, _ []string) error {
 	registry := endpoint.NewHandlerRegistry()
@@ -74,7 +72,7 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var endpointOrchestrator = endpoint.NewOrchestrator(
+	endpointOrchestrator := endpoint.NewOrchestrator(
 		certStore,
 		registry,
 		appLogger.Named("orchestrator"),

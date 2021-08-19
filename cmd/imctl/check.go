@@ -56,8 +56,8 @@ var (
 
 			switch len(params) {
 			case noArgs:
-				var stdinReader = bufio.NewReader(os.Stdin)
-				var script = make([]string, 0)
+				stdinReader := bufio.NewReader(os.Stdin)
+				script := make([]string, 0)
 				for {
 					if line, err := stdinReader.ReadString('\n'); err != nil {
 						if errors.Is(err, io.EOF) {
@@ -102,7 +102,7 @@ func init() {
 }
 
 func runCheck(script []string, args *runCheckArgs) error {
-	var healthCfg = health.Config{
+	healthCfg := health.Config{
 		Client: health.ClientsConfig{
 			HTTP: health.Server{
 				IP:   args.TargetIP.String(),
@@ -145,19 +145,19 @@ func runCheck(script []string, args *runCheckArgs) error {
 		}
 	}
 
-	var tlsConfig = &tls.Config{
+	tlsConfig := &tls.Config{
 		RootCAs: certPool,
 		//nolint:gosec
 		InsecureSkipVerify: args.TLSSkipVerify,
 	}
 
-	var client = health.HTTPClient(healthCfg, tlsConfig)
-	var resolver = health.DNSResolver(healthCfg)
-	var check = new(rules.Check)
-	var checkLogger = cliApp.Logger().Named("check")
+	client := health.HTTPClient(healthCfg, tlsConfig)
+	resolver := health.DNSResolver(healthCfg)
+	check := new(rules.Check)
+	checkLogger := cliApp.Logger().Named("check")
 
 	for idx := range script {
-		var rawRule = script[idx]
+		rawRule := script[idx]
 
 		if err := rules.Parse(rawRule, check); err != nil {
 			return err
@@ -179,7 +179,7 @@ func runCheck(script []string, args *runCheckArgs) error {
 			}
 		}
 
-		var ctx, cancel = context.WithTimeout(cliApp.Context(), args.Timeout)
+		ctx, cancel := context.WithTimeout(cliApp.Context(), args.Timeout)
 		err = compiledCheck.Status(ctx)
 		cancel()
 		if err != nil {
@@ -191,7 +191,7 @@ func runCheck(script []string, args *runCheckArgs) error {
 }
 
 func addCACertToPool(pool *x509.CertPool) (err error) {
-	var buffer = bytes.NewBuffer(nil)
+	buffer := bytes.NewBuffer(nil)
 	var reader io.ReadCloser
 	if reader, err = os.Open(args.CACertPath); err != nil {
 		return err

@@ -9,13 +9,11 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/rules"
 )
 
-var (
-	knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){
-		"method":      HTTPMethodMatcher,
-		"pathpattern": PathPatternMatcher,
-		"header":      HeaderValueMatcher,
-	}
-)
+var knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){
+	"method":      HTTPMethodMatcher,
+	"pathpattern": PathPatternMatcher,
+	"header":      HeaderValueMatcher,
+}
 
 const (
 	expectedHeaderValueParamCount = 2

@@ -1,5 +1,5 @@
-// +build linux,sudo
 //go:build linux && sudo
+// +build linux,sudo
 
 package pcap_test
 
@@ -357,7 +357,7 @@ func Test_recorder_StopRecordingFromContext(t *testing.T) {
 		}
 	})
 
-	var recorder = pcap.NewRecorder()
+	recorder := pcap.NewRecorder()
 
 	t.Cleanup(func() {
 		if err = recorder.Close(); err != nil {

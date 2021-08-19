@@ -12,8 +12,7 @@ func NewTimeSource() TimeSource {
 	return &defaultTimeSource{}
 }
 
-type defaultTimeSource struct {
-}
+type defaultTimeSource struct{}
 
 func (d defaultTimeSource) UTCNow() time.Time {
 	return time.Now().UTC()

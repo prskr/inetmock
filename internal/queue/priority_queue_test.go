@@ -129,7 +129,6 @@ func Test_TTL_Evict(t *testing.T) {
 			if tt.wantEvicted > 0 {
 				t1.Log("waiting to get callback")
 				for range wait {
-
 				}
 			}
 			td.CmpLen(t1, gotEvicted, tt.wantEvicted)
@@ -342,12 +341,12 @@ func Test_TTL_UpdateTTL(t1 *testing.T) {
 		tt := tt
 		t1.Run(tt.name, func(t1 *testing.T) {
 			t1.Parallel()
-			var ttlQueue = queue.NewTTL(tt.fields.initialCapacity)
+			ttlQueue := queue.NewTTL(tt.fields.initialCapacity)
 			for i := range tt.fields.seeds {
 				seed := tt.fields.seeds[i]
 				_ = ttlQueue.Push(seed.value.Name, seed.value, seed.ttl)
 			}
-			var entry = ttlQueue.Get(tt.args.idxToUpdate)
+			entry := ttlQueue.Get(tt.args.idxToUpdate)
 			ttlQueue.UpdateTTL(entry, tt.args.newTTL)
 
 			validateQueue(td.NewT(t1), ttlQueue)
@@ -355,45 +354,43 @@ func Test_TTL_UpdateTTL(t1 *testing.T) {
 	}
 }
 
-var (
-	baseSeeds = []seedEntry{
-		{
-			value: &dns.Record{
-				Name:    "a.gogle.ru",
-				Address: net.ParseIP("1.2.3.4"),
-			},
-			ttl: -150 * time.Millisecond,
+var baseSeeds = []seedEntry{
+	{
+		value: &dns.Record{
+			Name:    "a.gogle.ru",
+			Address: net.ParseIP("1.2.3.4"),
 		},
-		{
-			value: &dns.Record{
-				Name:    "b.gogle.ru",
-				Address: net.ParseIP("1.2.3.5"),
-			},
-			ttl: -140 * time.Millisecond,
+		ttl: -150 * time.Millisecond,
+	},
+	{
+		value: &dns.Record{
+			Name:    "b.gogle.ru",
+			Address: net.ParseIP("1.2.3.5"),
 		},
-		{
-			value: &dns.Record{
-				Name:    "c.gogle.ru",
-				Address: net.ParseIP("1.2.3.6"),
-			},
-			ttl: 450 * time.Millisecond,
+		ttl: -140 * time.Millisecond,
+	},
+	{
+		value: &dns.Record{
+			Name:    "c.gogle.ru",
+			Address: net.ParseIP("1.2.3.6"),
 		},
-		{
-			value: &dns.Record{
-				Name:    "d.gogle.ru",
-				Address: net.ParseIP("1.2.3.7"),
-			},
-			ttl: 500 * time.Millisecond,
+		ttl: 450 * time.Millisecond,
+	},
+	{
+		value: &dns.Record{
+			Name:    "d.gogle.ru",
+			Address: net.ParseIP("1.2.3.7"),
 		},
-		{
-			value: &dns.Record{
-				Name:    "e.gogle.ru",
-				Address: net.ParseIP("1.2.3.8"),
-			},
-			ttl: 600 * time.Millisecond,
+		ttl: 500 * time.Millisecond,
+	},
+	{
+		value: &dns.Record{
+			Name:    "e.gogle.ru",
+			Address: net.ParseIP("1.2.3.8"),
 		},
-	}
-)
+		ttl: 600 * time.Millisecond,
+	},
+}
 
 func Test_TTL_PushAfterEviction(t1 *testing.T) {
 	t1.Parallel()
@@ -450,7 +447,7 @@ func validateQueue(t *td.T, q *queue.TTL) {
 	if q.Len() < 1 {
 		return
 	}
-	var current = q.PeekFront().TTL()
+	current := q.PeekFront().TTL()
 	for i := 0; i < q.Len(); i++ {
 		entry := q.Get(i)
 		t.Cmp(q.IndexOf(entry), i)

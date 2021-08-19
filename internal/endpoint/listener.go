@@ -71,8 +71,8 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 		return nil, nil, ErrUDPMultiplexer
 	}
 
-	var epNames = make([]string, len(l.Endpoints))
-	var multiplexEndpoints = make(map[string]MultiplexHandler)
+	epNames := make([]string, len(l.Endpoints))
+	multiplexEndpoints := make(map[string]MultiplexHandler)
 	var idx int
 	for name, spec := range l.Endpoints {
 		epNames[idx] = name
@@ -91,12 +91,12 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 	tlsListener = tls.NewListener(tlsListener, tlsConfig)
 	tlsMux := cmux.New(tlsListener)
 
-	var tlsRequired = false
+	tlsRequired := false
 
-	var endpoints = make([]Endpoint, len(epNames))
+	endpoints := make([]Endpoint, len(epNames))
 	for i, epName := range epNames {
 		epSpec := l.Endpoints[epName]
-		var epMux = plainMux
+		epMux := plainMux
 		if epSpec.TLS {
 			epMux = tlsMux
 			tlsRequired = true

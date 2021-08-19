@@ -102,7 +102,7 @@ func Test_pprofHandler_Start(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
-			var emitter = audit_mock.NewMockEmitter(ctrl)
+			emitter := audit_mock.NewMockEmitter(ctrl)
 			if !tt.wantErr {
 				emitter.EXPECT().Emit(test.GenericMatcher(t, tt.wantEvent)).MinTimes(1)
 			}
@@ -111,7 +111,7 @@ func Test_pprofHandler_Start(t *testing.T) {
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
 			listener := eptest.NewInMemoryListener(t)
-			var lifecycle = endpoint.NewEndpointLifecycle(t.Name(), endpoint.Uplink{Listener: listener}, nil)
+			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.Uplink{Listener: listener}, nil)
 
 			if err := p.Start(ctx, lifecycle); err != nil {
 				if !tt.wantErr {
@@ -120,7 +120,7 @@ func Test_pprofHandler_Start(t *testing.T) {
 				return
 			}
 
-			var client = eptest.HTTPClientForInMemListener(listener)
+			client := eptest.HTTPClientForInMemListener(listener)
 
 			if resp, err := client.Do(tt.args.req); err != nil {
 				if !tt.wantErr {

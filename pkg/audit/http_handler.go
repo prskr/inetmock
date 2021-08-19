@@ -10,7 +10,7 @@ import (
 
 func EmittingHandler(emitter Emitter, app v1.AppProtocol, delegate http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
-		var httpDetails = details.HTTP{
+		httpDetails := details.HTTP{
 			Method:  req.Method,
 			Host:    req.Host,
 			URI:     req.RequestURI,
@@ -18,7 +18,7 @@ func EmittingHandler(emitter Emitter, app v1.AppProtocol, delegate http.Handler)
 			Headers: req.Header,
 		}
 
-		var ev = Event{
+		ev := Event{
 			Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
 			Application:     app,
 			ProtocolDetails: httpDetails,

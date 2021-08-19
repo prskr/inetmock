@@ -173,7 +173,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				t.Cleanup(func() {
 					_ = resp.Body.Close()
 				})
-				var bodyBuilder = new(strings.Builder)
+				bodyBuilder := new(strings.Builder)
 				if _, err := io.Copy(bodyBuilder, resp.Body); !td.CmpNoError(t, err) {
 					return
 				}

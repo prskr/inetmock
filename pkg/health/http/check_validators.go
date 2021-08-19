@@ -71,7 +71,7 @@ type Validator interface {
 type ValidationChain []Validator
 
 func (c *ValidationChain) Add(v Validator) {
-	var arr = *c
+	arr := *c
 	arr = append(arr, v)
 	*c = arr
 }
@@ -183,7 +183,7 @@ func ResponseBodyContainsFilter(args ...rules.Param) (Validator, error) {
 		defer multierr.AppendInvoke(&err, multierr.Close(resp.Body))
 
 		var read, idx int
-		var more = true
+		more := true
 		for more {
 			read, err = resp.Body.Read(searchBuffer[searchValueLength:])
 			switch {

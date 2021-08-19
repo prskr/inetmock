@@ -38,7 +38,7 @@ func (o *OptionByTypeDecoderBuilder) AddMappingToType(typeName string, targetTyp
 
 func (o *OptionByTypeDecoderBuilder) AddMappingToProvider(typeName string, provider func() interface{}) *OptionByTypeDecoderBuilder {
 	o.Mappings[typeName] = MappingFunc(func(data interface{}) (interface{}, error) {
-		var instance = provider()
+		instance := provider()
 		return instance, mapstructure.Decode(data, instance)
 	})
 	return o

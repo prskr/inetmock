@@ -1,3 +1,4 @@
+//nolint:testpackage //testing internals here - needs to be in same package
 package cert
 
 import (
@@ -23,9 +24,7 @@ const (
 	caRelativeValidity     = 168 * time.Hour
 )
 
-var (
-	serverCN = fmt.Sprintf("%s-%d", cnLocalhost, time.Now().Unix())
-)
+var serverCN = fmt.Sprintf("%s-%d", cnLocalhost, time.Now().Unix())
 
 func Test_certShouldBeRenewed(t *testing.T) {
 	t.Parallel()
@@ -161,7 +160,7 @@ func Test_fileSystemCache_Get(t *testing.T) {
 			t.Parallel()
 			dir := t.TempDir()
 
-			var m = new(sync.RWMutex)
+			m := new(sync.RWMutex)
 			f := &fileSystemCache{
 				certCachePath: dir,
 				inMemCache:    tt.fields.inMemCache,
@@ -269,7 +268,7 @@ func Test_fileSystemCache_Put(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var m = new(sync.RWMutex)
+			m := new(sync.RWMutex)
 			f := &fileSystemCache{
 				certCachePath: tt.fields.certCachePath,
 				inMemCache:    tt.fields.inMemCache,

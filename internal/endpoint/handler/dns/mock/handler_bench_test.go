@@ -1,4 +1,6 @@
+//go:build integration
 // +build integration
+
 // go:build integration
 
 package mock_test
@@ -25,9 +27,7 @@ const (
 	shutdownTimeout = 5 * time.Second
 )
 
-var (
-	dnsEndpoint string
-)
+var dnsEndpoint string
 
 func TestMain(m *testing.M) {
 	rand.Seed(time.Now().Unix())

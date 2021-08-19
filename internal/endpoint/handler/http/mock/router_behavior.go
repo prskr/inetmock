@@ -16,12 +16,10 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-var (
-	knownResponseHandlers = map[string]func(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (http.Handler, error){
-		"file":   FileHandler,
-		"status": StatusHandler,
-	}
-)
+var knownResponseHandlers = map[string]func(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (http.Handler, error){
+	"file":   FileHandler,
+	"status": StatusHandler,
+}
 
 func HandlerForRoutingRule(rule *rules.Routing, logger logging.Logger, fakeFileFS fs.FS) (http.Handler, error) {
 	if rule.Terminator == nil {

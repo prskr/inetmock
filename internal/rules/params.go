@@ -5,9 +5,7 @@ import (
 	"fmt"
 )
 
-var (
-	ErrAmbiguousParamCount = errors.New("the supplied number of arguments does not match the expected one")
-)
+var ErrAmbiguousParamCount = errors.New("the supplied number of arguments does not match the expected one")
 
 func StringP(value string) *string {
 	return &value

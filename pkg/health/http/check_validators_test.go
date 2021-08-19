@@ -571,7 +571,7 @@ func TestValidationChain_Matches(t *testing.T) {
 			name: "Matching chain",
 			chainSetup: func(tb testing.TB) http.ValidationChain {
 				tb.Helper()
-				var params = []rules.Param{{Int: rules.IntP(200)}}
+				params := []rules.Param{{Int: rules.IntP(200)}}
 				if validator, err := http.StatusCodeFilter(params...); err != nil {
 					tb.Errorf("dns.NotEmtpyResponseFilter() error = %v", err)
 					return nil
@@ -591,7 +591,7 @@ func TestValidationChain_Matches(t *testing.T) {
 			name: "Not matching chain",
 			chainSetup: func(tb testing.TB) http.ValidationChain {
 				tb.Helper()
-				var params = []rules.Param{{Int: rules.IntP(200)}}
+				params := []rules.Param{{Int: rules.IntP(200)}}
 				if validator, err := http.StatusCodeFilter(params...); err != nil {
 					tb.Errorf("dns.NotEmtpyResponseFilter() error = %v", err)
 					return nil
@@ -613,7 +613,7 @@ func TestValidationChain_Matches(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var chain = tt.chainSetup(t)
+			chain := tt.chainSetup(t)
 			if err := chain.Matches(tt.args.resp); (err != nil) != tt.wantErr {
 				t.Errorf("ValidationChain.Matches() error = %v, wantErr %v", err, tt.wantErr)
 			}

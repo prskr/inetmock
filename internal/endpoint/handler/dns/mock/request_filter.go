@@ -10,12 +10,10 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/rules"
 )
 
-var (
-	knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){
-		"a":    HostnameQuestionFilter(dns.TypeA),
-		"aaaa": HostnameQuestionFilter(dns.TypeAAAA),
-	}
-)
+var knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){
+	"a":    HostnameQuestionFilter(dns.TypeA),
+	"aaaa": HostnameQuestionFilter(dns.TypeAAAA),
+}
 
 type RequestFilter interface {
 	Matches(req *dns.Question) bool

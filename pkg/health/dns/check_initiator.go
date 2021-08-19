@@ -57,7 +57,7 @@ func (f InitiatorFunc) Do(ctx context.Context, resolver Resolver) (*Response, er
 }
 
 func CheckForRule(rule *rules.Check, logger logging.Logger) (Initiator, error) {
-	var initiator = rule.Initiator
+	initiator := rule.Initiator
 	if initiator == nil {
 		return nil, rules.ErrNoInitiatorDefined
 	}
@@ -78,7 +78,7 @@ func AorAAAAInitiator(logger logging.Logger, args ...rules.Param) (Initiator, er
 		return nil, err
 	}
 
-	var host, err = args[0].AsString()
+	host, err := args[0].AsString()
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func AorAAAAInitiator(logger logging.Logger, args ...rules.Param) (Initiator, er
 
 	return InitiatorFunc(func(ctx context.Context, resolver Resolver) (*Response, error) {
 		logger.Debug("Setup health initiator")
-		var addrs, err = resolver.LookupHost(ctx, host)
+		addrs, err := resolver.LookupHost(ctx, host)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +127,7 @@ func PTRInitiator(logger logging.Logger, args ...rules.Param) (Initiator, error)
 
 	return InitiatorFunc(func(ctx context.Context, resolver Resolver) (*Response, error) {
 		logger.Debug("Setup health initiator")
-		var names, err = resolver.LookupAddr(ctx, ip.String())
+		names, err := resolver.LookupAddr(ctx, ip.String())
 		if err != nil {
 			return nil, err
 		}

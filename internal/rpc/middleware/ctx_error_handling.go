@@ -9,22 +9,20 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var (
-	ContextErrorConverter grpc.UnaryServerInterceptor = func(
-		ctx context.Context,
-		req interface{},
-		_ *grpc.UnaryServerInfo,
-		handler grpc.UnaryHandler,
-	) (resp interface{}, err error) {
-		resp, err = handler(ctx, req)
-		switch {
-		case errors.Is(err, context.DeadlineExceeded):
-			err = status.Error(codes.DeadlineExceeded, err.Error())
-		case errors.Is(err, context.Canceled):
-			err = status.Errorf(codes.Canceled, err.Error())
-		default:
-		}
-
-		return
+var ContextErrorConverter grpc.UnaryServerInterceptor = func(
+	ctx context.Context,
+	req interface{},
+	_ *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp interface{}, err error) {
+	resp, err = handler(ctx, req)
+	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		err = status.Error(codes.DeadlineExceeded, err.Error())
+	case errors.Is(err, context.Canceled):
+		err = status.Errorf(codes.Canceled, err.Error())
+	default:
 	}
-)
+
+	return
+}

@@ -1,4 +1,6 @@
+//go:build integration
 // +build integration
+
 // go:build integration
 
 package proxy_test
@@ -162,7 +164,7 @@ func setupHTTPClient(httpEndpoint, httpsEndpoint string) (*http.Client, error) {
 		return nil, errors.New("failed to add CA key")
 	}
 
-	var client = &http.Client{
+	client := &http.Client{
 		Transport: &http.Transport{
 			Proxy: func(req *http.Request) (*url.URL, error) {
 				switch req.URL.Scheme {

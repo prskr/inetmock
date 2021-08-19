@@ -42,7 +42,7 @@ func (d *Data) setup() (err error) {
 
 func ensureDataDir(dataDirPath string) (cleanedPath string, err error) {
 	const (
-		defaultDirPerm = 0750
+		defaultDirPerm = 0o750
 	)
 
 	cleanedPath = dataDirPath

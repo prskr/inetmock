@@ -106,14 +106,14 @@ func TestCheckForRule(t *testing.T) {
 				return
 			}
 
-			var logger = logging.CreateTestLogger(t)
+			logger := logging.CreateTestLogger(t)
 			if initiator, err = dns.CheckForRule(parsedRule, logger); err != nil {
 				if !tt.wantErr {
 					t.Errorf("CheckForRule() error = %v, wantErr %v", err, tt.wantErr)
 				}
 				return
 			}
-			var ctx, cancel = context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
 
 			if resp, err = initiator.Do(ctx, tt.args.resolver); err != nil {
@@ -231,7 +231,7 @@ func TestPTRInitiator(t *testing.T) {
 				}
 				return
 			}
-			var ctx, cancel = context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
 			resp, err = initiator.Do(ctx, tt.args.resolver)
 			if err != nil {
@@ -377,7 +377,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 				return
 			}
 
-			var ctx, cancel = context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
 			if resp, err = initiator.Do(ctx, tt.args.resolver); err != nil {
 				if !tt.wantResolvErr {

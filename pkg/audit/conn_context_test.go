@@ -29,8 +29,8 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					var ctrl = gomock.NewController(tb)
-					var connMock = audit_mock.NewMockConn(ctrl)
+					ctrl := gomock.NewController(tb)
+					connMock := audit_mock.NewMockConn(ctrl)
 
 					connMock.
 						EXPECT().
@@ -54,8 +54,8 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					var ctrl = gomock.NewController(tb)
-					var connMock = audit_mock.NewMockConn(ctrl)
+					ctrl := gomock.NewController(tb)
+					connMock := audit_mock.NewMockConn(ctrl)
 
 					connMock.
 						EXPECT().
@@ -79,8 +79,8 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					var ctrl = gomock.NewController(tb)
-					var connMock = audit_mock.NewMockConn(ctrl)
+					ctrl := gomock.NewController(tb)
+					connMock := audit_mock.NewMockConn(ctrl)
 
 					connMock.
 						EXPECT().
@@ -104,8 +104,8 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					var ctrl = gomock.NewController(tb)
-					var connMock = audit_mock.NewMockConn(ctrl)
+					ctrl := gomock.NewController(tb)
+					connMock := audit_mock.NewMockConn(ctrl)
 
 					connMock.
 						EXPECT().
@@ -129,7 +129,7 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var ctx = context.Background()
+			ctx := context.Background()
 			got := audit.StoreConnPropertiesInContext(ctx, tt.args.connSetup(t))
 
 			if present := (audit.LocalAddr(got) != nil); present != tt.wantLocalAddr {

@@ -4,11 +4,9 @@ import "gitlab.com/inetmock/inetmock/pkg/audit"
 
 type WriterSinkOption func(sink *writerCloserSink)
 
-var (
-	WithCloseOnExit WriterSinkOption = func(sink *writerCloserSink) {
-		sink.closeOnExit = true
-	}
-)
+var WithCloseOnExit WriterSinkOption = func(sink *writerCloserSink) {
+	sink.closeOnExit = true
+}
 
 func NewWriterSink(name string, target audit.Writer, opts ...WriterSinkOption) audit.Sink {
 	sink := &writerCloserSink{

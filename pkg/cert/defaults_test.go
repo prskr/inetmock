@@ -1,3 +1,4 @@
+//nolint:testpackage // testing internals here - needs to be private
 package cert
 
 import (

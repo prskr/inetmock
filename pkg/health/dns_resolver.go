@@ -7,8 +7,8 @@ import (
 )
 
 func DNSResolver(cfg Config) *net.Resolver {
-	var dialer = new(net.Dialer)
-	var dnsEndpoint = cfg.Client.DNS
+	dialer := new(net.Dialer)
+	dnsEndpoint := cfg.Client.DNS
 	return &net.Resolver{
 		PreferGo:     true,
 		StrictErrors: true,

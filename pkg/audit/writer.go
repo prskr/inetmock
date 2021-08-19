@@ -11,9 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	ErrValueMostNotBeNil = errors.New("event value must not be nil")
-)
+var ErrValueMostNotBeNil = errors.New("event value must not be nil")
 
 type Writer interface {
 	io.Closer

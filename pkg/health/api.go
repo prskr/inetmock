@@ -23,16 +23,16 @@ func New() Checker {
 }
 
 func NewFromConfig(logger logging.Logger, cfg Config, tlsConfig *tls.Config) (Checker, error) {
-	var httpClient = HTTPClient(cfg, tlsConfig)
-	var dnsResolver = DNSResolver(cfg)
+	httpClient := HTTPClient(cfg, tlsConfig)
+	dnsResolver := DNSResolver(cfg)
 
-	var checker = &checker{
+	checker := &checker{
 		registeredChecks: make(map[string]Check),
 	}
 
 	for idx := range cfg.Rules {
-		var rawRule = cfg.Rules[idx]
-		var check = new(rules.Check)
+		rawRule := cfg.Rules[idx]
+		check := new(rules.Check)
 		if err := rules.Parse(rawRule.Rule, check); err != nil {
 			return nil, err
 		}

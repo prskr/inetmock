@@ -8,7 +8,6 @@ import (
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
-	"github.com/alecthomas/participle/v2/lexer/stateful"
 )
 
 var (
@@ -19,7 +18,7 @@ var (
 
 // nolint:lll
 func init() {
-	ruleLexer := lexer.Must(stateful.NewSimple([]stateful.Rule{
+	ruleLexer := lexer.Must(lexer.NewSimple([]lexer.Rule{
 		{Name: `Module`, Pattern: `[a-z]+`, Action: nil},
 		{Name: `Ident`, Pattern: `[A-Z][a-zA-Z0-9_]*`, Action: nil},
 		{Name: `CIDR`, Pattern: `(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}/(3[0-2]|[1-2][0-9]|[1-9])`, Action: nil},

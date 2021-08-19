@@ -29,7 +29,7 @@ type RuleHandler struct {
 
 func (r *RuleHandler) RegisterRule(rawRule string) error {
 	r.Logger.Debug("Adding routing rule", zap.String("rawRule", rawRule))
-	var rule = new(rules.Routing)
+	rule := new(rules.Routing)
 	if err := rules.Parse(rawRule, rule); err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ questionLoop:
 		}
 
 		for idx := range r.handlers {
-			var handler = r.handlers[idx]
+			handler := r.handlers[idx]
 			if handler.Matches(&question) {
 				matchedQuestions[qIdx] = true
 				ip = formatIP(handler.Lookup(question.Name), question.Qtype)
@@ -102,13 +102,13 @@ questionLoop:
 	}
 
 	for qIdx := range req.Question {
-		var q = req.Question[qIdx]
+		q := req.Question[qIdx]
 
 		if matchedQuestions[qIdx] {
 			continue
 		}
 
-		var ip = formatIP(r.Fallback.Lookup(q.Name), q.Qtype)
+		ip := formatIP(r.Fallback.Lookup(q.Name), q.Qtype)
 		r.Cache.PutRecord(q.Name, ip)
 		addARecordAnswer(resp, q, ip, q.Name, seconds)
 	}

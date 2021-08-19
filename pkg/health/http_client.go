@@ -19,7 +19,7 @@ func HTTPClient(cfg Config, tlsConfig *tls.Config) *http.Client {
 		httpsEndpoint = cfg.Client.HTTPS
 	)
 
-	var roundTripper = &http.Transport{
+	roundTripper := &http.Transport{
 		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			return netDialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", httpEndpoint.IP, httpEndpoint.Port))
 		},

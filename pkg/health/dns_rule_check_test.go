@@ -85,12 +85,12 @@ func TestNewDNSRuleCheck(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var parsedCheck = new(rules.Check)
+			parsedCheck := new(rules.Check)
 			if err := rules.Parse(tt.args.check, parsedCheck); (err != nil) != tt.wantParseErr {
 				t.Errorf("rules.Parse() error = %v", err)
 				return
 			}
-			var logger = logging.CreateTestLogger(t)
+			logger := logging.CreateTestLogger(t)
 			compiledCheck, err := health.NewDNSRuleCheck(tt.args.name, tt.args.resolver, logger, parsedCheck)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewDNSRuleCheck() error = %v, wantErr %v", err, tt.wantErr)
@@ -104,7 +104,7 @@ func TestNewDNSRuleCheck(t *testing.T) {
 				return
 			}
 
-			var ctx, cancel = context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
 			if err := compiledCheck.Status(ctx); (err != nil) != tt.wantCheckErr {
 				t.Errorf("compiledCheck.Status() error = %v, wantCheckErr = %t", err, tt.wantCheckErr)

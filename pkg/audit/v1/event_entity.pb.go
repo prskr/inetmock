@@ -7,12 +7,13 @@
 package v1
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -460,17 +461,20 @@ func file_audit_v1_event_entity_proto_rawDescGZIP() []byte {
 	return file_audit_v1_event_entity_proto_rawDescData
 }
 
-var file_audit_v1_event_entity_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_audit_v1_event_entity_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_audit_v1_event_entity_proto_goTypes = []interface{}{
-	(TransportProtocol)(0),        // 0: inetmock.audit.v1.TransportProtocol
-	(AppProtocol)(0),              // 1: inetmock.audit.v1.AppProtocol
-	(TLSVersion)(0),               // 2: inetmock.audit.v1.TLSVersion
-	(*TLSDetailsEntity)(nil),      // 3: inetmock.audit.v1.TLSDetailsEntity
-	(*EventEntity)(nil),           // 4: inetmock.audit.v1.EventEntity
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
-	(*anypb.Any)(nil),             // 6: google.protobuf.Any
-}
+var (
+	file_audit_v1_event_entity_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+	file_audit_v1_event_entity_proto_msgTypes  = make([]protoimpl.MessageInfo, 2)
+	file_audit_v1_event_entity_proto_goTypes   = []interface{}{
+		(TransportProtocol)(0),        // 0: inetmock.audit.v1.TransportProtocol
+		(AppProtocol)(0),              // 1: inetmock.audit.v1.AppProtocol
+		(TLSVersion)(0),               // 2: inetmock.audit.v1.TLSVersion
+		(*TLSDetailsEntity)(nil),      // 3: inetmock.audit.v1.TLSDetailsEntity
+		(*EventEntity)(nil),           // 4: inetmock.audit.v1.EventEntity
+		(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+		(*anypb.Any)(nil),             // 6: google.protobuf.Any
+	}
+)
+
 var file_audit_v1_event_entity_proto_depIdxs = []int32{
 	2, // 0: inetmock.audit.v1.TLSDetailsEntity.version:type_name -> inetmock.audit.v1.TLSVersion
 	5, // 1: inetmock.audit.v1.EventEntity.timestamp:type_name -> google.protobuf.Timestamp

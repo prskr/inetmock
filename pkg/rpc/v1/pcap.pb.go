@@ -7,11 +7,12 @@
 package v1
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -573,19 +574,22 @@ func file_rpc_v1_pcap_proto_rawDescGZIP() []byte {
 	return file_rpc_v1_pcap_proto_rawDescData
 }
 
-var file_rpc_v1_pcap_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_rpc_v1_pcap_proto_goTypes = []interface{}{
-	(*ListAvailableDevicesRequest)(nil),             // 0: inetmock.rpc.v1.ListAvailableDevicesRequest
-	(*ListAvailableDevicesResponse)(nil),            // 1: inetmock.rpc.v1.ListAvailableDevicesResponse
-	(*ListActiveRecordingsRequest)(nil),             // 2: inetmock.rpc.v1.ListActiveRecordingsRequest
-	(*ListActiveRecordingsResponse)(nil),            // 3: inetmock.rpc.v1.ListActiveRecordingsResponse
-	(*StartPCAPFileRecordingRequest)(nil),           // 4: inetmock.rpc.v1.StartPCAPFileRecordingRequest
-	(*StartPCAPFileRecordingResponse)(nil),          // 5: inetmock.rpc.v1.StartPCAPFileRecordingResponse
-	(*StopPCAPFileRecordingRequest)(nil),            // 6: inetmock.rpc.v1.StopPCAPFileRecordingRequest
-	(*StopPCAPFileRecordingResponse)(nil),           // 7: inetmock.rpc.v1.StopPCAPFileRecordingResponse
-	(*ListAvailableDevicesResponse_PCAPDevice)(nil), // 8: inetmock.rpc.v1.ListAvailableDevicesResponse.PCAPDevice
-	(*durationpb.Duration)(nil),                     // 9: google.protobuf.Duration
-}
+var (
+	file_rpc_v1_pcap_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+	file_rpc_v1_pcap_proto_goTypes  = []interface{}{
+		(*ListAvailableDevicesRequest)(nil),             // 0: inetmock.rpc.v1.ListAvailableDevicesRequest
+		(*ListAvailableDevicesResponse)(nil),            // 1: inetmock.rpc.v1.ListAvailableDevicesResponse
+		(*ListActiveRecordingsRequest)(nil),             // 2: inetmock.rpc.v1.ListActiveRecordingsRequest
+		(*ListActiveRecordingsResponse)(nil),            // 3: inetmock.rpc.v1.ListActiveRecordingsResponse
+		(*StartPCAPFileRecordingRequest)(nil),           // 4: inetmock.rpc.v1.StartPCAPFileRecordingRequest
+		(*StartPCAPFileRecordingResponse)(nil),          // 5: inetmock.rpc.v1.StartPCAPFileRecordingResponse
+		(*StopPCAPFileRecordingRequest)(nil),            // 6: inetmock.rpc.v1.StopPCAPFileRecordingRequest
+		(*StopPCAPFileRecordingResponse)(nil),           // 7: inetmock.rpc.v1.StopPCAPFileRecordingResponse
+		(*ListAvailableDevicesResponse_PCAPDevice)(nil), // 8: inetmock.rpc.v1.ListAvailableDevicesResponse.PCAPDevice
+		(*durationpb.Duration)(nil),                     // 9: google.protobuf.Duration
+	}
+)
+
 var file_rpc_v1_pcap_proto_depIdxs = []int32{
 	8, // 0: inetmock.rpc.v1.ListAvailableDevicesResponse.available_devices:type_name -> inetmock.rpc.v1.ListAvailableDevicesResponse.PCAPDevice
 	9, // 1: inetmock.rpc.v1.StartPCAPFileRecordingRequest.read_timeout:type_name -> google.protobuf.Duration

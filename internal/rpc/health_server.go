@@ -14,9 +14,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-var (
-	_ v1.HealthServer = (*healthServer)(nil)
-)
+var _ v1.HealthServer = (*healthServer)(nil)
 
 type healthServer struct {
 	v1.UnimplementedHealthServer
@@ -34,7 +32,7 @@ func NewHealthServer(checker health.Checker, watchCheckPeriod time.Duration, log
 }
 
 func (h *healthServer) Check(ctx context.Context, request *v1.HealthCheckRequest) (resp *v1.HealthCheckResponse, err error) {
-	var result = h.checker.Status(ctx)
+	result := h.checker.Status(ctx)
 
 	if request.Service != "" {
 		known, result := result.CheckResult(request.Service)

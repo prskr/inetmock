@@ -17,9 +17,7 @@ const (
 	evictionCacheSized int     = 10
 )
 
-var (
-	cacheEvictionCounter prometheus.Counter
-)
+var cacheEvictionCounter prometheus.Counter
 
 func init() {
 	cacheEvictionCounter = prometheus.NewCounter(prometheus.CounterOpts{
@@ -51,7 +49,7 @@ type TTL struct {
 }
 
 func NewTTLFromSeed(seed []*Entry) *TTL {
-	var mutex = new(sync.RWMutex)
+	mutex := new(sync.RWMutex)
 
 	for idx := range seed {
 		seed[idx].index = idx
@@ -161,7 +159,7 @@ func (t *TTL) Push(name string, value interface{}, ttl time.Duration) *Entry {
 		return entry
 	}
 
-	var insertIdx = sort.Search(length, func(i int) bool {
+	insertIdx := sort.Search(length, func(i int) bool {
 		return t.virtual[i].timeout.After(entry.timeout)
 	})
 
@@ -229,7 +227,7 @@ func (t *TTL) doEvict() {
 
 	t.virtual = t.virtual[firstToNotEvict:]
 
-	var newOffset, overflow = t.offset.Inc(firstToNotEvict)
+	newOffset, overflow := t.offset.Inc(firstToNotEvict)
 
 	var (
 		minimumReserve = int(math.Max(math.Ceil((1.0-stretchFactor)*float64(len(t.virtual))), minimumCapReserve))

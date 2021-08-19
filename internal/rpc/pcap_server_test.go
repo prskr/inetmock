@@ -1,5 +1,5 @@
-// +build sudo
 //go:build sudo
+// +build sudo
 
 package rpc_test
 
@@ -47,7 +47,7 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 			name: "Listening to lo interface",
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
 				t.Helper()
-				var ctx, cancel = context.WithCancel(context.Background())
+				ctx, cancel := context.WithCancel(context.Background())
 				t.Cleanup(cancel)
 				recorder = pcap.NewRecorder()
 				_, err = recorder.StartRecording(ctx, "lo", consumers.NewNoOpConsumerWithName("test"))
@@ -76,7 +76,7 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 
 			pcapClient := setupTestPCAPServer(t, recorder)
 
-			var done = make(chan struct{})
+			done := make(chan struct{})
 			ctx, cancel := context.WithTimeout(context.Background(), rpcMethodTimeout)
 			t.Cleanup(cancel)
 			go func() {
@@ -138,7 +138,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			var err error
-			var recorder = pcap.NewRecorder()
+			recorder := pcap.NewRecorder()
 
 			t.Cleanup(func() {
 				if err = recorder.Close(); err != nil {
@@ -147,9 +147,9 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			var ctx, cancel = context.WithTimeout(context.Background(), rpcMethodTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), rpcMethodTimeout)
 			t.Cleanup(cancel)
-			var done = make(chan struct{})
+			done := make(chan struct{})
 			go func() {
 				defer close(done)
 				got, err := pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest))
@@ -211,7 +211,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			var err error
-			var recorder = pcap.NewRecorder()
+			recorder := pcap.NewRecorder()
 
 			t.Cleanup(func() {
 				if err = recorder.Close(); err != nil {
@@ -220,9 +220,9 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			var ctx, cancel = context.WithTimeout(context.Background(), rpcMethodTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), rpcMethodTimeout)
 			t.Cleanup(cancel)
-			var done = make(chan struct{})
+			done := make(chan struct{})
 
 			go func() {
 				defer close(done)
@@ -273,7 +273,7 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			recorderSetup: func(t *testing.T) (recorder pcap.Recorder, err error) {
 				t.Helper()
 				recorder = pcap.NewRecorder()
-				var ctx, cancel = context.WithCancel(context.Background())
+				ctx, cancel := context.WithCancel(context.Background())
 				t.Cleanup(cancel)
 				_, err = recorder.StartRecording(ctx, "lo", consumers.NewNoOpConsumerWithName("test.pcap"))
 				return
@@ -300,9 +300,9 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			})
 
 			pcapClient := setupTestPCAPServer(t, recorder)
-			var ctx, cancel = context.WithTimeout(context.Background(), rpcMethodTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), rpcMethodTimeout)
 			t.Cleanup(cancel)
-			var done = make(chan struct{})
+			done := make(chan struct{})
 			go func() {
 				defer close(done)
 				gotResp, err := pcapClient.StopPCAPFileRecording(ctx, &rpcV1.StopPCAPFileRecordingRequest{
@@ -335,7 +335,7 @@ func setupTestPCAPServer(t *testing.T, recorder pcap.Recorder) rpcV1.PCAPService
 	})
 
 	ctx, cancel := context.WithTimeout(tst.Context(t), 100*time.Millisecond)
-	var conn = srv.Dial(ctx, t)
+	conn := srv.Dial(ctx, t)
 	cancel()
 
 	return rpcV1.NewPCAPServiceClient(conn)

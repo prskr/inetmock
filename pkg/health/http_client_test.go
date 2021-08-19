@@ -53,12 +53,12 @@ func TestHttpClient(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var cfg = setupServer(t, tt.args.serverRules)
-			var httpClient = health.HTTPClient(cfg, new(tls.Config))
+			cfg := setupServer(t, tt.args.serverRules)
+			httpClient := health.HTTPClient(cfg, new(tls.Config))
 
 			var err error
 			var req *http.Request
-			var ctx, cancel = context.WithTimeout(test.Context(t), 50*time.Millisecond)
+			ctx, cancel := context.WithTimeout(test.Context(t), 50*time.Millisecond)
 			t.Cleanup(cancel)
 			if req, err = http.NewRequestWithContext(ctx, tt.args.request.method, tt.args.request.url, nil); err != nil {
 				t.Fatalf("http.NewRequest() - error = %v", err)
@@ -78,7 +78,7 @@ func TestHttpClient(t *testing.T) {
 
 func setupServer(tb testing.TB, rules []string) health.Config {
 	tb.Helper()
-	var listener, err = net.Listen("tcp", "127.0.0.1:0")
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		tb.Fatalf("net.Listen() error = %v", err)
 	}
@@ -91,7 +91,7 @@ func setupServer(tb testing.TB, rules []string) health.Config {
 
 	logger := logging.CreateTestLogger(tb)
 
-	var router = mock.Router{
+	router := mock.Router{
 		HandlerName: "Test",
 		Logger:      logger,
 	}
@@ -112,7 +112,7 @@ func setupServer(tb testing.TB, rules []string) health.Config {
 		tb.Fatalf("listener.Addr() not a TCP address but %v", listener.Addr())
 	}
 
-	var srv = health.Server{
+	srv := health.Server{
 		IP:   addr.IP.String(),
 		Port: uint16(addr.Port),
 	}

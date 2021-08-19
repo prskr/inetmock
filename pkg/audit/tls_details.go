@@ -6,14 +6,12 @@ import (
 	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
-var (
-	tlsToEntity = map[uint16]v1.TLSVersion{
-		tls.VersionTLS10: v1.TLSVersion_TLS_VERSION_TLS10,
-		tls.VersionTLS11: v1.TLSVersion_TLS_VERSION_TLS11,
-		tls.VersionTLS12: v1.TLSVersion_TLS_VERSION_TLS12,
-		tls.VersionTLS13: v1.TLSVersion_TLS_VERSION_TLS13,
-	}
-)
+var tlsToEntity = map[uint16]v1.TLSVersion{
+	tls.VersionTLS10: v1.TLSVersion_TLS_VERSION_TLS10,
+	tls.VersionTLS11: v1.TLSVersion_TLS_VERSION_TLS11,
+	tls.VersionTLS12: v1.TLSVersion_TLS_VERSION_TLS12,
+	tls.VersionTLS13: v1.TLSVersion_TLS_VERSION_TLS13,
+}
 
 type TLSDetails struct {
 	Version     string

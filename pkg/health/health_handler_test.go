@@ -68,7 +68,7 @@ func Test_healthHandler_ServeHTTP(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var checker = health.New()
+			checker := health.New()
 
 			for idx := range tt.checks {
 				check := tt.checks[idx]
@@ -78,7 +78,7 @@ func Test_healthHandler_ServeHTTP(t *testing.T) {
 				}
 			}
 
-			var h = health.NewHealthHandler(checker)
+			h := health.NewHealthHandler(checker)
 			ta := tdhttp.NewTestAPI(t, h)
 			ta = ta.Get("/").
 				CmpStatus(tt.wantStatus)

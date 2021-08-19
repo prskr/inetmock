@@ -62,10 +62,12 @@ linters:
     - exhaustive
     - exportloopref
     - funlen
+    - gocognit
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
+    - godox
+    - gofumpt
     - goimports
     - gomnd
     - gosec
@@ -80,9 +82,11 @@ linters:
     - nolintlint
     - paralleltest
     - prealloc
+    - promlinter
     - staticcheck
     - structcheck
     - stylecheck
+    - testpackage
     - thelper
     - typecheck
     - unconvert
@@ -108,4 +112,4 @@ run:
     - ".*.mock.\\.go$"
 
 service:
-  golangci-lint-version: 1.41.x # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.42.x # use the fixed version to not introduce new linters unexpectedly

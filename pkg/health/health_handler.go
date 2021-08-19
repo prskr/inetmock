@@ -14,7 +14,7 @@ type healthHandler struct {
 }
 
 func (h healthHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	var result = h.checker.Status(request.Context())
+	result := h.checker.Status(request.Context())
 
 	if !result.IsHealthy() {
 		writer.Header().Set("Content-Type", "application/json")

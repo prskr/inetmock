@@ -49,7 +49,7 @@ func (f IPResolverFunc) Lookup(host string) net.IP {
 type CacheOption func(cfg *cacheConfig)
 
 func NewCache(opts ...CacheOption) *Cache {
-	var cfg = cacheConfig{
+	cfg := cacheConfig{
 		ttl:         defaultTTL,
 		initialSize: defaultInitialSize,
 	}
@@ -57,9 +57,9 @@ func NewCache(opts ...CacheOption) *Cache {
 		opts[idx](&cfg)
 	}
 
-	var rwMutex = new(sync.RWMutex)
+	rwMutex := new(sync.RWMutex)
 
-	var cache = &Cache{
+	cache := &Cache{
 		cfg:          cfg,
 		readLock:     rwMutex.RLocker(),
 		writeLock:    rwMutex,
@@ -133,7 +133,7 @@ func (c *Cache) onCacheEvicted(evictedItems []*queue.Entry) {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
 	for idx := range evictedItems {
-		var record = evictedItems[idx].Value.(*Record)
+		record := evictedItems[idx].Value.(*Record)
 		delete(c.forwardIndex, record.Name)
 		delete(c.reverseIndex, IPToInt32(record.Address))
 	}

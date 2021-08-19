@@ -49,7 +49,7 @@ func NewHTTPFromWireFormat(entity *v1.HTTPDetailsEntity) HTTP {
 		}
 	}
 
-	var method = ""
+	method := ""
 	if mappedMethod, known := wireToGoMapping[entity.Method]; known {
 		method = mappedMethod
 	}
@@ -64,7 +64,7 @@ func NewHTTPFromWireFormat(entity *v1.HTTPDetailsEntity) HTTP {
 }
 
 func (d HTTP) MarshalToWireFormat() (any *anypb.Any, err error) {
-	var method = v1.HTTPMethod_HTTP_METHOD_UNSPECIFIED
+	method := v1.HTTPMethod_HTTP_METHOD_UNSPECIFIED
 	if methodValue, known := goToWireMapping[d.Method]; known {
 		method = methodValue
 	}

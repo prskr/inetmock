@@ -21,24 +21,22 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-var (
-	certStoreOptions = cert.Options{
-		RootCACert: cert.File{
-			PublicKeyPath:  "./ca/ca.pem",
-			PrivateKeyPath: "./ca/ca.key",
+var certStoreOptions = cert.Options{
+	RootCACert: cert.File{
+		PublicKeyPath:  "./ca/ca.pem",
+		PrivateKeyPath: "./ca/ca.key",
+	},
+	CertCachePath: os.TempDir(),
+	Curve:         cert.CurveTypeP256,
+	Validity: cert.ValidityByPurpose{
+		Server: cert.ValidityDuration{
+			NotBeforeRelative: 1 * time.Hour,
+			NotAfterRelative:  1 * time.Hour,
 		},
-		CertCachePath: os.TempDir(),
-		Curve:         cert.CurveTypeP256,
-		Validity: cert.ValidityByPurpose{
-			Server: cert.ValidityDuration{
-				NotBeforeRelative: 1 * time.Hour,
-				NotAfterRelative:  1 * time.Hour,
-			},
-		},
-		IncludeInsecureCipherSuites: true,
-		MinTLSVersion:               cert.TLSVersionTLS10,
-	}
-)
+	},
+	IncludeInsecureCipherSuites: true,
+	MinTLSVersion:               cert.TLSVersionTLS10,
+}
 
 func Test_orchestrator_RegisterListener(t *testing.T) {
 	t.Parallel()
@@ -131,7 +129,7 @@ func Test_orchestrator_RegisterListener(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var logger = logging.CreateTestLogger(t)
+			logger := logging.CreateTestLogger(t)
 			var store cert.Store
 			var err error
 			if store, err = cert.NewDefaultStore(certStoreOptions, logger); err != nil {
@@ -261,9 +259,9 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var logger = logging.CreateTestLogger(t)
-			var store = cert.MustDefaultStore(certStoreOptions, logger)
-			var stream = audit.MustNewEventStream(logger)
+			logger := logging.CreateTestLogger(t)
+			store := cert.MustDefaultStore(certStoreOptions, logger)
+			stream := audit.MustNewEventStream(logger)
 			uplink, client := setupTestListener(t, store.TLSConfig())
 			orchestrator := endpoint.NewOrchestrator(store, tt.handlerRegistrySetup(t, stream), logger)
 			tt.orchestratorSetup(t, orchestrator, uplink)
@@ -316,7 +314,7 @@ func setupTestListener(tb testing.TB, tlsConfig *tls.Config) (uplink *endpoint.U
 
 	listenerAddr := fmt.Sprintf("127.0.0.1:%d", addr.Port)
 
-	var transport = &http.Transport{
+	transport := &http.Transport{
 		TLSClientConfig: tlsConfig,
 		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			return dialer.DialContext(ctx, "tcp", listenerAddr)

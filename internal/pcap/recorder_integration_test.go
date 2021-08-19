@@ -1,5 +1,5 @@
-// +build sudo
 //go:build sudo
+// +build sudo
 
 package pcap_test
 
@@ -26,8 +26,8 @@ const (
 
 func Test_recorder_CompleteWorkflow(t *testing.T) {
 	t.Parallel()
-	var recorder = pcap.NewRecorder()
-	var buffer = bytes.NewBuffer(nil)
+	recorder := pcap.NewRecorder()
+	buffer := bytes.NewBuffer(nil)
 	var err error
 	var inMemConsumer pcap.Consumer
 	if inMemConsumer, err = consumers.NewWriterConsumer("InMem", buffer); err != nil {

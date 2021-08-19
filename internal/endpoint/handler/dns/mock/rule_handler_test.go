@@ -18,11 +18,9 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-var (
-	recordsMap = map[string]net.IP{
-		"google.com.": net.IPv4(142, 250, 185, 174).To4(),
-	}
-)
+var recordsMap = map[string]net.IP{
+	"google.com.": net.IPv4(142, 250, 185, 174).To4(),
+}
 
 func TestRuleHandler_RegisterRule(t *testing.T) {
 	t.Parallel()

@@ -8,9 +8,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var (
-	loggingConfig = zap.NewProductionConfig()
-)
+var loggingConfig = zap.NewProductionConfig()
 
 func ConfigureLogging(
 	level zap.AtomicLevel,

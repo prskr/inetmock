@@ -31,7 +31,7 @@ type Validator interface {
 type ValidationChain []Validator
 
 func (c *ValidationChain) Add(v Validator) {
-	var arr = *c
+	arr := *c
 	arr = append(arr, v)
 	*c = arr
 }
@@ -63,7 +63,7 @@ func ValidatorsForRule(rule *rules.Check) (filters ValidationChain, err error) {
 	filters = make(ValidationChain, 0, len(rule.Validators.Chain))
 
 	for idx := range rule.Validators.Chain {
-		var validator = rule.Validators.Chain[idx]
+		validator := rule.Validators.Chain[idx]
 		if provider, ok := knownCheckFilters[strings.ToLower(validator.Name)]; !ok {
 			return nil, fmt.Errorf("%w: %s", rules.ErrUnknownFilterMethod, validator.Name)
 		} else if instance, err := provider(validator.Params...); err != nil {
@@ -93,7 +93,7 @@ func ResolvedHostResponseFilter(args ...rules.Param) (Validator, error) {
 	if err := rules.ValidateParameterCount(args, 1); err != nil {
 		return nil, err
 	}
-	var expectedHost, err = args[0].AsString()
+	expectedHost, err := args[0].AsString()
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func ResolvedIPResponseFilter(args ...rules.Param) (Validator, error) {
 		return nil, err
 	}
 
-	var expectedIP, err = args[0].AsIP()
+	expectedIP, err := args[0].AsIP()
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func InCIDRResponseFilter(args ...rules.Param) (Validator, error) {
 		return nil, err
 	}
 
-	var cidr, err = args[0].AsCIDR()
+	cidr, err := args[0].AsCIDR()
 	if err != nil {
 		return nil, err
 	}

@@ -16,9 +16,7 @@ import (
 	v1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
-var (
-	_ v1.PCAPServiceServer = (*pcapServer)(nil)
-)
+var _ v1.PCAPServiceServer = (*pcapServer)(nil)
 
 type pcapServer struct {
 	v1.UnimplementedPCAPServiceServer
@@ -53,7 +51,7 @@ func (p *pcapServer) ListAvailableDevices(context.Context, *v1.ListAvailableDevi
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	var resp = new(v1.ListAvailableDevicesResponse)
+	resp := new(v1.ListAvailableDevicesResponse)
 	for i := range devs {
 		resp.AvailableDevices = append(resp.AvailableDevices, &v1.ListAvailableDevicesResponse_PCAPDevice{
 			Name:      devs[i].Name,
@@ -68,7 +66,7 @@ func (p *pcapServer) StartPCAPFileRecording(
 	_ context.Context,
 	req *v1.StartPCAPFileRecordingRequest,
 ) (*v1.StartPCAPFileRecordingResponse, error) {
-	var targetPath = req.TargetPath
+	targetPath := req.TargetPath
 	if !filepath.IsAbs(targetPath) {
 		targetPath = filepath.Join(p.pcapDataDir, req.TargetPath)
 	}

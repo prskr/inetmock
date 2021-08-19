@@ -17,7 +17,7 @@ func (o *Offset) Next() (offset int, overflow bool) {
 }
 
 func (o *Offset) Inc(val int) (newVal int, overflow bool) {
-	var maxOffset = math.MaxInt64 - o.CurrentOffset
+	maxOffset := math.MaxInt64 - o.CurrentOffset
 	if val >= maxOffset {
 		val -= maxOffset
 		o.CurrentOffset = 0

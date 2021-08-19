@@ -58,7 +58,7 @@ func (g *generator) privateKey() (key interface{}, err error) {
 
 //nolint:gocritic
 func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (*tls.Certificate, error) {
-	var err = applyDefaultGenerationOptions(&options)
+	err := applyDefaultGenerationOptions(&options)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (
 
 //nolint:gocritic
 func (g *generator) CACert(options GenerationOptions) (*tls.Certificate, error) {
-	var err = applyDefaultGenerationOptions(&options)
+	err := applyDefaultGenerationOptions(&options)
 	if err != nil {
 		return nil, err
 	}

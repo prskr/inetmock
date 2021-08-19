@@ -20,40 +20,38 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/wait"
 )
 
-var (
-	testEvents = []*audit.Event{
-		{
-			Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
-			Application:     v1.AppProtocol_APP_PROTOCOL_HTTP,
-			SourceIP:        net.ParseIP("127.0.0.1").To4(),
-			DestinationIP:   net.ParseIP("127.0.0.1").To4(),
-			SourcePort:      32344,
-			DestinationPort: 80,
-			TLS: &audit.TLSDetails{
-				Version:     audit.TLSVersionToEntity(tls.VersionTLS13).String(),
-				CipherSuite: tls.CipherSuiteName(tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA),
-				ServerName:  "localhost",
-			},
-			ProtocolDetails: details.HTTP{
-				Method: "GET",
-				Host:   "localhost",
-				URI:    "http://localhost/asdf",
-				Proto:  "HTTP 1.1",
-				Headers: http.Header{
-					"Accept": []string{"application/json"},
-				},
+var testEvents = []*audit.Event{
+	{
+		Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
+		Application:     v1.AppProtocol_APP_PROTOCOL_HTTP,
+		SourceIP:        net.ParseIP("127.0.0.1").To4(),
+		DestinationIP:   net.ParseIP("127.0.0.1").To4(),
+		SourcePort:      32344,
+		DestinationPort: 80,
+		TLS: &audit.TLSDetails{
+			Version:     audit.TLSVersionToEntity(tls.VersionTLS13).String(),
+			CipherSuite: tls.CipherSuiteName(tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA),
+			ServerName:  "localhost",
+		},
+		ProtocolDetails: details.HTTP{
+			Method: "GET",
+			Host:   "localhost",
+			URI:    "http://localhost/asdf",
+			Proto:  "HTTP 1.1",
+			Headers: http.Header{
+				"Accept": []string{"application/json"},
 			},
 		},
-		{
-			Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_UDP,
-			Application:     v1.AppProtocol_APP_PROTOCOL_DNS,
-			SourceIP:        net.ParseIP("::1").To16(),
-			DestinationIP:   net.ParseIP("::1").To16(),
-			SourcePort:      32344,
-			DestinationPort: 80,
-		},
-	}
-)
+	},
+	{
+		Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_UDP,
+		Application:     v1.AppProtocol_APP_PROTOCOL_DNS,
+		SourceIP:        net.ParseIP("::1").To16(),
+		DestinationIP:   net.ParseIP("::1").To16(),
+		SourcePort:      32344,
+		DestinationPort: 80,
+	},
+}
 
 func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 	t.Parallel()

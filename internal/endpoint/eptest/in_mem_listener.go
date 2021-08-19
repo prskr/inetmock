@@ -7,9 +7,7 @@ import (
 	"testing"
 )
 
-var (
-	ErrListenerClosed = errors.New("listener closed")
-)
+var ErrListenerClosed = errors.New("listener closed")
 
 type InMemListener interface {
 	net.Listener
@@ -79,8 +77,7 @@ func (i inMemListener) Dial(_, _ string) (net.Conn, error) {
 	return clientSide, nil
 }
 
-type inMemAddr struct {
-}
+type inMemAddr struct{}
 
 func (i inMemAddr) Network() string {
 	return "pipe"

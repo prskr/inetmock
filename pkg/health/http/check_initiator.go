@@ -38,7 +38,7 @@ type Initiator interface {
 }
 
 func InitiatorForRule(rule *rules.Check, logger logging.Logger) (Initiator, error) {
-	var initiator = rule.Initiator
+	initiator := rule.Initiator
 	if initiator == nil {
 		return nil, rules.ErrNoInitiatorDefined
 	}

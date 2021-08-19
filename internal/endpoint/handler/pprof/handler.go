@@ -31,7 +31,7 @@ type pprofHandler struct {
 }
 
 func (p *pprofHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
-	var pprofMux = new(http.ServeMux)
+	pprofMux := new(http.ServeMux)
 	pprofMux.HandleFunc(pprofIndexPath, pprof.Index)
 	pprofMux.HandleFunc(pprofCmdLinePath, pprof.Cmdline)
 	pprofMux.HandleFunc(pprofProfilePath, pprof.Profile)

@@ -130,7 +130,7 @@ func runListSinks(*cobra.Command, []string) (err error) {
 		Name string
 	}
 
-	var sinks = make([]printableSink, 0, len(resp.Sinks))
+	sinks := make([]printableSink, 0, len(resp.Sinks))
 	for idx := range resp.Sinks {
 		sinks = append(sinks, printableSink{Name: resp.Sinks[idx]})
 	}

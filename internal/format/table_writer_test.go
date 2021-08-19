@@ -1,8 +1,10 @@
-package format
+package format_test
 
 import (
 	"strings"
 	"testing"
+
+	"gitlab.com/inetmock/inetmock/internal/format"
 )
 
 func Test_tblWriter_Write(t *testing.T) {
@@ -147,7 +149,7 @@ func Test_tblWriter_Write(t *testing.T) {
 
 			// hack to be able to format expected strings pretty
 			bldr.WriteRune('\n')
-			tw := Writer("table", bldr)
+			tw := format.Writer("table", bldr)
 			if err := tw.Write(tt.args.in); (err != nil) != tt.wantErr {
 				t.Errorf("Write() error = %v, wantErr %v", err, tt.wantErr)
 				return

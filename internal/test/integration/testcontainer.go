@@ -20,7 +20,7 @@ func SetupINetMockContainer(ctx context.Context, exposedPorts ...string) (testco
 		return nil, err
 	}
 
-	var tcpPortPresent = false
+	tcpPortPresent := false
 	for _, port := range exposedPorts {
 		if strings.Contains(port, "tcp") {
 			tcpPortPresent = true

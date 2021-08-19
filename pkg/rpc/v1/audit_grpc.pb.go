@@ -4,6 +4,7 @@ package v1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -103,18 +104,20 @@ type AuditServiceServer interface {
 }
 
 // UnimplementedAuditServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedAuditServiceServer struct {
-}
+type UnimplementedAuditServiceServer struct{}
 
 func (UnimplementedAuditServiceServer) WatchEvents(*WatchEventsRequest, AuditService_WatchEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method WatchEvents not implemented")
 }
+
 func (UnimplementedAuditServiceServer) RegisterFileSink(context.Context, *RegisterFileSinkRequest) (*RegisterFileSinkResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterFileSink not implemented")
 }
+
 func (UnimplementedAuditServiceServer) RemoveFileSink(context.Context, *RemoveFileSinkRequest) (*RemoveFileSinkResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveFileSink not implemented")
 }
+
 func (UnimplementedAuditServiceServer) ListSinks(context.Context, *ListSinksRequest) (*ListSinksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSinks not implemented")
 }

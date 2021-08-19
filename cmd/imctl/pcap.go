@@ -176,9 +176,9 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 		return err
 	}
 
-	var out = make([]printableSubscription, 0, len(resp.Subscriptions))
+	out := make([]printableSubscription, 0, len(resp.Subscriptions))
 	for idx := range resp.Subscriptions {
-		var subscription = resp.Subscriptions[idx]
+		subscription := resp.Subscriptions[idx]
 		splitIdx := strings.Index(subscription, ":")
 		if splitIdx < 0 {
 			continue
@@ -233,7 +233,7 @@ func runRemoveCurrentlyRunningRecording(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	var knownSubscription = false
+	knownSubscription := false
 	for i := range listRecsResp.Subscriptions {
 		knownSubscription = knownSubscription || listRecsResp.Subscriptions[i] == args[0]
 		if knownSubscription {

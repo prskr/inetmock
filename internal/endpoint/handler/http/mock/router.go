@@ -34,7 +34,7 @@ type Router struct {
 
 func (r *Router) RegisterRule(rawRule string) error {
 	r.Logger.Debug("Adding routing rule", zap.String("rawRule", rawRule))
-	var rule = new(rules.Routing)
+	rule := new(rules.Routing)
 	if err := rules.Parse(rawRule, rule); err != nil {
 		return err
 	}

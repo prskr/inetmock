@@ -19,13 +19,11 @@ func (h HandlerForArgsFunc) CreateHandler(args ...rules.Param) (dns.IPResolver, 
 	return h(args...)
 }
 
-var (
-	knownResponseHandlers = map[string]HandlerForArgs{
-		"ip":          HandlerForArgsFunc(IPHandlerForArgs),
-		"incremental": HandlerForArgsFunc(IncrementalHandlerForArgs),
-		"random":      HandlerForArgsFunc(RandomHandlerForArgs),
-	}
-)
+var knownResponseHandlers = map[string]HandlerForArgs{
+	"ip":          HandlerForArgsFunc(IPHandlerForArgs),
+	"incremental": HandlerForArgsFunc(IncrementalHandlerForArgs),
+	"random":      HandlerForArgsFunc(RandomHandlerForArgs),
+}
 
 func HandlerForRoutingRule(rule *rules.Routing) (dns.IPResolver, error) {
 	if rule.Terminator == nil {
