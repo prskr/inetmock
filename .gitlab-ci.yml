@@ -29,7 +29,7 @@ test:
   extends: .go-cache
   needs: []
   script:
-    - task cli-cover-report html-cover-report
+    - task test-all html-cover-report
   artifacts:
     paths:
       - out/coverage.html
