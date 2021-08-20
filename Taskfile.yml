@@ -118,9 +118,7 @@ tasks:
       CGO_ENABLED: 1
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - cmd: go test --tags sudo -race -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./... 2>&1 | tee {{ .OUT_DIR }}/test_output
-        ignore_error: true
-      - cat {{ .OUT_DIR }}/test_output | go-junit-report -set-exit-code > {{ .OUT_DIR }}/report.xml
+      - gotestsum --junitfile={{ .OUT_DIR }}/report.xml  -- --tags sudo -race -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./...
       - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
       - gocover-cobertura < {{ .OUT_DIR }}/cov.out > {{ .OUT_DIR }}/coverage.xml
       - rm -f {{ .OUT_DIR }}/cov-raw.out

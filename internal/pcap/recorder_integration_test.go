@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"sync"
 	"testing"
 	"time"
 
@@ -27,7 +28,7 @@ const (
 func Test_recorder_CompleteWorkflow(t *testing.T) {
 	t.Parallel()
 	recorder := pcap.NewRecorder()
-	buffer := bytes.NewBuffer(nil)
+	buffer := newSyncBuffer()
 	var err error
 	var inMemConsumer pcap.Consumer
 	if inMemConsumer, err = consumers.NewWriterConsumer("InMem", buffer); err != nil {
@@ -89,4 +90,28 @@ func simulateTraffic(ctx context.Context, numberOfRequests int) {
 		}).WithContext(ctx)
 		_, _ = http.DefaultClient.Do(req)
 	}
+}
+
+func newSyncBuffer() *syncBuffer {
+	return &syncBuffer{
+		lock: new(sync.Mutex),
+		buf:  bytes.NewBuffer(nil),
+	}
+}
+
+type syncBuffer struct {
+	lock sync.Locker
+	buf  *bytes.Buffer
+}
+
+func (s *syncBuffer) Write(p []byte) (n int, err error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return s.buf.Write(p)
+}
+
+func (s *syncBuffer) Read(p []byte) (n int, err error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return s.buf.Read(p)
 }

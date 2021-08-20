@@ -139,8 +139,9 @@ func (r *recorder) Close() (err error) {
 	r.locker.Lock()
 	defer r.locker.Unlock()
 
-	for _, consumer := range r.openDevices {
+	for key, consumer := range r.openDevices {
 		err = multierr.Append(err, consumer.Close())
+		delete(r.openDevices, key)
 	}
 	return
 }
