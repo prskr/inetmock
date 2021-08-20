@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"runtime"
 	"strings"
@@ -21,6 +22,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
 	"gitlab.com/inetmock/inetmock/pkg/health"
+	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
 type runCheckArgs struct {
@@ -54,6 +56,11 @@ var (
 				return fmt.Errorf("expected 1 argument, got %d", len(params))
 			}
 
+			httpClient, dnsResolver, err := setupClients(args)
+			if err != nil {
+				return err
+			}
+
 			switch len(params) {
 			case noArgs:
 				stdinReader := bufio.NewReader(os.Stdin)
@@ -61,7 +68,7 @@ var (
 				for {
 					if line, err := stdinReader.ReadString('\n'); err != nil {
 						if errors.Is(err, io.EOF) {
-							return runCheck(script, args)
+							return runCheck(cliApp.Context(), cliApp.Logger(), script, httpClient, dnsResolver)
 						}
 						return err
 					} else {
@@ -69,7 +76,7 @@ var (
 					}
 				}
 			case singleArg:
-				return runCheck(params, args)
+				return runCheck(cliApp.Context(), cliApp.Logger(), params, httpClient, dnsResolver)
 			default:
 				return errors.New("missing script")
 			}
@@ -101,7 +108,46 @@ func init() {
 	checkCmd.AddCommand(runCheckCmd)
 }
 
-func runCheck(script []string, args *runCheckArgs) error {
+func runCheck(ctx context.Context, logger logging.Logger, script []string, httpClient *http.Client, dnsResolver *net.Resolver) error {
+	check := new(rules.Check)
+	checkLogger := logger.Named("check")
+
+	for idx := range script {
+		rawRule := script[idx]
+
+		if err := rules.Parse(rawRule, check); err != nil {
+			return err
+		}
+
+		var (
+			compiledCheck health.Check
+			err           error
+		)
+
+		switch module := strings.ToLower(check.Initiator.Module); module {
+		case "http":
+			if compiledCheck, err = health.NewHTTPRuleCheck("CLI", httpClient, checkLogger, check); err != nil {
+				return err
+			}
+		case "dns":
+			if compiledCheck, err = health.NewDNSRuleCheck("CLI", dnsResolver, checkLogger, check); err != nil {
+				return err
+			}
+		}
+
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, args.Timeout)
+		err = compiledCheck.Status(ctx)
+		cancel()
+		if err != nil {
+			return err
+		}
+	}
+	checkLogger.Info("Successfully executed")
+	return nil
+}
+
+func setupClients(args *runCheckArgs) (*http.Client, *net.Resolver, error) {
 	healthCfg := health.Config{
 		Client: health.ClientsConfig{
 			HTTP: health.Server{
@@ -133,7 +179,7 @@ func runCheck(script []string, args *runCheckArgs) error {
 	case "linux", "darwin", "freebsd", "netbsd", "openbsd", "solaris":
 		var err error
 		if certPool, err = x509.SystemCertPool(); err != nil {
-			return err
+			return nil, nil, err
 		}
 	default:
 		certPool = x509.NewCertPool()
@@ -151,43 +197,7 @@ func runCheck(script []string, args *runCheckArgs) error {
 		InsecureSkipVerify: args.TLSSkipVerify,
 	}
 
-	client := health.HTTPClient(healthCfg, tlsConfig)
-	resolver := health.DNSResolver(healthCfg)
-	check := new(rules.Check)
-	checkLogger := cliApp.Logger().Named("check")
-
-	for idx := range script {
-		rawRule := script[idx]
-
-		if err := rules.Parse(rawRule, check); err != nil {
-			return err
-		}
-
-		var (
-			compiledCheck health.Check
-			err           error
-		)
-
-		switch module := strings.ToLower(check.Initiator.Module); module {
-		case "http":
-			if compiledCheck, err = health.NewHTTPRuleCheck("CLI", client, checkLogger, check); err != nil {
-				return err
-			}
-		case "dns":
-			if compiledCheck, err = health.NewDNSRuleCheck("CLI", resolver, checkLogger, check); err != nil {
-				return err
-			}
-		}
-
-		ctx, cancel := context.WithTimeout(cliApp.Context(), args.Timeout)
-		err = compiledCheck.Status(ctx)
-		cancel()
-		if err != nil {
-			return err
-		}
-	}
-	cliApp.Logger().Info("Successfully executed")
-	return nil
+	return health.HTTPClient(healthCfg, tlsConfig), health.DNSResolver(healthCfg), nil
 }
 
 func addCACertToPool(pool *x509.CertPool) (err error) {

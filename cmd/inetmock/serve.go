@@ -8,11 +8,6 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	dnsmock "gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/proxy"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/metrics"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/pprof"
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	audit2 "gitlab.com/inetmock/inetmock/internal/pcap/consumers/audit"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
@@ -21,6 +16,11 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	dnsmock "gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"gitlab.com/inetmock/inetmock/protocols/http/proxy"
+	"gitlab.com/inetmock/inetmock/protocols/metrics"
+	"gitlab.com/inetmock/inetmock/protocols/pprof"
 )
 
 const (

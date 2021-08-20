@@ -7,8 +7,8 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns"
 	"gitlab.com/inetmock/inetmock/internal/queue"
+	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 type seedEntry struct {

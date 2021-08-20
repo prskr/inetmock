@@ -14,11 +14,11 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/protocols/http/mock"
 )
 
 var certStoreOptions = cert.Options{
@@ -104,7 +104,7 @@ func Test_orchestrator_RegisterListener(t *testing.T) {
 			want:    td.Len(2),
 		},
 		{
-			name: "Fail because no matching handler registered",
+			name: "Fail because no matching protocols registered",
 			args: args{
 				spec: endpoint.ListenerSpec{
 					Protocol: "tcp",
@@ -170,7 +170,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 		want                 interface{}
 	}{
 		{
-			name: "Start single plain_http handler",
+			name: "Start single plain_http protocols",
 			request: request{
 				method: http.MethodGet,
 				url:    "http://www.inetmock.org/idx.html",

@@ -10,10 +10,10 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/protocols/http/mock"
 )
 
 func TestHttpClient(t *testing.T) {

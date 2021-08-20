@@ -37,7 +37,7 @@ func TestEndpoint_Start(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Start fails in handler",
+			name: "Start fails in protocols",
 			handlerSetup: func(tb testing.TB, ctrl *gomock.Controller) endpoint.ProtocolHandler {
 				tb.Helper()
 				return VerifiedProtocolHandler(t, func(ctx context.Context, lifecycle endpoint.Lifecycle) error {

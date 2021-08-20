@@ -8,10 +8,10 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	dnsmock "gitlab.com/inetmock/inetmock/internal/endpoint/handler/dns/mock"
-	httpmock "gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	dnsmock "gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	httpmock "gitlab.com/inetmock/inetmock/protocols/http/mock"
 )
 
 func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
@@ -29,7 +29,7 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 			wantAvailableHandlers: td.Nil(),
 		},
 		{
-			name: "Single handler registered",
+			name: "Single protocols registered",
 			handlerRegistrySetup: func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry {
 				tb.Helper()
 				registry := endpoint.NewHandlerRegistry()
@@ -41,7 +41,7 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 			wantAvailableHandlers: td.Set(endpoint.HandlerReference("http_mock")),
 		},
 		{
-			name: "Multiple handler registered",
+			name: "Multiple protocols registered",
 			handlerRegistrySetup: func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry {
 				tb.Helper()
 				registry := endpoint.NewHandlerRegistry()

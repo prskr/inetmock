@@ -10,13 +10,12 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint/eptest"
-	"gitlab.com/inetmock/inetmock/internal/endpoint/handler/http/mock"
 	"gitlab.com/inetmock/inetmock/internal/rules"
 	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/health/http"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/protocols/http/mock"
 )
 
 func TestInitiatorForRule(t *testing.T) {
@@ -411,7 +410,7 @@ func setupServer(tb testing.TB, routingRules []string) *gohttp.Client {
 		}
 	}
 
-	listener := eptest.NewInMemoryListener(tb)
+	listener := test.NewInMemoryListener(tb)
 
 	go func(tb testing.TB, listener net.Listener, handler gohttp.Handler) {
 		tb.Helper()
@@ -422,5 +421,5 @@ func setupServer(tb testing.TB, routingRules []string) *gohttp.Client {
 		}
 	}(tb, listener, &router)
 
-	return eptest.HTTPClientForInMemListener(listener)
+	return test.HTTPClientForInMemListener(listener)
 }
