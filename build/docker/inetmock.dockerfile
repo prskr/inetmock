@@ -1,5 +1,5 @@
 # Runtime layer
-FROM alpine:3.13
+FROM docker.io/alpine:3.14
 
 # Create appuser and group.
 ARG USER=inetmock

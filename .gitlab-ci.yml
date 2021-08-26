@@ -12,7 +12,7 @@ variables:
   DOCKER_TLS_VERIFY: 1
   DOCKER_HOST: 'tcp://docker:2376'
   SAST_EXCLUDED_ANALYZERS: "eslint"
-  DOCKER_IMAGE: registry.gitlab.com/inetmock/inetmock:latest
+  DOCKER_IMAGE: registry.gitlab.com/inetmock/inetmock:$CI_COMMIT_SHORT_SHA
   DOCKERFILE_PATH: build/docker/inetmock.dockerfile
 
 .go-cache:
@@ -39,12 +39,29 @@ test:
       junit: out/report.xml
       cobertura: out/coverage.xml
 
-integration-test:
-  stage: test
+build-test-image:
+  stage: build
   extends: .go-cache
+  needs:
+    - test
   services:
     - docker:dind
-  needs: []
+  script:
+    - task build-inetmock
+    - docker build -t $DOCKER_IMAGE -f build/docker/integration.dockerfile . 
+    - docker push $DOCKER_IMAGE
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+
+integration-test:
+  stage: release
+  extends: .go-cache
+  services:
+    - name: $DOCKER_IMAGE
+      alias: inetmock
+    - docker:dind
+  needs:
+    - build-test-image
   script:
     - task integration-test
 
@@ -61,7 +78,7 @@ lint:
       - gl-code-quality-report.json
 
 snapshot-release:
-  stage: build
+  stage: release
   extends: .go-cache
   services:
     - docker:dind

@@ -1,8 +1,6 @@
 //go:build integration
 // +build integration
 
-// go:build integration
-
 package proxy_test
 
 import (
@@ -31,7 +29,7 @@ import (
 
 const (
 	charSet         = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
-	startupTimeout  = 5 * time.Minute
+	startupTimeout  = 10 * time.Minute
 	shutdownTimeout = 5 * time.Second
 )
 
