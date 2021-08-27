@@ -439,7 +439,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "Check - Initiator and multiple filters",
 			args: args{
-				rule: `http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text.html")`,
+				rule: `http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text/html")`,
 			},
 			target: new(rules.Check),
 			want: &rules.Check{
@@ -469,7 +469,7 @@ func TestParse(t *testing.T) {
 									String: rules.StringP("Content-Type"),
 								},
 								{
-									String: rules.StringP("text.html"),
+									String: rules.StringP("text/html"),
 								},
 							},
 						},
@@ -477,6 +477,35 @@ func TestParse(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "CheckScript without comments",
+			args: args{
+				rule: `
+http.Get("https://www.gogol.com/") => Status(404)
+http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text.html")
+`,
+			},
+			target: new(rules.CheckScript),
+			want: td.Struct(new(rules.CheckScript), td.StructFields{
+				"Checks": td.Len(2),
+			}),
+		},
+		{
+			name: "CheckScript with comments",
+			args: args{
+				rule: `
+# GET https://www.gogol.com/ expect a not found response
+http.Get("https://www.gogol.com/") => Status(404)
+
+// GET https://www.microsoft.com/ - expect status OK and HTML content
+http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text/html")
+`,
+			},
+			target: new(rules.CheckScript),
+			want: td.Struct(new(rules.CheckScript), td.StructFields{
+				"Checks": td.Len(2),
+			}),
 		},
 	}
 	for _, tc := range tests {

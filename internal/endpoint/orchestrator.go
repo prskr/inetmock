@@ -14,7 +14,7 @@ import (
 
 var (
 	ErrStartupTimeout    = errors.New("endpoint did not start in time")
-	ErrUnknownHandlerRef = errors.New("no protocols for given key registered")
+	ErrUnknownHandlerRef = errors.New("no handler for given key registered")
 )
 
 type Orchestrator interface {

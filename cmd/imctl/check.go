@@ -64,19 +64,19 @@ var (
 			switch len(params) {
 			case noArgs:
 				stdinReader := bufio.NewReader(os.Stdin)
-				script := make([]string, 0)
+				scriptBuffer := strings.Builder{}
 				for {
 					if line, err := stdinReader.ReadString('\n'); err != nil {
 						if errors.Is(err, io.EOF) {
-							return runCheck(cliApp.Context(), cliApp.Logger(), script, httpClient, dnsResolver)
+							return runCheck(cliApp.Context(), cliApp.Logger(), scriptBuffer.String(), httpClient, dnsResolver)
 						}
 						return err
 					} else {
-						script = append(script, line)
+						scriptBuffer.WriteString(line)
 					}
 				}
 			case singleArg:
-				return runCheck(cliApp.Context(), cliApp.Logger(), params, httpClient, dnsResolver)
+				return runCheck(cliApp.Context(), cliApp.Logger(), params[0], httpClient, dnsResolver)
 			default:
 				return errors.New("missing script")
 			}
@@ -93,7 +93,7 @@ func init() {
 		defaultHTTPPort  int = 80
 		defaultHTTPSPort     = 443
 		defaultDNSPort       = 53
-		defaultTimeout       = 1 * time.Second
+		defaultTimeout       = 5 * time.Second
 	)
 
 	//nolint:gomnd // 127.0.0.1 is well known
@@ -108,17 +108,16 @@ func init() {
 	checkCmd.AddCommand(runCheckCmd)
 }
 
-func runCheck(ctx context.Context, logger logging.Logger, script []string, httpClient *http.Client, dnsResolver *net.Resolver) error {
-	check := new(rules.Check)
+func runCheck(ctx context.Context, logger logging.Logger, script string, httpClient *http.Client, dnsResolver *net.Resolver) error {
+	checkScript := new(rules.CheckScript)
 	checkLogger := logger.Named("check")
 
-	for idx := range script {
-		rawRule := script[idx]
+	if err := rules.Parse(script, checkScript); err != nil {
+		return err
+	}
 
-		if err := rules.Parse(rawRule, check); err != nil {
-			return err
-		}
-
+	for idx := range checkScript.Checks {
+		check := checkScript.Checks[idx]
 		var (
 			compiledCheck health.Check
 			err           error
@@ -126,23 +125,23 @@ func runCheck(ctx context.Context, logger logging.Logger, script []string, httpC
 
 		switch module := strings.ToLower(check.Initiator.Module); module {
 		case "http":
-			if compiledCheck, err = health.NewHTTPRuleCheck("CLI", httpClient, checkLogger, check); err != nil {
+			if compiledCheck, err = health.NewHTTPRuleCheck("CLI", httpClient, checkLogger, &check); err != nil {
 				return err
 			}
 		case "dns":
-			if compiledCheck, err = health.NewDNSRuleCheck("CLI", dnsResolver, checkLogger, check); err != nil {
+			if compiledCheck, err = health.NewDNSRuleCheck("CLI", dnsResolver, checkLogger, &check); err != nil {
 				return err
 			}
 		}
 
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, args.Timeout)
-		err = compiledCheck.Status(ctx)
+		checkCtx, cancel := context.WithTimeout(ctx, args.Timeout)
+		err = compiledCheck.Status(checkCtx)
 		cancel()
 		if err != nil {
 			return err
 		}
 	}
+
 	checkLogger.Info("Successfully executed")
 	return nil
 }

@@ -41,7 +41,7 @@ type ListenerSpec struct {
 }
 
 type Spec struct {
-	HandlerRef HandlerReference `mapstructure:"protocols"`
+	HandlerRef HandlerReference `mapstructure:"handler"`
 	TLS        bool
 	Handler    ProtocolHandler `mapstructure:"-"`
 	Options    map[string]interface{}

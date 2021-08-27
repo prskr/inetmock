@@ -1,0 +1,26 @@
+# HTTP GET /index.html
+http.GET("https://stackoverflow.com/index.html") => Status(200) -> Header("Content-Type", "text/html") -> Contains(`<title>INetSim default HTML page</title>`)
+
+# HTTP GET default ico
+http.GET("https://google.com/favicon.ico") => Status(200) -> SHA256("cb3f33cb0c7bae881d13be647cb928aa7fec9e9fcd6ec758751374bf7436d41a")
+
+# HTTP POST - Status 204
+http.POST("https://api.icndb.com/jokes/new", `{"joke":"asdf","categories":[]}`) => Status(204)
+
+# HTTP PUT - Status 204
+http.PUT("https://api.icndb.com/jokes/37", `{"joke":"asdf","categories":[]}`) => Status(204)
+
+# Ensure that the Google DNS fake works
+dns.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
+
+# Ensure the Google reverse entry is in the cache
+dns.PTR(1.1.1.1) => NotEmpty() -> ResolvedHost("mail.google.com")
+
+# Ensure that the Reddit DNS fake works
+dns.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
+
+# Ensure the Reddit reverse entry is in the cache
+dns.PTR(2.2.2.2) => NotEmpty() -> ResolvedHost("www.reddit.com")
+
+# Ensure the CloudFlare IPs are from the same CIDR
+dns.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)

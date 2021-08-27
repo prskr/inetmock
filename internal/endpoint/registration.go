@@ -42,7 +42,7 @@ func (h *handlerRegistry) RegisterHandler(handlerRef HandlerReference, handlerPr
 	handlerRef = handlerRef.ToLower()
 	handlers := *h
 	if _, exists := handlers[handlerRef]; exists {
-		panic(fmt.Sprintf("protocols with name %s is already registered - there's something strange...in the neighborhood", handlerRef))
+		panic(fmt.Sprintf("handler with name %s is already registered - there's something strange...in the neighborhood", handlerRef))
 	}
 	handlers[handlerRef] = handlerProvider
 }

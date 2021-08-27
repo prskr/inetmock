@@ -29,7 +29,7 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 			wantAvailableHandlers: td.Nil(),
 		},
 		{
-			name: "Single protocols registered",
+			name: "Single handler registered",
 			handlerRegistrySetup: func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry {
 				tb.Helper()
 				registry := endpoint.NewHandlerRegistry()
@@ -41,7 +41,7 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 			wantAvailableHandlers: td.Set(endpoint.HandlerReference("http_mock")),
 		},
 		{
-			name: "Multiple protocols registered",
+			name: "Multiple handlers registered",
 			handlerRegistrySetup: func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry {
 				tb.Helper()
 				registry := endpoint.NewHandlerRegistry()

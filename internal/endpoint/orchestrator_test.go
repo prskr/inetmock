@@ -104,7 +104,7 @@ func Test_orchestrator_RegisterListener(t *testing.T) {
 			want:    td.Len(2),
 		},
 		{
-			name: "Fail because no matching protocols registered",
+			name: "Fail because no matching handler registered",
 			args: args{
 				spec: endpoint.ListenerSpec{
 					Protocol: "tcp",
