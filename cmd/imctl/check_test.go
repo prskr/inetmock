@@ -14,7 +14,7 @@ import (
 func Test_HTTP_runCheck(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		script []string
+		script string
 	}
 	tests := []struct {
 		name     string
@@ -28,9 +28,7 @@ func Test_HTTP_runCheck(t *testing.T) {
 				`=> Status(200)`,
 			},
 			args: args{
-				script: []string{
-					`http.GET("http://stackoverflow.com/index.html") => Status(200)`,
-				},
+				script: `http.GET("http://stackoverflow.com/index.html") => Status(200)`,
 			},
 			wantErr: false,
 		},
