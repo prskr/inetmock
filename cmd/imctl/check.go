@@ -26,7 +26,7 @@ import (
 )
 
 type runCheckArgs struct {
-	TargetIP      net.IP
+	Target        string
 	HTTPPort      uint16
 	HTTPSPort     uint16
 	DNSPort       uint16
@@ -96,8 +96,7 @@ func init() {
 		defaultTimeout       = 5 * time.Second
 	)
 
-	//nolint:gomnd // 127.0.0.1 is well known
-	runCheckCmd.Flags().IPVar(&args.TargetIP, "target-ip", net.IPv4(127, 0, 0, 1), "target IP used to connect for the check execution")
+	runCheckCmd.Flags().StringVar(&args.Target, "target", "localhost", "target IP used to connect for the check execution")
 	runCheckCmd.Flags().Uint16Var(&args.HTTPPort, "http-port", uint16(defaultHTTPPort), "Port to connect to for 'http://' requests")
 	runCheckCmd.Flags().Uint16Var(&args.HTTPSPort, "https-port", defaultHTTPSPort, "Port to connect to for 'https://' requests")
 	runCheckCmd.Flags().Uint16Var(&args.DNSPort, "dns-port", defaultDNSPort, "Port to connect to for DNS requests")
@@ -150,15 +149,15 @@ func setupClients(args *runCheckArgs) (*http.Client, *net.Resolver, error) {
 	healthCfg := health.Config{
 		Client: health.ClientsConfig{
 			HTTP: health.Server{
-				IP:   args.TargetIP.String(),
+				IP:   args.Target,
 				Port: args.HTTPPort,
 			},
 			HTTPS: health.Server{
-				IP:   args.TargetIP.String(),
+				IP:   args.Target,
 				Port: args.HTTPSPort,
 			},
 			DNS: health.Server{
-				IP:   args.TargetIP.String(),
+				IP:   args.Target,
 				Port: args.DNSPort,
 			},
 		},
