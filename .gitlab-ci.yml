@@ -24,6 +24,16 @@ variables:
     paths:
       - .go/pkg/mod/
 
+.integration-test:
+  stage: release
+  extends: .go-cache
+  services:
+    - name: $DOCKER_IMAGE
+      alias: inetmock
+    - docker:dind
+  script:
+    - task integration-test
+
 test:
   stage: test
   extends: .go-cache
@@ -38,32 +48,6 @@ test:
     reports:
       junit: out/report.xml
       cobertura: out/coverage.xml
-
-build-test-image:
-  stage: build
-  extends: .go-cache
-  needs:
-    - test
-  services:
-    - docker:dind
-  script:
-    - task build-inetmock
-    - docker build -t $DOCKER_IMAGE -f build/docker/integration.dockerfile . 
-    - docker push $DOCKER_IMAGE
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-
-integration-test:
-  stage: release
-  extends: .go-cache
-  services:
-    - name: $DOCKER_IMAGE
-      alias: inetmock
-    - docker:dind
-  needs:
-    - build-test-image
-  script:
-    - task integration-test
 
 lint:
   stage: test
@@ -84,11 +68,11 @@ snapshot-release:
     - docker:dind
   needs:
     - test
-    - integration-test
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - task snapshot-release
+    - docker push $DOCKER_IMAGE
   except:
     - tags
 
@@ -99,14 +83,27 @@ release:
     - docker:dind
   needs:
     - test
-    - integration-test
   only:
     - tags
   variables:
     GIT_DEPTH: 0
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - goreleaser release --rm-dist
+    - task release
+
+release-integration-test:
+  extends: .integration-test
+  only:
+    - tags
+  needs:
+    - release 
+
+snapshot-release-integration-test:
+  extends: .integration-test
+  except:
+    - tags
+  needs:
+    - snapshot-release
 
 include:
   - template: Dependency-Scanning.gitlab-ci.yml

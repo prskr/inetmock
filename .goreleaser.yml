@@ -64,6 +64,7 @@ dockers:
       - registry.gitlab.com/inetmock/inetmock:latest
       - registry.gitlab.com/inetmock/inetmock:{{ .Tag }}
       - registry.gitlab.com/inetmock/inetmock:{{ .Major }}
+      - registry.gitlab.com/inetmock/inetmock:{{ .ShortCommit}}
 
     dockerfile: build/docker/inetmock.dockerfile
     build_flag_templates:

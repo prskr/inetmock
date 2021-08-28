@@ -188,7 +188,7 @@ tasks:
       - deps
       - generate
     cmds:
-      - goreleaser release
+      - goreleaser release --rm-dist
 
   docs:
     desc: generate docs
