@@ -6,8 +6,6 @@ vars:
   IMCTL_PKG: gitlab.com/inetmock/inetmock/cmd/imctl
   PROTO_FILES:
     sh: find ./api/ -type f -name "*.proto" -printf "%p "
-  INETMOCK_SVC_IP:
-    sh: dig +short -t a inetmock 
 
 env:
   GOOS: linux
@@ -131,7 +129,7 @@ tasks:
       - deps
       - generate
     cmds:
-      - cat testdata/integration.imcs | go run ./cmd/imctl check run --ca-cert assets/demoCA/ca.pem --target-ip {{ .INETMOCK_SVC_IP }}
+      - cat testdata/integration.imcs | go run ./cmd/imctl check run --ca-cert assets/demoCA/ca.pem --target-ip inetmock
 
   cli-cover-report:
     desc: generate a coverage report on the CLI

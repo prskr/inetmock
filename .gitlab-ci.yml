@@ -72,6 +72,7 @@ snapshot-release:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - task snapshot-release
+    - docker tag registry.gitlab.com/inetmock/inetmock:latest $DOCKER_IMAGE
     - docker push $DOCKER_IMAGE
   except:
     - tags
