@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -56,7 +57,9 @@ var (
 				return fmt.Errorf("expected 1 argument, got %d", len(params))
 			}
 
-			httpClient, dnsResolver, err := setupClients(args)
+			clientSetupCtx, cancel := context.WithTimeout(cliApp.Context(), args.Timeout)
+			httpClient, dnsResolver, err := setupClients(clientSetupCtx, cliApp.Logger(), args)
+			cancel()
 			if err != nil {
 				return err
 			}
@@ -145,7 +148,21 @@ func runCheck(ctx context.Context, logger logging.Logger, script string, httpCli
 	return nil
 }
 
-func setupClients(args *runCheckArgs) (*http.Client, *net.Resolver, error) {
+func setupClients(ctx context.Context, logger logging.Logger, args *runCheckArgs) (*http.Client, *net.Resolver, error) {
+	if targetIP := net.ParseIP(args.Target); len(targetIP) == 0 {
+		logger = logger.With(zap.String("target", args.Target))
+		logger.Debug("target is apparently not an IP - resolving IP address")
+		if addrs, err := net.DefaultResolver.LookupHost(ctx, args.Target); err != nil {
+			return nil, nil, err
+		} else {
+			logger.Debug("Resolved target addresses", zap.Strings("resolvedAddresses", addrs))
+			//nolint:gosec // no need for cryptographic security when picking a random IP address to contact
+			idx := rand.Intn(len(addrs))
+			logger.Debug("Picked random address", zap.String("newTargetAddress", addrs[idx]))
+			args.Target = addrs[idx]
+		}
+	}
+
 	healthCfg := health.Config{
 		Client: health.ClientsConfig{
 			HTTP: health.Server{
