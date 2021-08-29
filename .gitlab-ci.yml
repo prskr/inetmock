@@ -4,7 +4,15 @@ stages:
   - test
   - build
   - release
+  - validate
   - deploy
+
+include:
+  - template: Dependency-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
@@ -13,7 +21,8 @@ variables:
   DOCKER_HOST: 'tcp://docker:2376'
   SAST_EXCLUDED_ANALYZERS: "eslint"
   DOCKER_IMAGE: registry.gitlab.com/inetmock/inetmock:$CI_COMMIT_SHORT_SHA
-  DOCKERFILE_PATH: build/docker/inetmock.dockerfile
+  GIT_STRATEGY: fetch
+  DOCKERFILE_PATH: ./build/docker/inetmock.dockerfile
 
 .go-cache:
   variables:
@@ -23,18 +32,6 @@ variables:
   cache:
     paths:
       - .go/pkg/mod/
-
-.integration-test:
-  stage: release
-  extends: .go-cache
-  services:
-    - name: $DOCKER_IMAGE
-      alias: inetmock
-      command:
-        - serve
-    - docker:dind
-  script:
-    - task integration-test
 
 test:
   stage: test
@@ -94,26 +91,29 @@ release:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - task release
 
-release-integration-test:
-  extends: .integration-test
-  only:
-    - tags
+integration-test:
+  stage: validate
+  extends: .go-cache
   needs:
-    - release
+    - job: snapshot-release
+      optional: true
+    - job: release
+      optional: true
+  services:
+    - name: $DOCKER_IMAGE
+      alias: inetmock
+      command:
+        - serve
+  script:
+    - task integration-test
 
-snapshot-release-integration-test:
-  extends: .integration-test
-  except:
-    - tags
+container_scanning:
+  stage: validate
   needs:
-    - snapshot-release
-
-include:
-  - template: Dependency-Scanning.gitlab-ci.yml
-  - template: Security/License-Scanning.gitlab-ci.yml
-  - template: Security/SAST.gitlab-ci.yml
-  - template: Security/Secret-Detection.gitlab-ci.yml
-  - template: Security/Container-Scanning.gitlab-ci.yml
+    - job: snapshot-release
+      optional: true
+    - job: release
+      optional: true
 
 pages:
   stage: deploy
