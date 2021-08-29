@@ -30,6 +30,8 @@ variables:
   services:
     - name: $DOCKER_IMAGE
       alias: inetmock
+      command:
+        - serve
     - docker:dind
   script:
     - task integration-test
@@ -97,7 +99,7 @@ release-integration-test:
   only:
     - tags
   needs:
-    - release 
+    - release
 
 snapshot-release-integration-test:
   extends: .integration-test
