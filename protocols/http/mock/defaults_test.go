@@ -12,7 +12,7 @@ var (
 </head>
 <body>
 <p></p>
-<p align="center">This is the default HTML page for INetMock HTTP mock protocols.</p>
+<p align="center">This is the default HTML page for INetMock HTTP mock handler.</p>
 <p align="center">This file is an HTML document.</p>
 </body>
 </html>`

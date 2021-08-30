@@ -36,7 +36,7 @@ variables:
 test:
   stage: test
   extends: .go-cache
-  needs: []
+  needs: [ ]
   script:
     - task test-all html-cover-report
   artifacts:
@@ -94,18 +94,26 @@ release:
 integration-test:
   stage: validate
   extends: .go-cache
+  variables:
+    DOCKER_ENDPOINT: docker
   needs:
     - job: snapshot-release
       optional: true
     - job: release
       optional: true
   services:
-    - name: $DOCKER_IMAGE
-      alias: inetmock
-      command:
-        - serve
+    - docker:dind
   script:
-    - task integration-test
+    - |
+      docker run -d --name inetmock -p 80:80 -p 443:443 -p 53:53/udp --cap-add CAP_NET_RAW --cap-add CAP_NET_BIND_SERVICE $DOCKER_IMAGE;
+      for i in `seq 1 20`
+      do
+        docker exec -i inetmock /usr/lib/inetmock/bin/imctl health container 2>&1 > /dev/null || sleep 1;
+      done;
+
+      task integration-test
+  after_script:
+    - docker rm -f inetmock
 
 container_scanning:
   stage: validate
@@ -118,7 +126,7 @@ container_scanning:
 pages:
   stage: deploy
   image: registry.gitlab.com/inetmock/ci-image/mdbook
-  needs: []
+  needs: [ ]
   only:
     refs:
       - master

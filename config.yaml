@@ -54,7 +54,7 @@ data:
   fakeFiles: ./assets/fakeFiles
 
 api:
-  listen: unix:///var/run/inetmock.sock
+  listen: unix:///var/run/inetmock/inetmock.sock
 
 health:
   client:
@@ -89,7 +89,7 @@ health:
       rule: dns.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
 
 tls:
-  curve: P256
+  curve: P224
   minTLSVersion: TLS10
   includeInsecureCipherSuites: false
   validity:

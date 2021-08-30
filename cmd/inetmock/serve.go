@@ -48,6 +48,10 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if cfg.TLS.CertCachePath, err = ensureDataDir(cfg.TLS.CertCachePath); err != nil {
+		appLogger.Error("Failed to setup cert cache directory", zap.Error(err))
+	}
+
 	fakeFileFS := os.DirFS(cfg.Data.FakeFiles)
 
 	var certStore cert.Store

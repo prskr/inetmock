@@ -65,6 +65,10 @@ health:
     https:
       ip: 127.0.0.1
       port: 443
+    dns:
+      ip: 127.0.0.1
+      port: 53
+      proto: udp
   rules:
     - name: HTTP GET /index.html
       rule: http.GET("https://stackoverflow.com/index.html") => Status(200) -> Header("Content-Type", "text/html") -> Contains(`<title>INetSim default HTML page</title>`)
@@ -99,7 +103,7 @@ tls:
   rootCaCert:
     publicKeyPath: /var/lib/inetmock/ca/ca.pem
     privateKeyPath: /var/lib/inetmock/ca/ca.key
-  certCachePath: /var/lib/inetmock/certs
+  certCachePath: /var/lib/inetmock/data/certs
 
 listeners:
   udp_53:

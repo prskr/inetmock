@@ -11,9 +11,9 @@ import (
 type httpContextKey string
 
 const (
-	remoteAddrKey httpContextKey = "gitlab.com/inetmock/inetmock/internal/endpoint/protocols/http/context/remoteAddr"
-	localAddrKey  httpContextKey = "gitlab.com/inetmock/inetmock/internal/endpoint/protocols/http/context/localAddr"
-	tlsStateKey   httpContextKey = "gitlab.com/inetmock/inetmock/internal/endpoint/protocols/http/context/tlsState"
+	remoteAddrKey httpContextKey = "gitlab.com/inetmock/inetmock/pkg/audit/context/remoteAddr"
+	localAddrKey  httpContextKey = "gitlab.com/inetmock/inetmock/pkg/audit/context/localAddr"
+	tlsStateKey   httpContextKey = "gitlab.com/inetmock/inetmock/pkg/audit/context/tlsState"
 )
 
 func StoreConnPropertiesInContext(ctx context.Context, c net.Conn) context.Context {

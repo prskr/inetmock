@@ -1,41 +1,21 @@
+FROM docker.io/alpine:3.14 as builder
+
+RUN touch /tmp/.keep
+
 # Runtime layer
-FROM docker.io/alpine:3.14
+FROM gcr.io/distroless/static:debug-nonroot
 
-# Create appuser and group.
-ARG USER=inetmock
-ARG GROUP=inetmock
-ARG USER_ID=10001
-ARG GROUP_ID=10001
+USER nonroot:nonroot
 
-RUN addgroup -S -g "${GROUP_ID}" "${GROUP}" && \
-    adduser \
-        --disabled-password \
-        --gecos "" \
-        --home "/nonexistent" \
-        --shell "/sbin/nologin" \
-        --no-create-home \
-        -G "${GROUP}" \
-        --uid "${USER_ID}" \
-        "${USER}"
+COPY --from=builder --chown=nonroot:nonroot /tmp/.keep /var/lib/inetmock/data/pcap/.keep
+COPY --from=builder --chown=nonroot:nonroot /tmp/.keep /var/lib/inetmock/data/audit/.keep
+COPY --from=builder --chown=nonroot:nonroot /tmp/.keep /var/lib/inetmock/data/certs/.keep
+COPY --from=builder --chown=nonroot:nonroot /tmp/.keep /var/run/inetmock/inetmock.sock
 
-COPY --chown=$USER:$GROUP inetmock imctl /usr/lib/inetmock/bin/
-COPY --chown=$USER:$GROUP assets/fakeFiles /var/lib/inetmock/fakeFiles/
-COPY --chown=$USER:$GROUP assets/demoCA /var/lib/inetmock/ca
+COPY --chown=nonroot:nonroot inetmock imctl /usr/lib/inetmock/bin/
+COPY --chown=nonroot:nonroot assets/fakeFiles /var/lib/inetmock/fakeFiles/
+COPY --chown=nonroot:nonroot assets/demoCA /var/lib/inetmock/ca
 COPY config-container.yaml /etc/inetmock/config.yaml
 
-RUN mkdir -p /var/run/inetmock /var/lib/inetmock/ca /var/lib/inetmock/certs /var/lib/inetmock/data /usr/lib/inetmock && \
-    chown -R $USER:$GROUP /var/run/inetmock /var/lib/inetmock /usr/lib/inetmock && \
-    apk add -U --no-cache libcap
-
-RUN ln -s /usr/lib/inetmock/bin/inetmock /usr/bin/inetmock && \
-    ln -s /usr/lib/inetmock/bin/imctl /usr/bin/imctl && \
-    setcap 'cap_net_raw,cap_net_bind_service=eip' /usr/lib/inetmock/bin/inetmock
-
-HEALTHCHECK --interval=5s --timeout=1s \
-    CMD imctl --socket-path /var/run/inetmock/inetmock.sock health container
-
-USER $USER
-
-VOLUME [ "/var/lib/inetmock/data" ]
-
-ENTRYPOINT ["inetmock"]
+ENTRYPOINT ["/usr/lib/inetmock/bin/inetmock"]
+CMD ["serve"]

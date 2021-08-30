@@ -54,7 +54,7 @@ func main() {
 		},
 	)
 
-	cliApp.RootCommand().PersistentFlags().String("socket-path", "unix:///var/run/inetmock.sock", "Path to the INetMock socket file")
+	cliApp.RootCommand().PersistentFlags().String("socket-path", "unix:///var/run/inetmock/inetmock.sock", "Path to the INetMock socket file")
 	cliApp.RootCommand().PersistentFlags().StringP("format", "f", "table", "Output format to use. Possible values: table, json, yaml")
 	cliApp.RootCommand().PersistentFlags().Duration("grpc-timeout", defaultGRPCTimeout, "Timeout to connect to the gRPC API")
 

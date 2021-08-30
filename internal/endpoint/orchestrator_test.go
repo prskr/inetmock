@@ -170,7 +170,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 		want                 interface{}
 	}{
 		{
-			name: "Start single plain_http protocols",
+			name: "Start single plain_http handler",
 			request: request{
 				method: http.MethodGet,
 				url:    "http://www.inetmock.org/idx.html",

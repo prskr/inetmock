@@ -48,10 +48,9 @@ func NewDefaultStore(
 	options Options,
 	logger logging.Logger,
 ) (Store, error) {
-	timeSource := NewTimeSource()
 	return NewStore(
 		options,
-		NewFileSystemCache(options.CertCachePath, timeSource),
+		NewFileSystemCache(options.CertCachePath, NewTimeSource()),
 		NewDefaultGenerator(options),
 		logger,
 	)

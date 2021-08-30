@@ -149,8 +149,8 @@ func runCheck(ctx context.Context, logger logging.Logger, script string, httpCli
 }
 
 func setupClients(ctx context.Context, logger logging.Logger, args *runCheckArgs) (*http.Client, *net.Resolver, error) {
+	logger = logger.With(zap.String("target", args.Target))
 	if targetIP := net.ParseIP(args.Target); len(targetIP) == 0 {
-		logger = logger.With(zap.String("target", args.Target))
 		logger.Debug("target is apparently not an IP - resolving IP address")
 		if addrs, err := net.DefaultResolver.LookupHost(ctx, args.Target); err != nil {
 			return nil, nil, err
@@ -161,6 +161,8 @@ func setupClients(ctx context.Context, logger logging.Logger, args *runCheckArgs
 			logger.Debug("Picked random address", zap.String("newTargetAddress", addrs[idx]))
 			args.Target = addrs[idx]
 		}
+	} else {
+		logger.Debug("target is an IP address - will be set for clients")
 	}
 
 	healthCfg := health.Config{

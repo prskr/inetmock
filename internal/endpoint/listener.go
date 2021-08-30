@@ -78,7 +78,7 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 		epNames[idx] = name
 		idx++
 		if ep, ok := spec.Handler.(MultiplexHandler); !ok {
-			return nil, nil, fmt.Errorf("protocols %s %w", spec.HandlerRef, ErrMultiplexingNotSupported)
+			return nil, nil, fmt.Errorf("handler %s %w", spec.HandlerRef, ErrMultiplexingNotSupported)
 		} else {
 			multiplexEndpoints[name] = ep
 		}

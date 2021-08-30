@@ -1,8 +1,6 @@
 //go:build integration
 // +build integration
 
-// go:build integration
-
 package mock_test
 
 import (
