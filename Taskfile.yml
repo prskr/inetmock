@@ -154,7 +154,7 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/inetmock {{ .INETMOCK_PKG }}
+      - go build -ldflags='-w -s' -trimpath -o {{ .OUT_DIR }}/inetmock {{ .INETMOCK_PKG }}
 
   debug-inetmock:
     desc: run INetMock server with delve for remote debugging
@@ -168,7 +168,7 @@ tasks:
       - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
-      - go build -ldflags='-w -s' -o {{ .OUT_DIR }}/imctl {{ .IMCTL_PKG }}
+      - go build -ldflags='-w -s' -trimpath -o {{ .OUT_DIR }}/imctl {{ .IMCTL_PKG }}
 
   build-all:
     desc: build all binaries

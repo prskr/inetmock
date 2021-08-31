@@ -2,6 +2,8 @@ builds:
   - id: "inetmock"
     binary: inetmock
     main: ./cmd/inetmock/
+    flags:
+      - -trimpath
     ldflags:
       - -w -s
     env:
@@ -13,6 +15,8 @@ builds:
   - id: "imctl"
     binary: imctl
     main: ./cmd/imctl/
+    flags:
+      - -trimpath
     ldflags:
       - -w -s
     goos:
