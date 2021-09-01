@@ -3,7 +3,7 @@ FROM docker.io/alpine:3.14 as builder
 RUN touch /tmp/.keep
 
 # Runtime layer
-FROM gcr.io/distroless/static:debug-nonroot
+FROM gcr.io/distroless/static:nonroot
 
 USER nonroot:nonroot
 
