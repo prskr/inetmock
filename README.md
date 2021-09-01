@@ -39,7 +39,7 @@ The current tags can be found in the [releases](https://gitlab.com/inetmock/inet
 The pre-built container image is configured with the [config-container.yaml](config-container.yaml) but you can always mount your own config.
 Because the default config binds to the ports 53, 80 and 443 it requires some additional capabilities:
 
-```
+```bash
 docker/podman run --rm -ti --cap-add CAP_NET_RAW --cap-add CAP_NET_BIND_SERVICE registry.gitlab.com/inetmock/inetmock:latest 
 ```
 
@@ -48,7 +48,7 @@ A very basic example how to run a Vagrant VM with an INetMock instanced running 
 
 To run the container with a custom config just override the existing one like so:
 
-```
+```bash
 docker/podman run --rm -ti -v `pwd`/config.yaml:/etc/inetmock/config.yaml:ro --cap-add CAP_NET_RAW --cap-add CAP_NET_BIND_SERVICE registry.gitlab.com/inetmock/inetmock:latest 
 ```
 
@@ -78,7 +78,7 @@ To interact with the gRPC API of INetMock without having to write your own appli
 - interact with the audit API - the audit API allows you to monitor which requests INetMock handled in near-realtime, register an audit monitoring file to get a structured log, read those protobuf files to JSON and to remove an audit sink
 - interact with the health API - runs the defined health checks on the server side and returns the result including an exit code != 0 if any check fails
 - interact with the PCAP API - start/stop recording of network interface traffic to PCAP files, list available interfaces, list active recordings
-- run check scripts like the [interation test](testdata/integration.imcs) or run single check commands like `imctl check run "http.GET('https://google.com/favicon.ico') => Status(200)"`
+- run check scripts like the [integration test](testdata/integration.imcs) or run single check commands like `imctl check run "http.GET('https://google.com/favicon.ico') => Status(200)"`
 
 Everything that can be done from the CLI is documented with `--help` switches hence no huge documentation that will be outdated as soon as it is pushed here.
 
