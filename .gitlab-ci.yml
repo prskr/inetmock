@@ -130,7 +130,7 @@ pages:
   needs: [ ]
   only:
     refs:
-      - master
+      - main 
       - tags
   script:
     - mdbook build -d ./../public ./docs
