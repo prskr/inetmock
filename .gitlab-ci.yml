@@ -39,6 +39,7 @@ test:
   needs: [ ]
   script:
     - task test-all html-cover-report
+    - task cli-cover-report | grep "total"
   artifacts:
     paths:
       - out/coverage.html
