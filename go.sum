@@ -415,6 +415,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182aff
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/maxatome/go-testdeep v1.9.2 h1:5D7u/JkeG0A/HDTbZ/CFFmpYZPeWN+uGQ1IbsEHYlCo=
 github.com/maxatome/go-testdeep v1.9.2/go.mod h1:011SgQ6efzZYAen6fDn4BqQ+lUR72ysdyKe7Dyogw70=
+github.com/maxatome/go-testdeep v1.10.1 h1:3kcvVpYaKneKON75eNXVCVNAJNcMMcDaZzLclSklRIE=
+github.com/maxatome/go-testdeep v1.10.1/go.mod h1:011SgQ6efzZYAen6fDn4BqQ+lUR72ysdyKe7Dyogw70=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
 github.com/miekg/dns v1.1.43 h1:JKfpVSCB84vrAmHzyrsxB5NAr5kLoMXZArPSw7Qlgyg=
 github.com/miekg/dns v1.1.43/go.mod h1:+evo5L0630/F6ca/Z9+GAqzhjGyn8/c+TBaOyfEl0V4=

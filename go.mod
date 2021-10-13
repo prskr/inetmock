@@ -14,7 +14,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.12
 	github.com/jinzhu/copier v0.3.2
-	github.com/maxatome/go-testdeep v1.9.2
+	github.com/maxatome/go-testdeep v1.10.1
 	github.com/miekg/dns v1.1.43
 	github.com/mitchellh/mapstructure v1.4.2
 	github.com/olekukonko/tablewriter v0.0.5
