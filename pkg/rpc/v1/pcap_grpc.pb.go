@@ -4,6 +4,7 @@ package v1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -80,18 +81,20 @@ type PCAPServiceServer interface {
 }
 
 // UnimplementedPCAPServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedPCAPServiceServer struct {
-}
+type UnimplementedPCAPServiceServer struct{}
 
 func (UnimplementedPCAPServiceServer) ListAvailableDevices(context.Context, *ListAvailableDevicesRequest) (*ListAvailableDevicesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAvailableDevices not implemented")
 }
+
 func (UnimplementedPCAPServiceServer) ListActiveRecordings(context.Context, *ListActiveRecordingsRequest) (*ListActiveRecordingsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListActiveRecordings not implemented")
 }
+
 func (UnimplementedPCAPServiceServer) StartPCAPFileRecording(context.Context, *StartPCAPFileRecordingRequest) (*StartPCAPFileRecordingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartPCAPFileRecording not implemented")
 }
+
 func (UnimplementedPCAPServiceServer) StopPCAPFileRecording(context.Context, *StopPCAPFileRecordingRequest) (*StopPCAPFileRecordingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StopPCAPFileRecording not implemented")
 }

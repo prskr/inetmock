@@ -26,12 +26,12 @@ variables:
 
 .go-cache:
   variables:
-    GOPATH: $CI_PROJECT_DIR/.go
+    GOPATH: /gocache
   before_script:
-    - mkdir -p .go
+    - mkdir -p /gocache
   cache:
     paths:
-      - .go/pkg/mod/
+      - /gocache/pkg/mod/
 
 test:
   stage: test
