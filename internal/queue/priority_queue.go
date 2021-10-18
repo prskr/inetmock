@@ -15,6 +15,7 @@ const (
 	minimumCapReserve  float64 = 5.0
 	minimumCapacity    int     = 10
 	evictionCacheSized int     = 10
+	evictedEntryIndex  int     = -1337
 )
 
 var cacheEvictionCounter prometheus.Counter
@@ -99,6 +100,12 @@ func (t *TTL) UpdateTTL(e *Entry, newTTL time.Duration) {
 	t.modLock.Lock()
 	defer t.modLock.Unlock()
 
+	if e.index == evictedEntryIndex {
+		newEntry := t.Push(e.Key, e.Value, newTTL)
+		*e = *newEntry
+		return
+	}
+
 	var (
 		length    = len(t.virtual)
 		insertIdx int
@@ -109,10 +116,12 @@ func (t *TTL) UpdateTTL(e *Entry, newTTL time.Duration) {
 		return t.virtual[i].timeout.After(e.timeout)
 	})
 
-	if insertIdx == length {
-		insertIdx -= 1
+	if insertIdx >= length {
+		insertIdx = length - 1
 	}
 
+	// if actual index is desired index
+	// e.index is relative index to the current offset
 	if insertIdx == e.index-t.offset.CurrentOffset {
 		return
 	}
@@ -219,10 +228,16 @@ func (t *TTL) doEvict() {
 		return
 	}
 
+	evictedEntries := t.virtual[:firstToNotEvict]
+
+	for idx := range evictedEntries {
+		evictedEntries[idx].index = evictedEntryIndex
+	}
+
 	if t.evictionCache != nil {
 		go func(evictedItems []*Entry) {
 			t.evictionCache <- evictedItems
-		}(t.virtual[:firstToNotEvict])
+		}(evictedEntries)
 	}
 
 	t.virtual = t.virtual[firstToNotEvict:]
@@ -273,6 +288,14 @@ func (t *TTL) doEvict() {
 }
 
 func (t *TTL) move(startIdx, endIdx, offset int) {
+	if endIdx < 0 {
+		return
+	}
+
+	if startIdx < 0 {
+		startIdx = 0
+	}
+
 	length := len(t.virtual)
 	for idx := startIdx; idx != endIdx && idx < length; idx += offset {
 		t.virtual[idx] = t.virtual[idx+offset]
