@@ -1,4 +1,4 @@
-package mock
+package dns
 
 import (
 	"math/rand"
@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"gitlab.com/inetmock/inetmock/internal/app"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 type RandomIPResolver struct {
@@ -31,10 +30,10 @@ func (r *RandomIPResolver) Lookup(string) net.IP {
 		offset, base uint32
 	)
 
-	base = dns.IPToInt32(r.CIDR.IP)
+	base = IPToInt32(r.CIDR.IP)
 	r.lock.Lock()
 	offset = uint32(r.Random.Intn(max))
 	r.lock.Unlock()
 
-	return dns.Uint32ToIP(base + offset)
+	return Uint32ToIP(base + offset)
 }

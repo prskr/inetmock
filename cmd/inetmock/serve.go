@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
@@ -16,6 +17,7 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/protocols/dns/doh"
 	dnsmock "gitlab.com/inetmock/inetmock/protocols/dns/mock"
 	"gitlab.com/inetmock/inetmock/protocols/http/mock"
 	"gitlab.com/inetmock/inetmock/protocols/http/proxy"
@@ -76,20 +78,8 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	endpointOrchestrator := endpoint.NewOrchestrator(
-		certStore,
-		registry,
-		appLogger.Named("orchestrator"),
-	)
-
-	rpcAPI := rpc.NewINetMockAPI(
-		cfg.APIURL(),
-		appLogger,
-		checker,
-		eventStream,
-		cfg.Data.Audit,
-		cfg.Data.PCAP,
-	)
+	endpointOrchestrator := endpoint.NewOrchestrator(certStore, registry, appLogger.Named("orchestrator"))
+	rpcAPI := rpc.NewINetMockAPI(cfg.APIURL(), appLogger, checker, eventStream, cfg.Data.Audit, cfg.Data.PCAP)
 
 	for name, spec := range cfg.Listeners {
 		if spec.Name == "" {
@@ -119,14 +109,21 @@ loop:
 	for {
 		select {
 		case err := <-errChan:
-			appLogger.Error("got error from endpoint", zap.Error(err))
+			switch e := err.(type) {
+			case cmux.ErrNotMatched:
+				appLogger.Error("Not matched error",
+					zap.Bool("temporary", e.Temporary()),
+					zap.Bool("timeoutError", e.Timeout()),
+					zap.String("error", e.Error()),
+				)
+			default:
+				appLogger.Error("got error from endpoint", zap.Error(err))
+			}
 		case <-serverApp.Context().Done():
 			break loop
 		}
 	}
-
 	appLogger.Info("App context canceled - shutting down")
-
 	rpcAPI.StopServer()
 	return nil
 }
@@ -167,6 +164,7 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS, checker health.Checker) (err error) {
 	mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS)
 	dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter)
+	doh.AddDoH(registry, logger.Named("doh_mock"), emitter)
 	pprof.AddPPROF(registry, logger.Named("pprof"), emitter)
 	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, store); err != nil {
 		return

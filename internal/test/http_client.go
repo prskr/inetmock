@@ -6,7 +6,10 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
+
+	"golang.org/x/net/http2"
 )
 
 func HTTPClientForListener(lis net.Listener) (*http.Client, error) {
@@ -44,5 +47,24 @@ func HTTPClientForInMemListener(lis InMemListener) *http.Client {
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
+	}
+}
+
+func HTTP2ClientForInMemListener(lis InMemListener) *http.Client {
+	return &http.Client{
+		Transport: &http2.Transport{
+			AllowHTTP: true,
+			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+				return lis.Dial(network, addr)
+			},
+		},
+	}
+}
+
+func MustParseURL(rawURL string) *url.URL {
+	if u, err := url.Parse(rawURL); err != nil {
+		panic(err)
+	} else {
+		return u
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -141,17 +142,24 @@ func (i *inetmockAPI) isRunning() bool {
 	}
 }
 
-func createListenerFromURL(u *url.URL) (lis net.Listener, err error) {
+func createListenerFromURL(u *url.URL) (net.Listener, error) {
+	const socketDirectoryPermissions = 0x755
+
 	switch u.Scheme {
 	case "unix":
-		if _, err = os.Stat(u.Path); err == nil {
-			if err = os.Remove(u.Path); err != nil {
-				return
+		directory := filepath.Dir(u.Path)
+		if _, err := os.Stat(directory); err != nil {
+			if err := os.MkdirAll(directory, socketDirectoryPermissions); err != nil {
+				return nil, err
 			}
 		}
-		lis, err = net.Listen(u.Scheme, u.Path)
+		if _, err := os.Stat(u.Path); err == nil {
+			if err := os.Remove(u.Path); err != nil {
+				return nil, err
+			}
+		}
+		return net.Listen(u.Scheme, u.Path)
 	default:
-		lis, err = net.Listen(u.Scheme, u.Host)
+		return net.Listen(u.Scheme, u.Host)
 	}
-	return
 }

@@ -2,6 +2,7 @@ package health_test
 
 import (
 	"context"
+	"net"
 	"testing"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
@@ -14,7 +15,7 @@ func TestNewDNSRuleCheck(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		name     string
-		resolver dns.Resolver
+		resolver health.ResolverForModule
 		check    string
 	}
 	tests := []struct {
@@ -55,8 +56,8 @@ func TestNewDNSRuleCheck(t *testing.T) {
 			args: args{
 				name: "test",
 				resolver: &dns.MockResolver{
-					LookupHostDelegate: func(context.Context, string) (addrs []string, err error) {
-						return []string{"192.168.0.1"}, nil
+					LookupHostDelegate: func(context.Context, string) (addrs []net.IP, err error) {
+						return []net.IP{net.IPv4(192, 168, 0, 1)}, nil
 					},
 				},
 				check: `dns.A("api.inetmock.loc") => ResolvedIP(192.168.1.42)`,
@@ -70,8 +71,8 @@ func TestNewDNSRuleCheck(t *testing.T) {
 			args: args{
 				name: "test",
 				resolver: &dns.MockResolver{
-					LookupHostDelegate: func(context.Context, string) (addrs []string, err error) {
-						return []string{"192.168.1.42"}, nil
+					LookupHostDelegate: func(context.Context, string) (addrs []net.IP, err error) {
+						return []net.IP{net.IPv4(192, 168, 1, 42)}, nil
 					},
 				},
 				check: `dns.A("api.inetmock.loc") => ResolvedIP(192.168.1.42)`,

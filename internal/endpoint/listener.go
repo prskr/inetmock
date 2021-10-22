@@ -56,6 +56,9 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 
 	if len(l.Endpoints) <= 1 {
 		for name, s := range l.Endpoints {
+			if s.TLS {
+				l.Uplink.Listener = tls.NewListener(l.Uplink.Listener, tlsConfig)
+			}
 			endpoints := []Endpoint{
 				{
 					name:   fmt.Sprintf("%s:%s", l.Name, name),
@@ -71,58 +74,57 @@ func (l *ListenerSpec) ConfigureMultiplexing(tlsConfig *tls.Config) ([]Endpoint,
 		return nil, nil, ErrUDPMultiplexer
 	}
 
-	epNames := make([]string, len(l.Endpoints))
-	multiplexEndpoints := make(map[string]MultiplexHandler)
-	var idx int
-	for name, spec := range l.Endpoints {
-		epNames[idx] = name
-		idx++
-		if ep, ok := spec.Handler.(MultiplexHandler); !ok {
-			return nil, nil, fmt.Errorf("handler %s %w", spec.HandlerRef, ErrMultiplexingNotSupported)
-		} else {
-			multiplexEndpoints[name] = ep
-		}
-	}
-
-	sort.Strings(epNames)
-
-	plainMux := cmux.New(l.Uplink.Listener)
-	tlsListener := plainMux.Match(cmux.TLS())
-	tlsListener = tls.NewListener(tlsListener, tlsConfig)
-	tlsMux := cmux.New(tlsListener)
-
-	tlsRequired := false
-
-	endpoints := make([]Endpoint, len(epNames))
-	for i, epName := range epNames {
-		epSpec := l.Endpoints[epName]
-		epMux := plainMux
-		if epSpec.TLS {
-			epMux = tlsMux
-			tlsRequired = true
-		}
-		epListener := Endpoint{
-			name: fmt.Sprintf("%s:%s", l.Name, epName),
-			uplink: Uplink{
-				Proto:    NetProtoTCP,
-				Listener: epMux.Match(multiplexEndpoints[epName].Matchers()...),
-			},
-			Spec: epSpec,
-		}
-
-		endpoints[i] = epListener
+	plainGrp, tlsGrp, err := l.groupByTLS()
+	if err != nil {
+		return nil, nil, err
 	}
 
 	var muxes []cmux.CMux
-	muxes = append(muxes, plainMux)
+	endpoints := make([]Endpoint, 0, len(l.Endpoints))
+	lis := l.Uplink.Listener
 
-	if tlsRequired {
+	if len(plainGrp.Names) > 0 {
+		plainMux := cmux.New(lis)
+		endpoints = append(endpoints, l.setupMux(plainMux, plainGrp)...)
+		muxes = append(muxes, plainMux)
+		lis = plainMux.Match(cmux.Any())
+	}
+
+	if len(tlsGrp.Names) > 0 {
+		tlsMux := cmux.New(tls.NewListener(lis, tlsConfig))
+		endpoints = append(endpoints, l.setupMux(tlsMux, tlsGrp)...)
 		muxes = append(muxes, tlsMux)
-	} else {
-		_ = tlsListener.Close()
 	}
 
 	return endpoints, muxes, nil
+}
+
+func (l *ListenerSpec) groupByTLS() (plainGrp, tlsGrp *endpointGroup, err error) {
+	if plainGrp, err = groupEndpoints(l.Endpoints, func(s Spec) bool { return !s.TLS }); err != nil {
+		return nil, nil, err
+	}
+
+	if tlsGrp, err = groupEndpoints(l.Endpoints, func(s Spec) bool { return s.TLS }); err != nil {
+		return nil, nil, err
+	}
+
+	return
+}
+
+func (l *ListenerSpec) setupMux(mux cmux.CMux, grp *endpointGroup) (endpoints []Endpoint) {
+	for idx := range grp.Names {
+		name := grp.Names[idx]
+		epSpec := l.Endpoints[name]
+		endpoints = append(endpoints, Endpoint{
+			name: fmt.Sprintf("%s:%s", l.Name, name),
+			uplink: Uplink{
+				Proto:    NetProtoTCP,
+				Listener: mux.Match(grp.Handlers[name].Matchers()...),
+			},
+			Spec: epSpec,
+		})
+	}
+	return
 }
 
 func (l *ListenerSpec) setupUplink() (err error) {
@@ -144,4 +146,32 @@ func (l *ListenerSpec) setupUplink() (err error) {
 		err = errors.New("protocol not supported")
 	}
 	return
+}
+
+type endpointGroup struct {
+	Names    []string
+	Handlers map[string]MultiplexHandler
+}
+
+func groupEndpoints(endpoints map[string]Spec, predicate func(s Spec) bool) (*endpointGroup, error) {
+	grp := &endpointGroup{
+		Names:    make([]string, 0, len(endpoints)),
+		Handlers: make(map[string]MultiplexHandler),
+	}
+
+	for name, spec := range endpoints {
+		var e MultiplexHandler
+		if ep, ok := spec.Handler.(MultiplexHandler); !ok {
+			return nil, fmt.Errorf("handler %s %w", spec.HandlerRef, ErrMultiplexingNotSupported)
+		} else {
+			e = ep
+		}
+
+		if predicate(spec) {
+			grp.Names = append(grp.Names, name)
+			grp.Handlers[name] = e
+		}
+	}
+	sort.Strings(grp.Names)
+	return grp, nil
 }

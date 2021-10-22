@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/multiplexing"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
@@ -30,7 +31,7 @@ type httpProxy struct {
 }
 
 func (h *httpProxy) Matchers() []cmux.Matcher {
-	return []cmux.Matcher{cmux.HTTP1()}
+	return []cmux.Matcher{multiplexing.HTTP()}
 }
 
 func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {

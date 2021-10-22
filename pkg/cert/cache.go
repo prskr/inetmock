@@ -50,7 +50,7 @@ func (f *fileSystemCache) Put(cert *tls.Certificate) (err error) {
 		}
 
 		f.inMemCache[cn] = cert
-		pemCrt := NewPEM(cert)
+		pemCrt := PEMCert{Certificate: cert}
 		err = pemCrt.Write(cn, f.certCachePath)
 	} else {
 		err = errors.New("no public key present for certificate")
@@ -66,14 +66,18 @@ func (f *fileSystemCache) Get(cn string) (*tls.Certificate, bool) {
 		return crt, true
 	}
 
-	pemCrt := NewPEM(nil)
-	if err := pemCrt.Read(cn, f.certCachePath); err != nil || pemCrt.Cert() == nil {
+	var (
+		crt      *PEMCert
+		x509Cert *x509.Certificate
+		err      error
+	)
+	if crt, err = Read(cn, f.certCachePath); err != nil {
 		return nil, false
 	}
 
-	x509Cert, err := x509.ParseCertificate(pemCrt.Cert().Certificate[0])
+	x509Cert, err = x509.ParseCertificate(crt.Certificate.Certificate[0])
 	if err == nil && !certShouldBeRenewed(f.timeSource, x509Cert) {
-		return pemCrt.Cert(), true
+		return crt.Certificate, true
 	}
 
 	return nil, false

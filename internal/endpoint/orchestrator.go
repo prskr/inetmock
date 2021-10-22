@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
@@ -17,25 +18,19 @@ var (
 	ErrUnknownHandlerRef = errors.New("no handler for given key registered")
 )
 
-type Orchestrator interface {
-	RegisterListener(spec ListenerSpec) error
-	Endpoints() []Endpoint
-	StartEndpoints(ctx context.Context) (errChan chan error)
-}
-
 func NewOrchestrator(
 	certStore cert.Store,
 	registry HandlerRegistry,
 	logger logging.Logger,
-) Orchestrator {
-	return &orchestrator{
+) *Orchestrator {
+	return &Orchestrator{
 		registry:  registry,
 		logger:    logger,
 		certStore: certStore,
 	}
 }
 
-type orchestrator struct {
+type Orchestrator struct {
 	registry  HandlerRegistry
 	logger    logging.Logger
 	certStore cert.Store
@@ -44,7 +39,7 @@ type orchestrator struct {
 	muxes             []cmux.CMux
 }
 
-func (e *orchestrator) RegisterListener(spec ListenerSpec) (err error) {
+func (e *Orchestrator) RegisterListener(spec ListenerSpec) (err error) {
 	for name, s := range spec.Endpoints {
 		if handler, registered := e.registry.HandlerForName(s.HandlerRef); registered {
 			s.Handler = handler
@@ -66,11 +61,12 @@ func (e *orchestrator) RegisterListener(spec ListenerSpec) (err error) {
 	return
 }
 
-func (e orchestrator) Endpoints() []Endpoint {
+func (e Orchestrator) Endpoints() []Endpoint {
 	return e.endpointListeners
 }
 
-func (e *orchestrator) StartEndpoints(ctx context.Context) chan error {
+func (e *Orchestrator) StartEndpoints(ctx context.Context) chan error {
+	const muxReadTimeout = 50 * time.Millisecond
 	errChan := make(chan error)
 	for _, epListener := range e.endpointListeners {
 		endpointLogger := e.logger.With(
@@ -92,9 +88,18 @@ func (e *orchestrator) StartEndpoints(ctx context.Context) chan error {
 	e.logger.Info("Startup of all endpoints completed")
 
 	for _, mux := range e.muxes {
+		mux := mux
 		go func(mux cmux.CMux) {
+			mux.SetReadTimeout(muxReadTimeout)
 			mux.HandleError(func(err error) bool {
-				errChan <- err
+				switch e := err.(type) {
+				case cmux.ErrNotMatched:
+					if !e.Temporary() {
+						errChan <- e
+					}
+				default:
+					errChan <- e
+				}
 				return true
 			})
 			if err := mux.Serve(); err != nil && !errors.Is(err, cmux.ErrListenerClosed) {

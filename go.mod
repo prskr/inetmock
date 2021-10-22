@@ -26,6 +26,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.11.1
 	go.uber.org/multierr v1.7.0
 	go.uber.org/zap v1.19.1
+	golang.org/x/net v0.0.0-20210913180222-943fd674d43e
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
@@ -35,10 +36,10 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
-	github.com/Microsoft/hcsshim v0.8.20 // indirect
+	github.com/Microsoft/hcsshim v0.8.22 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/containerd/cgroups v1.0.1 // indirect
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -61,7 +62,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/opencontainers/runc v1.0.1 // indirect
+	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
@@ -75,19 +76,18 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
-	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
+	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71 // indirect
+	google.golang.org/genproto v0.0.0-20210909211513-a8c4777a87af // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.5.2
-	github.com/docker/docker => github.com/docker/docker v20.10.7+incompatible
-	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20210811071216-a2eed1ae149e
-	github.com/gorilla/mux => github.com/gorilla/mux v1.7.3
+	github.com/containerd/containerd => github.com/containerd/containerd v1.5.7
+	github.com/docker/docker => github.com/docker/docker v20.10.9+incompatible
+	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20210913184640-f48151e94d0a
+	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
-	golang.org/x/text => golang.org/x/text v0.3.6
+	golang.org/x/text => golang.org/x/text v0.3.7
 )

@@ -13,10 +13,6 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-const (
-	expectedModuleName = "dns"
-)
-
 var (
 	ErrNotADNSPInitiator = errors.New("the given initiator is not a DNS initiator")
 
@@ -26,20 +22,6 @@ var (
 		"ptr":  PTRInitiator,
 	}
 )
-
-type Resolver interface {
-	// LookupHost looks up the given host using the local resolver.
-	// It returns a slice of that host's addresses.
-	LookupHost(ctx context.Context, host string) (addrs []string, err error)
-
-	// LookupAddr performs a reverse lookup for the given address, returning a list
-	// of names mapping to that address.
-	//
-	// The returned names are validated to be properly formatted presentation-format
-	// domain names. If the response contains invalid names, those records are filtered
-	// out and an error will be returned alongside the the remaining results, if any.
-	LookupAddr(ctx context.Context, addr string) (names []string, err error)
-}
 
 type Response struct {
 	Hosts     []string
@@ -62,14 +44,15 @@ func CheckForRule(rule *rules.Check, logger logging.Logger) (Initiator, error) {
 		return nil, rules.ErrNoInitiatorDefined
 	}
 
-	if !strings.EqualFold(strings.ToLower(initiator.Module), expectedModuleName) {
+	switch strings.ToLower(initiator.Module) {
+	case "dns", "dot", "doh", "doh2":
+		if constructor, ok := knownInitiators[strings.ToLower(initiator.Name)]; !ok {
+			return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, initiator.Name)
+		} else {
+			return constructor(logger, initiator.Params...)
+		}
+	default:
 		return nil, ErrNotADNSPInitiator
-	}
-
-	if constructor, ok := knownInitiators[strings.ToLower(initiator.Name)]; !ok {
-		return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, initiator.Name)
-	} else {
-		return constructor(logger, initiator.Params...)
 	}
 }
 
@@ -88,22 +71,14 @@ func AorAAAAInitiator(logger logging.Logger, args ...rules.Param) (Initiator, er
 	)
 
 	return InitiatorFunc(func(ctx context.Context, resolver Resolver) (*Response, error) {
-		logger.Debug("Setup health initiator")
-		addrs, err := resolver.LookupHost(ctx, host)
-		if err != nil {
+		logger.Debug("Initiating check")
+		if addrs, err := resolver.LookupA(ctx, host); err != nil {
 			return nil, err
+		} else {
+			return &Response{
+				Addresses: addrs,
+			}, nil
 		}
-
-		var ipAddrs []net.IP
-		for idx := range addrs {
-			if parsed := net.ParseIP(addrs[idx]); parsed != nil {
-				ipAddrs = append(ipAddrs, parsed)
-			}
-		}
-
-		return &Response{
-			Addresses: ipAddrs,
-		}, nil
 	}), nil
 }
 
@@ -127,7 +102,7 @@ func PTRInitiator(logger logging.Logger, args ...rules.Param) (Initiator, error)
 
 	return InitiatorFunc(func(ctx context.Context, resolver Resolver) (*Response, error) {
 		logger.Debug("Setup health initiator")
-		names, err := resolver.LookupAddr(ctx, ip.String())
+		names, err := resolver.LookupPTR(ctx, ip.String())
 		if err != nil {
 			return nil, err
 		}

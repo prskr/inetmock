@@ -8,6 +8,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/internal/test/integration"
+	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -54,7 +55,12 @@ func Test_HTTP_runCheck(t *testing.T) {
 				t.Fatalf("test.HTTPClientForListener() err = %v", err)
 			}
 
-			if err := runCheck(test.Context(t), logging.CreateTestLogger(t), tt.args.script, client, nil); (err != nil) != tt.wantErr {
+			clients := health.ClientsForModuleMap{
+				"http":  client,
+				"http2": client,
+			}
+
+			if err := runCheck(test.Context(t), logging.CreateTestLogger(t), tt.args.script, clients, nil); (err != nil) != tt.wantErr {
 				t.Errorf("runCheck() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

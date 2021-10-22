@@ -17,7 +17,7 @@ var (
 	ErrUnmatchedResolvedIPs   = errors.New("resolved IPs do not match")
 
 	knownCheckFilters = map[string]func(args ...rules.Param) (Validator, error){
-		"notempty":     NotEmtpyResponseFilter,
+		"notempty":     NotEmptyResponseFilter,
 		"resolvedhost": ResolvedHostResponseFilter,
 		"resolvedip":   ResolvedIPResponseFilter,
 		"incidr":       InCIDRResponseFilter,
@@ -76,7 +76,7 @@ func ValidatorsForRule(rule *rules.Check) (filters ValidationChain, err error) {
 	return
 }
 
-func NotEmtpyResponseFilter(...rules.Param) (Validator, error) {
+func NotEmptyResponseFilter(...rules.Param) (Validator, error) {
 	return CheckFilterFunc(func(resp *Response) error {
 		switch {
 		case resp == nil:

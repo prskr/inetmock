@@ -26,7 +26,7 @@ func TestResponseFilters(t *testing.T) {
 			args: args{
 				resp: nil,
 			},
-			validatorProvider: dns.NotEmtpyResponseFilter,
+			validatorProvider: dns.NotEmptyResponseFilter,
 			wantErr:           false,
 			wantMatchErr:      true,
 		},
@@ -35,7 +35,7 @@ func TestResponseFilters(t *testing.T) {
 			args: args{
 				resp: new(dns.Response),
 			},
-			validatorProvider: dns.NotEmtpyResponseFilter,
+			validatorProvider: dns.NotEmptyResponseFilter,
 			wantErr:           false,
 			wantMatchErr:      true,
 		},
@@ -46,7 +46,7 @@ func TestResponseFilters(t *testing.T) {
 					Hosts: []string{"google.com"},
 				},
 			},
-			validatorProvider: dns.NotEmtpyResponseFilter,
+			validatorProvider: dns.NotEmptyResponseFilter,
 			wantErr:           false,
 			wantMatchErr:      false,
 		},
@@ -57,7 +57,7 @@ func TestResponseFilters(t *testing.T) {
 					Addresses: []net.IP{net.IPv4(192, 168, 0, 1)},
 				},
 			},
-			validatorProvider: dns.NotEmtpyResponseFilter,
+			validatorProvider: dns.NotEmptyResponseFilter,
 			wantErr:           false,
 			wantMatchErr:      false,
 		},
@@ -608,8 +608,8 @@ func TestValidationChain_Matches(t *testing.T) {
 			name: "Matching chain",
 			chainSetup: func(tb testing.TB) dns.ValidationChain {
 				tb.Helper()
-				if validator, err := dns.NotEmtpyResponseFilter(); err != nil {
-					tb.Errorf("dns.NotEmtpyResponseFilter() error = %v", err)
+				if validator, err := dns.NotEmptyResponseFilter(); err != nil {
+					tb.Errorf("dns.NotEmptyResponseFilter() error = %v", err)
 					return nil
 				} else {
 					return dns.ValidationChain{
@@ -627,8 +627,8 @@ func TestValidationChain_Matches(t *testing.T) {
 			name: "Not matching chain",
 			chainSetup: func(tb testing.TB) dns.ValidationChain {
 				tb.Helper()
-				if validator, err := dns.NotEmtpyResponseFilter(); err != nil {
-					tb.Errorf("dns.NotEmtpyResponseFilter() error = %v", err)
+				if validator, err := dns.NotEmptyResponseFilter(); err != nil {
+					tb.Errorf("dns.NotEmptyResponseFilter() error = %v", err)
 					return nil
 				} else {
 					return dns.ValidationChain{
@@ -681,7 +681,7 @@ func TestValidationChain_Add(t *testing.T) {
 				v: nil,
 			},
 			chain: func() dns.ValidationChain {
-				f, err := dns.NotEmtpyResponseFilter()
+				f, err := dns.NotEmptyResponseFilter()
 				if err != nil {
 					panic(err)
 				}

@@ -10,6 +10,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 const shutdownTimeout = 100 * time.Millisecond
@@ -21,8 +22,8 @@ type dnsHandler struct {
 }
 
 func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
-	var options dnsOptions
-	if opts, err := loadFromConfig(lifecycle); err != nil {
+	var options *dns.Options
+	if opts, err := dns.OptionsFromLifecycle(lifecycle); err != nil {
 		return err
 	} else {
 		options = opts
@@ -33,13 +34,8 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 		zap.String("address", lifecycle.Uplink().Addr().String()),
 	)
 
-	handler := &RuleHandler{
-		Cache:       options.Cache,
-		TTL:         options.TTL,
-		HandlerName: lifecycle.Name(),
-		Logger:      d.logger,
-		Emitter:     d.emitter,
-		Fallback:    options.Default,
+	ruleHandler := &dns.RuleHandler{
+		TTL: options.TTL,
 	}
 
 	for _, rule := range options.Rules {
@@ -47,20 +43,31 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 			"Register DNS rule",
 			zap.String("raw", rule),
 		)
-		if err := handler.RegisterRule(rule); err != nil {
+		if err := ruleHandler.RegisterRule(rule); err != nil {
 			return err
 		}
+	}
+
+	serverHandler := &Server{
+		Name: lifecycle.Name(),
+		Handler: &dns.CacheHandler{
+			Cache:    options.Cache,
+			TTL:      options.TTL,
+			Fallback: dns.FallbackHandler(ruleHandler, options.Default, options.TTL),
+		},
+		Logger:  d.logger,
+		Emitter: d.emitter,
 	}
 
 	if lifecycle.Uplink().Listener != nil {
 		d.dnsServer = &mdns.Server{
 			Listener: lifecycle.Uplink().Listener,
-			Handler:  handler,
+			Handler:  serverHandler,
 		}
 	} else {
 		d.dnsServer = &mdns.Server{
 			PacketConn: lifecycle.Uplink().PacketConn,
-			Handler:    handler,
+			Handler:    serverHandler,
 		}
 	}
 

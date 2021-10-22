@@ -6,16 +6,18 @@ import (
 	gohttp "net/http"
 
 	"go.uber.org/multierr"
+	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
 	"gitlab.com/inetmock/inetmock/pkg/health/http"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-func NewHTTPRuleCheck(name string, client *gohttp.Client, logger logging.Logger, check *rules.Check) (Check, error) {
+func NewHTTPRuleCheck(name string, clients HTTPClientForModule, logger logging.Logger, check *rules.Check) (Check, error) {
 	var (
 		initiator http.Initiator
 		chain     http.ValidationChain
+		client    *gohttp.Client
 		err       error
 	)
 
@@ -27,7 +29,12 @@ func NewHTTPRuleCheck(name string, client *gohttp.Client, logger logging.Logger,
 		return nil, err
 	}
 
+	if client, err = clients.ClientForModule(check.Initiator.Module); err != nil {
+		return nil, err
+	}
+
 	return NewCheckFunc(name, func(ctx context.Context) (err error) {
+		const maxRetries = 10
 		defer func() {
 			if rec := recover(); rec != nil {
 				err = multierr.Append(err, fmt.Errorf("recovered panic in HTTP health check: %v", rec))
@@ -36,8 +43,15 @@ func NewHTTPRuleCheck(name string, client *gohttp.Client, logger logging.Logger,
 
 		var resp *gohttp.Response
 
-		if resp, err = initiator.Do(ctx, client); err != nil {
-			return err
+		for tries := 0; ctx.Err() == nil && tries < maxRetries; tries++ {
+			if resp, err = initiator.Do(ctx, client); err != nil {
+				logger.Warn("Failed to initiate health check", zap.Error(err))
+				if ctx.Err() != nil {
+					return err
+				}
+			} else {
+				break
+			}
 		}
 
 		return chain.Matches(resp)

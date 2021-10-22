@@ -1,11 +1,11 @@
-package mock_test
+package dns_test
 
 import (
 	"net"
 	"testing"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 var sampleCIDR = net.IPNet{
@@ -13,7 +13,7 @@ var sampleCIDR = net.IPNet{
 	Mask: net.CIDRMask(24, 32),
 }
 
-func TestIPHandlerForArgs(t *testing.T) {
+func TestStaticIPResolverForArgs(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		args []rules.Param
@@ -69,7 +69,7 @@ func TestIPHandlerForArgs(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := mock.IPHandlerForArgs(tt.args.args...)
+			got, err := dns.StaticIPResolverForArgs(tt.args.args)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("IPHandlerForArgs() error = %v, wantErr %v", err, tt.wantErr)
@@ -83,7 +83,7 @@ func TestIPHandlerForArgs(t *testing.T) {
 	}
 }
 
-func TestIncrementalHandlerForArgs(t *testing.T) {
+func TestIncrementalResolverForArgs(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		args []rules.Param
@@ -147,7 +147,7 @@ func TestIncrementalHandlerForArgs(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := mock.IncrementalHandlerForArgs(tt.args.args...)
+			got, err := dns.IncrementalResolverForArgs(tt.args.args)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("IncrementalHandlerForArgs() error = %v, wantErr %v", err, tt.wantErr)
@@ -163,7 +163,7 @@ func TestIncrementalHandlerForArgs(t *testing.T) {
 	}
 }
 
-func TestRandomHandlerForArgs(t *testing.T) {
+func TestRandomIPResolverForArgs(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		args []rules.Param
@@ -207,7 +207,7 @@ func TestRandomHandlerForArgs(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := mock.RandomHandlerForArgs(tt.args.args...)
+			got, err := dns.RandomIPResolverForArgs(tt.args.args)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("RandomHandlerForArgs() error = %v, wantErr %v", err, tt.wantErr)

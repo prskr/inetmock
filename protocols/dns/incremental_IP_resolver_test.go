@@ -1,10 +1,10 @@
-package mock_test
+package dns_test
 
 import (
 	"net"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 func mustParseCIDR(cidr string) *net.IPNet {
@@ -51,7 +51,7 @@ func TestIncrementalIPResolver_Lookup(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			i := mock.NewIncrementalIPResolver(tt.fields.cidr)
+			i := dns.NewIncrementalIPResolver(tt.fields.cidr)
 			i.Offset = tt.fields.offset
 
 			got := i.Lookup("")

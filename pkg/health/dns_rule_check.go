@@ -6,17 +6,18 @@ import (
 	"fmt"
 
 	"go.uber.org/multierr"
+	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
 	"gitlab.com/inetmock/inetmock/pkg/health/dns"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-func NewDNSRuleCheck(name string, resolver dns.Resolver, logger logging.Logger, check *rules.Check) (Check, error) {
+func NewDNSRuleCheck(name string, resolvers ResolverForModule, logger logging.Logger, check *rules.Check) (Check, error) {
 	switch {
 	case name == "":
 		return nil, ErrEmptyCheckName
-	case resolver == nil:
+	case resolvers == nil:
 		return nil, errors.New("passed resolver is nil")
 	case check == nil:
 		return nil, errors.New("passed check is nil")
@@ -25,6 +26,7 @@ func NewDNSRuleCheck(name string, resolver dns.Resolver, logger logging.Logger, 
 	var (
 		initiator dns.Initiator
 		chain     dns.ValidationChain
+		resolver  dns.Resolver
 		err       error
 	)
 
@@ -36,17 +38,36 @@ func NewDNSRuleCheck(name string, resolver dns.Resolver, logger logging.Logger, 
 		return nil, err
 	}
 
+	if resolver, err = resolvers.ResolverForModule(check.Initiator.Module); err != nil {
+		return nil, err
+	}
+
 	return NewCheckFunc(name, func(ctx context.Context) (err error) {
+		const maxRetries = 10
 		defer func() {
 			if rec := recover(); rec != nil {
 				err = multierr.Append(err, fmt.Errorf("recovered panic during check: %v", rec))
 			}
 		}()
 
-		if resp, err := initiator.Do(ctx, resolver); err != nil {
-			return err
-		} else {
-			return chain.Matches(resp)
+		var resp *dns.Response
+		for tries := 0; ctx.Err() == nil && tries < maxRetries; tries++ {
+			if resp, err = initiator.Do(ctx, resolver); err != nil {
+				logger.Warn("Failed to initiate check", zap.Error(err))
+				if ctx.Err() != nil {
+					return err
+				}
+			} else if len(resp.Addresses) == 0 && len(resp.Hosts) == 0 {
+				logger.Warn("Response empty")
+			} else {
+				break
+			}
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return chain.Matches(resp)
 	}), nil
 }

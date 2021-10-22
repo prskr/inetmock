@@ -1,4 +1,4 @@
-package mock
+package dns
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	dnsmock "gitlab.com/inetmock/inetmock/internal/mock/dns"
 )
 
 const (
@@ -62,28 +62,28 @@ var (
 		} else if err = decoder.Decode(in); err != nil {
 			return nil, err
 		} else {
-			return dns.NewCache(dns.WithInitialSize(cacheOpts.InitialCapacity), dns.WithTTL(cacheOpts.TTL)), nil
+			return NewCache(WithInitialSize(cacheOpts.InitialCapacity), WithTTL(cacheOpts.TTL)), nil
 		}
 	})
 )
 
-type dnsOptions struct {
+type Options struct {
 	Rules   []string
-	Cache   Cache
-	Default dns.IPResolver
+	Cache   ResourceRecordCache
+	Default IPResolver
 	TTL     time.Duration
 }
 
-func loadFromConfig(lifecycle endpoint.Lifecycle) (dnsOptions, error) {
+func OptionsFromLifecycle(lifecycle endpoint.Lifecycle) (*Options, error) {
 	var (
-		opts            dnsOptions
 		composedHook    mapstructure.DecodeHookFunc
+		opts            = new(Options)
 		cacheDecodeHook = endpoint.NewOptionByTypeDecoderBuilderFor(&opts.Cache)
 		ipResolverHook  = endpoint.NewOptionByTypeDecoderBuilderFor(&opts.Default)
 	)
 
 	cacheDecodeHook.AddMappingToMapper(ttlCacheType, ttlCacheMapping)
-	cacheDecodeHook.AddMappingToType(noneCacheType, reflect.TypeOf(DelegateCache{}))
+	cacheDecodeHook.AddMappingToType(noneCacheType, reflect.TypeOf(dnsmock.CacheMock{}))
 
 	ipResolverHook.AddMappingToMapper(incrementalResolverType, incrementalIPMapping)
 	ipResolverHook.AddMappingToMapper(randomResolverType, randomIPMapping)
@@ -95,7 +95,7 @@ func loadFromConfig(lifecycle endpoint.Lifecycle) (dnsOptions, error) {
 	)
 
 	if err := lifecycle.UnmarshalOptions(&opts, endpoint.WithDecodeHook(composedHook)); err != nil {
-		return dnsOptions{}, err
+		return nil, err
 	}
 
 	return opts, nil

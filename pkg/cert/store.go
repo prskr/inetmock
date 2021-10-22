@@ -29,7 +29,7 @@ type KeyProvider func() (key interface{}, err error)
 
 type Store interface {
 	CACert() *tls.Certificate
-	GetCertificate(serverName string, ip net.IP) (*tls.Certificate, error)
+	Certificate(serverName string, ip net.IP) (*tls.Certificate, error)
 	TLSConfig() *tls.Config
 }
 
@@ -115,7 +115,7 @@ func (s *store) TLSConfig() *tls.Config {
 				}
 			}
 
-			if cert, err = s.GetCertificate(info.ServerName, localIP.IP); err != nil {
+			if cert, err = s.Certificate(info.ServerName, localIP.IP); err != nil {
 				s.logger.Error(
 					"error while resolving certificate",
 					zap.String("serverName", info.ServerName),
@@ -130,20 +130,11 @@ func (s *store) TLSConfig() *tls.Config {
 	}
 }
 
-func (s *store) loadCACert() (err error) {
-	pemCrt := NewPEM(nil)
-	if err = pemCrt.ReadFrom(s.options.RootCACert.PublicKeyPath, s.options.RootCACert.PrivateKeyPath); err != nil {
-		return
-	}
-	s.caCert = pemCrt.Cert()
-	return
-}
-
 func (s *store) CACert() *tls.Certificate {
 	return s.caCert
 }
 
-func (s *store) GetCertificate(serverName string, ip net.IP) (cert *tls.Certificate, err error) {
+func (s *store) Certificate(serverName string, ip net.IP) (cert *tls.Certificate, err error) {
 	if crt, ok := s.cache.Get(serverName); ok {
 		return crt, nil
 	}
@@ -157,6 +148,15 @@ func (s *store) GetCertificate(serverName string, ip net.IP) (cert *tls.Certific
 	}
 
 	return
+}
+
+func (s *store) loadCACert() error {
+	if pemCrt, err := ReadFrom(s.options.RootCACert.PublicKeyPath, s.options.RootCACert.PrivateKeyPath); err != nil {
+		return err
+	} else {
+		s.caCert = pemCrt.Certificate
+	}
+	return nil
 }
 
 func privateKeyForCurve(options Options) (privateKey interface{}, err error) {

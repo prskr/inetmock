@@ -1,10 +1,8 @@
-package mock
+package dns
 
 import (
 	"net"
 	"sync"
-
-	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 type IncrementalIPResolver struct {
@@ -26,7 +24,7 @@ func (i *IncrementalIPResolver) Lookup(string) net.IP {
 	var (
 		ones, bits = i.CIDR.Mask.Size()
 		max        = uint32(1<<(bits-ones)) - 1
-		base       = dns.IPToInt32(i.CIDR.IP)
+		base       = IPToInt32(i.CIDR.IP)
 	)
 
 	if i.Offset >= max {
@@ -35,5 +33,5 @@ func (i *IncrementalIPResolver) Lookup(string) net.IP {
 
 	i.Offset += 1
 
-	return dns.Uint32ToIP(base + i.Offset)
+	return Uint32ToIP(base + i.Offset)
 }

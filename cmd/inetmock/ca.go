@@ -101,7 +101,7 @@ func runGenerateCA(_ *cobra.Command, _ []string) {
 		return
 	}
 
-	pemCrt := cert.NewPEM(caCrt)
+	pemCrt := cert.PEMCert{Certificate: caCrt}
 	if err = pemCrt.Write(pubKey.Subject.CommonName, certOutPath); err != nil {
 		logger.Error(
 			"failed to write Ca files",

@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -52,7 +51,7 @@ func Test_httpHandler_Start(t *testing.T) {
 					},
 				},
 				req: &http.Request{
-					URL: mustParseURL("https://www.google.de/index.html"),
+					URL: test.MustParseURL("https://www.google.de/index.html"),
 				},
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
@@ -79,7 +78,7 @@ func Test_httpHandler_Start(t *testing.T) {
 					},
 				},
 				req: &http.Request{
-					URL: mustParseURL("https://www.google.de/asdf.html"),
+					URL: test.MustParseURL("https://www.google.de/asdf.html"),
 				},
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
@@ -107,7 +106,7 @@ func Test_httpHandler_Start(t *testing.T) {
 					},
 				},
 				req: &http.Request{
-					URL: mustParseURL("https://www.google.de/asdf"),
+					URL: test.MustParseURL("https://www.google.de/asdf"),
 					Header: http.Header{
 						"Accept": []string{"text/html"},
 					},
@@ -179,13 +178,5 @@ func Test_httpHandler_Start(t *testing.T) {
 				td.Cmp(t, bodyBuilder.String(), tt.wantBody)
 			}
 		})
-	}
-}
-
-func mustParseURL(rawURL string) *url.URL {
-	if u, err := url.Parse(rawURL); err != nil {
-		panic(err)
-	} else {
-		return u
 	}
 }

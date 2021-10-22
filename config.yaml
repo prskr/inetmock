@@ -16,7 +16,7 @@ x-response-rules: &httpResponseRules
     - Method("GET") => File("default.html")
     - => Status(204)
 
-x-dns-respond-rules: &dnsRespondRules
+x-dns-response-rules: &dnsResponseRules
   options:
     ttl: 30s
     cache:
@@ -42,6 +42,10 @@ x-http-handlers: &httpHandlers
       tls: false
       options:
         <<: *httpResponseRules
+    doh:
+      handler: doh_mock
+      tls: true
+      <<: *dnsResponseRules
     https:
       handler: http_mock
       tls: true
@@ -77,19 +81,39 @@ health:
       rule: http.POST("https://api.icndb.com/jokes/new", `{"joke":"asdf","categories":[]}`) => Status(204)
     - name: HTTP PUT - Status 204
       rule: http.PUT("https://api.icndb.com/jokes/37", `{"joke":"asdf","categories":[]}`) => Status(204)
-    - name: Ensure that the Google DNS fake works
+    - name: HTTP2 GET /index.html
+      rule: http2.GET("https://stackoverflow.com/index.html") => Status(200) -> Header("Content-Type", "text/html") -> Contains(`<title>INetSim default HTML page</title>`)
+    - name: HTTP2 GET default ico
+      rule: http2.GET("https://google.com/favicon.ico") => Status(200) -> SHA256("cb3f33cb0c7bae881d13be647cb928aa7fec9e9fcd6ec758751374bf7436d41a")
+    - name: HTTP2 POST - Status 204
+      rule: http2.POST("https://api.icndb.com/jokes/new", `{"joke":"asdf","categories":[]}`) => Status(204)
+    - name: HTTP2 PUT - Status 204
+      rule: http2.PUT("https://api.icndb.com/jokes/37", `{"joke":"asdf","categories":[]}`) => Status(204)
+    - name: Plain DNS - Ensure that the Google DNS fake works
       rule: dns.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
-    - name: Ensure the Google reverse entry is in the cache
+    - name: Plain DNS - Ensure the Google reverse entry is in the cache
       rule: dns.PTR(1.1.1.1) => NotEmpty() -> ResolvedHost("mail.google.com")
-    - name: Ensure that the Reddit DNS fake works
+    - name: Plain DNS - Ensure that the Reddit DNS fake works
       rule: dns.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
-    - name: Ensure the Reddit reverse entry is in the cache
+    - name: Plain DNS - Ensure the Reddit reverse entry is in the cache
       rule: dns.PTR(2.2.2.2) => NotEmpty() -> ResolvedHost("www.reddit.com")
-    - name: Ensure the CloudFlare IPs are from the same CIDR
+    - name: Plain DNS - Ensure the CloudFlare IPs are from the same CIDR
       rule: dns.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
+    - name: DoH - Ensure that the Google DNS fake works
+      rule: doh.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
+    - name: DoH - Ensure that the Reddit DNS fake works
+      rule: doh.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
+    - name: DoH - Ensure the CloudFlare IPs are from the same CIDR
+      rule: doh.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
+    - name: DoH2 - Ensure that the Google DNS fake works
+      rule: doh2.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
+    - name: DoH2 - Ensure that the Reddit DNS fake works
+      rule: doh2.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
+    - name: DoH2 - Ensure the CloudFlare IPs are from the same CIDR
+      rule: doh2.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
 
 tls:
-  curve: P224
+  curve: P256
   minTLSVersion: TLS10
   includeInsecureCipherSuites: false
   validity:
@@ -113,7 +137,16 @@ listeners:
     endpoints:
       plainDns:
         handler: dns_mock
-        <<: *dnsRespondRules
+        <<: *dnsResponseRules
+  tcp_53:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 1053
+    endpoints:
+      plainDns:
+        handler: dns_mock
+        <<: *dnsResponseRules
   tcp_80:
     name: ''
     protocol: tcp
@@ -135,7 +168,7 @@ listeners:
       DoT:
         handler: dns_mock
         tls: true
-        <<: *dnsRespondRules
+        <<: *dnsResponseRules
   tcp_3128:
     name: ''
     protocol: tcp

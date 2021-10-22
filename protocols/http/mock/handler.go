@@ -9,8 +9,11 @@ import (
 
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"gitlab.com/inetmock/inetmock/multiplexing"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
@@ -30,7 +33,7 @@ type httpHandler struct {
 }
 
 func (p *httpHandler) Matchers() []cmux.Matcher {
-	return []cmux.Matcher{cmux.HTTP1()}
+	return []cmux.Matcher{multiplexing.HTTP()}
 }
 
 func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
@@ -55,7 +58,7 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 	}
 
 	p.server = &http.Server{
-		Handler:     audit.EmittingHandler(p.emitter, v1.AppProtocol_APP_PROTOCOL_HTTP, router),
+		Handler:     h2c.NewHandler(audit.EmittingHandler(p.emitter, v1.AppProtocol_APP_PROTOCOL_HTTP, router), new(http2.Server)),
 		ConnContext: audit.StoreConnPropertiesInContext,
 	}
 

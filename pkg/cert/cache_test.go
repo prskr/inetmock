@@ -170,7 +170,7 @@ func Test_fileSystemCache_Get(t *testing.T) {
 			}
 
 			if tt.polluteCertCache {
-				pem := NewPEM(srvCrt)
+				pem := PEMCert{Certificate: srvCrt}
 				if err := pem.Write(serverCN, dir); err != nil {
 					t.Fatalf("polluteCertCache error = %v", err)
 				}

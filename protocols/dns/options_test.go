@@ -1,5 +1,4 @@
-//nolint:testpackage // testing internals here - needs to be private
-package mock
+package dns_test
 
 import (
 	"testing"
@@ -8,10 +7,11 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	dnsmock "gitlab.com/inetmock/inetmock/internal/mock/dns"
 	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
-func Test_loadFromConfig(t *testing.T) {
+func TestOptionsFromLifecycle(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		opts map[string]interface{}
@@ -35,8 +35,8 @@ func Test_loadFromConfig(t *testing.T) {
 					},
 				},
 			},
-			want: td.Struct(dnsOptions{}, td.StructFields{
-				"Cache": td.Isa(new(DelegateCache)),
+			want: td.Struct(new(dns.Options), td.StructFields{
+				"Cache": td.Isa(new(dnsmock.CacheMock)),
 			}),
 		},
 		{
@@ -53,7 +53,7 @@ func Test_loadFromConfig(t *testing.T) {
 					},
 				},
 			},
-			want: td.Struct(dnsOptions{}, td.StructFields{
+			want: td.Struct(new(dns.Options), td.StructFields{
 				"Cache": td.Isa(new(dns.Cache)),
 			}),
 		},
@@ -70,8 +70,8 @@ func Test_loadFromConfig(t *testing.T) {
 					},
 				},
 			},
-			want: td.Struct(dnsOptions{}, td.StructFields{
-				"Default": td.Struct(new(RandomIPResolver), td.StructFields{
+			want: td.Struct(new(dns.Options), td.StructFields{
+				"Default": td.Struct(new(dns.RandomIPResolver), td.StructFields{
 					"CIDR":   td.NotNil(),
 					"Random": td.NotNil(),
 				}),
@@ -90,8 +90,8 @@ func Test_loadFromConfig(t *testing.T) {
 					},
 				},
 			},
-			want: td.Struct(dnsOptions{}, td.StructFields{
-				"Default": td.Struct(new(IncrementalIPResolver), td.StructFields{
+			want: td.Struct(new(dns.Options), td.StructFields{
+				"Default": td.Struct(new(dns.IncrementalIPResolver), td.StructFields{
 					"CIDR": td.NotNil(),
 				}),
 			}),
@@ -102,9 +102,9 @@ func Test_loadFromConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			lifecycle := endpoint.NewEndpointLifecycle("", endpoint.Uplink{}, tt.args.opts)
-			got, err := loadFromConfig(lifecycle)
+			got, err := dns.OptionsFromLifecycle(lifecycle)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("loadFromConfig() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("OptionsFromLifecycle() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			td.Cmp(t, got, tt.want)

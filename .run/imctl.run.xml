@@ -2,8 +2,7 @@
   <configuration default="false" name="imctl" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="inetmock" />
     <working_directory value="$PROJECT_DIR$" />
-    <parameters value="health general" />
-    <sudo value="true" />
+    <parameters value="check run -i 'doh.A(&quot;mail.google.com&quot;) =&gt; NotEmpty() -&gt; ResolvedIP(1.1.1.1)'" />
     <kind value="PACKAGE" />
     <package value="gitlab.com/inetmock/inetmock/cmd/imctl" />
     <directory value="$PROJECT_DIR$" />

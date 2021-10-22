@@ -1,13 +1,13 @@
 package test
 
 import (
-	"net"
+	"gitlab.com/inetmock/inetmock/protocols/dns/client"
 )
 
-func DNSResolverForInMemListener(lis InMemListener) *net.Resolver {
-	return &net.Resolver{
-		PreferGo:     true,
-		Dial:         lis.DialContext,
-		StrictErrors: true,
+func DNSResolverForInMemListener(lis InMemListener) *client.Resolver {
+	return &client.Resolver{
+		Transport: &client.TraditionalTransport{
+			Dial: lis.DialContext,
+		},
 	}
 }

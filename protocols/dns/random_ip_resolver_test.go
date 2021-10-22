@@ -1,10 +1,10 @@
-package mock_test
+package dns_test
 
 import (
 	"net"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 func TestRandomIPResolver_Lookup(t *testing.T) {
@@ -39,7 +39,7 @@ func TestRandomIPResolver_Lookup(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			r := mock.NewRandomIPResolver(tt.fields.CIDR)
+			r := dns.NewRandomIPResolver(tt.fields.CIDR)
 			got := r.Lookup("")
 			if !tt.fields.CIDR.Contains(got) {
 				t.Errorf("Lookup() = %v, not in expected CIDR", got)

@@ -146,7 +146,7 @@ default:
 			resolver := test.DNSResolverForInMemListener(listener)
 			requestCtx, requestCancel := context.WithTimeout(ctx, 250*time.Millisecond)
 			t.Cleanup(requestCancel)
-			if ips, err := resolver.LookupIP(requestCtx, "ip", tt.args.host); err != nil {
+			if ips, err := resolver.LookupA(requestCtx, tt.args.host); err != nil {
 				if !tt.wantErr {
 					t.Errorf("LookupIP() error = %v, wantErr %v", err, tt.wantErr)
 				}

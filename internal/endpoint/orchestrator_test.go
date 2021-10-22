@@ -2,9 +2,6 @@ package endpoint_test
 
 import (
 	"context"
-	"crypto/tls"
-	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -164,7 +161,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 	tests := []struct {
 		name                 string
 		handlerRegistrySetup func(t *testing.T, emitter audit.Emitter) endpoint.HandlerRegistry
-		orchestratorSetup    func(t *testing.T, orchestrator endpoint.Orchestrator, uplink *endpoint.Uplink)
+		orchestratorSetup    func(t *testing.T, orchestrator *endpoint.Orchestrator, uplink *endpoint.Uplink)
 		request              request
 		wantErr              bool
 		want                 interface{}
@@ -181,7 +178,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 				mock.AddHTTPMock(registry, logging.CreateTestLogger(t), emitter, fstest.MapFS{})
 				return registry
 			},
-			orchestratorSetup: func(t *testing.T, orchestrator endpoint.Orchestrator, uplink *endpoint.Uplink) {
+			orchestratorSetup: func(t *testing.T, orchestrator *endpoint.Orchestrator, uplink *endpoint.Uplink) {
 				t.Helper()
 				err := orchestrator.RegisterListener(endpoint.ListenerSpec{
 					Protocol: endpoint.NetProtoTCP.String(),
@@ -199,7 +196,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 					},
 				})
 				if err != nil {
-					t.Fatalf("orchestrator.RegisterListener() error = %v", err)
+					t.Fatalf("Orchestrator.RegisterListener() error = %v", err)
 				}
 			},
 			want: td.Struct(new(http.Response), td.StructFields{
@@ -219,7 +216,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 				mock.AddHTTPMock(registry, logging.CreateTestLogger(t), emitter, fstest.MapFS{})
 				return registry
 			},
-			orchestratorSetup: func(t *testing.T, orchestrator endpoint.Orchestrator, uplink *endpoint.Uplink) {
+			orchestratorSetup: func(t *testing.T, orchestrator *endpoint.Orchestrator, uplink *endpoint.Uplink) {
 				t.Helper()
 				err := orchestrator.RegisterListener(endpoint.ListenerSpec{
 					Protocol: endpoint.NetProtoTCP.String(),
@@ -246,7 +243,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 					},
 				})
 				if err != nil {
-					t.Fatalf("orchestrator.RegisterListener() error = %v", err)
+					t.Fatalf("Orchestrator.RegisterListener() error = %v", err)
 				}
 			},
 			want: td.Struct(new(http.Response), td.StructFields{
@@ -262,7 +259,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 			logger := logging.CreateTestLogger(t)
 			store := cert.MustDefaultStore(certStoreOptions, logger)
 			stream := audit.MustNewEventStream(logger)
-			uplink, client := setupTestListener(t, store.TLSConfig())
+			uplink, client := setupTestListener(t)
 			orchestrator := endpoint.NewOrchestrator(store, tt.handlerRegistrySetup(t, stream), logger)
 			tt.orchestratorSetup(t, orchestrator, uplink)
 			ctx, cancel := context.WithCancel(test.Context(t))
@@ -288,45 +285,14 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 	}
 }
 
-func setupTestListener(tb testing.TB, tlsConfig *tls.Config) (uplink *endpoint.Uplink, client *http.Client) {
+func setupTestListener(tb testing.TB) (uplink *endpoint.Uplink, client *http.Client) {
 	tb.Helper()
-	var err error
-	uplink = new(endpoint.Uplink)
-	if uplink.Listener, err = net.Listen("tcp", "127.0.0.1:0"); err != nil {
-		tb.Fatalf("net.Listen() error = %v", err)
+	inMemListener := test.NewInMemoryListener(tb)
+	uplink = &endpoint.Uplink{
+		Listener: inMemListener,
+		Proto:    endpoint.NetProtoTCP,
 	}
-
-	tb.Cleanup(func() {
-		if err := uplink.Listener.Close(); err != nil {
-			tb.Logf("listener.Close() error = %v", err)
-		}
-	})
-
-	var addr *net.TCPAddr
-	var isTCPAddr bool
-	if addr, isTCPAddr = uplink.Listener.Addr().(*net.TCPAddr); !isTCPAddr {
-		tb.Fatalf("address %s is not a TCP address", uplink.Listener.Addr().String())
-	}
-
-	uplink.Proto = endpoint.NetProtoTCP
-
-	var dialer net.Dialer
-
-	listenerAddr := fmt.Sprintf("127.0.0.1:%d", addr.Port)
-
-	transport := &http.Transport{
-		TLSClientConfig: tlsConfig,
-		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-			return dialer.DialContext(ctx, "tcp", listenerAddr)
-		},
-		DialTLSContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return tls.Dial("tcp", listenerAddr, tlsConfig)
-		},
-	}
-
-	client = &http.Client{
-		Transport: transport,
-	}
+	client = test.HTTPClientForInMemListener(inMemListener)
 
 	return uplink, client
 }
@@ -338,7 +304,7 @@ func handleStartupErrors(tb testing.TB, errChan chan error) {
 			select {
 			case err, more := <-errChan:
 				if err != nil {
-					tb.Errorf("orchestrator.StartEndpoints() error = %v", err)
+					tb.Errorf("Orchestrator.StartEndpoints() error = %v", err)
 				}
 				if !more {
 					return

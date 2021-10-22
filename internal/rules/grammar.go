@@ -20,7 +20,7 @@ var (
 func init() {
 	ruleLexer := lexer.Must(lexer.NewSimple([]lexer.Rule{
 		{Name: "Comment", Pattern: `(?:#|//)[^\n]*\n?`, Action: nil},
-		{Name: `Module`, Pattern: `[a-z]+`, Action: nil},
+		{Name: `Module`, Pattern: `[a-z]{1}[A-z0-9]+`, Action: nil},
 		{Name: `Ident`, Pattern: `[A-Z][a-zA-Z0-9_]*`, Action: nil},
 		{Name: `CIDR`, Pattern: `(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}/(3[0-2]|[1-2][0-9]|[1-9])`, Action: nil},
 		{Name: `IP`, Pattern: `(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`, Action: nil},

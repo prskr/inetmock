@@ -14,6 +14,12 @@ type Emitter interface {
 	Emit(ev Event)
 }
 
+type EmitterFunc func(ev Event)
+
+func (ef EmitterFunc) Emit(ev Event) {
+	ef(ev)
+}
+
 type Sink interface {
 	Name() string
 	OnSubscribe(evs <-chan Event)

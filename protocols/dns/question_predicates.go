@@ -1,4 +1,4 @@
-package mock
+package dns
 
 import (
 	"fmt"
@@ -10,43 +10,35 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/rules"
 )
 
-var knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){
+var knownRequestFilters = map[string]func(args ...rules.Param) (QuestionPredicate, error){
 	"a":    HostnameQuestionFilter(dns.TypeA),
 	"aaaa": HostnameQuestionFilter(dns.TypeAAAA),
 }
 
-type RequestFilter interface {
-	Matches(req *dns.Question) bool
-}
-
-type RequestFilterFunc func(req *dns.Question) bool
-
-func (r RequestFilterFunc) Matches(req *dns.Question) bool {
-	return r(req)
-}
-
-func RequestFiltersForRoutingRule(rule *rules.Routing) (filters []RequestFilter, err error) {
+func QuestionPredicatesForRoutingRule(rule *rules.Routing) (predicates []QuestionPredicate, err error) {
 	if rule == nil || rule.Filters == nil || len(rule.Filters.Chain) == 0 {
 		return nil, nil
 	}
-	filters = make([]RequestFilter, len(rule.Filters.Chain))
+
+	predicates = make([]QuestionPredicate, 0, len(rule.Filters.Chain))
 	for idx := range rule.Filters.Chain {
 		if constructor, ok := knownRequestFilters[strings.ToLower(rule.Filters.Chain[idx].Name)]; !ok {
 			return nil, fmt.Errorf("%w %s", rules.ErrUnknownFilterMethod, rule.Filters.Chain[idx].Name)
 		} else {
-			var instance RequestFilter
+			var instance QuestionPredicate
 			instance, err = constructor(rule.Filters.Chain[idx].Params...)
 			if err != nil {
 				return
 			}
-			filters[idx] = instance
+			predicates = append(predicates, instance)
 		}
 	}
+
 	return
 }
 
-func HostnameQuestionFilter(qType uint16) func(args ...rules.Param) (RequestFilter, error) {
-	return func(args ...rules.Param) (RequestFilter, error) {
+func HostnameQuestionFilter(qType uint16) func(args ...rules.Param) (QuestionPredicate, error) {
+	return func(args ...rules.Param) (QuestionPredicate, error) {
 		if err := rules.ValidateParameterCount(args, 1); err != nil {
 			return nil, err
 		}
@@ -64,12 +56,7 @@ func HostnameQuestionFilter(qType uint16) func(args ...rules.Param) (RequestFilt
 			return nil, err
 		}
 
-		return RequestFilterFunc(func(req *dns.Question) bool {
-			// if nil there's nothing to match
-			if req == nil {
-				return false
-			}
-
+		return QuestionPredicateFunc(func(req Question) bool {
 			if req.Qtype == qType {
 				return pattern.MatchString(req.Name)
 			}

@@ -11,7 +11,6 @@ import (
 	"io"
 	"math/rand"
 	"net"
-	"net/http"
 	"os"
 	"runtime"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
 	"gitlab.com/inetmock/inetmock/pkg/health"
@@ -32,6 +32,7 @@ type runCheckArgs struct {
 	HTTPSPort     uint16
 	DNSPort       uint16
 	DNSProto      string
+	DoTPort       uint16
 	Timeout       time.Duration
 	TLSSkipVerify bool
 	CACertPath    string
@@ -96,6 +97,7 @@ func init() {
 		defaultHTTPPort  int = 80
 		defaultHTTPSPort     = 443
 		defaultDNSPort       = 53
+		defaultDoTPort       = 853
 		defaultTimeout       = 5 * time.Second
 	)
 
@@ -103,14 +105,21 @@ func init() {
 	runCheckCmd.Flags().Uint16Var(&args.HTTPPort, "http-port", uint16(defaultHTTPPort), "Port to connect to for 'http://' requests")
 	runCheckCmd.Flags().Uint16Var(&args.HTTPSPort, "https-port", defaultHTTPSPort, "Port to connect to for 'https://' requests")
 	runCheckCmd.Flags().Uint16Var(&args.DNSPort, "dns-port", defaultDNSPort, "Port to connect to for DNS requests")
-	runCheckCmd.Flags().StringVar(&args.DNSProto, "dns-proto", "udp", "Protocol to use for DNS requests one of [tcp, tcp4, tcp6, udp, udp4, udp6]")
+	runCheckCmd.Flags().StringVar(&args.DNSProto, "dns-proto", "tcp4", "Protocol to use for DNS requests one of [tcp, tcp4, tcp6, udp, udp4, udp6]")
+	runCheckCmd.Flags().Uint16Var(&args.DoTPort, "dot-port", defaultDoTPort, "Port to use for DoT requests")
 	runCheckCmd.Flags().DurationVar(&args.Timeout, "check-timeout", defaultTimeout, "timeout to execute the check")
 	runCheckCmd.Flags().StringVar(&args.CACertPath, "ca-cert", "", "Path to CA cert file to trust additionally to system cert pool")
 	runCheckCmd.Flags().BoolVarP(&args.TLSSkipVerify, "insecure", "i", false, "Skip TLS server certificate verification")
 	checkCmd.AddCommand(runCheckCmd)
 }
 
-func runCheck(ctx context.Context, logger logging.Logger, script string, httpClient *http.Client, dnsResolver *net.Resolver) error {
+func runCheck(
+	ctx context.Context,
+	logger logging.Logger,
+	script string,
+	httpClients health.HTTPClientForModule,
+	dnsResolvers health.ResolverForModule,
+) error {
 	checkScript := new(rules.CheckScript)
 	checkLogger := logger.Named("check")
 
@@ -118,37 +127,57 @@ func runCheck(ctx context.Context, logger logging.Logger, script string, httpCli
 		return err
 	}
 
+	compiledChecks := make([]health.Check, 0, len(checkScript.Checks))
+
 	for idx := range checkScript.Checks {
 		check := checkScript.Checks[idx]
-		var (
-			compiledCheck health.Check
-			err           error
-		)
-
 		switch module := strings.ToLower(check.Initiator.Module); module {
-		case "http":
-			if compiledCheck, err = health.NewHTTPRuleCheck("CLI", httpClient, checkLogger, &check); err != nil {
+		case "http", "http2":
+			if compiledCheck, err := health.NewHTTPRuleCheck("CLI", httpClients, checkLogger, &check); err != nil {
 				return err
+			} else {
+				compiledChecks = append(compiledChecks, compiledCheck)
 			}
-		case "dns":
-			if compiledCheck, err = health.NewDNSRuleCheck("CLI", dnsResolver, checkLogger, &check); err != nil {
+		case "dns", "dot", "doh", "doh2":
+			if compiledCheck, err := health.NewDNSRuleCheck("CLI", dnsResolvers, checkLogger, &check); err != nil {
 				return err
+			} else {
+				compiledChecks = append(compiledChecks, compiledCheck)
 			}
+		default:
+			return fmt.Errorf("unmatched check module: %s", module)
 		}
+	}
 
-		checkCtx, cancel := context.WithTimeout(ctx, args.Timeout)
-		err = compiledCheck.Status(checkCtx)
-		cancel()
-		if err != nil {
-			return err
-		}
+	timeoutCtx, cancel := context.WithTimeout(ctx, args.Timeout)
+	defer cancel()
+	grp, grpcCtx := errgroup.WithContext(timeoutCtx)
+
+	for idx := range compiledChecks {
+		idx := idx
+		grp.Go(func() error {
+			if err := compiledChecks[idx].Status(grpcCtx); err != nil {
+				checkLogger.Error("Failed to execute check", zap.Error(err))
+				return err
+			}
+			return nil
+		})
+	}
+
+	if err := grp.Wait(); err != nil {
+		checkLogger.Error("Failed to execute check", zap.Error(err))
+		return err
 	}
 
 	checkLogger.Info("Successfully executed")
 	return nil
 }
 
-func setupClients(ctx context.Context, logger logging.Logger, args *runCheckArgs) (*http.Client, *net.Resolver, error) {
+func setupClients(
+	ctx context.Context,
+	logger logging.Logger,
+	args *runCheckArgs,
+) (health.HTTPClientForModule, health.ResolverForModule, error) {
 	logger = logger.With(zap.String("target", args.Target))
 	if targetIP := net.ParseIP(args.Target); len(targetIP) == 0 {
 		logger.Debug("target is apparently not an IP - resolving IP address")
@@ -178,6 +207,10 @@ func setupClients(ctx context.Context, logger logging.Logger, args *runCheckArgs
 			DNS: health.Server{
 				IP:   args.Target,
 				Port: args.DNSPort,
+			},
+			DoT: health.Server{
+				IP:   args.Target,
+				Port: args.DoTPort,
 			},
 		},
 	}
@@ -214,7 +247,7 @@ func setupClients(ctx context.Context, logger logging.Logger, args *runCheckArgs
 		InsecureSkipVerify: args.TLSSkipVerify,
 	}
 
-	return health.HTTPClient(healthCfg, tlsConfig), health.DNSResolver(healthCfg), nil
+	return health.HTTPClients(healthCfg, tlsConfig), health.Resolvers(healthCfg, tlsConfig), nil
 }
 
 func addCACertToPool(pool *x509.CertPool) (err error) {

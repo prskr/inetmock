@@ -10,6 +10,7 @@ type ClientsConfig struct {
 	HTTP  Server
 	HTTPS Server
 	DNS   Server
+	DoT   Server
 }
 
 type ValidationRule struct {

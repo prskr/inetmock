@@ -1,20 +1,20 @@
-package mock_test
+package dns_test
 
 import (
 	"testing"
 
 	"github.com/maxatome/go-testdeep/td"
-	"github.com/miekg/dns"
+	mdns "github.com/miekg/dns"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 func TestHostnameQuestionFilter(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		qType  uint16
-		req    *dns.Question
+		req    dns.Question
 		params []rules.Param
 	}
 	tests := []struct {
@@ -26,9 +26,9 @@ func TestHostnameQuestionFilter(t *testing.T) {
 		{
 			name: "Match A request",
 			args: args{
-				qType: dns.TypeA,
-				req: &dns.Question{
-					Qtype: dns.TypeA,
+				qType: mdns.TypeA,
+				req: dns.Question{
+					Qtype: mdns.TypeA,
 					Name:  "google.com",
 				},
 				params: []rules.Param{
@@ -43,9 +43,9 @@ func TestHostnameQuestionFilter(t *testing.T) {
 		{
 			name: "Match A request with pattern",
 			args: args{
-				qType: dns.TypeA,
-				req: &dns.Question{
-					Qtype: dns.TypeA,
+				qType: mdns.TypeA,
+				req: dns.Question{
+					Qtype: mdns.TypeA,
 					Name:  `.*google\.com`,
 				},
 				params: []rules.Param{
@@ -60,9 +60,9 @@ func TestHostnameQuestionFilter(t *testing.T) {
 		{
 			name: "Match AAAA request",
 			args: args{
-				qType: dns.TypeAAAA,
-				req: &dns.Question{
-					Qtype: dns.TypeAAAA,
+				qType: mdns.TypeAAAA,
+				req: dns.Question{
+					Qtype: mdns.TypeAAAA,
 					Name:  "google.com",
 				},
 				params: []rules.Param{
@@ -77,9 +77,9 @@ func TestHostnameQuestionFilter(t *testing.T) {
 		{
 			name: "Don't match SRV request",
 			args: args{
-				qType: dns.TypeAAAA,
-				req: &dns.Question{
-					Qtype: dns.TypeSRV,
+				qType: mdns.TypeAAAA,
+				req: dns.Question{
+					Qtype: mdns.TypeSRV,
 					Name:  "google.com",
 				},
 				params: []rules.Param{
@@ -94,7 +94,7 @@ func TestHostnameQuestionFilter(t *testing.T) {
 		{
 			name: "Fail due to missing parameter",
 			args: args{
-				qType: dns.TypeAAAA,
+				qType: mdns.TypeAAAA,
 			},
 			wantMatch: false,
 			wantErr:   true,
@@ -102,7 +102,7 @@ func TestHostnameQuestionFilter(t *testing.T) {
 		{
 			name: "Fail to compile pattern",
 			args: args{
-				qType: dns.TypeAAAA,
+				qType: mdns.TypeAAAA,
 				params: []rules.Param{
 					{
 						String: rules.StringP(`[`),
@@ -117,7 +117,7 @@ func TestHostnameQuestionFilter(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := mock.HostnameQuestionFilter(tt.args.qType)(tt.args.params...)
+			got, err := dns.HostnameQuestionFilter(tt.args.qType)(tt.args.params...)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("HostnameQuestionFilter() err = %v", err)
@@ -135,7 +135,7 @@ func TestHostnameQuestionFilter(t *testing.T) {
 	}
 }
 
-func TestRequestFiltersForRoutingRule(t *testing.T) {
+func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		rule *rules.Routing
@@ -208,12 +208,12 @@ func TestRequestFiltersForRoutingRule(t *testing.T) {
 					},
 				},
 			},
-			wantFilters: td.Code(func(filters []mock.RequestFilter) bool {
+			wantFilters: td.Code(func(filters []dns.QuestionPredicate) bool {
 				if len(filters) != 1 {
 					return false
 				}
-				return filters[0].Matches(&dns.Question{
-					Qtype: dns.TypeA,
+				return filters[0].Matches(dns.Question{
+					Qtype: mdns.TypeA,
 					Name:  "www.google.com",
 				})
 			}),
@@ -237,12 +237,12 @@ func TestRequestFiltersForRoutingRule(t *testing.T) {
 					},
 				},
 			},
-			wantFilters: td.Code(func(filters []mock.RequestFilter) bool {
+			wantFilters: td.Code(func(filters []dns.QuestionPredicate) bool {
 				if len(filters) != 1 {
 					return false
 				}
-				return filters[0].Matches(&dns.Question{
-					Qtype: dns.TypeAAAA,
+				return filters[0].Matches(dns.Question{
+					Qtype: mdns.TypeAAAA,
 					Name:  "www.google.com",
 				})
 			}),
@@ -253,7 +253,7 @@ func TestRequestFiltersForRoutingRule(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			gotFilters, err := mock.RequestFiltersForRoutingRule(tt.args.rule)
+			gotFilters, err := dns.QuestionPredicatesForRoutingRule(tt.args.rule)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RequestFiltersForRoutingRule() error = %v, wantErr %v", err, tt.wantErr)
 				return

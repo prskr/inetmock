@@ -14,6 +14,7 @@ import (
 var (
 	ErrEmptyCheckName     = errors.New("name of the check must not be empty")
 	ErrAmbiguousCheckName = errors.New("a check with the same name is already registered")
+	ErrNoClientForModule  = errors.New("no client for module registered")
 )
 
 func New() Checker {
@@ -23,8 +24,8 @@ func New() Checker {
 }
 
 func NewFromConfig(logger logging.Logger, cfg Config, tlsConfig *tls.Config) (Checker, error) {
-	httpClient := HTTPClient(cfg, tlsConfig)
-	dnsResolver := DNSResolver(cfg)
+	httpClients := HTTPClients(cfg, tlsConfig)
+	resolvers := Resolvers(cfg, tlsConfig)
 
 	checker := &checker{
 		registeredChecks: make(map[string]Check),
@@ -39,14 +40,14 @@ func NewFromConfig(logger logging.Logger, cfg Config, tlsConfig *tls.Config) (Ch
 		switch strings.ToLower(check.Initiator.Module) {
 		case "":
 			return nil, fmt.Errorf("initiator of check '%s' has no module", rawRule.Name)
-		case "http":
-			if compiledCheck, err := NewHTTPRuleCheck(rawRule.Name, httpClient, logger, check); err != nil {
+		case "http", "http2":
+			if compiledCheck, err := NewHTTPRuleCheck(rawRule.Name, httpClients, logger, check); err != nil {
 				return nil, err
 			} else if err := checker.AddCheck(compiledCheck); err != nil {
 				return nil, err
 			}
-		case "dns":
-			if compiledCheck, err := NewDNSRuleCheck(rawRule.Name, dnsResolver, logger, check); err != nil {
+		case "dns", "doh", "doh2", "dot":
+			if compiledCheck, err := NewDNSRuleCheck(rawRule.Name, resolvers, logger, check); err != nil {
 				return nil, err
 			} else if err := checker.AddCheck(compiledCheck); err != nil {
 				return nil, err

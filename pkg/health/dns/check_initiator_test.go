@@ -32,8 +32,8 @@ func TestCheckForRule(t *testing.T) {
 			args: args{
 				rule: `dns.A("gitlab.com")`,
 				resolver: &dns.MockResolver{
-					LookupHostDelegate: func(context.Context, string) (addrs []string, err error) {
-						return []string{"192.168.0.11"}, nil
+					LookupHostDelegate: func(context.Context, string) (addrs []net.IP, err error) {
+						return []net.IP{net.IPv4(192, 168, 0, 11)}, nil
 					},
 				},
 			},
@@ -283,8 +283,8 @@ func TestAorAAAAInitiator(t *testing.T) {
 					},
 				},
 				resolver: &dns.MockResolver{
-					LookupHostDelegate: func(ctx context.Context, host string) (addrs []string, err error) {
-						return []string{"192.168.0.12"}, nil
+					LookupHostDelegate: func(ctx context.Context, host string) (addrs []net.IP, err error) {
+						return []net.IP{net.IPv4(192, 168, 0, 12)}, nil
 					},
 				},
 			},
@@ -303,10 +303,10 @@ func TestAorAAAAInitiator(t *testing.T) {
 					},
 				},
 				resolver: &dns.MockResolver{
-					LookupHostDelegate: func(ctx context.Context, host string) (addrs []string, err error) {
-						return []string{
-							"192.168.0.12",
-							"192.168.0.13",
+					LookupHostDelegate: func(ctx context.Context, host string) (addrs []net.IP, err error) {
+						return []net.IP{
+							net.IPv4(192, 168, 0, 12),
+							net.IPv4(192, 168, 0, 13),
 						}, nil
 					},
 				},
@@ -347,7 +347,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 					},
 				},
 				resolver: &dns.MockResolver{
-					LookupHostDelegate: func(ctx context.Context, host string) (addrs []string, err error) {
+					LookupHostDelegate: func(ctx context.Context, host string) (addrs []net.IP, err error) {
 						if host == "gitlab.com" {
 							return nil, errors.New("expected error")
 						}

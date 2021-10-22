@@ -113,12 +113,16 @@ func NewApp(spec Spec) App {
 			return spec.readConfig(a.rootCmd)
 		},
 		func(cmd *cobra.Command, args []string) (err error) {
+			var cwd string
+			if cwd, err = os.Getwd(); err != nil {
+				return err
+			}
 			logging.ConfigureLogging(
 				logging.ParseLevel(logLevel),
 				developmentLogs,
 				logEncoding,
 				map[string]interface{}{
-					"cwd":  path.WorkingDirectory(),
+					"cwd":  cwd,
 					"cmd":  cmd.Name(),
 					"args": args,
 				},

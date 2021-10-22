@@ -24,7 +24,7 @@ tasks:
   format:
     desc: format all source files
     cmds:
-      - gofumpt -l -w ./
+      - gofumpt -l -s -w ./
       - goimports -local gitlab.com/inetmock/inetmock -w ./
 
   deps:
@@ -49,6 +49,7 @@ tasks:
     deps:
       - deps
       - generate
+      - format
     cmds:
       - golangci-lint run --timeout 5m
 
@@ -106,7 +107,7 @@ tasks:
     cmds:
       - mkdir -p {{ .OUT_DIR }}
       - go test -race -shuffle=on -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./...
-      - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
+      - grep -Ev "gitlab.com/inetmock/inetmock/pkg/logging" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
       - go tool cover -func={{ .OUT_DIR }}/cov.out
 
   test-all:
@@ -121,7 +122,7 @@ tasks:
     cmds:
       - mkdir -p {{ .OUT_DIR }}
       - gotestsum --junitfile={{ .OUT_DIR }}/report.xml  -- --tags sudo -race -shuffle=on -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./...
-      - grep -v "generated" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
+      - grep -Ev "gitlab.com/inetmock/inetmock/pkg/logging|_enum.go" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
       - gocover-cobertura < {{ .OUT_DIR }}/cov.out > {{ .OUT_DIR }}/coverage.xml
       - rm -f {{ .OUT_DIR }}/cov-raw.out
 
@@ -132,6 +133,14 @@ tasks:
       - generate
     cmds:
       - cat testdata/integration.imcs | go run ./cmd/imctl check run --insecure --target {{ .DOCKER_ENDPOINT }} --log-level debug
+
+  debug-integration-test:
+    desc: run all benchmarks/integration tests
+    deps:
+      - deps
+      - generate
+    cmds:
+      - cat testdata/integration.imcs | dlv debug --headless --listen=:2345 --api-version=2 --accept-multiclient ./cmd/imctl -- check run --insecure --target {{ .DOCKER_ENDPOINT }} --log-level debug
 
   cli-cover-report:
     desc: generate a coverage report on the CLI

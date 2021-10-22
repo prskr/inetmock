@@ -17,7 +17,6 @@ import (
 const (
 	numberArgsWithoutBody = 1
 	numberArgsWithBody    = 2
-	expectedModuleName    = "http"
 )
 
 var (
@@ -43,14 +42,15 @@ func InitiatorForRule(rule *rules.Check, logger logging.Logger) (Initiator, erro
 		return nil, rules.ErrNoInitiatorDefined
 	}
 
-	if !strings.EqualFold(strings.ToLower(initiator.Module), expectedModuleName) {
-		return nil, ErrNotAnHTTPInitiator
-	}
-
-	if constructor, ok := knownInitiators[strings.ToLower(initiator.Name)]; !ok {
-		return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, initiator.Name)
-	} else {
-		return constructor(logger, initiator.Params...)
+	switch m := strings.ToLower(initiator.Module); m {
+	case "http", "http2":
+		if constructor, ok := knownInitiators[strings.ToLower(initiator.Name)]; !ok {
+			return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, initiator.Name)
+		} else {
+			return constructor(logger, initiator.Params...)
+		}
+	default:
+		return nil, fmt.Errorf("%w: %s", ErrNotAnHTTPInitiator, m)
 	}
 }
 
@@ -72,6 +72,7 @@ func (s *simpleRequest) Do(ctx context.Context, client *http.Client) (resp *http
 	if req, err = http.NewRequestWithContext(ctx, s.method, s.uri, s.bodyBuffer); err != nil {
 		return
 	}
+	req.Header.Set("Accept-Encoding", "identity")
 	return client.Do(req)
 }
 
