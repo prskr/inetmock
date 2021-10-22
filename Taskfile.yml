@@ -94,6 +94,8 @@ tasks:
     deps:
       - go-generate
       - protoc
+    cmds:
+      - task: format
 
   test:
     desc: run short running unit tests that do not need sudo
@@ -191,7 +193,6 @@ tasks:
       - deps
       - generate
     cmds:
-      - task: format
       - goreleaser release --snapshot --skip-publish --rm-dist
 
   release:
@@ -200,7 +201,6 @@ tasks:
       - deps
       - generate
     cmds:
-      - task: format
       - goreleaser release --rm-dist
 
   docs:

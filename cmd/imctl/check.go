@@ -105,7 +105,7 @@ func init() {
 	runCheckCmd.Flags().Uint16Var(&args.HTTPPort, "http-port", uint16(defaultHTTPPort), "Port to connect to for 'http://' requests")
 	runCheckCmd.Flags().Uint16Var(&args.HTTPSPort, "https-port", defaultHTTPSPort, "Port to connect to for 'https://' requests")
 	runCheckCmd.Flags().Uint16Var(&args.DNSPort, "dns-port", defaultDNSPort, "Port to connect to for DNS requests")
-	runCheckCmd.Flags().StringVar(&args.DNSProto, "dns-proto", "tcp4", "Protocol to use for DNS requests one of [tcp, tcp4, tcp6, udp, udp4, udp6]")
+	runCheckCmd.Flags().StringVar(&args.DNSProto, "dns-proto", "tcp", "Protocol to use for DNS requests one of [tcp, tcp4, tcp6, udp, udp4, udp6]")
 	runCheckCmd.Flags().Uint16Var(&args.DoTPort, "dot-port", defaultDoTPort, "Port to use for DoT requests")
 	runCheckCmd.Flags().DurationVar(&args.Timeout, "check-timeout", defaultTimeout, "timeout to execute the check")
 	runCheckCmd.Flags().StringVar(&args.CACertPath, "ca-cert", "", "Path to CA cert file to trust additionally to system cert pool")
@@ -178,38 +178,26 @@ func setupClients(
 	logger logging.Logger,
 	args *runCheckArgs,
 ) (health.HTTPClientForModule, health.ResolverForModule, error) {
-	logger = logger.With(zap.String("target", args.Target))
-	if targetIP := net.ParseIP(args.Target); len(targetIP) == 0 {
-		logger.Debug("target is apparently not an IP - resolving IP address")
-		if addrs, err := net.DefaultResolver.LookupHost(ctx, args.Target); err != nil {
-			return nil, nil, err
-		} else {
-			logger.Debug("Resolved target addresses", zap.Strings("resolvedAddresses", addrs))
-			//nolint:gosec // no need for cryptographic security when picking a random IP address to contact
-			idx := rand.Intn(len(addrs))
-			logger.Debug("Picked random address", zap.String("newTargetAddress", addrs[idx]))
-			args.Target = addrs[idx]
-		}
-	} else {
-		logger.Debug("target is an IP address - will be set for clients")
+	target, err := resolveTargetIP(ctx, logger, args.Target)
+	if err != nil {
+		return nil, nil, err
 	}
-
 	healthCfg := health.Config{
 		Client: health.ClientsConfig{
 			HTTP: health.Server{
-				IP:   args.Target,
+				IP:   target,
 				Port: args.HTTPPort,
 			},
 			HTTPS: health.Server{
-				IP:   args.Target,
+				IP:   target,
 				Port: args.HTTPSPort,
 			},
 			DNS: health.Server{
-				IP:   args.Target,
+				IP:   target,
 				Port: args.DNSPort,
 			},
 			DoT: health.Server{
-				IP:   args.Target,
+				IP:   target,
 				Port: args.DoTPort,
 			},
 		},
@@ -265,4 +253,30 @@ func addCACertToPool(pool *x509.CertPool) (err error) {
 
 	pool.AppendCertsFromPEM(buffer.Bytes())
 	return nil
+}
+
+func resolveTargetIP(ctx context.Context, logger logging.Logger, target string) (string, error) {
+	logger = logger.With(zap.String("target", target))
+	if targetIP := net.ParseIP(target); targetIP != nil && len(targetIP) > 0 {
+		logger.Debug("target is an IP address - will be set for clients")
+		return target, nil
+	}
+
+	logger.Debug("target is apparently not an IP - resolving IP address")
+	if addrs, err := net.DefaultResolver.LookupHost(ctx, args.Target); err != nil {
+		return "", err
+	} else {
+		logger.Debug("Resolved target addresses", zap.Strings("resolvedAddresses", addrs))
+		//nolint:gosec // no need for cryptographic security when picking a random IP address to contact
+		pickedAddr := addrs[rand.Intn(len(addrs))]
+		logger.Debug("Picked random address", zap.String("newTargetAddress", pickedAddr))
+		if parsed := net.ParseIP(pickedAddr); parsed == nil {
+			logger.Error("Could not parse resolved IP", zap.String("addr", pickedAddr))
+			return "", errors.New("could not parse resolved IP")
+		} else if parsed.To4() == nil {
+			pickedAddr = fmt.Sprintf("[%s]", pickedAddr)
+		}
+		args.Target = pickedAddr
+	}
+	return target, nil
 }

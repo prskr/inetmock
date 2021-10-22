@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	gohttp "net/http"
+	"time"
 
 	"golang.org/x/net/http2"
 )
@@ -44,6 +45,10 @@ func HTTPClient(cfg Config, tlsConfig *tls.Config) *gohttp.Client {
 	)
 
 	roundTripper := &gohttp.Transport{
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			return netDialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", httpEndpoint.IP, httpEndpoint.Port))
 		},
