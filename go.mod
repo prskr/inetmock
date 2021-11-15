@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/docker/go-connections v0.4.0
-	github.com/elazarl/goproxy v0.0.0-20210801061803-8e322dfb79c4
+	github.com/elazarl/goproxy v0.0.0-20211114080932-d06c3be7c11b
 	github.com/golang/mock v1.6.0
 	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.3.0
