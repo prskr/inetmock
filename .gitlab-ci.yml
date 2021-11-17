@@ -56,6 +56,7 @@ lint:
     - task deps generate protobuf-lint
     - golangci-lint run --timeout 5m --issues-exit-code 0 --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
   artifacts:
+    expire_in: 7 days
     reports:
       codequality: gl-code-quality-report.json
     paths:
@@ -118,6 +119,8 @@ integration-test:
 
 container_scanning:
   stage: validate
+  artifacts:
+    expire_in: 7 days
   needs:
     - job: snapshot-release
       optional: true
@@ -130,10 +133,11 @@ pages:
   needs: [ ]
   only:
     refs:
-      - main 
+      - main
       - tags
   script:
     - mdbook build -d ./../public ./docs
   artifacts:
+    expire_in: 7 days
     paths:
       - public
