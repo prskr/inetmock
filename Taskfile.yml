@@ -22,8 +22,8 @@ tasks:
   format:
     desc: format all source files
     cmds:
-      - gofumpt -l -w ./
       - goimports -local gitlab.com/inetmock/inetmock -w ./
+      - gofumpt -l -w ./
 
   deps:
     desc: download dependencies

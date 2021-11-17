@@ -33,8 +33,8 @@ func NetProtoNames() []string {
 }
 
 var _NetProtoMap = map[NetProto]string{
-	0: _NetProtoName[0:3],
-	1: _NetProtoName[3:6],
+	NetProtoUDP: _NetProtoName[0:3],
+	NetProtoTCP: _NetProtoName[3:6],
 }
 
 // String implements the Stringer interface.
@@ -46,10 +46,10 @@ func (x NetProto) String() string {
 }
 
 var _NetProtoValue = map[string]NetProto{
-	_NetProtoName[0:3]:                  0,
-	strings.ToLower(_NetProtoName[0:3]): 0,
-	_NetProtoName[3:6]:                  1,
-	strings.ToLower(_NetProtoName[3:6]): 1,
+	_NetProtoName[0:3]:                  NetProtoUDP,
+	strings.ToLower(_NetProtoName[0:3]): NetProtoUDP,
+	_NetProtoName[3:6]:                  NetProtoTCP,
+	strings.ToLower(_NetProtoName[3:6]): NetProtoTCP,
 }
 
 // ParseNetProto attempts to convert a string to a NetProto
