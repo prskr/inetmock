@@ -2,12 +2,6 @@ syntax = "proto3";
 
 package inetmock.rpc.v1;
 
-option csharp_namespace = "INetMock.Client.Rpc";
-option go_package = "gitlab.com/inetmock/inetmock/pkg/rpc/v1";
-option java_multiple_files = true;
-option java_outer_classname = "AuditProto";
-option java_package = "com.github.baez90.inetmock.rpc";
-
 import "google/protobuf/duration.proto";
 
 message ListAvailableDevicesRequest {}

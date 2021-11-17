@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package inetmock.rpc.v1;
+
+import "google/protobuf/duration.proto";
+
+message ProfileDumpRequest {
+  string profile_name = 1;
+  int32 debug = 2;
+  // this applies only for 'heap' profile
+  bool gc_before_dump = 3;
+}
+
+message ProfileDumpResponse {
+  bytes profile_data = 1;
+}
+
+message CPUProfileRequest {
+  google.protobuf.Duration profile_duration = 1;
+}
+
+message CPUProfileResponse {
+  bytes profile_data = 1;
+}
+
+message TraceRequest {
+  google.protobuf.Duration trace_duration = 1;
+}
+
+message TraceResponse {
+  bytes profile_data = 1;
+}
+
+service ProfilingService {
+  rpc ProfileDump(ProfileDumpRequest) returns (ProfileDumpResponse);
+  rpc CPUProfile(CPUProfileRequest) returns (CPUProfileResponse);
+  rpc Trace(TraceRequest) returns (TraceResponse);
+}
