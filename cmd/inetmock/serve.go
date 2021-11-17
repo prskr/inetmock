@@ -165,7 +165,7 @@ func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Log
 	mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS)
 	dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter)
 	doh.AddDoH(registry, logger.Named("doh_mock"), emitter)
-	pprof.AddPPROF(registry, logger.Named("pprof"), emitter)
+	pprof.AddPprof(registry, logger.Named("pprof"), emitter)
 	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, store); err != nil {
 		return
 	}

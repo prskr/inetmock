@@ -38,6 +38,13 @@ linters-settings:
           - return
   govet:
     check-shadowing: true
+  importas:
+    no-unaliased: true
+    alias:
+      - pkg: gitlab.com/inetmock/inetmock/pkg/(audit|rpc)/(v[\w\d]+)
+        alias: $1$2
+      - pkg: github.com/miekg/dns
+        alias: mdns
   lll:
     line-length: 140
   maligned:
@@ -73,6 +80,7 @@ linters:
     - gosec
     - gosimple
     - govet
+    - importas
     - ineffassign
     - lll
     - misspell
@@ -105,6 +113,8 @@ issues:
         - funlen
 
 run:
+  build-tags:
+    - sudo
   skip-dirs:
     - internal/mock
   skip-files:

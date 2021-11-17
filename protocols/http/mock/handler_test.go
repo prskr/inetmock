@@ -16,7 +16,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/protocols/http/mock"
 )
@@ -55,7 +55,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				},
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
-				"Application": v1.AppProtocol_APP_PROTOCOL_HTTP,
+				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
 				"ProtocolDetails": td.Struct(details.HTTP{}, td.StructFields{
 					"Host":   "www.google.de",
 					"URI":    "/index.html",
@@ -82,7 +82,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				},
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
-				"Application": v1.AppProtocol_APP_PROTOCOL_HTTP,
+				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
 				"ProtocolDetails": td.Struct(details.HTTP{}, td.StructFields{
 					"Host":   "www.google.de",
 					"URI":    "/asdf.html",
@@ -113,7 +113,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				},
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
-				"Application": v1.AppProtocol_APP_PROTOCOL_HTTP,
+				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
 				"ProtocolDetails": td.Struct(details.HTTP{}, td.StructFields{
 					"Host":   "www.google.de",
 					"URI":    "/asdf",

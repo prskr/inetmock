@@ -15,7 +15,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/format"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	rpcV1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 var (
@@ -89,16 +89,15 @@ func init() {
 }
 
 func watchAuditEvents(_ *cobra.Command, _ []string) (err error) {
-	auditClient := rpcV1.NewAuditServiceClient(conn)
+	auditClient := rpcv1.NewAuditServiceClient(conn)
 
-	var watchClient rpcV1.AuditService_WatchEventsClient
-	if watchClient, err = auditClient.WatchEvents(cliApp.Context(), &rpcV1.WatchEventsRequest{WatcherName: listenerName}); err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+	var watchClient rpcv1.AuditService_WatchEventsClient
+	if watchClient, err = auditClient.WatchEvents(cliApp.Context(), &rpcv1.WatchEventsRequest{WatcherName: listenerName}); err != nil {
+		return err
 	}
 
 	go func() {
-		var resp *rpcV1.WatchEventsResponse
+		var resp *rpcv1.WatchEventsResponse
 		for resp, err = watchClient.Recv(); err == nil; resp, err = watchClient.Recv() {
 			ev := audit.NewEventFromProto(resp.Entity)
 			var out []byte
@@ -117,12 +116,12 @@ func watchAuditEvents(_ *cobra.Command, _ []string) (err error) {
 }
 
 func runListSinks(*cobra.Command, []string) (err error) {
-	auditClient := rpcV1.NewAuditServiceClient(conn)
+	auditClient := rpcv1.NewAuditServiceClient(conn)
 	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
-	var resp *rpcV1.ListSinksResponse
-	if resp, err = auditClient.ListSinks(ctx, new(rpcV1.ListSinksRequest)); err != nil {
+	var resp *rpcv1.ListSinksResponse
+	if resp, err = auditClient.ListSinks(ctx, new(rpcv1.ListSinksRequest)); err != nil {
 		return
 	}
 
@@ -141,12 +140,12 @@ func runListSinks(*cobra.Command, []string) (err error) {
 }
 
 func runAddFile(_ *cobra.Command, args []string) (err error) {
-	auditClient := rpcV1.NewAuditServiceClient(conn)
+	auditClient := rpcv1.NewAuditServiceClient(conn)
 	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
-	var resp *rpcV1.RegisterFileSinkResponse
-	resp, err = auditClient.RegisterFileSink(ctx, &rpcV1.RegisterFileSinkRequest{TargetPath: args[0]})
+	var resp *rpcv1.RegisterFileSinkResponse
+	resp, err = auditClient.RegisterFileSink(ctx, &rpcv1.RegisterFileSinkRequest{TargetPath: args[0]})
 
 	if err != nil {
 		return
@@ -158,11 +157,11 @@ func runAddFile(_ *cobra.Command, args []string) (err error) {
 }
 
 func runRemoveFile(_ *cobra.Command, args []string) (err error) {
-	auditClient := rpcV1.NewAuditServiceClient(conn)
+	auditClient := rpcv1.NewAuditServiceClient(conn)
 	ctx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
 	defer cancel()
 
-	_, err = auditClient.RemoveFileSink(ctx, &rpcV1.RemoveFileSinkRequest{TargetPath: args[0]})
+	_, err = auditClient.RemoveFileSink(ctx, &rpcv1.RemoveFileSinkRequest{TargetPath: args[0]})
 	return
 }
 

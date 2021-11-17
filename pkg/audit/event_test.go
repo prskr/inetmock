@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
 func Test_guessDetailsFromApp(t *testing.T) {
@@ -35,8 +35,8 @@ func Test_guessDetailsFromApp(t *testing.T) {
 		{
 			name: "HTTP etails",
 			args: args{
-				any: mustAny(&v1.HTTPDetailsEntity{
-					Method: v1.HTTPMethod_HTTP_METHOD_GET,
+				any: mustAny(&auditv1.HTTPDetailsEntity{
+					Method: auditv1.HTTPMethod_HTTP_METHOD_GET,
 					Host:   "localhost",
 					Uri:    "http://localhost/asdf",
 					Proto:  "HTTP",

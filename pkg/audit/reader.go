@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
 const (
@@ -67,7 +67,7 @@ func (e eventReader) Read() (ev Event, err error) {
 		return
 	}
 
-	protoEv := new(v1.EventEntity)
+	protoEv := new(auditv1.EventEntity)
 
 	if err = proto.Unmarshal(msgBuf, protoEv); err != nil {
 		return

@@ -11,7 +11,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
 	"gitlab.com/inetmock/inetmock/protocols/dns"
@@ -101,19 +101,19 @@ func (s *Server) ServeDNS(w mdns.ResponseWriter, req *mdns.Msg) {
 
 func (s *Server) recordRequest(m *mdns.Msg, localAddr, remoteAddr net.Addr) {
 	dnsDetails := &details.DNS{
-		OPCode: v1.DNSOpCode(m.Opcode),
+		OPCode: auditv1.DNSOpCode(m.Opcode),
 	}
 
 	for _, q := range m.Question {
 		dnsDetails.Questions = append(dnsDetails.Questions, details.DNSQuestion{
-			RRType: v1.ResourceRecordType(q.Qtype),
+			RRType: auditv1.ResourceRecordType(q.Qtype),
 			Name:   q.Name,
 		})
 	}
 
 	ev := audit.Event{
 		Transport:       guessTransportFromAddr(localAddr),
-		Application:     v1.AppProtocol_APP_PROTOCOL_DNS,
+		Application:     auditv1.AppProtocol_APP_PROTOCOL_DNS,
 		ProtocolDetails: dnsDetails,
 	}
 
@@ -124,13 +124,13 @@ func (s *Server) recordRequest(m *mdns.Msg, localAddr, remoteAddr net.Addr) {
 	s.Emitter.Emit(ev)
 }
 
-func guessTransportFromAddr(addr net.Addr) v1.TransportProtocol {
+func guessTransportFromAddr(addr net.Addr) auditv1.TransportProtocol {
 	switch addr.(type) {
 	case *net.TCPAddr:
-		return v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP
+		return auditv1.TransportProtocol_TRANSPORT_PROTOCOL_TCP
 	case *net.UDPAddr:
-		return v1.TransportProtocol_TRANSPORT_PROTOCOL_UDP
+		return auditv1.TransportProtocol_TRANSPORT_PROTOCOL_UDP
 	default:
-		return v1.TransportProtocol_TRANSPORT_PROTOCOL_UNSPECIFIED
+		return auditv1.TransportProtocol_TRANSPORT_PROTOCOL_UNSPECIFIED
 	}
 }

@@ -10,7 +10,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/netutils"
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
 type Details interface {
@@ -20,8 +20,8 @@ type Details interface {
 type Event struct {
 	ID              int64
 	Timestamp       time.Time
-	Transport       v1.TransportProtocol
-	Application     v1.AppProtocol
+	Transport       auditv1.TransportProtocol
+	Application     auditv1.AppProtocol
 	SourceIP        net.IP
 	DestinationIP   net.IP
 	SourcePort      uint16
@@ -30,8 +30,8 @@ type Event struct {
 	TLS             *TLSDetails
 }
 
-func (e *Event) ProtoMessage() *v1.EventEntity {
-	var tlsDetails *v1.TLSDetailsEntity = nil
+func (e *Event) ProtoMessage() *auditv1.EventEntity {
+	var tlsDetails *auditv1.TLSDetailsEntity = nil
 	if e.TLS != nil {
 		tlsDetails = e.TLS.ProtoMessage()
 	}
@@ -43,7 +43,7 @@ func (e *Event) ProtoMessage() *v1.EventEntity {
 		}
 	}
 
-	return &v1.EventEntity{
+	return &auditv1.EventEntity{
 		Id:              e.ID,
 		Timestamp:       timestamppb.New(e.Timestamp),
 		Transport:       e.Transport,
@@ -85,7 +85,7 @@ func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) error {
 	return nil
 }
 
-func NewEventFromProto(msg *v1.EventEntity) (ev Event) {
+func NewEventFromProto(msg *auditv1.EventEntity) (ev Event) {
 	ev = Event{
 		ID:              msg.GetId(),
 		Timestamp:       msg.GetTimestamp().AsTime(),
@@ -109,9 +109,9 @@ func guessDetailsFromApp(any *anypb.Any) Details {
 	}
 	switch any.TypeUrl {
 	case "type.googleapis.com/inetmock.audit.v1.HTTPDetailsEntity":
-		return details.NewHTTPFromWireFormat(detailsProto.(*v1.HTTPDetailsEntity))
+		return details.NewHTTPFromWireFormat(detailsProto.(*auditv1.HTTPDetailsEntity))
 	case "type.googleapis.com/inetmock.audit.v1.DNSDetailsEntity":
-		return details.NewDNSFromWireFormat(detailsProto.(*v1.DNSDetailsEntity))
+		return details.NewDNSFromWireFormat(detailsProto.(*auditv1.DNSDetailsEntity))
 	default:
 		return nil
 	}

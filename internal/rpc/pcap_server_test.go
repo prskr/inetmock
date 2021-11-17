@@ -17,7 +17,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/rpc"
 	"gitlab.com/inetmock/inetmock/internal/rpc/test"
 	tst "gitlab.com/inetmock/inetmock/internal/test"
-	rpcV1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 const (
@@ -81,7 +81,7 @@ func Test_pcapServer_ListActiveRecordings(t *testing.T) {
 			t.Cleanup(cancel)
 			go func() {
 				defer close(done)
-				gotResp, err := pcapClient.ListActiveRecordings(ctx, new(rpcV1.ListActiveRecordingsRequest))
+				gotResp, err := pcapClient.ListActiveRecordings(ctx, new(rpcv1.ListActiveRecordingsRequest))
 				if (err != nil) != tt.wantErr {
 					t.Errorf("ListActiveRecordings() error = %v, wantErr %v", err, tt.wantErr)
 					return
@@ -120,14 +120,14 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 		},
 		{
 			name: "Ensure that any device with an assigned IP was found",
-			want: td.Contains(td.Struct(new(rpcV1.ListAvailableDevicesResponse_PCAPDevice), td.StructFields{
+			want: td.Contains(td.Struct(new(rpcv1.ListAvailableDevicesResponse_PCAPDevice), td.StructFields{
 				"Addresses": td.NotEmpty(),
 			})),
 			wantErr: false,
 		},
 		{
 			name: "Ensure that loopback device was found",
-			want: td.Contains(td.Struct(new(rpcV1.ListAvailableDevicesResponse_PCAPDevice), td.StructFields{
+			want: td.Contains(td.Struct(new(rpcv1.ListAvailableDevicesResponse_PCAPDevice), td.StructFields{
 				"Name": "lo",
 			})),
 			wantErr: false,
@@ -152,7 +152,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 			done := make(chan struct{})
 			go func() {
 				defer close(done)
-				got, err := pcapClient.ListAvailableDevices(ctx, new(rpcV1.ListAvailableDevicesRequest))
+				got, err := pcapClient.ListAvailableDevices(ctx, new(rpcv1.ListAvailableDevicesRequest))
 				if (err != nil) != tt.wantErr {
 					t.Errorf("ListAvailableDevices() error = %v, wantErr %v", err, tt.wantErr)
 					return
@@ -174,7 +174,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
 		name              string
-		req               *rpcV1.StartPCAPFileRecordingRequest
+		req               *rpcv1.StartPCAPFileRecordingRequest
 		wantResp          interface{}
 		wantSubscriptions []pcap.Subscription
 		wantErr           bool
@@ -182,11 +182,11 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 	tests := []testCase{
 		{
 			name: "Start a recording on lo interface",
-			req: &rpcV1.StartPCAPFileRecordingRequest{
+			req: &rpcv1.StartPCAPFileRecordingRequest{
 				Device:     "lo",
 				TargetPath: "test.pcap",
 			},
-			wantResp: td.Struct(&rpcV1.StartPCAPFileRecordingResponse{ConsumerKey: "lo:test.pcap"}, td.StructFields{}),
+			wantResp: td.Struct(&rpcv1.StartPCAPFileRecordingResponse{ConsumerKey: "lo:test.pcap"}, td.StructFields{}),
 			wantSubscriptions: []pcap.Subscription{
 				{
 					ConsumerKey:  "lo:test.pcap",
@@ -197,7 +197,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 		},
 		{
 			name: "Start a recording on a non-existing interface",
-			req: &rpcV1.StartPCAPFileRecordingRequest{
+			req: &rpcv1.StartPCAPFileRecordingRequest{
 				Device:     uuid.NewString(),
 				TargetPath: "test.pcap",
 			},
@@ -305,7 +305,7 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 			done := make(chan struct{})
 			go func() {
 				defer close(done)
-				gotResp, err := pcapClient.StopPCAPFileRecording(ctx, &rpcV1.StopPCAPFileRecordingRequest{
+				gotResp, err := pcapClient.StopPCAPFileRecording(ctx, &rpcv1.StopPCAPFileRecordingRequest{
 					ConsumerKey: tt.keyToRemove,
 				})
 				if (err != nil) != tt.wantErr {
@@ -326,17 +326,17 @@ func Test_pcapServer_StopPCAPFileRecord(t *testing.T) {
 	}
 }
 
-func setupTestPCAPServer(t *testing.T, recorder pcap.Recorder) rpcV1.PCAPServiceClient {
+func setupTestPCAPServer(t *testing.T, recorder pcap.Recorder) rpcv1.PCAPServiceClient {
 	t.Helper()
 	p := rpc.NewPCAPServer(t.TempDir(), recorder)
 
 	srv := test.NewTestGRPCServer(t, func(registrar grpc.ServiceRegistrar) {
-		rpcV1.RegisterPCAPServiceServer(registrar, p)
+		rpcv1.RegisterPCAPServiceServer(registrar, p)
 	})
 
 	ctx, cancel := context.WithTimeout(tst.Context(t), 100*time.Millisecond)
+	defer cancel()
 	conn := srv.Dial(ctx, t)
-	cancel()
 
-	return rpcV1.NewPCAPServiceClient(conn)
+	return rpcv1.NewPCAPServiceClient(conn)
 }

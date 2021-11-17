@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/miekg/dns"
+	mdns "github.com/miekg/dns"
 
 	"gitlab.com/inetmock/inetmock/internal/rules"
 )
 
 var knownRequestFilters = map[string]func(args ...rules.Param) (QuestionPredicate, error){
-	"a":    HostnameQuestionFilter(dns.TypeA),
-	"aaaa": HostnameQuestionFilter(dns.TypeAAAA),
+	"a":    HostnameQuestionFilter(mdns.TypeA),
+	"aaaa": HostnameQuestionFilter(mdns.TypeAAAA),
 }
 
 func QuestionPredicatesForRoutingRule(rule *rules.Routing) (predicates []QuestionPredicate, err error) {

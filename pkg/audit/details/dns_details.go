@@ -3,10 +3,10 @@ package details
 import (
 	"google.golang.org/protobuf/types/known/anypb"
 
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
-func NewDNSFromWireFormat(entity *v1.DNSDetailsEntity) DNS {
+func NewDNSFromWireFormat(entity *auditv1.DNSDetailsEntity) DNS {
 	d := DNS{
 		OPCode: entity.Opcode,
 	}
@@ -22,22 +22,22 @@ func NewDNSFromWireFormat(entity *v1.DNSDetailsEntity) DNS {
 }
 
 type DNSQuestion struct {
-	RRType v1.ResourceRecordType
+	RRType auditv1.ResourceRecordType
 	Name   string
 }
 
 type DNS struct {
-	OPCode    v1.DNSOpCode
+	OPCode    auditv1.DNSOpCode
 	Questions []DNSQuestion
 }
 
 func (d DNS) MarshalToWireFormat() (any *anypb.Any, err error) {
-	detailsEntity := &v1.DNSDetailsEntity{
+	detailsEntity := &auditv1.DNSDetailsEntity{
 		Opcode: d.OPCode,
 	}
 
 	for _, q := range d.Questions {
-		detailsEntity.Questions = append(detailsEntity.Questions, &v1.DNSQuestionEntity{
+		detailsEntity.Questions = append(detailsEntity.Questions, &auditv1.DNSQuestionEntity{
 			Type: q.RRType,
 			Name: q.Name,
 		})

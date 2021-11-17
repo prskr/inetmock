@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit/details"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
-func EmittingHandler(emitter Emitter, app v1.AppProtocol, delegate http.Handler) http.Handler {
+func EmittingHandler(emitter Emitter, app auditv1.AppProtocol, delegate http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
 		httpDetails := details.HTTP{
 			Method:  req.Method,
@@ -19,7 +19,7 @@ func EmittingHandler(emitter Emitter, app v1.AppProtocol, delegate http.Handler)
 		}
 
 		ev := Event{
-			Transport:       v1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
+			Transport:       auditv1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
 			Application:     app,
 			ProtocolDetails: httpDetails,
 		}

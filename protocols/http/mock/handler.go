@@ -15,7 +15,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/multiplexing"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -58,7 +58,7 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 	}
 
 	p.server = &http.Server{
-		Handler:     h2c.NewHandler(audit.EmittingHandler(p.emitter, v1.AppProtocol_APP_PROTOCOL_HTTP, router), new(http2.Server)),
+		Handler:     h2c.NewHandler(audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP, router), new(http2.Server)),
 		ConnContext: audit.StoreConnPropertiesInContext,
 	}
 

@@ -11,7 +11,7 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -39,7 +39,7 @@ func (p *pprofHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) 
 	pprofMux.HandleFunc(pprofTracePath, pprof.Trace)
 
 	p.server = &http.Server{
-		Handler:     audit.EmittingHandler(p.emitter, v1.AppProtocol_APP_PROTOCOL_PPROF, pprofMux),
+		Handler:     audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_PPROF, pprofMux),
 		ConnContext: audit.StoreConnPropertiesInContext,
 	}
 

@@ -4,8 +4,6 @@ vars:
   OUT_DIR: ./out
   INETMOCK_PKG: gitlab.com/inetmock/inetmock/cmd/inetmock
   IMCTL_PKG: gitlab.com/inetmock/inetmock/cmd/imctl
-  PROTO_FILES:
-    sh: find ./api/ -type f -name "*.proto" -printf "%p "
   DOCKER_ENDPOINT:
     sh: echo "${DOCKER_ENDPOINT:-localhost}"
 
@@ -24,7 +22,7 @@ tasks:
   format:
     desc: format all source files
     cmds:
-      - gofumpt -l -s -w ./
+      - gofumpt -l -w ./
       - goimports -local gitlab.com/inetmock/inetmock -w ./
 
   deps:
@@ -55,9 +53,8 @@ tasks:
 
   protobuf-lint:
     desc: run protobuf linter
-    dir: api/
     sources:
-      - "proto/**/*.proto"
+      - "api/proto/**/*.proto"
     cmds:
       - buf lint
 
@@ -76,7 +73,7 @@ tasks:
     generates:
       - "**/*.pb.go"
     cmds:
-      - buf protoc --proto_path ./api/proto/ --go_out=./pkg/ --go_opt=paths=source_relative --go-grpc_out=./pkg/ --go-grpc_opt=paths=source_relative {{ .PROTO_FILES }}
+      - buf generate
 
   go-generate:
     desc: run all go:generate directives

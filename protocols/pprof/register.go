@@ -52,7 +52,7 @@ func New(logger logging.Logger, emitter audit.Emitter) endpoint.ProtocolHandler 
 	}
 }
 
-func AddPPROF(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter) {
+func AddPprof(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter) {
 	logger = logger.With(
 		zap.String("protocol_handler", name),
 	)

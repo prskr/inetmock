@@ -16,7 +16,7 @@ import (
 	tst "gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	v1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
 const (
@@ -30,14 +30,14 @@ func Test_auditServer_RemoveFileSink(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		req     *v1.RemoveFileSinkRequest
+		req     *rpcv1.RemoveFileSinkRequest
 		fields  fields
 		want    td.StructFields
 		wantErr bool
 	}{
 		{
 			name: "Remove existing file sink - success",
-			req: &v1.RemoveFileSinkRequest{
+			req: &rpcv1.RemoveFileSinkRequest{
 				TargetPath: "test.pcap",
 			},
 			fields: fields{
@@ -61,7 +61,7 @@ func Test_auditServer_RemoveFileSink(t *testing.T) {
 		},
 		{
 			name: "Remove non-existing file sink - success",
-			req: &v1.RemoveFileSinkRequest{
+			req: &rpcv1.RemoveFileSinkRequest{
 				TargetPath: "test.pcap",
 			},
 			fields: fields{
@@ -89,14 +89,14 @@ func Test_auditServer_RemoveFileSink(t *testing.T) {
 			logger := logging.CreateTestLogger(t)
 
 			srv := test.NewTestGRPCServer(t, func(registrar grpc.ServiceRegistrar) {
-				v1.RegisterAuditServiceServer(registrar, rpc.NewAuditServiceServer(logger, tt.fields.eventStreamSetup(t), t.TempDir()))
+				rpcv1.RegisterAuditServiceServer(registrar, rpc.NewAuditServiceServer(logger, tt.fields.eventStreamSetup(t), t.TempDir()))
 			})
 
 			ctx, cancel := context.WithTimeout(testCtx, grpcTimeout)
 			conn := srv.Dial(ctx, t)
 			cancel()
 
-			client := v1.NewAuditServiceClient(conn)
+			client := rpcv1.NewAuditServiceClient(conn)
 
 			ctx, cancel = context.WithTimeout(testCtx, grpcTimeout)
 			t.Cleanup(cancel)
@@ -107,7 +107,7 @@ func Test_auditServer_RemoveFileSink(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				td.CmpStruct(t, got, new(v1.RemoveFileSinkResponse), tt.want)
+				td.CmpStruct(t, got, new(rpcv1.RemoveFileSinkResponse), tt.want)
 			}
 		})
 	}

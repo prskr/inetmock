@@ -13,18 +13,18 @@ import (
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
-	v1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
-var _ v1.PCAPServiceServer = (*pcapServer)(nil)
+var _ rpcv1.PCAPServiceServer = (*pcapServer)(nil)
 
 type pcapServer struct {
-	v1.UnimplementedPCAPServiceServer
+	rpcv1.UnimplementedPCAPServiceServer
 	recorder    pcap.Recorder
 	pcapDataDir string
 }
 
-func NewPCAPServer(pcapDataDir string, recorder pcap.Recorder) v1.PCAPServiceServer {
+func NewPCAPServer(pcapDataDir string, recorder pcap.Recorder) rpcv1.PCAPServiceServer {
 	return &pcapServer{
 		pcapDataDir: pcapDataDir,
 		recorder:    recorder,
@@ -33,9 +33,9 @@ func NewPCAPServer(pcapDataDir string, recorder pcap.Recorder) v1.PCAPServiceSer
 
 func (p *pcapServer) ListActiveRecordings(
 	context.Context,
-	*v1.ListActiveRecordingsRequest,
-) (resp *v1.ListActiveRecordingsResponse, _ error) {
-	resp = new(v1.ListActiveRecordingsResponse)
+	*rpcv1.ListActiveRecordingsRequest,
+) (resp *rpcv1.ListActiveRecordingsResponse, _ error) {
+	resp = new(rpcv1.ListActiveRecordingsResponse)
 	subs := p.recorder.Subscriptions()
 	for i := range subs {
 		resp.Subscriptions = append(resp.Subscriptions, subs[i].ConsumerKey)
@@ -44,16 +44,19 @@ func (p *pcapServer) ListActiveRecordings(
 	return
 }
 
-func (p *pcapServer) ListAvailableDevices(context.Context, *v1.ListAvailableDevicesRequest) (*v1.ListAvailableDevicesResponse, error) {
+func (p *pcapServer) ListAvailableDevices(
+	context.Context,
+	*rpcv1.ListAvailableDevicesRequest,
+) (*rpcv1.ListAvailableDevicesResponse, error) {
 	var err error
 	var devs []pcap.Device
 	if devs, err = p.recorder.AvailableDevices(); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	resp := new(v1.ListAvailableDevicesResponse)
+	resp := new(rpcv1.ListAvailableDevicesResponse)
 	for i := range devs {
-		resp.AvailableDevices = append(resp.AvailableDevices, &v1.ListAvailableDevicesResponse_PCAPDevice{
+		resp.AvailableDevices = append(resp.AvailableDevices, &rpcv1.ListAvailableDevicesResponse_PCAPDevice{
 			Name:      devs[i].Name,
 			Addresses: ipAddressesToBytes(devs[i].IPAddresses),
 		})
@@ -64,8 +67,8 @@ func (p *pcapServer) ListAvailableDevices(context.Context, *v1.ListAvailableDevi
 
 func (p *pcapServer) StartPCAPFileRecording(
 	_ context.Context,
-	req *v1.StartPCAPFileRecordingRequest,
-) (*v1.StartPCAPFileRecordingResponse, error) {
+	req *rpcv1.StartPCAPFileRecordingRequest,
+) (*rpcv1.StartPCAPFileRecordingResponse, error) {
 	targetPath := req.TargetPath
 	if !filepath.IsAbs(targetPath) {
 		targetPath = filepath.Join(p.pcapDataDir, req.TargetPath)
@@ -100,7 +103,7 @@ func (p *pcapServer) StartPCAPFileRecording(
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 
-	return &v1.StartPCAPFileRecordingResponse{
+	return &rpcv1.StartPCAPFileRecordingResponse{
 		ResolvedPath: targetPath,
 		ConsumerKey:  result.ConsumerKey,
 	}, nil
@@ -108,9 +111,9 @@ func (p *pcapServer) StartPCAPFileRecording(
 
 func (p *pcapServer) StopPCAPFileRecording(
 	_ context.Context,
-	request *v1.StopPCAPFileRecordingRequest,
-) (resp *v1.StopPCAPFileRecordingResponse, _ error) {
-	resp = new(v1.StopPCAPFileRecordingResponse)
+	request *rpcv1.StopPCAPFileRecordingRequest,
+) (resp *rpcv1.StopPCAPFileRecordingResponse, _ error) {
+	resp = new(rpcv1.StopPCAPFileRecordingResponse)
 	resp.Removed = p.recorder.StopRecording(request.ConsumerKey) == nil
 	return
 }

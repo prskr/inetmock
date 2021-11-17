@@ -14,19 +14,19 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
-	v1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
 )
 
-var _ v1.AuditServiceServer = (*auditServer)(nil)
+var _ rpcv1.AuditServiceServer = (*auditServer)(nil)
 
 type auditServer struct {
-	v1.UnimplementedAuditServiceServer
+	rpcv1.UnimplementedAuditServiceServer
 	logger           logging.Logger
 	eventStream      audit.EventStream
 	auditDataDirPath string
 }
 
-func NewAuditServiceServer(logger logging.Logger, eventStream audit.EventStream, auditDataDirPath string) v1.AuditServiceServer {
+func NewAuditServiceServer(logger logging.Logger, eventStream audit.EventStream, auditDataDirPath string) rpcv1.AuditServiceServer {
 	return &auditServer{
 		logger:           logger,
 		eventStream:      eventStream,
@@ -34,17 +34,17 @@ func NewAuditServiceServer(logger logging.Logger, eventStream audit.EventStream,
 	}
 }
 
-func (a *auditServer) ListSinks(context.Context, *v1.ListSinksRequest) (*v1.ListSinksResponse, error) {
-	return &v1.ListSinksResponse{
+func (a *auditServer) ListSinks(context.Context, *rpcv1.ListSinksRequest) (*rpcv1.ListSinksResponse, error) {
+	return &rpcv1.ListSinksResponse{
 		Sinks: a.eventStream.Sinks(),
 	}, nil
 }
 
-func (a *auditServer) WatchEvents(req *v1.WatchEventsRequest, srv v1.AuditService_WatchEventsServer) (err error) {
+func (a *auditServer) WatchEvents(req *rpcv1.WatchEventsRequest, srv rpcv1.AuditService_WatchEventsServer) (err error) {
 	logger := a.logger
 	logger.Info("watcher attached", zap.String("name", req.WatcherName))
 	err = a.eventStream.RegisterSink(srv.Context(), sink.NewGenericSink(req.WatcherName, func(ev audit.Event) {
-		if err = srv.Send(&v1.WatchEventsResponse{Entity: ev.ProtoMessage()}); err != nil {
+		if err = srv.Send(&rpcv1.WatchEventsResponse{Entity: ev.ProtoMessage()}); err != nil {
 			return
 		}
 	}))
@@ -58,7 +58,7 @@ func (a *auditServer) WatchEvents(req *v1.WatchEventsRequest, srv v1.AuditServic
 	return
 }
 
-func (a *auditServer) RegisterFileSink(_ context.Context, req *v1.RegisterFileSinkRequest) (*v1.RegisterFileSinkResponse, error) {
+func (a *auditServer) RegisterFileSink(_ context.Context, req *rpcv1.RegisterFileSinkRequest) (*rpcv1.RegisterFileSinkResponse, error) {
 	targetPath := req.TargetPath
 	if !filepath.IsAbs(targetPath) {
 		targetPath = filepath.Join(a.auditDataDirPath, req.TargetPath)
@@ -76,14 +76,14 @@ func (a *auditServer) RegisterFileSink(_ context.Context, req *v1.RegisterFileSi
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 
-	return &v1.RegisterFileSinkResponse{
+	return &rpcv1.RegisterFileSinkResponse{
 		ResolvedPath: targetPath,
 	}, nil
 }
 
-func (a *auditServer) RemoveFileSink(_ context.Context, req *v1.RemoveFileSinkRequest) (*v1.RemoveFileSinkResponse, error) {
+func (a *auditServer) RemoveFileSink(_ context.Context, req *rpcv1.RemoveFileSinkRequest) (*rpcv1.RemoveFileSinkResponse, error) {
 	if gotRemoved := a.eventStream.RemoveSink(req.TargetPath); gotRemoved {
-		return &v1.RemoveFileSinkResponse{
+		return &rpcv1.RemoveFileSinkResponse{
 			SinkGotRemoved: gotRemoved,
 		}, nil
 	}

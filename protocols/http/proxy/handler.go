@@ -13,7 +13,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/multiplexing"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
@@ -41,7 +41,7 @@ func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) err
 	}
 
 	h.server = &http.Server{
-		Handler:     audit.EmittingHandler(h.emitter, v1.AppProtocol_APP_PROTOCOL_HTTP_PROXY, h.proxy),
+		Handler:     audit.EmittingHandler(h.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP_PROXY, h.proxy),
 		ConnContext: audit.StoreConnPropertiesInContext,
 	}
 	h.logger = h.logger.With(

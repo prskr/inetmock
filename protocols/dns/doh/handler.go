@@ -14,7 +14,7 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/multiplexing"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	v1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
@@ -69,7 +69,7 @@ func (d *dohHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 	}
 
 	queryHandler := DNSQueryHandler(d.logger, handler)
-	emittingHandler := audit.EmittingHandler(d.emitter, v1.AppProtocol_APP_PROTOCOL_DNS_OVER_HTTPS, queryHandler)
+	emittingHandler := audit.EmittingHandler(d.emitter, auditv1.AppProtocol_APP_PROTOCOL_DNS_OVER_HTTPS, queryHandler)
 	d.server = NewServer(emittingHandler)
 
 	go d.startServer(lifecycle.Uplink().Listener)

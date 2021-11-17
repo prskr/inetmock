@@ -148,7 +148,7 @@ func Test_tblWriter_Write(t *testing.T) {
 			bldr := new(strings.Builder)
 
 			// hack to be able to format expected strings pretty
-			bldr.WriteRune('\n')
+			bldr.WriteByte('\n')
 			tw := format.Writer("table", bldr)
 			if err := tw.Write(tt.args.in); (err != nil) != tt.wantErr {
 				t.Errorf("Write() error = %v, wantErr %v", err, tt.wantErr)
