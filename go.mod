@@ -36,7 +36,7 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
-	github.com/Microsoft/hcsshim v0.8.22 // indirect
+	github.com/Microsoft/hcsshim v0.8.23 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -84,10 +84,9 @@ require (
 )
 
 replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.5.7
-	github.com/docker/docker => github.com/docker/docker v20.10.9+incompatible
+	github.com/containerd/containerd => github.com/containerd/containerd v1.5.8
+	github.com/docker/docker => github.com/docker/docker v20.10.11+incompatible
 	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20210913184640-f48151e94d0a
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
-	github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
 	golang.org/x/text => golang.org/x/text v0.3.7
 )
