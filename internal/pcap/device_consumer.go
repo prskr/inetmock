@@ -41,6 +41,8 @@ func openDeviceForConsumers(device string, consumer Consumer, opts RecordingOpti
 	}
 
 	packetSrc := gopacket.NewPacketSource(handle, layers.LinkTypeEthernet)
+	packetSrc.Lazy = true
+	packetSrc.NoCopy = true
 	dev := &deviceConsumer{
 		locker:        new(sync.Mutex),
 		handle:        handle,

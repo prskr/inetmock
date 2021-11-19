@@ -23,20 +23,19 @@ const (
 
 type HTTP2PseudoHeader string
 
-func parseHTTPVersion(reader io.Reader) (HTTPVersion, *bufio.Reader) {
-	bufferedReader := bufio.NewReaderSize(reader, maxHTTPRead)
+func parseHTTPVersion(bufferedReader *bufio.Reader) HTTPVersion {
 	b, err := bufferedReader.Peek(http2ClientPrefaceLength)
 
 	if err != nil {
-		return HTTPVersionUnknown, nil
+		return HTTPVersionUnknown
 	} else if bytes.HasPrefix(b, []byte(http2.ClientPreface)) {
 		_, _ = io.CopyN(io.Discard, bufferedReader, int64(http2ClientPrefaceLength))
-		return HTTPVersion2, bufferedReader
+		return HTTPVersion2
 	}
 
 	for i := 4; i < maxHTTPRead; i++ {
 		if b, err = bufferedReader.Peek(i); err != nil {
-			return HTTPVersionUnknown, nil
+			return HTTPVersionUnknown
 		} else if bytes.HasSuffix(b, []byte("\r\n")) {
 			b = b[:len(b)-2]
 			break
@@ -45,21 +44,21 @@ func parseHTTPVersion(reader io.Reader) (HTTPVersion, *bufio.Reader) {
 
 	_, _, proto, ok := parseRequestLine(string(b))
 	if !ok {
-		return HTTPVersionUnknown, nil
+		return HTTPVersionUnknown
 	}
 
 	major, minor, ok := http.ParseHTTPVersion(proto)
 	if !ok {
-		return HTTPVersionUnknown, nil
+		return HTTPVersionUnknown
 	}
 
 	switch {
 	case major == 1 && minor == 0:
-		return HTTPVersion10, bufferedReader
+		return HTTPVersion10
 	case major == 1 && minor == 1:
-		return HTTPVersion11, bufferedReader
+		return HTTPVersion11
 	default:
-		return HTTPVersionUnknown, nil
+		return HTTPVersionUnknown
 	}
 }
 

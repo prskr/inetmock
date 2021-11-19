@@ -1,9 +1,11 @@
 package multiplexing
 
 import (
+	"bufio"
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/soheilhy/cmux"
 )
@@ -14,6 +16,12 @@ const (
 	HTTPVersion11
 	HTTPVersion2
 )
+
+var bufferPool = &sync.Pool{
+	New: func() interface{} {
+		return bufio.NewReaderSize(nil, maxHTTPRead)
+	},
+}
 
 type (
 	HTTPVersion    uint8
@@ -69,16 +77,18 @@ func httpMatch(reqMatchers []RequestMatcher, init bool, fold func(b1, b2 bool) b
 			err error
 		)
 
-		switch v, r := parseHTTPVersion(reader); v {
+		buffered := newBufferedReader(reader)
+		defer putBufferedReader(buffered)
+		switch v := parseHTTPVersion(buffered); v {
 		case HTTPVersionUnknown:
 			return false
 		case HTTPVersion10, HTTPVersion11:
-			if req, err = parseHTTP1Request(r); err != nil {
+			if req, err = parseHTTP1Request(buffered); err != nil {
 				return false
 			}
 			req.Version = v
 		case HTTPVersion2:
-			if req, err = parseHTTP2Request(r); err != nil {
+			if req, err = parseHTTP2Request(buffered); err != nil {
 				return false
 			}
 			req.Version = v
@@ -94,4 +104,15 @@ func httpMatch(reqMatchers []RequestMatcher, init bool, fold func(b1, b2 bool) b
 		}
 		return acc
 	}
+}
+
+func newBufferedReader(in io.Reader) (buffered *bufio.Reader) {
+	buffered = bufferPool.Get().(*bufio.Reader)
+	buffered.Reset(in)
+	return
+}
+
+func putBufferedReader(in *bufio.Reader) {
+	in.Reset(nil)
+	bufferPool.Put(in)
 }
