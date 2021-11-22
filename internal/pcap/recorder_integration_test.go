@@ -63,7 +63,7 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 	packetSource.NoCopy = true
 	packetSource.Lazy = true
 
-	for pkg := range packetSource.Packets() {
+	for pkg := range packetSource.Packets(context.Background()) {
 		ip4LayerRaw := pkg.Layer(layers.LayerTypeIPv4)
 		tcpLayerRaw := pkg.Layer(layers.LayerTypeTCP)
 		if tcpLayerRaw == nil || ip4LayerRaw == nil {

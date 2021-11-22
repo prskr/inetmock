@@ -16,11 +16,11 @@ import (
 	"go.uber.org/multierr"
 )
 
-var ErrTransportStillRunning = errors.New("transport to consumers did not stop in time")
-
 const (
 	transportClosingTimeout = 100 * time.Millisecond
 )
+
+var ErrTransportStillRunning = errors.New("transport to consumers did not stop in time")
 
 func openDeviceForConsumers(device string, consumer Consumer, opts RecordingOptions) (*deviceConsumer, error) {
 	var (
@@ -40,7 +40,7 @@ func openDeviceForConsumers(device string, consumer Consumer, opts RecordingOpti
 		return nil, err
 	}
 
-	packetSrc := gopacket.NewPacketSource(handle, layers.LinkTypeEthernet)
+	packetSrc := gopacket.NewZeroCopyPacketSource(handle, layers.LinkTypeEthernet)
 	packetSrc.Lazy = true
 	packetSrc.NoCopy = true
 	dev := &deviceConsumer{
@@ -97,7 +97,7 @@ func (o *deviceConsumer) transportToConsumers(ctx context.Context) {
 	defer close(o.transportStat)
 	for {
 		select {
-		case pkg, more := <-o.packetSource.PacketsCtx(ctx):
+		case pkg, more := <-o.packetSource.Packets(ctx):
 			if !more {
 				return
 			}

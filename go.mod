@@ -86,7 +86,7 @@ require (
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.5.8
 	github.com/docker/docker => github.com/docker/docker v20.10.11+incompatible
-	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20211119083456-9634acb4d010
+	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20211122211316-f29bc3fa1a8a
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
 	golang.org/x/text => golang.org/x/text v0.3.7
 )
