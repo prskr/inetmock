@@ -3,16 +3,16 @@ package test
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"net"
 	"net/http"
 	"net/url"
+	"testing"
 	"time"
 
 	"golang.org/x/net/http2"
 )
 
-func HTTPClientForListener(lis net.Listener) (*http.Client, error) {
+func HTTPClientForListener(tb testing.TB, lis net.Listener) *http.Client {
 	switch l := lis.(type) {
 	case *net.TCPListener:
 		dialer := new(net.Dialer)
@@ -31,9 +31,10 @@ func HTTPClientForListener(lis net.Listener) (*http.Client, error) {
 				TLSHandshakeTimeout:   10 * time.Second,
 				ExpectContinueTimeout: 1 * time.Second,
 			},
-		}, nil
+		}
 	default:
-		return nil, errors.New("not a TCP listener")
+		tb.Fatal("not a TCP listener")
+		return nil
 	}
 }
 

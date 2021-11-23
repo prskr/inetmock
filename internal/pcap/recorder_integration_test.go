@@ -6,8 +6,9 @@ package pcap_test
 import (
 	"bytes"
 	"context"
+	"errors"
+	"net"
 	"net/http"
-	"net/url"
 	"sync"
 	"testing"
 	"time"
@@ -16,18 +17,36 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 	"github.com/maxatome/go-testdeep/td"
+	"golang.org/x/net/context/ctxhttp"
 
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
+	"gitlab.com/inetmock/inetmock/internal/test"
+	"gitlab.com/inetmock/inetmock/internal/test/integration"
 )
 
 const (
-	simulateTimeout = 1 * time.Second
+	simulateTimeout  = 200 * time.Millisecond
+	recordingTimeout = 500 * time.Millisecond
 )
 
 func Test_recorder_CompleteWorkflow(t *testing.T) {
 	t.Parallel()
+
+	srv := integration.NewTestHTTPServer(t, []string{
+		`=> Status(204)`,
+	}, nil)
+
+	listener := test.NewTCPListener(t, "127.0.0.1:0")
+	go srv.Listen(t, listener)
+	client := test.HTTPClientForListener(t, listener)
+
+	listenerPort := uint16(listener.(*net.TCPListener).Addr().(*net.TCPAddr).Port)
+
 	recorder := pcap.NewRecorder()
+	t.Cleanup(func() {
+		td.CmpNoError(t, recorder.Close())
+	})
 	buffer := newSyncBuffer()
 	var err error
 	var inMemConsumer pcap.Consumer
@@ -36,22 +55,21 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 		return
 	}
 
-	recordCtx, recordCancel := context.WithCancel(context.Background())
-	defer recordCancel()
+	recordCtx, recordCancel := context.WithTimeout(context.Background(), recordingTimeout)
+	t.Cleanup(recordCancel)
+
 	var result *pcap.StartRecordingResult
 	if result, err = recorder.StartRecording(recordCtx, "lo", inMemConsumer); err != nil {
 		t.Errorf("StartRecording() error = %v", err)
-		recordCancel()
 		return
 	}
 
 	td.Cmp(t, result, &pcap.StartRecordingResult{ConsumerKey: "lo:InMem"})
 
 	simulateCtx, simulateCancel := context.WithTimeout(context.Background(), simulateTimeout)
-	defer simulateCancel()
-	simulateTraffic(simulateCtx, 100)
-
-	recordCancel()
+	t.Cleanup(simulateCancel)
+	simulateTraffic(simulateCtx, t, client)
+	<-buffer.Closed
 
 	var pcapReader *pcapgo.Reader
 	if pcapReader, err = pcapgo.NewReader(buffer); err != nil {
@@ -59,9 +77,7 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 		return
 	}
 
-	packetSource := gopacket.NewPacketSource(pcapReader, layers.LayerTypeEthernet)
-	packetSource.NoCopy = true
-	packetSource.Lazy = true
+	packetSource := gopacket.NewZeroCopyPacketSource(pcapReader, layers.LayerTypeEthernet, gopacket.WithLazy(true), gopacket.WithPool(true))
 
 	for pkg := range packetSource.Packets(context.Background()) {
 		ip4LayerRaw := pkg.Layer(layers.LayerTypeIPv4)
@@ -73,7 +89,7 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 		ip4Layer, _ := ip4LayerRaw.(*layers.IPv4)
 		tcpLayer, _ := tcpLayerRaw.(*layers.TCP)
 
-		if ip4Layer.DstIP.IsLoopback() && tcpLayer.DstPort == 8181 {
+		if ip4Layer.DstIP.IsLoopback() && uint16(tcpLayer.DstPort) == listenerPort {
 			t.Logf("found one of the sample requests: %s", pkg.String())
 			return
 		}
@@ -81,27 +97,37 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 	t.Errorf("Couldn't find any of the sample requets")
 }
 
-func simulateTraffic(ctx context.Context, numberOfRequests int) {
-	for i := 0; i < numberOfRequests; i++ {
-		sampleURL, _ := url.Parse("http://127.0.0.1:8181")
-		req := (&http.Request{
-			Method: http.MethodGet,
-			URL:    sampleURL,
-		}).WithContext(ctx)
-		_, _ = http.DefaultClient.Do(req)
+func simulateTraffic(ctx context.Context, tb testing.TB, client *http.Client) {
+	tb.Helper()
+	for ctx.Err() == nil {
+		_, err := ctxhttp.Get(ctx, client, "http://gitlab.com/")
+		if errors.Is(err, context.DeadlineExceeded) {
+			return
+		}
+		td.CmpNoError(tb, err)
 	}
 }
 
 func newSyncBuffer() *syncBuffer {
 	return &syncBuffer{
-		lock: new(sync.Mutex),
-		buf:  bytes.NewBuffer(nil),
+		Closed: make(chan bool),
+		lock:   new(sync.Mutex),
+		buf:    bytes.NewBuffer(nil),
 	}
 }
 
 type syncBuffer struct {
-	lock sync.Locker
-	buf  *bytes.Buffer
+	Closed chan bool
+	lock   sync.Locker
+	buf    *bytes.Buffer
+}
+
+func (s *syncBuffer) Close() error {
+	select {
+	case s.Closed <- true:
+	case <-time.After(10 * time.Millisecond):
+	}
+	return nil
 }
 
 func (s *syncBuffer) Write(p []byte) (n int, err error) {

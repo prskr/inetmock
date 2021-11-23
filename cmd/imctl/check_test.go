@@ -51,9 +51,7 @@ func Test_HTTP_runCheck(t *testing.T) {
 			testServer := integration.NewTestHTTPServer(t, tt.behavior, nil)
 			go testServer.Listen(t, listener)
 
-			if client, err = test.HTTPClientForListener(listener); err != nil {
-				t.Fatalf("test.HTTPClientForListener() err = %v", err)
-			}
+			client = test.HTTPClientForListener(t, listener)
 
 			clients := health.ClientsForModuleMap{
 				"http":  client,

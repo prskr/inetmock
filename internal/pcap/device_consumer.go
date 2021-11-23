@@ -40,9 +40,7 @@ func openDeviceForConsumers(device string, consumer Consumer, opts RecordingOpti
 		return nil, err
 	}
 
-	packetSrc := gopacket.NewZeroCopyPacketSource(handle, layers.LinkTypeEthernet)
-	packetSrc.Lazy = true
-	packetSrc.NoCopy = true
+	packetSrc := gopacket.NewZeroCopyPacketSource(handle, layers.LinkTypeEthernet, gopacket.WithLazy(true), gopacket.WithPool(true))
 	dev := &deviceConsumer{
 		locker:        new(sync.Mutex),
 		handle:        handle,
@@ -95,17 +93,12 @@ func (o *deviceConsumer) StartTransport(ctx context.Context) {
 
 func (o *deviceConsumer) transportToConsumers(ctx context.Context) {
 	defer close(o.transportStat)
-	for {
-		select {
-		case pkg, more := <-o.packetSource.Packets(ctx):
-			if !more {
-				return
-			}
-			o.locker.Lock()
-			o.consumer.Observe(pkg)
-			o.locker.Unlock()
-		case <-ctx.Done():
-			return
+	for pkg := range o.packetSource.Packets(ctx) {
+		o.locker.Lock()
+		o.consumer.Observe(pkg)
+		o.locker.Unlock()
+		if p, ok := pkg.(gopacket.PooledPacket); ok {
+			p.Dispose()
 		}
 	}
 }

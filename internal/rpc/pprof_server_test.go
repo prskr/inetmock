@@ -76,7 +76,7 @@ func Test_profilingServer_ProfileDump(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			client := setupTestProfilingServer(t)
-			ctx, cancel := context.WithTimeout(tst.Context(t), 100*time.Millisecond)
+			ctx, cancel := context.WithTimeout(tst.Context(t), 500*time.Millisecond)
 			t.Cleanup(cancel)
 			got, err := client.ProfileDump(ctx, tt.req)
 			if err != nil {

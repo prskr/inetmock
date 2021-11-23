@@ -18,7 +18,11 @@ var (
 		if data, err := question.Pack(); err != nil {
 			return nil, err
 		} else {
-			return http.NewRequest(http.MethodPost, queryURL.String(), bytes.NewReader(data))
+			if req, err = http.NewRequest(http.MethodPost, queryURL.String(), bytes.NewReader(data)); err != nil {
+				return nil, err
+			}
+			req.Header.Set("Content-Type", "application/dns-message")
+			return req, nil
 		}
 	})
 

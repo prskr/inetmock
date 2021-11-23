@@ -13,6 +13,12 @@ env:
   CGO_ENABLED: 0
 
 tasks:
+  default:
+    desc: By default run tests and build all binaries
+    cmds:
+      - task: test
+      - task: build
+
   clean:
     desc: clean all generated files
     cmds:
@@ -157,12 +163,10 @@ tasks:
 
   build-inetmock:
     desc: build the INetMock server part
-    deps:
-      - deps
-      - generate
     cmds:
-      - mkdir -p {{ .OUT_DIR }}
-      - go build -ldflags='-w -s' -trimpath -o {{ .OUT_DIR }}/inetmock {{ .INETMOCK_PKG }}
+      - task: build
+        vars:
+          TARGET_ID: inetmock
 
   debug-inetmock:
     desc: run INetMock server with delve for remote debugging
@@ -171,18 +175,22 @@ tasks:
 
   build-imctl:
     desc: build the imctl INetMock client CLI
+    cmds:
+      - task: build
+        vars:
+          TARGET_ID: imctl
+
+  build:
+    desc: build all binaries
     deps:
       - deps
       - generate
+    vars:
+      TARGET_ID: '{{ default "" .TARGET_ID }}'
     cmds:
+      - goreleaser build --single-target --skip-validate --rm-dist {{ if .TARGET_ID }}--id {{ .TARGET_ID }}{{end}}
       - mkdir -p {{ .OUT_DIR }}
-      - go build -ldflags='-w -s' -trimpath -o {{ .OUT_DIR }}/imctl {{ .IMCTL_PKG }}
-
-  build-all:
-    desc: build all binaries
-    deps:
-      - build-inetmock
-      - build-imctl
+      - cp ./dist/*_linux_amd64/* {{ .OUT_DIR }}
 
   snapshot-release:
     desc: create a snapshot/test release without publishing any artifacts
