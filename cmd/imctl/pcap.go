@@ -185,7 +185,7 @@ func runListActiveRecordings(*cobra.Command, []string) error {
 		}
 
 		out = append(out, printableSubscription{
-			Name:        subscription[splitIdx:],
+			Name:        subscription[splitIdx+1:],
 			Device:      subscription[:splitIdx],
 			ConsumerKey: subscription,
 		})

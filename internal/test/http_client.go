@@ -13,6 +13,7 @@ import (
 )
 
 func HTTPClientForListener(tb testing.TB, lis net.Listener) *http.Client {
+	tb.Helper()
 	switch l := lis.(type) {
 	case *net.TCPListener:
 		dialer := new(net.Dialer)

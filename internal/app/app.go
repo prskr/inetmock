@@ -120,7 +120,7 @@ func NewApp(spec Spec) App {
 			logging.ConfigureLogging(
 				logging.ParseLevel(logLevel),
 				developmentLogs,
-				logEncoding,
+				spec.LogEncoding,
 				map[string]interface{}{
 					"cwd":  cwd,
 					"cmd":  cmd.Name(),
@@ -134,7 +134,7 @@ func NewApp(spec Spec) App {
 			return
 		},
 		func(*cobra.Command, []string) (err error) {
-			a.logger.Info("Random seed", zap.Int64("seed", randomSeed))
+			a.logger.Debug("Random seed", zap.Int64("seed", randomSeed))
 			return nil
 		},
 	}
