@@ -1,7 +1,18 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/golangci/golangci-lint
-    rev: v1.42.0
+  - repo: https://github.com/tekwizely/pre-commit-golang
+    rev: v1.0.0-beta.4
     hooks:
-    -   id: golangci-lint
+      - id: go-mod-tidy-repo
+      - id: go-fumpt
+        args:
+          - -w
+      - id: go-imports
+        args:
+          - -local=gitlab.com/inetmock/inetmock
+          - -w
+      - id: golangci-lint-repo-mod
+        args:
+          - --fast
+          - --fix
