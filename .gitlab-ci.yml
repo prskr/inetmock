@@ -19,19 +19,20 @@ variables:
   DOCKER_CERT_PATH: "/certs/client"
   DOCKER_TLS_VERIFY: 1
   DOCKER_HOST: 'tcp://docker:2376'
-  SAST_EXCLUDED_ANALYZERS: "eslint"
   DOCKER_IMAGE: registry.gitlab.com/inetmock/inetmock:$CI_COMMIT_SHORT_SHA
-  GIT_STRATEGY: fetch
-  DOCKERFILE_PATH: ./build/docker/inetmock.dockerfile
+  SAST_EXCLUDED_ANALYZERS: "eslint"
 
 .go-cache:
   variables:
-    GOPATH: /gocache
+    GOCACHE: $CI_PROJECT_DIR/.go/build-cache
+    GOMODCACHE: $CI_PROJECT_DIR/.go/mod-cache
+    GOLANGCI_LINT_CACHE: $CI_PROJECT_DIR/.go/golangci-lint
   before_script:
-    - mkdir -p /gocache
+    - mkdir -p .go/build-cache .go/mod-cache .go/golangci-lint
   cache:
+    key: e74f07d2-d20d-4e79-82b9-9da46be444df
     paths:
-      - /gocache/pkg/mod/
+      - .go/
 
 test:
   stage: test
@@ -121,6 +122,9 @@ container_scanning:
   stage: validate
   artifacts:
     expire_in: 7 days
+  variables:
+    GIT_STRATEGY: fetch
+    DOCKERFILE_PATH: build/docker/inetmock.dockerfile
   needs:
     - job: snapshot-release
       optional: true

@@ -26,10 +26,10 @@ tasks:
       - rm -rf ./main {{ .OUT_DIR }}
 
   format:
-    desc: format all source files
+    desc: Format all changed source files
     cmds:
-      - goimports -local gitlab.com/inetmock/inetmock -w ./
-      - gofumpt -l -w ./
+      - goimports -local gitlab.com/inetmock/inetmock -w $(git ls-files --modified --others | grep -v -E "^.go/" | grep -E ".go$")
+      - gofumpt -l -w $(git ls-files --modified --others | grep -v -E "^.go/" | grep -E ".go$")
 
   deps:
     desc: download dependencies
