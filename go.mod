@@ -88,5 +88,8 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v20.10.11+incompatible
 	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20211124091904-a10d380ef3cd
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
+	github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
+	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
 	golang.org/x/text => golang.org/x/text v0.3.7
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 )
