@@ -16,7 +16,7 @@ require (
 	github.com/jinzhu/copier v0.3.2
 	github.com/maxatome/go-testdeep v1.10.1
 	github.com/miekg/dns v1.1.43
-	github.com/mitchellh/mapstructure v1.4.2
+	github.com/mitchellh/mapstructure v1.4.3
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.11.0
 	github.com/soheilhy/cmux v0.1.5
