@@ -36,7 +36,7 @@ func main() {
 			Short:       "IMCTL is the CLI app to interact with an INetMock server",
 			LogEncoding: "console",
 			Config:      &cfg,
-			SubCommands: []*cobra.Command{healthCmd, auditCmd, pcapCmd, checkCmd, pprofCmd},
+			SubCommands: []*cobra.Command{healthCmd, auditCmd, pcapCmd, checkCmd, pprofCmd, uiCmd},
 			LateInitTasks: []func(cmd *cobra.Command, args []string) (err error){
 				initGRPCConnection,
 			},

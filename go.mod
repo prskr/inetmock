@@ -3,6 +3,8 @@ module gitlab.com/inetmock/inetmock
 go 1.17
 
 require (
+	github.com/CAFxX/httpcompression v0.0.5
+	github.com/Nerzal/tinydom v0.0.15
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
@@ -25,6 +27,7 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.10.1
+	github.com/tarndt/wasmws v0.0.0-20191230183838-0f186a886e92
 	github.com/testcontainers/testcontainers-go v0.12.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/multierr v1.7.0
@@ -34,12 +37,14 @@ require (
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	nhooyr.io/websocket v1.8.7
 )
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/Microsoft/hcsshim v0.8.23 // indirect
+	github.com/andybalholm/brotli v1.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -62,7 +67,8 @@ require (
 	github.com/gorilla/mux v0.0.0-00010101000000-000000000000 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/klauspost/compress v1.12.3 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
@@ -72,6 +78,7 @@ require (
 	github.com/moby/sys/mountinfo v0.5.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
@@ -96,6 +103,7 @@ require (
 	golang.org/x/tools v0.1.6-0.20210726203631-07bc1bf47fb2 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
+	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
@@ -105,6 +113,9 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v20.10.11+incompatible
 	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20211124091904-a10d380ef3cd
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
+	github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
+
+	github.com/tarndt/wasmws => github.com/baez90/wasmws v0.0.0-20211230122114-0e33fe29a744
 	golang.org/x/text => golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 )

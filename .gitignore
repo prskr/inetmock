@@ -12,6 +12,8 @@
 ./main
 **/*.mock.go
 .go/
+*.wasm
+wasm_exec.js
 
 ###############
 # directories #

@@ -23,13 +23,6 @@ builds:
       - windows
     goarch:
       - amd64
-  - id: ui
-    binary: ui
-    main: ./cmd/ui/
-    goos:
-      - js
-    goarch:
-      - wasm
 archives:
   - id: inetmock
     builds:

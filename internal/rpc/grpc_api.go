@@ -12,6 +12,8 @@ import (
 	reqlog "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"go.uber.org/zap/zapgrpc"
+	"google.golang.org/grpc/grpclog"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -52,6 +54,8 @@ func NewINetMockAPI(
 	eventStream audit.EventStream,
 	auditDataDir, pcapDataDir string,
 ) INetMockAPI {
+	grpclog.SetLoggerV2(zapgrpc.NewLogger(logger.ZapLogger()))
+
 	return &inetmockAPI{
 		lock:         new(sync.Mutex),
 		url:          u,

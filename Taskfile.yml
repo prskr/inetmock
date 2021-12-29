@@ -99,6 +99,7 @@ tasks:
       - protoc
     cmds:
       - task: format
+      - task: build-ui
 
   test:
     desc: run short running unit tests that do not need sudo
@@ -179,6 +180,17 @@ tasks:
       - task: build
         vars:
           TARGET_ID: imctl
+
+  build-ui:
+    desc: Build WASM binary for web UI
+    deps:
+      - deps
+    env:
+      GOARCH: wasm
+      GOOS: js
+    cmds:
+      - cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" web/js/
+      - go build -o web/wasm/main.wasm ./cmd/ui/
 
   build:
     desc: build all binaries
