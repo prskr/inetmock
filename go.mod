@@ -25,7 +25,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/testcontainers/testcontainers-go v0.12.0
 	go.uber.org/multierr v1.7.0
-	go.uber.org/zap v1.19.1
+	go.uber.org/zap v1.20.0
 	golang.org/x/net v0.0.0-20220105145211-5b0dc2dfae98
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.43.0
