@@ -6,20 +6,36 @@ import (
 	"go.uber.org/multierr"
 )
 
+func NewUplink(conn interface{}) (u Uplink) {
+	switch c := conn.(type) {
+	case net.Listener:
+		u.Listener = c
+		u.Addr = c.Addr()
+		u.Proto = NetProtoTCP
+	case net.PacketConn:
+		u.PacketConn = c
+		u.Addr = c.LocalAddr()
+		u.Proto = NetProtoUDP
+	case net.Addr:
+		u.Unmanaged = true
+		u.Addr = c
+		switch c.(type) {
+		case *net.TCPAddr:
+			u.Proto = NetProtoTCP
+		case *net.UDPAddr:
+			u.Proto = NetProtoUDP
+		}
+	}
+
+	return
+}
+
 type Uplink struct {
+	Addr       net.Addr
+	Unmanaged  bool
 	Proto      NetProto
 	Listener   net.Listener
 	PacketConn net.PacketConn
-}
-
-func (u Uplink) Addr() net.Addr {
-	if u.Listener != nil {
-		return u.Listener.Addr()
-	}
-	if u.PacketConn != nil {
-		return u.PacketConn.LocalAddr()
-	}
-	return nil
 }
 
 func (u Uplink) Close() (err error) {

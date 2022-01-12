@@ -10,18 +10,52 @@ import (
 
 var loggingConfig = zap.NewProductionConfig()
 
-func ConfigureLogging(
-	level zap.AtomicLevel,
-	developmentLogging bool,
-	encoding string,
-	initialFields map[string]interface{},
-) {
-	loggingConfig.Level = level
-	loggingConfig.Development = developmentLogging
-	loggingConfig.Encoding = encoding
-	if initialFields != nil {
-		loggingConfig.InitialFields = initialFields
+type (
+	LoggingOption interface {
+		Apply(cfg *zap.Config)
 	}
+	LoggingOptionFunc func(cfg *zap.Config)
+)
+
+func (f LoggingOptionFunc) Apply(cfg *zap.Config) {
+	f(cfg)
+}
+
+func WithLevel(level zap.AtomicLevel) LoggingOption {
+	return LoggingOptionFunc(func(cfg *zap.Config) {
+		cfg.Level = level
+	})
+}
+
+func WithDevelopment(developmentLogging bool) LoggingOption {
+	return LoggingOptionFunc(func(cfg *zap.Config) {
+		cfg.Development = developmentLogging
+	})
+}
+
+func WithEncoding(encoding string) LoggingOption {
+	return LoggingOptionFunc(func(cfg *zap.Config) {
+		cfg.Encoding = encoding
+	})
+}
+
+func WithInitialFields(initialFields map[string]interface{}) LoggingOption {
+	return LoggingOptionFunc(func(cfg *zap.Config) {
+		cfg.InitialFields = initialFields
+	})
+}
+
+func ConfigureLogging(opts ...LoggingOption) error {
+	for idx := range opts {
+		opts[idx].Apply(&loggingConfig)
+	}
+	if defaultLogger, err := loggingConfig.Build(zap.AddCallerSkip(1)); err != nil {
+		return err
+	} else {
+		zap.ReplaceGlobals(defaultLogger)
+	}
+
+	return nil
 }
 
 func ParseLevel(levelString string) zap.AtomicLevel {
@@ -41,12 +75,8 @@ func ParseLevel(levelString string) zap.AtomicLevel {
 	}
 }
 
-func CreateLogger() (Logger, error) {
-	if zapLogger, err := loggingConfig.Build(zap.AddCallerSkip(1)); err != nil {
-		return nil, err
-	} else {
-		return NewLogger(zapLogger), nil
-	}
+func CreateLogger() Logger {
+	return NewLogger(zap.L())
 }
 
 func CreateTestLogger(tb testing.TB) Logger {

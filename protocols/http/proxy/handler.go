@@ -46,7 +46,7 @@ func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) err
 	}
 	h.logger = h.logger.With(
 		zap.String("handler_name", lifecycle.Name()),
-		zap.String("address", lifecycle.Uplink().Addr().String()),
+		zap.String("address", lifecycle.Uplink().Addr.String()),
 	)
 
 	tlsConfig := h.certStore.TLSConfig()

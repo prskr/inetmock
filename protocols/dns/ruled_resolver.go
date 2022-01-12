@@ -14,15 +14,15 @@ var knownRuleResolvers = map[string]func(params []rules.Param) (IPResolver, erro
 	"random":      RandomIPResolverForArgs,
 }
 
-func ResolverForRule(rule *rules.Routing) (IPResolver, error) {
-	if rule == nil || rule.Terminator == nil {
+func ResolverForRule(rule *rules.SingleResponsePipeline) (IPResolver, error) {
+	if rule == nil || rule.Response == nil {
 		return nil, rules.ErrNoTerminatorDefined
 	}
 
-	if resolverConstructor, ok := knownRuleResolvers[strings.ToLower(rule.Terminator.Name)]; !ok {
-		return nil, fmt.Errorf("%w: %s", rules.ErrUnknownTerminator, rule.Terminator.Name)
+	if resolverConstructor, ok := knownRuleResolvers[strings.ToLower(rule.Response.Name)]; !ok {
+		return nil, fmt.Errorf("%w: %s", rules.ErrUnknownTerminator, rule.Response.Name)
 	} else {
-		return resolverConstructor(rule.Terminator.Params)
+		return resolverConstructor(rule.Response.Params)
 	}
 }
 

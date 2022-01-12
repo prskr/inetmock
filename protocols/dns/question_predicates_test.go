@@ -138,7 +138,7 @@ func TestHostnameQuestionFilter(t *testing.T) {
 func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		rule *rules.Routing
+		rule *rules.SingleResponsePipeline
 	}
 	tests := []struct {
 		name        string
@@ -149,9 +149,9 @@ func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 		{
 			name: "Unknown filter method",
 			args: args{
-				rule: &rules.Routing{
-					Filters: &rules.Filters{
-						Chain: []rules.Method{
+				rule: &rules.SingleResponsePipeline{
+					FilterChain: &rules.Filters{
+						Chain: []rules.Call{
 							{
 								Name: "srv",
 							},
@@ -163,11 +163,11 @@ func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 			wantErr:     true,
 		},
 		{
-			name: "Filters empty",
+			name: "FilterChain empty",
 			args: args{
-				rule: &rules.Routing{
-					Filters: &rules.Filters{
-						Chain: make([]rules.Method, 0),
+				rule: &rules.SingleResponsePipeline{
+					FilterChain: &rules.Filters{
+						Chain: make([]rules.Call, 0),
 					},
 				},
 			},
@@ -175,17 +175,17 @@ func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 			wantErr:     false,
 		},
 		{
-			name: "Filters nil",
+			name: "FilterChain nil",
 			args: args{
-				rule: new(rules.Routing),
+				rule: new(rules.SingleResponsePipeline),
 			},
 			wantFilters: td.Nil(),
 			wantErr:     false,
 		},
 		{
-			name: "Routing nil",
+			name: "SingleResponsePipeline nil",
 			args: args{
-				rule: new(rules.Routing),
+				rule: new(rules.SingleResponsePipeline),
 			},
 			wantFilters: td.Nil(),
 			wantErr:     false,
@@ -193,9 +193,9 @@ func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 		{
 			name: "Single A filter",
 			args: args{
-				rule: &rules.Routing{
-					Filters: &rules.Filters{
-						Chain: []rules.Method{
+				rule: &rules.SingleResponsePipeline{
+					FilterChain: &rules.Filters{
+						Chain: []rules.Call{
 							{
 								Name: "A",
 								Params: []rules.Param{
@@ -222,9 +222,9 @@ func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 		{
 			name: "Single AAAA filter",
 			args: args{
-				rule: &rules.Routing{
-					Filters: &rules.Filters{
-						Chain: []rules.Method{
+				rule: &rules.SingleResponsePipeline{
+					FilterChain: &rules.Filters{
+						Chain: []rules.Call{
 							{
 								Name: "AAAA",
 								Params: []rules.Param{

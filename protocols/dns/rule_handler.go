@@ -36,7 +36,7 @@ func (r RuleHandler) AnswerDNSQuestion(q Question) (ResourceRecord, error) {
 }
 
 func (r *RuleHandler) RegisterRule(rawRule string) error {
-	rule := new(rules.Routing)
+	rule := new(rules.SingleResponsePipeline)
 	if err := rules.Parse(rawRule, rule); err != nil {
 		return err
 	}

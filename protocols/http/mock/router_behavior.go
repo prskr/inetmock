@@ -21,15 +21,15 @@ var knownResponseHandlers = map[string]func(logger logging.Logger, fakeFileFS fs
 	"status": StatusHandler,
 }
 
-func HandlerForRoutingRule(rule *rules.Routing, logger logging.Logger, fakeFileFS fs.FS) (http.Handler, error) {
-	if rule.Terminator == nil {
+func HandlerForRoutingRule(rule *rules.SingleResponsePipeline, logger logging.Logger, fakeFileFS fs.FS) (http.Handler, error) {
+	if rule.Response == nil {
 		return nil, rules.ErrNoTerminatorDefined
 	}
 
-	if constructor, ok := knownResponseHandlers[strings.ToLower(rule.Terminator.Name)]; !ok {
-		return nil, fmt.Errorf("%w %s", rules.ErrUnknownTerminator, rule.Terminator.Name)
+	if constructor, ok := knownResponseHandlers[strings.ToLower(rule.Response.Name)]; !ok {
+		return nil, fmt.Errorf("%w %s", rules.ErrUnknownTerminator, rule.Response.Name)
 	} else {
-		return constructor(logger, fakeFileFS, rule.Terminator.Params...)
+		return constructor(logger, fakeFileFS, rule.Response.Params...)
 	}
 }
 
@@ -38,8 +38,10 @@ func FileHandler(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (
 		return nil, err
 	}
 
-	var err error
-	var filePath string
+	var (
+		filePath string
+		err      error
+	)
 	if filePath, err = args[0].AsString(); err != nil {
 		return nil, err
 	}

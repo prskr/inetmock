@@ -1,22 +1,26 @@
 package main
 
 import (
+	"io"
 	"io/fs"
 	"os"
 
 	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	audit2 "gitlab.com/inetmock/inetmock/internal/pcap/consumers/audit"
 	"gitlab.com/inetmock/inetmock/internal/rpc"
+	"gitlab.com/inetmock/inetmock/internal/state"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	"gitlab.com/inetmock/inetmock/pkg/cert"
 	"gitlab.com/inetmock/inetmock/pkg/health"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
+	dhcpmock "gitlab.com/inetmock/inetmock/protocols/dhcp"
 	"gitlab.com/inetmock/inetmock/protocols/dns/doh"
 	dnsmock "gitlab.com/inetmock/inetmock/protocols/dns/mock"
 	"gitlab.com/inetmock/inetmock/protocols/http/mock"
@@ -29,14 +33,24 @@ const (
 	defaultEventBufferSize = 10
 )
 
-var serveCmd = &cobra.Command{
-	Use:          "serve",
-	Short:        "Starts the INetMock server",
-	Long:         ``,
-	RunE:         startINetMock,
-	SilenceUsage: true,
-}
+var (
+	toClose  []io.Closer
+	serveCmd = &cobra.Command{
+		Use:          "serve",
+		Short:        "Starts the INetMock server",
+		Long:         ``,
+		RunE:         startINetMock,
+		SilenceUsage: true,
+		PostRunE: func(*cobra.Command, []string) (err error) {
+			for idx := range toClose {
+				err = multierr.Append(err, toClose[idx].Close())
+			}
+			return
+		},
+	}
+)
 
+//nolint:gocyclo // central setup point
 func startINetMock(_ *cobra.Command, _ []string) error {
 	registry := endpoint.NewHandlerRegistry()
 
@@ -49,6 +63,13 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		appLogger.Error("Failed to setup data directories", zap.Error(err))
 		return err
 	}
+
+	var stateStore state.KVStore
+	if stateStore, err = state.NewDefault(state.WithPath(cfg.Data.State)); err != nil {
+		appLogger.Error("Failed to setup state store", zap.Error(err))
+		return err
+	}
+	toClose = append(toClose, stateStore)
 
 	if cfg.TLS.CertCachePath, err = ensureDataDir(cfg.TLS.CertCachePath); err != nil {
 		appLogger.Error("Failed to setup cert cache directory", zap.Error(err))
@@ -66,6 +87,7 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 	if eventStream, err = setupEventStream(appLogger); err != nil {
 		return err
 	}
+	toClose = append(toClose, eventStream)
 
 	var checker health.Checker
 	if checker, err = health.NewFromConfig(appLogger.Named("health"), cfg.Health, certStore.TLSConfig()); err != nil {
@@ -73,7 +95,7 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err = setupEndpointHandlers(registry, appLogger, eventStream, certStore, fakeFileFS, checker); err != nil {
+	if err = setupEndpointHandlers(registry, appLogger, eventStream, certStore, stateStore, fakeFileFS, checker); err != nil {
 		appLogger.Error("Failed to run registration", zap.Error(err))
 		return err
 	}
@@ -160,13 +182,21 @@ func setupEventStream(appLogger logging.Logger) (audit.EventStream, error) {
 	return evenStream, nil
 }
 
-//nolint:lll
-func setupEndpointHandlers(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store, fakeFileFS fs.FS, checker health.Checker) (err error) {
+func setupEndpointHandlers(
+	registry endpoint.HandlerRegistry,
+	logger logging.Logger,
+	emitter audit.Emitter,
+	certStore cert.Store,
+	stateStore state.KVStore,
+	fakeFileFS fs.FS,
+	checker health.Checker,
+) (err error) {
 	mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS)
 	dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter)
+	dhcpmock.AddDHCPMock(registry, logger.Named("dhcp_mock"), emitter, stateStore.WithSuffixes("dhcp_mock"))
 	doh.AddDoH(registry, logger.Named("doh_mock"), emitter)
 	pprof.AddPprof(registry, logger.Named("pprof"), emitter)
-	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, store); err != nil {
+	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, certStore); err != nil {
 		return
 	}
 	if err = metrics.AddMetricsExporter(registry, logger.Named("metrics_exporter"), checker); err != nil {

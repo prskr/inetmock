@@ -3,17 +3,18 @@ package dns
 import (
 	"net"
 	"sync"
+
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 )
 
 type IncrementalIPResolver struct {
-	lock   sync.Locker
+	lock   sync.Mutex
 	Offset uint32
 	CIDR   *net.IPNet
 }
 
 func NewIncrementalIPResolver(cidr *net.IPNet) *IncrementalIPResolver {
 	return &IncrementalIPResolver{
-		lock: new(sync.Mutex),
 		CIDR: cidr,
 	}
 }
@@ -24,7 +25,7 @@ func (i *IncrementalIPResolver) Lookup(string) net.IP {
 	var (
 		ones, bits = i.CIDR.Mask.Size()
 		max        = uint32(1<<(bits-ones)) - 1
-		base       = IPToInt32(i.CIDR.IP)
+		base       = netutils.IPToInt32(i.CIDR.IP)
 	)
 
 	if i.Offset >= max {
@@ -33,5 +34,5 @@ func (i *IncrementalIPResolver) Lookup(string) net.IP {
 
 	i.Offset += 1
 
-	return Uint32ToIP(base + i.Offset)
+	return netutils.Uint32ToIP(base + i.Offset)
 }

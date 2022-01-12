@@ -145,7 +145,7 @@ func Test_httpHandler_Start(t *testing.T) {
 			t.Cleanup(cancel)
 			logger := logging.CreateTestLogger(t)
 			listener := test.NewInMemoryListener(t)
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.Uplink{Listener: listener}, tt.args.opts)
+			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.NewUplink(listener), tt.args.opts)
 			emitterMock := audit_mock.NewMockEmitter(ctrl)
 			if !tt.wantErr {
 				emitterMock.EXPECT().Emit(test.GenericMatcher(t, tt.wantEvent))

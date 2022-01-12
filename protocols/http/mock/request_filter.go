@@ -19,21 +19,23 @@ const (
 	expectedHeaderValueParamCount = 2
 )
 
-type RequestFilter interface {
-	Matches(req *http.Request) bool
+type RequestFilterFunc func(req *http.Request) bool
+
+func (r RequestFilterFunc) Matches(req *http.Request) bool {
+	return r(req)
 }
 
-func RequestFiltersForRoutingRule(rule *rules.Routing) (filters []RequestFilter, err error) {
-	if rule.Filters == nil || len(rule.Filters.Chain) == 0 {
+func RequestFiltersForRoutingRule(rule *rules.SingleResponsePipeline) (filters []RequestFilter, err error) {
+	if rule.FilterChain == nil || len(rule.FilterChain.Chain) == 0 {
 		return nil, nil
 	}
-	filters = make([]RequestFilter, len(rule.Filters.Chain))
-	for idx := range rule.Filters.Chain {
-		if constructor, ok := knownRequestFilters[strings.ToLower(rule.Filters.Chain[idx].Name)]; !ok {
-			return nil, fmt.Errorf("%w %s", rules.ErrUnknownFilterMethod, rule.Filters.Chain[idx].Name)
+	filters = make([]RequestFilter, len(rule.FilterChain.Chain))
+	for idx := range rule.FilterChain.Chain {
+		if constructor, ok := knownRequestFilters[strings.ToLower(rule.FilterChain.Chain[idx].Name)]; !ok {
+			return nil, fmt.Errorf("%w %s", rules.ErrUnknownFilterMethod, rule.FilterChain.Chain[idx].Name)
 		} else {
 			var instance RequestFilter
-			instance, err = constructor(rule.Filters.Chain[idx].Params...)
+			instance, err = constructor(rule.FilterChain.Chain[idx].Params...)
 			if err != nil {
 				return
 			}
@@ -41,12 +43,6 @@ func RequestFiltersForRoutingRule(rule *rules.Routing) (filters []RequestFilter,
 		}
 	}
 	return
-}
-
-type RequestFilterFunc func(req *http.Request) bool
-
-func (r RequestFilterFunc) Matches(req *http.Request) bool {
-	return r(req)
 }
 
 func HTTPMethodMatcher(args ...rules.Param) (RequestFilter, error) {

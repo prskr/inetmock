@@ -112,6 +112,8 @@ func guessDetailsFromApp(any *anypb.Any) Details {
 		return details.NewHTTPFromWireFormat(detailsProto.(*auditv1.HTTPDetailsEntity))
 	case "type.googleapis.com/inetmock.audit.v1.DNSDetailsEntity":
 		return details.NewDNSFromWireFormat(detailsProto.(*auditv1.DNSDetailsEntity))
+	case "type.googleapis.com/inetmock.audit.v1.DHCPDetailsEntity":
+		return details.NewDHCPFromWireFormat(detailsProto.(*auditv1.DHCPDetailsEntity))
 	default:
 		return nil
 	}

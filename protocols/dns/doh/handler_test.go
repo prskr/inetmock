@@ -107,7 +107,7 @@ func Test_dohHandler_Start(t *testing.T) {
 					Server: "one.one.one.one",
 				},
 			}
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.Uplink{Listener: listener}, tt.args.opts)
+			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.NewUplink(listener), tt.args.opts)
 			if err := d.Start(ctx, lifecycle); (err != nil) != tt.wantErr {
 				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantErr)
 				return

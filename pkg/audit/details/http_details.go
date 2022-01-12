@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	goToWireMapping = map[string]auditv1.HTTPMethod{
+	httpGoToWireMapping = map[string]auditv1.HTTPMethod{
 		http.MethodGet:     auditv1.HTTPMethod_HTTP_METHOD_GET,
 		http.MethodHead:    auditv1.HTTPMethod_HTTP_METHOD_HEAD,
 		http.MethodPost:    auditv1.HTTPMethod_HTTP_METHOD_POST,
@@ -20,7 +20,7 @@ var (
 		http.MethodOptions: auditv1.HTTPMethod_HTTP_METHOD_OPTIONS,
 		http.MethodTrace:   auditv1.HTTPMethod_HTTP_METHOD_TRACE,
 	}
-	wireToGoMapping = map[auditv1.HTTPMethod]string{
+	httpWireToGoMapping = map[auditv1.HTTPMethod]string{
 		auditv1.HTTPMethod_HTTP_METHOD_GET:     http.MethodGet,
 		auditv1.HTTPMethod_HTTP_METHOD_HEAD:    http.MethodHead,
 		auditv1.HTTPMethod_HTTP_METHOD_POST:    http.MethodPost,
@@ -50,7 +50,7 @@ func NewHTTPFromWireFormat(entity *auditv1.HTTPDetailsEntity) HTTP {
 	}
 
 	method := ""
-	if mappedMethod, known := wireToGoMapping[entity.Method]; known {
+	if mappedMethod, known := httpWireToGoMapping[entity.Method]; known {
 		method = mappedMethod
 	}
 
@@ -65,7 +65,7 @@ func NewHTTPFromWireFormat(entity *auditv1.HTTPDetailsEntity) HTTP {
 
 func (d HTTP) MarshalToWireFormat() (any *anypb.Any, err error) {
 	method := auditv1.HTTPMethod_HTTP_METHOD_UNSPECIFIED
-	if methodValue, known := goToWireMapping[d.Method]; known {
+	if methodValue, known := httpGoToWireMapping[d.Method]; known {
 		method = methodValue
 	}
 

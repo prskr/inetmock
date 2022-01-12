@@ -117,20 +117,22 @@ func NewApp(spec Spec) App {
 			if cwd, err = os.Getwd(); err != nil {
 				return err
 			}
-			logging.ConfigureLogging(
-				logging.ParseLevel(logLevel),
-				developmentLogs,
-				spec.LogEncoding,
-				map[string]interface{}{
+			err = logging.ConfigureLogging(
+				logging.WithLevel(logging.ParseLevel(logLevel)),
+				logging.WithDevelopment(developmentLogs),
+				logging.WithEncoding(spec.LogEncoding),
+				logging.WithInitialFields(map[string]interface{}{
 					"cwd":  cwd,
 					"cmd":  cmd.Name(),
 					"args": args,
-				},
+				}),
 			)
 
-			if a.logger, err = logging.CreateLogger(); err != nil {
-				return
+			if err != nil {
+				return err
 			}
+
+			a.logger = logging.CreateLogger()
 			return
 		},
 		func(*cobra.Command, []string) (err error) {

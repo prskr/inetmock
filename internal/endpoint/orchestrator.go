@@ -68,7 +68,8 @@ func (e Orchestrator) Endpoints() []Endpoint {
 func (e *Orchestrator) StartEndpoints(ctx context.Context) chan error {
 	const muxReadTimeout = 50 * time.Millisecond
 	errChan := make(chan error)
-	for _, epListener := range e.endpointListeners {
+	for idx := range e.endpointListeners {
+		epListener := e.endpointListeners[idx]
 		endpointLogger := e.logger.With(
 			zap.String("epListener", epListener.name),
 		)

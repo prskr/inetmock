@@ -13,9 +13,8 @@ import (
 )
 
 var (
-	totalRequestCounter      *prometheus.CounterVec
 	requestDurationHistogram *prometheus.HistogramVec
-	initLock                 sync.Locker = new(sync.Mutex)
+	initLock                 sync.Mutex
 )
 
 func init() {
@@ -23,18 +22,6 @@ func init() {
 	defer initLock.Unlock()
 
 	var err error
-	if totalRequestCounter == nil {
-		if totalRequestCounter, err = metrics.Counter(
-			name,
-			"total_requests",
-			"",
-			handlerNameLblName,
-			ruleMatchedLblName,
-		); err != nil {
-			panic(err)
-		}
-	}
-
 	if requestDurationHistogram == nil {
 		if requestDurationHistogram, err = metrics.Histogram(
 			name,

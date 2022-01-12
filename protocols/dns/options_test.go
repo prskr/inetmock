@@ -44,7 +44,7 @@ func TestOptionsFromLifecycle(t *testing.T) {
 			args: args{
 				opts: map[string]interface{}{
 					"cache": map[string]interface{}{
-						"type": "ttl",
+						"type": "inMemory",
 						"ttl":  30 * time.Second,
 					},
 					"default": map[string]interface{}{
@@ -101,7 +101,7 @@ func TestOptionsFromLifecycle(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			lifecycle := endpoint.NewEndpointLifecycle("", endpoint.Uplink{}, tt.args.opts)
+			lifecycle := endpoint.NewEndpointLifecycle("", endpoint.NewUplink(nil), tt.args.opts)
 			got, err := dns.OptionsFromLifecycle(lifecycle)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OptionsFromLifecycle() error = %v, wantErr %v", err, tt.wantErr)

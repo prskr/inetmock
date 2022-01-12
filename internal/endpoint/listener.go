@@ -1,5 +1,3 @@
-//go:generate go-enum -f $GOFILE --lower --marshal --names
-
 package endpoint
 
 import (
@@ -18,13 +16,6 @@ var (
 	ErrMultiplexingNotSupported = errors.New("not all handlers do support multiplexing")
 )
 
-/* ENUM(
-UDP,
-TCP
-)
-*/
-type NetProto int
-
 type HandlerReference string
 
 func (h HandlerReference) ToLower() HandlerReference {
@@ -37,6 +28,7 @@ type ListenerSpec struct {
 	Address   string `mapstructure:"listenAddress"`
 	Port      uint16
 	Endpoints map[string]Spec
+	Unmanaged bool
 	Uplink    *Uplink `mapstructure:"-"`
 }
 
@@ -119,6 +111,7 @@ func (l *ListenerSpec) setupMux(mux cmux.CMux, grp *endpointGroup) (endpoints []
 			name: fmt.Sprintf("%s:%s", l.Name, name),
 			uplink: Uplink{
 				Proto:    NetProtoTCP,
+				Addr:     l.Uplink.Addr,
 				Listener: mux.Match(grp.Handlers[name].Matchers()...),
 			},
 			Spec: epSpec,
@@ -128,20 +121,30 @@ func (l *ListenerSpec) setupMux(mux cmux.CMux, grp *endpointGroup) (endpoints []
 }
 
 func (l *ListenerSpec) setupUplink() (err error) {
-	l.Uplink = new(Uplink)
+	l.Uplink = &Uplink{
+		Unmanaged: l.Unmanaged,
+	}
 	switch l.Protocol {
 	case "udp", "udp4", "udp6":
 		l.Uplink.Proto = NetProtoUDP
-		l.Uplink.PacketConn, err = net.ListenUDP(l.Protocol, &net.UDPAddr{
+		addr := &net.UDPAddr{
 			IP:   net.ParseIP(l.Address),
 			Port: int(l.Port),
-		})
+		}
+		l.Uplink.Addr = addr
+		if !l.Unmanaged {
+			l.Uplink.PacketConn, err = net.ListenUDP(l.Protocol, addr)
+		}
 	case "tcp", "tcp4", "tcp6":
 		l.Uplink.Proto = NetProtoTCP
-		l.Uplink.Listener, err = net.ListenTCP(l.Protocol, &net.TCPAddr{
+		addr := &net.TCPAddr{
 			IP:   net.ParseIP(l.Address),
 			Port: int(l.Port),
-		})
+		}
+		l.Uplink.Addr = addr
+		if !l.Unmanaged {
+			l.Uplink.Listener, err = net.ListenTCP(l.Protocol, addr)
+		}
 	default:
 		err = errors.New("protocol not supported")
 	}

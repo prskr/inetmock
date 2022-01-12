@@ -24,44 +24,38 @@ func TestParse(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Routing - Terminator only - string argument",
+			name: "SingleResponsePipeline - Response only - string argument",
 			args: args{
 				rule: `=> File("default.html")`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "File",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("default.html"),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "File",
+					Params: params(rules.Param{String: rules.StringP("default.html")}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator only - no argument",
+			name: "SingleResponsePipeline - Response only - no argument",
 			args: args{
 				rule: `=> NoContent()`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "NoContent",
-				},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{Name: "NoContent"},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator with module - no argument",
+			name: "SingleResponsePipeline - Response with module - no argument",
 			args: args{
 				rule: `=> http.NoContent()`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
 					Module: "http",
 					Name:   "NoContent",
 				},
@@ -69,184 +63,144 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator only do not support method name not starting with capital letter",
+			name: "SingleResponsePipeline - Response only do not support method name not starting with capital letter",
 			args: args{
 				rule: `=> file("default.html")`,
 			},
-			target:  new(rules.Routing),
+			target:  new(rules.SingleResponsePipeline),
 			wantErr: true,
 		},
 		{
-			name: "Routing - Terminator with module - string argument",
+			name: "SingleResponsePipeline - Response with module - string argument",
 			args: args{
 				rule: `=> http.File("default.html")`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
 					Module: "http",
 					Name:   "File",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("default.html"),
-						},
-					},
+					Params: params(rules.Param{String: rules.StringP("default.html")}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator only - int argument",
+			name: "SingleResponsePipeline - Response only - int argument",
 			args: args{
 				rule: `=> ReturnInt(1)`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "ReturnInt",
-					Params: []rules.Param{
-						{
-							Int: rules.IntP(1),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "ReturnInt",
+					Params: params(rules.Param{Int: rules.IntP(1)}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator with module - int argument",
+			name: "SingleResponsePipeline - Response with module - int argument",
 			args: args{
 				rule: `=> http.ReturnInt(1)`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
 					Module: "http",
 					Name:   "ReturnInt",
-					Params: []rules.Param{
-						{
-							Int: rules.IntP(1),
-						},
-					},
+					Params: params(rules.Param{Int: rules.IntP(1)}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator only - int argument, multiple digits",
+			name: "SingleResponsePipeline - Response only - int argument, multiple digits",
 			args: args{
 				rule: `=> ReturnInt(1337)`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "ReturnInt",
-					Params: []rules.Param{
-						{
-							Int: rules.IntP(1337),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "ReturnInt",
+					Params: params(rules.Param{Int: rules.IntP(1337)}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator with Module - int argument, multiple digits",
+			name: "SingleResponsePipeline - Response with Module - int argument, multiple digits",
 			args: args{
 				rule: `=> http.ReturnInt(1337)`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
 					Module: "http",
 					Name:   "ReturnInt",
-					Params: []rules.Param{
-						{
-							Int: rules.IntP(1337),
-						},
-					},
+					Params: params(rules.Param{Int: rules.IntP(1337)}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator only - float argument",
+			name: "SingleResponsePipeline - Response only - float argument",
 			args: args{
 				rule: `=> ReturnFloat(13.37)`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "ReturnFloat",
-					Params: []rules.Param{
-						{
-							Float: rules.FloatP(13.37),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "ReturnFloat",
+					Params: params(rules.Param{Float: rules.FloatP(13.37)}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator only - IP argument",
+			name: "SingleResponsePipeline - Response only - IP argument",
 			args: args{
 				rule: `=> IP(8.8.8.8)`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "IP",
-					Params: []rules.Param{
-						{
-							IP: net.ParseIP("8.8.8.8"),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "IP",
+					Params: params(rules.Param{IP: net.ParseIP("8.8.8.8")}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - Terminator only - CIDR argument",
+			name: "SingleResponsePipeline - Response only - CIDR argument",
 			args: args{
 				rule: `=> IP(8.8.8.8/32)`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "IP",
-					Params: []rules.Param{
-						{
-							CIDR: rules.MustParseCIDR("8.8.8.8/32"),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "IP",
+					Params: params(rules.Param{CIDR: rules.MustParseCIDR("8.8.8.8/32")}),
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Routing - path pattern and terminator",
+			name: "SingleResponsePipeline - path pattern and terminator",
 			args: args{
 				rule: `PathPattern(".*\\.(?i)png") => ReturnFile("default.html")`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "ReturnFile",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("default.html"),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "ReturnFile",
+					Params: params(rules.Param{String: rules.StringP("default.html")}),
 				},
-				Filters: &rules.Filters{
-					Chain: []rules.Method{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
 						{
-							Name: "PathPattern",
-							Params: []rules.Param{
-								{
-									String: rules.StringP(`.*\.(?i)png`),
-								},
-							},
+							Name:   "PathPattern",
+							Params: params(rules.Param{String: rules.StringP(`.*\.(?i)png`)}),
 						},
 					},
 				},
@@ -254,31 +208,23 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Routing - path pattern and terminator with Modules",
+			name: "SingleResponsePipeline - path pattern and terminator with Modules",
 			args: args{
 				rule: `http.PathPattern(".*\\.(?i)png") => http.ReturnFile("default.html")`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
 					Module: "http",
 					Name:   "ReturnFile",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("default.html"),
-						},
-					},
+					Params: params(rules.Param{String: rules.StringP("default.html")}),
 				},
-				Filters: &rules.Filters{
-					Chain: []rules.Method{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
 						{
 							Module: "http",
 							Name:   "PathPattern",
-							Params: []rules.Param{
-								{
-									String: rules.StringP(`.*\.(?i)png`),
-								},
-							},
+							Params: params(rules.Param{String: rules.StringP(`.*\.(?i)png`)}),
 						},
 					},
 				},
@@ -286,37 +232,25 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Routing - HTTP method, path pattern and terminator",
+			name: "SingleResponsePipeline - HTTP method, path pattern and terminator",
 			args: args{
 				rule: `Method("GET") -> PathPattern("/index.html") => ReturnFile("default.html")`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
-					Name: "ReturnFile",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("default.html"),
-						},
-					},
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
+					Name:   "ReturnFile",
+					Params: params(rules.Param{String: rules.StringP("default.html")}),
 				},
-				Filters: &rules.Filters{
-					Chain: []rules.Method{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
 						{
-							Name: "Method",
-							Params: []rules.Param{
-								{
-									String: rules.StringP(http.MethodGet),
-								},
-							},
+							Name:   "Method",
+							Params: params(rules.Param{String: rules.StringP(http.MethodGet)}),
 						},
 						{
-							Name: "PathPattern",
-							Params: []rules.Param{
-								{
-									String: rules.StringP("/index.html"),
-								},
-							},
+							Name:   "PathPattern",
+							Params: params(rules.Param{String: rules.StringP("/index.html")}),
 						},
 					},
 				},
@@ -324,42 +258,142 @@ func TestParse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Routing - HTTP method, path pattern and terminator with modules",
+			name: "SingleResponsePipeline - HTTP method, path pattern and terminator with modules",
 			args: args{
 				rule: `http.Method("GET") -> http.PathPattern("/index.html") => http.ReturnFile("default.html")`,
 			},
-			target: new(rules.Routing),
-			want: &rules.Routing{
-				Terminator: &rules.Method{
+			target: new(rules.SingleResponsePipeline),
+			want: &rules.SingleResponsePipeline{
+				Response: &rules.Call{
 					Module: "http",
 					Name:   "ReturnFile",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("default.html"),
-						},
-					},
+					Params: params(rules.Param{String: rules.StringP("default.html")}),
 				},
-				Filters: &rules.Filters{
-					Chain: []rules.Method{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
 						{
 							Module: "http",
 							Name:   "Method",
-							Params: []rules.Param{
-								{
-									String: rules.StringP(http.MethodGet),
-								},
-							},
+							Params: params(rules.Param{String: rules.StringP(http.MethodGet)}),
 						},
 						{
 							Module: "http",
 							Name:   "PathPattern",
-							Params: []rules.Param{
-								{
-									String: rules.StringP("/index.html"),
-								},
-							},
+							Params: params(rules.Param{String: rules.StringP("/index.html")}),
 						},
 					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ChainedResponsePipeline - single response only - IP argument",
+			args: args{
+				rule: `=> IP(1.2.3.4)`,
+			},
+			target: new(rules.ChainedResponsePipeline),
+			want: &rules.ChainedResponsePipeline{
+				Response: []rules.Call{{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})}},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ChainedResponsePipeline - multi-response only - IP arguments",
+			args: args{
+				rule: `=> IP(1.2.3.4) => Router(1.2.3.1)`,
+			},
+			target: new(rules.ChainedResponsePipeline),
+			want: &rules.ChainedResponsePipeline{
+				Response: calls(
+					rules.Call{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})},
+					rules.Call{Name: "Router", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 1)})},
+				),
+			},
+			wantErr: false,
+		},
+		{
+			name: "ChainedResponsePipeline - single response - single filter - IP argument",
+			args: args{
+				rule: `MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
+			},
+			target: new(rules.ChainedResponsePipeline),
+			want: &rules.ChainedResponsePipeline{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
+						{
+							Name:   "MatchMAC",
+							Params: params(rules.Param{String: rules.StringP(`00:06:7C:.*`)}),
+						},
+					},
+				},
+				Response: []rules.Call{{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})}},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ChainedResponsePipeline - single response - single filter - IP argument",
+			args: args{
+				rule: `MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
+			},
+			target: new(rules.ChainedResponsePipeline),
+			want: &rules.ChainedResponsePipeline{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
+						{
+							Name:   "MatchMAC",
+							Params: params(rules.Param{String: rules.StringP(`00:06:7C:.*`)}),
+						},
+					},
+				},
+				Response: []rules.Call{{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})}},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ChainedResponsePipeline - single response - multiple filters - IP argument",
+			args: args{
+				rule: `RequestType('Discover') -> MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
+			},
+			target: new(rules.ChainedResponsePipeline),
+			want: &rules.ChainedResponsePipeline{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
+						{
+							Name:   "RequestType",
+							Params: params(rules.Param{String: rules.StringP("Discover")}),
+						},
+						{
+							Name:   "MatchMAC",
+							Params: params(rules.Param{String: rules.StringP(`00:06:7C:.*`)}),
+						},
+					},
+				},
+				Response: []rules.Call{{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})}},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ChainedResponsePipeline - multiple responses - multiple filters - IP argument",
+			args: args{
+				rule: `RequestType('Discover') -> MatchMAC("00:06:7C:.*") => IP(1.2.3.4) => Router(1.2.3.1)`,
+			},
+			target: new(rules.ChainedResponsePipeline),
+			want: &rules.ChainedResponsePipeline{
+				FilterChain: &rules.Filters{
+					Chain: []rules.Call{
+						{
+							Name:   "RequestType",
+							Params: params(rules.Param{String: rules.StringP("Discover")}),
+						},
+						{
+							Name:   "MatchMAC",
+							Params: params(rules.Param{String: rules.StringP(`00:06:7C:.*`)}),
+						},
+					},
+				},
+				Response: []rules.Call{
+					{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})},
+					{Name: "Router", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 1)})},
 				},
 			},
 			wantErr: false,
@@ -371,14 +405,10 @@ func TestParse(t *testing.T) {
 			},
 			target: new(rules.Check),
 			want: &rules.Check{
-				Initiator: &rules.Method{
+				Initiator: &rules.Call{
 					Module: "http",
 					Name:   "Get",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("https://www.microsoft.com/"),
-						},
-					},
+					Params: params(rules.Param{String: rules.StringP("https://www.microsoft.com/")}),
 				},
 			},
 			wantErr: false,
@@ -390,7 +420,7 @@ func TestParse(t *testing.T) {
 			},
 			target: new(rules.Check),
 			want: &rules.Check{
-				Initiator: &rules.Method{
+				Initiator: &rules.Call{
 					Module: "http",
 					Name:   "Post",
 					Params: []rules.Param{
@@ -412,17 +442,13 @@ func TestParse(t *testing.T) {
 			},
 			target: new(rules.Check),
 			want: &rules.Check{
-				Initiator: &rules.Method{
+				Initiator: &rules.Call{
 					Module: "http",
 					Name:   "Get",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("https://www.microsoft.com/"),
-						},
-					},
+					Params: params(rules.Param{String: rules.StringP("https://www.microsoft.com/")}),
 				},
 				Validators: &rules.Filters{
-					Chain: []rules.Method{
+					Chain: []rules.Call{
 						{
 							Name: "Status",
 							Params: []rules.Param{
@@ -443,17 +469,13 @@ func TestParse(t *testing.T) {
 			},
 			target: new(rules.Check),
 			want: &rules.Check{
-				Initiator: &rules.Method{
+				Initiator: &rules.Call{
 					Module: "http",
 					Name:   "Get",
-					Params: []rules.Param{
-						{
-							String: rules.StringP("https://www.microsoft.com/"),
-						},
-					},
+					Params: params(rules.Param{String: rules.StringP("https://www.microsoft.com/")}),
 				},
 				Validators: &rules.Filters{
-					Chain: []rules.Method{
+					Chain: []rules.Call{
 						{
 							Name: "Status",
 							Params: []rules.Param{
@@ -669,4 +691,12 @@ func TestParam_AsFloat(t *testing.T) {
 			}
 		})
 	}
+}
+
+func params(p ...rules.Param) []rules.Param {
+	return p
+}
+
+func calls(c ...rules.Call) []rules.Call {
+	return c
 }

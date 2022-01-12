@@ -1,4 +1,4 @@
-package dns_test
+package netutils_test
 
 import (
 	"net"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 )
 
 func TestIPToInt32(t *testing.T) {
@@ -39,7 +39,7 @@ func TestIPToInt32(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			td.Cmp(t, dns.IPToInt32(tt.args.ip), tt.want)
+			td.Cmp(t, netutils.IPToInt32(tt.args.ip), tt.want)
 		})
 	}
 }

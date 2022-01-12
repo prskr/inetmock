@@ -22,7 +22,6 @@ import (
 const (
 	name               = "http_mock"
 	handlerNameLblName = "handler_name"
-	ruleMatchedLblName = "rule_matched"
 )
 
 type httpHandler struct {
@@ -41,14 +40,17 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 		zap.String("protocol_handler", name),
 	)
 
-	var err error
-	var options httpOptions
+	var (
+		options httpOptions
+		err     error
+	)
+
 	if options, err = loadFromConfig(lifecycle); err != nil {
 		return err
 	}
 
 	p.logger = p.logger.With(
-		zap.String("address", lifecycle.Uplink().Addr().String()),
+		zap.String("address", lifecycle.Uplink().Addr.String()),
 	)
 
 	router := &Router{
@@ -63,8 +65,9 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 	}
 
 	for idx := range options.Rules {
-		if err = router.RegisterRule(options.Rules[idx]); err != nil {
-			p.logger.Error("failed to setup rule", zap.String("rawRule", options.Rules[idx]), zap.Error(err))
+		rule := options.Rules[idx]
+		if err = router.RegisterRule(rule); err != nil {
+			p.logger.Error("failed to setup rule", zap.String("raw_rule", rule), zap.Error(err))
 			return err
 		}
 	}

@@ -1,6 +1,8 @@
 package test
 
 import (
+	"fmt"
+	"net"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -27,4 +29,14 @@ func (g genericMatcher) Matches(x interface{}) bool {
 
 func (g genericMatcher) String() string {
 	return g.tb.Name()
+}
+
+func IP(rawIP string) td.TestDeep {
+	parsed := net.ParseIP(rawIP)
+	return td.Code(func(other net.IP) error {
+		if !parsed.Equal(other) {
+			return fmt.Errorf("expected IP %s", rawIP)
+		}
+		return nil
+	})
 }

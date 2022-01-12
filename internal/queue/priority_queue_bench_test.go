@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 	"gitlab.com/inetmock/inetmock/internal/queue"
 	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 const (
@@ -77,7 +77,7 @@ func generateTestData(b *testing.B) []testData {
 	for i := 0; i < b.N; i++ {
 		data = append(data, testData{
 			domain: test.GenerateDomain(),
-			ip:     dns.Uint32ToIP(rand.Uint32()),
+			ip:     netutils.Uint32ToIP(rand.Uint32()),
 		})
 	}
 	return data

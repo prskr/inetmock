@@ -129,7 +129,7 @@ default:
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
 			emitter := auditmock.NewMockEmitter(ctrl)
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.Uplink{Listener: listener}, optsMap)
+			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.NewUplink(listener), optsMap)
 			if !tt.wantErr {
 				emitter.EXPECT().
 					Emit(gomock.Any()).

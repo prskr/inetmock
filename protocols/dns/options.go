@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ttlCacheType            = "ttl"
+	inMemCacheType          = "inMemory"
 	noneCacheType           = "none"
 	incrementalResolverType = "incremental"
 	randomResolverType      = "random"
@@ -23,7 +23,7 @@ const (
 var (
 	incrementalIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
 		if m, ok := in.(map[string]interface{}); ok {
-			if cidr, ok := m["cidr"].(string); ok {
+			if cidr, ok := m[cidrKey].(string); ok {
 				_, n, err := net.ParseCIDR(cidr)
 				if err != nil {
 					return nil, err
@@ -82,7 +82,7 @@ func OptionsFromLifecycle(lifecycle endpoint.Lifecycle) (*Options, error) {
 		ipResolverHook  = endpoint.NewOptionByTypeDecoderBuilderFor(&opts.Default)
 	)
 
-	cacheDecodeHook.AddMappingToMapper(ttlCacheType, ttlCacheMapping)
+	cacheDecodeHook.AddMappingToMapper(inMemCacheType, ttlCacheMapping)
 	cacheDecodeHook.AddMappingToType(noneCacheType, reflect.TypeOf(dnsmock.CacheMock{}))
 
 	ipResolverHook.AddMappingToMapper(incrementalResolverType, incrementalIPMapping)

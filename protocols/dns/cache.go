@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 	"gitlab.com/inetmock/inetmock/internal/queue"
 )
 
@@ -100,7 +101,7 @@ func (c *Cache) PutRecord(host string, address net.IP) {
 		Name:    host,
 		Address: address,
 	}
-	i := IPToInt32(address)
+	i := netutils.IPToInt32(address)
 	e := c.queue.Push(host, rec, c.cfg.ttl)
 	c.forwardIndex[host] = e
 	c.reverseIndex[i] = e
@@ -121,7 +122,7 @@ func (c *Cache) ForwardLookup(host string) net.IP {
 func (c *Cache) ReverseLookup(address net.IP) (host string, miss bool) {
 	c.readLock.Lock()
 	defer c.readLock.Unlock()
-	if e, cached := c.reverseIndex[IPToInt32(address)]; cached {
+	if e, cached := c.reverseIndex[netutils.IPToInt32(address)]; cached {
 		c.queue.UpdateTTL(e, c.cfg.ttl)
 		return e.Value.(*Record).Name, false
 	} else {
@@ -135,6 +136,6 @@ func (c *Cache) onCacheEvicted(evictedItems []*queue.Entry) {
 	for idx := range evictedItems {
 		record := evictedItems[idx].Value.(*Record)
 		delete(c.forwardIndex, record.Name)
-		delete(c.reverseIndex, IPToInt32(record.Address))
+		delete(c.reverseIndex, netutils.IPToInt32(record.Address))
 	}
 }

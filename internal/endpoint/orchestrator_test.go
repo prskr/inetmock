@@ -261,7 +261,7 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 			stream := audit.MustNewEventStream(logger)
 			uplink, client := setupTestListener(t)
 			orchestrator := endpoint.NewOrchestrator(store, tt.handlerRegistrySetup(t, stream), logger)
-			tt.orchestratorSetup(t, orchestrator, uplink)
+			tt.orchestratorSetup(t, orchestrator, &uplink)
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
 			handleStartupErrors(t, orchestrator.StartEndpoints(ctx))
@@ -285,13 +285,10 @@ func Test_orchestrator_StartEndpoints(t *testing.T) {
 	}
 }
 
-func setupTestListener(tb testing.TB) (uplink *endpoint.Uplink, client *http.Client) {
+func setupTestListener(tb testing.TB) (uplink endpoint.Uplink, client *http.Client) {
 	tb.Helper()
 	inMemListener := test.NewInMemoryListener(tb)
-	uplink = &endpoint.Uplink{
-		Listener: inMemListener,
-		Proto:    endpoint.NetProtoTCP,
-	}
+	uplink = endpoint.NewUplink(inMemListener)
 	client = test.HTTPClientForInMemListener(inMemListener)
 
 	return uplink, client

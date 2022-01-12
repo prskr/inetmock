@@ -15,18 +15,18 @@ var knownRequestFilters = map[string]func(args ...rules.Param) (QuestionPredicat
 	"aaaa": HostnameQuestionFilter(mdns.TypeAAAA),
 }
 
-func QuestionPredicatesForRoutingRule(rule *rules.Routing) (predicates []QuestionPredicate, err error) {
-	if rule == nil || rule.Filters == nil || len(rule.Filters.Chain) == 0 {
+func QuestionPredicatesForRoutingRule(rule *rules.SingleResponsePipeline) (predicates []QuestionPredicate, err error) {
+	if rule == nil || rule.FilterChain == nil || len(rule.FilterChain.Chain) == 0 {
 		return nil, nil
 	}
 
-	predicates = make([]QuestionPredicate, 0, len(rule.Filters.Chain))
-	for idx := range rule.Filters.Chain {
-		if constructor, ok := knownRequestFilters[strings.ToLower(rule.Filters.Chain[idx].Name)]; !ok {
-			return nil, fmt.Errorf("%w %s", rules.ErrUnknownFilterMethod, rule.Filters.Chain[idx].Name)
+	predicates = make([]QuestionPredicate, 0, len(rule.FilterChain.Chain))
+	for idx := range rule.FilterChain.Chain {
+		if constructor, ok := knownRequestFilters[strings.ToLower(rule.FilterChain.Chain[idx].Name)]; !ok {
+			return nil, fmt.Errorf("%w %s", rules.ErrUnknownFilterMethod, rule.FilterChain.Chain[idx].Name)
 		} else {
 			var instance QuestionPredicate
-			instance, err = constructor(rule.Filters.Chain[idx].Params...)
+			instance, err = constructor(rule.FilterChain.Chain[idx].Params...)
 			if err != nil {
 				return
 			}

@@ -1,4 +1,4 @@
-package dns
+package netutils
 
 import (
 	"encoding/binary"

@@ -23,6 +23,7 @@ type Data struct {
 	PCAP      string
 	Audit     string
 	FakeFiles string
+	State     string
 }
 
 func (d *Data) setup() (err error) {
@@ -31,6 +32,12 @@ func (d *Data) setup() (err error) {
 	}
 	if d.Audit, err = ensureDataDir(d.Audit); err != nil {
 		return
+	}
+	var stateDir string
+	if stateDir, err = ensureDataDir(filepath.Dir(d.State)); err != nil {
+		return
+	} else {
+		d.State = filepath.Join(stateDir, filepath.Base(d.State))
 	}
 
 	if !filepath.IsAbs(d.FakeFiles) {
@@ -87,6 +94,7 @@ func main() {
 				"api.listen":                            "tcp://:0",
 				"data.pcap":                             "/var/lib/inetmock/data/pcap",
 				"data.audit":                            "/var/lib/inetmock/data/audit",
+				"data.state":                            "/var/lib/inetmock/data/state/inetmock.db",
 				"tls.curve":                             cert.CurveTypeP256,
 				"tls.minTLSVersion":                     cert.TLSVersionTLS10,
 				"tls.includeInsecureCipherSuites":       false,

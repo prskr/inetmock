@@ -8,6 +8,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 	dns2 "gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
@@ -87,7 +88,7 @@ func Test_cache_ForwardLookup(t *testing.T) {
 			args: args{
 				host: "mail.gogle.ru",
 				resolver: dns2.IPResolverFunc(func(host string) net.IP {
-					return dns2.Uint32ToIP(rand.Uint32())
+					return netutils.Uint32ToIP(rand.Uint32())
 				}),
 			},
 			want: td.NotNil(),

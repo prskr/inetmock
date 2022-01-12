@@ -31,3 +31,11 @@ func IPPortFromAddress(addr net.Addr) (ipPort *IPPort, err error) {
 		return nil, errors.New("unknown address type")
 	}
 }
+
+func MustParseMAC(rawMac string) net.HardwareAddr {
+	if m, err := net.ParseMAC(rawMac); err != nil {
+		panic(err)
+	} else {
+		return m
+	}
+}

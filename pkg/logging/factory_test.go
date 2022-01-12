@@ -116,58 +116,41 @@ func TestParseLevel(t *testing.T) {
 
 //nolint:paralleltest
 func TestConfigureLogging(t *testing.T) {
-	type args struct {
-		level              zap.AtomicLevel
-		developmentLogging bool
-		encoding           string
-		initialFields      map[string]interface{}
-	}
 	type testCase struct {
 		name string
-		args args
+		opts []LoggingOption
 	}
 	tests := []testCase{
 		{
 			name: "Test configure defaults",
-			args: args{},
 		},
 		{
 			name: "Test configure with initialFields",
-			args: args{
-				initialFields: map[string]interface{}{
+			opts: []LoggingOption{
+				WithInitialFields(map[string]interface{}{
 					"asdf": "hello, World",
-				},
+				}),
 			},
 		},
 		{
 			name: "Test configure development logging enabled",
-			args: args{
-				developmentLogging: true,
+			opts: []LoggingOption{
+				WithDevelopment(true),
 			},
 		},
 		{
 			name: "Test configure log level",
-			args: args{
-				level: zap.NewAtomicLevelAt(zap.FatalLevel),
+			opts: []LoggingOption{
+				WithLevel(zap.NewAtomicLevelAt(zap.FatalLevel)),
 			},
 		},
 	}
 	for _, tc := range tests {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
-			ConfigureLogging(tt.args.level, tt.args.developmentLogging, tt.args.encoding, tt.args.initialFields)
-			if loggingConfig.Development != tt.args.developmentLogging {
-				t.Errorf("loggingConfig.Development = %t, want %t", loggingConfig.Development, tt.args.developmentLogging)
+			if err := ConfigureLogging(tt.opts...); err != nil {
+				t.Errorf("ConfigureLogging() error = %v", err)
 				return
-			}
-
-			if loggingConfig.Level != tt.args.level {
-				t.Errorf("loggingConfig.Level = %v, want %v", loggingConfig.Level, tt.args.level)
-				return
-			}
-
-			if tt.args.initialFields != nil {
-				td.Cmp(t, loggingConfig.InitialFields, tt.args.initialFields)
 			}
 		})
 	}

@@ -44,7 +44,7 @@ func (p *pprofHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) 
 	}
 
 	p.logger = p.logger.With(
-		zap.String("address", lifecycle.Uplink().Addr().String()),
+		zap.String("address", lifecycle.Uplink().Addr.String()),
 	)
 
 	go p.startServer(lifecycle.Uplink().Listener)

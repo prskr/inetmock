@@ -45,7 +45,7 @@ func (d *dohHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 
 	d.logger = d.logger.With(
 		zap.String("handler_name", lifecycle.Name()),
-		zap.String("address", lifecycle.Uplink().Addr().String()),
+		zap.String("address", lifecycle.Uplink().Addr.String()),
 	)
 
 	ruleHandler := &dns.RuleHandler{

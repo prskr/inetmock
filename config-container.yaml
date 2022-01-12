@@ -20,7 +20,7 @@ x-dns-response-rules: &dnsResponseRules
   options:
     ttl: 30s
     cache:
-      type: ttl
+      type: inMemory
       ttl: 30s
       initialCapacity: 500
     rules:
@@ -147,6 +147,32 @@ listeners:
       plainDns:
         handler: dns_mock
         <<: *dnsResponseRules
+  udp_67:
+    name: ''
+    protocol: udp
+    listenAddress: ''
+    port: 67
+    unmanaged: true
+    endpoints:
+      dhcp_mock:
+        handler: dhcp_mock
+        options:
+          rules:
+            - ExactMAC("54:df:83:56:2c:f3") => IP(1.3.3.7)
+            - MatchMAC(`00:06:7C:.*`) => Range(3.3.6.110, 3.3.6.200)
+          default:
+            serverID: 1.2.3.1
+            dns:
+              - 1.2.3.4
+              - 3.4.5.6
+            router: 1.2.3.4
+            netmask: 255.255.255.0
+            leaseTime: 1h
+          fallback:
+            type: range
+            ttl: 1h
+            startIP: 10.0.0.50
+            endIP: 10.0.0.100
   tcp_80:
     name: ''
     protocol: tcp

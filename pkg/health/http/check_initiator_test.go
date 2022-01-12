@@ -33,7 +33,7 @@ func TestInitiatorForRule(t *testing.T) {
 			name: "Initiator for GET request",
 			args: args{
 				rule: &rules.Check{
-					Initiator: &rules.Method{
+					Initiator: &rules.Call{
 						Module: "http",
 						Name:   "Get",
 						Params: []rules.Param{
@@ -51,7 +51,7 @@ func TestInitiatorForRule(t *testing.T) {
 			name: "Initiator for POST request without parameter",
 			args: args{
 				rule: &rules.Check{
-					Initiator: &rules.Method{
+					Initiator: &rules.Call{
 						Module: "http",
 						Name:   "Post",
 						Params: []rules.Param{
@@ -69,7 +69,7 @@ func TestInitiatorForRule(t *testing.T) {
 			name: "Initiator for POST request with JSON parameter",
 			args: args{
 				rule: &rules.Check{
-					Initiator: &rules.Method{
+					Initiator: &rules.Call{
 						Module: "http",
 						Name:   "Post",
 						Params: []rules.Param{
@@ -90,7 +90,7 @@ func TestInitiatorForRule(t *testing.T) {
 			name: "Error wrong module",
 			args: args{
 				rule: &rules.Check{
-					Initiator: &rules.Method{
+					Initiator: &rules.Call{
 						Module: "dns",
 					},
 				},
@@ -101,7 +101,7 @@ func TestInitiatorForRule(t *testing.T) {
 			name: "Error unknown initiator",
 			args: args{
 				rule: &rules.Check{
-					Initiator: &rules.Method{
+					Initiator: &rules.Call{
 						Module: "http",
 						Name:   "proxy",
 					},
@@ -113,7 +113,7 @@ func TestInitiatorForRule(t *testing.T) {
 			name: "Error missing argument",
 			args: args{
 				rule: &rules.Check{
-					Initiator: &rules.Method{
+					Initiator: &rules.Call{
 						Module: "http",
 						Name:   "get",
 					},

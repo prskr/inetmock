@@ -11,14 +11,22 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
-type ConditionalHandler struct {
-	http.Handler
-	Filters []RequestFilter
-}
+type (
+	RequestFilter interface {
+		Matches(req *http.Request) bool
+	}
 
-func (c *ConditionalHandler) Matches(req *http.Request) bool {
-	for idx := range c.Filters {
-		if !c.Filters[idx].Matches(req) {
+	FilterChain []RequestFilter
+
+	ConditionalHandler struct {
+		http.Handler
+		Chain FilterChain
+	}
+)
+
+func (c FilterChain) Matches(req *http.Request) bool {
+	for idx := range c {
+		if !c[idx].Matches(req) {
 			return false
 		}
 	}
@@ -34,7 +42,7 @@ type Router struct {
 
 func (r *Router) RegisterRule(rawRule string) error {
 	r.Logger.Debug("Adding routing rule", zap.String("rawRule", rawRule))
-	rule := new(rules.Routing)
+	rule := new(rules.SingleResponsePipeline)
 	if err := rules.Parse(rawRule, rule); err != nil {
 		return err
 	}
@@ -44,7 +52,7 @@ func (r *Router) RegisterRule(rawRule string) error {
 		err                error
 	)
 
-	if conditionalHandler.Filters, err = RequestFiltersForRoutingRule(rule); err != nil {
+	if conditionalHandler.Chain, err = RequestFiltersForRoutingRule(rule); err != nil {
 		return err
 	}
 
@@ -53,7 +61,6 @@ func (r *Router) RegisterRule(rawRule string) error {
 	}
 
 	r.Logger.Debug("Configure successfully parsed routing rule")
-
 	r.handlers = append(r.handlers, conditionalHandler)
 
 	return nil
@@ -64,7 +71,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	defer timer.ObserveDuration()
 
 	for idx := range r.handlers {
-		if r.handlers[idx].Matches(request) {
+		if r.handlers[idx].Chain.Matches(request) {
 			r.handlers[idx].ServeHTTP(writer, request)
 			return
 		}

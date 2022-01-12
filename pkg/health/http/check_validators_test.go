@@ -469,7 +469,7 @@ func TestCheckFiltersForRule(t *testing.T) {
 			args: args{
 				rule: &rules.Check{
 					Validators: &rules.Filters{
-						Chain: []rules.Method{
+						Chain: []rules.Call{
 							{
 								Module: "http",
 								Name:   "status",
@@ -491,7 +491,7 @@ func TestCheckFiltersForRule(t *testing.T) {
 			args: args{
 				rule: &rules.Check{
 					Validators: &rules.Filters{
-						Chain: []rules.Method{
+						Chain: []rules.Call{
 							{
 								Module: "http",
 								Name:   "statuscode",
@@ -512,7 +512,7 @@ func TestCheckFiltersForRule(t *testing.T) {
 			args: args{
 				rule: &rules.Check{
 					Validators: &rules.Filters{
-						Chain: []rules.Method{
+						Chain: []rules.Call{
 							{
 								Module: "http",
 								Name:   "statcode",

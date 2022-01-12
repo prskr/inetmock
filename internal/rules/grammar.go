@@ -34,8 +34,14 @@ func init() {
 	}))
 
 	parsers = map[reflect.Type]*participle.Parser{
-		reflect.TypeOf(new(Routing)): participle.MustBuild(
-			new(Routing),
+		reflect.TypeOf(new(SingleResponsePipeline)): participle.MustBuild(
+			new(SingleResponsePipeline),
+			participle.Lexer(ruleLexer),
+			participle.Unquote("String"),
+			participle.Unquote("RawString"),
+		),
+		reflect.TypeOf(new(ChainedResponsePipeline)): participle.MustBuild(
+			new(ChainedResponsePipeline),
 			participle.Lexer(ruleLexer),
 			participle.Unquote("String"),
 			participle.Unquote("RawString"),
@@ -57,7 +63,7 @@ func init() {
 }
 
 // Parse takes a raw rule and parses it into the given target instance
-// currently only Routing and Check are supported for parsing
+// currently only SingleResponsePipeline and Check are supported for parsing
 func Parse(rule string, target interface{}) error {
 	parser, available := parsers[reflect.TypeOf(target)]
 	if !available {
@@ -69,17 +75,46 @@ func Parse(rule string, target interface{}) error {
 	return nil
 }
 
-// Routing describes how DNS or HTTP requests are handled
-// A routing is described as a optional chain of Filters like: filter1() -> filter2()
-// and a Terminator which determines how the request should be handled e.g. http.Status(204)
+type FilteredPipeline interface {
+	Filters() []Call
+}
+
+// SingleResponsePipeline describes how requests are handled that expect single response
+// e.g. HTTP or DNS requests
+// A SingleResponsePipeline is defined as an optional chain of Filters like: filter1() -> filter2()
+// and a Response which determines how the request should be handled e.g. http.Status(204)
 // a full chain might look like so: GET() -> Header("Accept", "application/json") -> http.Status(200).
-type Routing struct {
-	Filters    *Filters `parser:"@@*"`
-	Terminator *Method  `parser:"'=>' @@"`
+type SingleResponsePipeline struct {
+	FilterChain *Filters `parser:"@@*"`
+	Response    *Call    `parser:"'=>' @@"`
+}
+
+func (p *SingleResponsePipeline) Filters() []Call {
+	if p.FilterChain != nil {
+		return p.FilterChain.Chain
+	}
+	return nil
+}
+
+// ChainedResponsePipeline describes how requests are handled that expect a chain of response handlers
+// e.g. DHCP where one handler might set the IP, one sets the default gateway, one sets the DNS servers and so on
+// A ChainedResponsePipeline is defined as an optional chain of Filters like: filter1() -> filter2()
+// and a chain of Response handlers while at least one has to be present
+// // a full chain might look like so: MatchMAC(`00:06:7C:.*`) => IP(3.3.6.6) => Router(1.2.3.4) => DNS(1.2.3.4, 4.5.6.7)
+type ChainedResponsePipeline struct {
+	FilterChain *Filters `parser:"@@*"`
+	Response    []Call   `parser:"'=>' @@ ('=>' @@)*"`
+}
+
+func (p *ChainedResponsePipeline) Filters() []Call {
+	if p.FilterChain != nil {
+		return p.FilterChain.Chain
+	}
+	return nil
 }
 
 type Check struct {
-	Initiator  *Method  `parser:"@@"`
+	Initiator  *Call    `parser:"@@"`
 	Validators *Filters `parser:"( '=>' @@)?"`
 }
 
@@ -88,10 +123,10 @@ type CheckScript struct {
 }
 
 type Filters struct {
-	Chain []Method `parser:"@@ ('->' @@)*"`
+	Chain []Call `parser:"@@ ('->' @@)*"`
 }
 
-type Method struct {
+type Call struct {
 	Module string  `parser:"(@Module'.')?"`
 	Name   string  `parser:"@Ident"`
 	Params []Param `parser:"'(' @@? ( ',' @@ )*')'"`

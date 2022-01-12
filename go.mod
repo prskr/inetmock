@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20211114080932-d06c3be7c11b
 	github.com/golang/mock v1.6.0
@@ -13,6 +14,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.12
+	github.com/insomniacslk/dhcp v0.0.0-20211214070828-5297eed8f489
 	github.com/jinzhu/copier v0.3.4
 	github.com/maxatome/go-testdeep v1.11.0
 	github.com/miekg/dns v1.1.45
@@ -21,9 +23,10 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/soheilhy/cmux v0.1.5
 	github.com/spf13/cobra v1.3.0
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.10.1
 	github.com/testcontainers/testcontainers-go v0.12.0
+	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/multierr v1.7.0
 	go.uber.org/zap v1.20.0
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
@@ -39,23 +42,32 @@ require (
 	github.com/Microsoft/hcsshim v0.8.23 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/containerd/cgroups v1.0.1 // indirect
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v20.10.11+incompatible // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/snappy v0.0.3 // indirect
+	github.com/google/flatbuffers v1.12.1 // indirect
 	github.com/gorilla/mux v0.0.0-00010101000000-000000000000 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/klauspost/compress v1.12.3 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/mdlayher/ethernet v0.0.0-20190606142754-0394541c37b7 // indirect
+	github.com/mdlayher/raw v0.0.0-20191009151244-50f2db8cc065 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/moby/sys/mountinfo v0.5.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
@@ -74,6 +86,8 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/u-root/uio v0.0.0-20210528114334-82958018845c // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/mod v0.5.0 // indirect
@@ -91,8 +105,6 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v20.10.11+incompatible
 	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20211124091904-a10d380ef3cd
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
-	github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
-	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
 	golang.org/x/text => golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 )

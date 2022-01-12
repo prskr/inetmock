@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"gitlab.com/inetmock/inetmock/internal/app"
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 )
 
 type RandomIPResolver struct {
@@ -30,10 +31,10 @@ func (r *RandomIPResolver) Lookup(string) net.IP {
 		offset, base uint32
 	)
 
-	base = IPToInt32(r.CIDR.IP)
+	base = netutils.IPToInt32(r.CIDR.IP)
 	r.lock.Lock()
 	offset = uint32(r.Random.Intn(max))
 	r.lock.Unlock()
 
-	return Uint32ToIP(base + offset)
+	return netutils.Uint32ToIP(base + offset)
 }

@@ -32,7 +32,7 @@ func (m *metricsExporter) Start(ctx context.Context, lifecycle endpoint.Lifecycl
 
 	m.logger = m.logger.With(
 		zap.String("handler_name", lifecycle.Name()),
-		zap.String("address", lifecycle.Uplink().Addr().String()),
+		zap.String("address", lifecycle.Uplink().Addr.String()),
 	)
 
 	mux := http.NewServeMux()
