@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package inetmock.audit.v1;
+
+enum DHCPOpCode {
+  DHCP_OP_CODE_UNSPECIFIED = 0;
+  DHCP_OP_CODE_BOOT_REQUEST = 1;
+  DHCP_OP_CODE_BOOT_REPLY = 2;
+}
+
+enum DHCPHwType {
+  DHCP_HW_TYPE_UNSPECIFIED = 0;
+  DHCP_HW_TYPE_ETHERNET = 1;
+  DHCP_HW_TYPE_LOCAL_NET = 12;
+  DHCP_HW_TYPE_FIBRE_CHANNEL = 18;
+  DHCP_HW_TYPE_SERIAL_LINE = 20;
+  DHCP_HW_TYPE_IPSEC = 31;
+  DHCP_HW_TYPE_INFINIBAND = 32;
+}
+
+message DHCPDetailsEntity {
+  int32 hop_count = 1;
+  DHCPOpCode opcode = 2;
+  DHCPHwType hw_type = 3;
+}
