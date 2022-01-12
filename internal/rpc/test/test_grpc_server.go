@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 )
 
@@ -41,9 +42,12 @@ func NewTestGRPCServer(tb testing.TB, registrations ...APIRegistration) (srv *GR
 
 func (t *GRPCServer) Dial(ctx context.Context, tb testing.TB, opts ...grpc.DialOption) *grpc.ClientConn {
 	tb.Helper()
-	opts = append(opts, grpc.WithInsecure(), grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
-		return t.listener.Dial()
-	}))
+	opts = append(opts,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return t.listener.Dial()
+		}),
+	)
 	conn, err := grpc.DialContext(ctx, "", opts...)
 	if err != nil {
 		tb.Fatalf("failed to connect to gRPC test server - error = %v", err)

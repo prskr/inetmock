@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"gitlab.com/inetmock/inetmock/internal/app"
 )
@@ -63,7 +64,7 @@ func main() {
 
 func initGRPCConnection(*cobra.Command, []string) (err error) {
 	dialCtx, cancel := context.WithTimeout(cliApp.Context(), cfg.GRPCTimeout)
-	conn, err = grpc.DialContext(dialCtx, cfg.SocketPath, grpc.WithInsecure())
+	conn, err = grpc.DialContext(dialCtx, cfg.SocketPath, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	cancel()
 
 	return
