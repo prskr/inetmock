@@ -38,6 +38,9 @@ linters-settings:
           - return
   govet:
     check-shadowing: true
+    enable-all: true
+    disable:
+      - fieldalignment
   importas:
     no-unaliased: true
     alias:
@@ -47,8 +50,6 @@ linters-settings:
         alias: mdns
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
   nolintlint:
@@ -111,6 +112,7 @@ issues:
       linters:
         - gomnd
         - funlen
+        - govet
 
 run:
   build-tags:
