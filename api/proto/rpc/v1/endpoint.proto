@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package inetmock.rpc.v1;
+
+message ListenerGroup {
+  string name = 1;
+  repeated string endpoints = 2;
+}
+
+message ListAllServingGroupsRequest {
+}
+
+message ListAllServingGroupsResponse {
+  repeated ListenerGroup groups = 1;
+}
+
+message ListAllConfiguredGroupsRequest {
+}
+
+message ListAllConfiguredGroupsResponse {
+  repeated ListenerGroup groups = 1;
+}
+
+message StartListenerGroupRequest {
+  string group_name = 1;
+}
+
+message StartListenerGroupResponse {
+}
+
+message StartAllGroupsRequest {
+}
+
+message StartAllGroupsResponse {
+}
+
+message StopListenerGroupRequest {
+  string group_name = 1;
+}
+
+message StopListenerGroupResponse {
+}
+
+message StopAllGroupsRequest {
+}
+
+message StopAllGroupsResponse {
+}
+
+message RestartListenerGroupRequest {
+  string group_name = 1;
+}
+
+message RestartListenerGroupResponse {
+}
+
+message RestartAllGroupsRequest {
+}
+
+message RestartAllGroupsResponse {
+}
+
+
+service EndpointOrchestratorService {
+  rpc ListAllServingGroups(ListAllServingGroupsRequest) returns(ListAllServingGroupsResponse);
+  rpc ListAllConfiguredGroups(ListAllConfiguredGroupsRequest) returns(ListAllConfiguredGroupsResponse);
+  rpc StartListenerGroup(StartListenerGroupRequest) returns (StartListenerGroupResponse);
+  rpc StartAllGroups(StartAllGroupsRequest) returns (StartAllGroupsResponse);
+  rpc StopListenerGroup(StopListenerGroupRequest) returns (StopListenerGroupResponse);
+  rpc StopAllGroups(StopAllGroupsRequest) returns (StopAllGroupsResponse);
+  rpc RestartListenerGroup(RestartListenerGroupRequest) returns (RestartListenerGroupResponse);
+  rpc RestartAllGroups(RestartAllGroupsRequest) returns (RestartAllGroupsResponse);
+}

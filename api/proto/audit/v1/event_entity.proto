@@ -2,8 +2,10 @@ syntax = "proto3";
 
 package inetmock.audit.v1;
 
-import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
+import "audit/v1/http_details.proto";
+import "audit/v1/dns_details.proto";
+import "audit/v1/dhcp_details.proto";
 
 enum TransportProtocol {
   TRANSPORT_PROTOCOL_UNSPECIFIED = 0;
@@ -45,5 +47,10 @@ message EventEntity {
   uint32 source_port = 7;
   uint32 destination_port = 8;
   TLSDetailsEntity tls = 9;
-  google.protobuf.Any protocol_details = 10;
+
+  oneof protocol_details {
+    HTTPDetailsEntity http = 20;
+    DNSDetailsEntity dns = 21;
+    DHCPDetailsEntity dhcp = 22;
+  }
 }
