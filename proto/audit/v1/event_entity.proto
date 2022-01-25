@@ -3,7 +3,7 @@ syntax = "proto3";
 package inetmock.audit.v1;
 
 option csharp_namespace = "INetMock.Client.Audit";
-option go_package = "gitlab.com/inetmock/inetmock/pkg/audit";
+option go_package = "gitlab.com/inetmock/inetmock/pkg/audit/v1";
 option java_multiple_files = true;
 option java_outer_classname = "HandlerEventProto";
 option java_package = "com.github.baez90.inetmock.audit";
@@ -22,6 +22,7 @@ enum AppProtocol {
   APP_PROTOCOL_DNS = 1;
   APP_PROTOCOL_HTTP = 2;
   APP_PROTOCOL_HTTP_PROXY = 3;
+  APP_PROTOCOL_PPROF = 4;
 }
 
 enum TLSVersion {

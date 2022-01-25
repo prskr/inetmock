@@ -3,7 +3,7 @@ syntax = "proto3";
 package inetmock.rpc.v1;
 
 option csharp_namespace = "INetMock.Client.Rpc";
-option go_package = "gitlab.com/inetmock/inetmock/pkg/rpc";
+option go_package = "gitlab.com/inetmock/inetmock/pkg/rpc/v1";
 option java_multiple_files = true;
 option java_outer_classname = "AuditProto";
 option java_package = "com.github.baez90.inetmock.rpc";
@@ -35,13 +35,14 @@ message StartPCAPFileRecordingRequest {
 
 message StartPCAPFileRecordingResponse {
   string resolved_path = 1;
+  string consumer_key = 2;
 }
 
-message StopPCAPFileRecordRequest {
+message StopPCAPFileRecordingRequest {
   string consumer_key = 1;
 }
 
-message StopPCAPFileRecordResponse {
+message StopPCAPFileRecordingResponse {
   bool removed = 1;
 }
 
@@ -49,5 +50,5 @@ service PCAPService {
   rpc ListAvailableDevices(ListAvailableDevicesRequest) returns (ListAvailableDevicesResponse);
   rpc ListActiveRecordings(ListActiveRecordingsRequest) returns (ListActiveRecordingsResponse);
   rpc StartPCAPFileRecording(StartPCAPFileRecordingRequest) returns (StartPCAPFileRecordingResponse);
-  rpc StopPCAPFileRecord(StopPCAPFileRecordRequest) returns (StopPCAPFileRecordResponse);
+  rpc StopPCAPFileRecording(StopPCAPFileRecordingRequest) returns (StopPCAPFileRecordingResponse);
 }
