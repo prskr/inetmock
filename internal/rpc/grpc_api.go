@@ -18,6 +18,7 @@ import (
 	v1Health "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
+	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	"gitlab.com/inetmock/inetmock/internal/pcap"
 	"gitlab.com/inetmock/inetmock/internal/rpc/middleware"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
@@ -40,6 +41,8 @@ type inetmockAPI struct {
 	logger        logging.Logger
 	checker       health.Checker
 	eventStream   audit.EventStream
+	epHost        endpoint.Host
+	hostBuilder   endpoint.HostBuilder
 	auditDataDir  string
 	pcapDataDir   string
 	serverRunning chan struct{}
@@ -50,6 +53,7 @@ func NewINetMockAPI(
 	logger logging.Logger,
 	checker health.Checker,
 	eventStream audit.EventStream,
+	epHost endpoint.Host,
 	auditDataDir, pcapDataDir string,
 ) INetMockAPI {
 	return &inetmockAPI{
@@ -58,6 +62,7 @@ func NewINetMockAPI(
 		logger:       logger.Named("api"),
 		checker:      checker,
 		eventStream:  eventStream,
+		epHost:       epHost,
 		auditDataDir: auditDataDir,
 		pcapDataDir:  pcapDataDir,
 	}
@@ -86,6 +91,7 @@ func (i *inetmockAPI) StartServer() (err error) {
 	rpcv1.RegisterAuditServiceServer(i.server, NewAuditServiceServer(i.logger, i.eventStream, i.auditDataDir))
 	rpcv1.RegisterPCAPServiceServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 	rpcv1.RegisterProfilingServiceServer(i.server, NewProfilingServer())
+	rpcv1.RegisterEndpointOrchestratorServiceServer(i.server, NewEndpointOrchestratorServer(i.logger, i.epHost))
 
 	reflection.Register(i.server)
 

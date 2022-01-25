@@ -2,19 +2,30 @@ package audit
 
 import (
 	"net"
+	"reflect"
+	"sync"
 	"time"
 
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
+var (
+	mappingLock     sync.Mutex
+	wire2AppMapping = make(map[reflect.Type]func(msg *auditv1.EventEntity) Details)
+)
+
+func AddMapping(t reflect.Type, mapper func(msg *auditv1.EventEntity) Details) {
+	mappingLock.Lock()
+	defer mappingLock.Unlock()
+
+	wire2AppMapping[t] = mapper
+}
+
 type Details interface {
-	MarshalToWireFormat() (*anypb.Any, error)
+	AddToMsg(msg *auditv1.EventEntity)
 }
 
 type Event struct {
@@ -36,14 +47,7 @@ func (e *Event) ProtoMessage() *auditv1.EventEntity {
 		tlsDetails = e.TLS.ProtoMessage()
 	}
 
-	var detailsEntity *anypb.Any = nil
-	if e.ProtocolDetails != nil {
-		if any, err := e.ProtocolDetails.MarshalToWireFormat(); err == nil {
-			detailsEntity = any
-		}
-	}
-
-	return &auditv1.EventEntity{
+	msg := &auditv1.EventEntity{
 		Id:              e.ID,
 		Timestamp:       timestamppb.New(e.Timestamp),
 		Transport:       e.Transport,
@@ -53,8 +57,13 @@ func (e *Event) ProtoMessage() *auditv1.EventEntity {
 		SourcePort:      uint32(e.SourcePort),
 		DestinationPort: uint32(e.DestinationPort),
 		Tls:             tlsDetails,
-		ProtocolDetails: detailsEntity,
 	}
+
+	if e.ProtocolDetails != nil {
+		e.ProtocolDetails.AddToMsg(msg)
+	}
+
+	return msg
 }
 
 func (e *Event) ApplyDefaults(id int64) {
@@ -95,26 +104,16 @@ func NewEventFromProto(msg *auditv1.EventEntity) (ev Event) {
 		DestinationIP:   msg.DestinationIp,
 		SourcePort:      uint16(msg.GetSourcePort()),
 		DestinationPort: uint16(msg.GetDestinationPort()),
-		ProtocolDetails: guessDetailsFromApp(msg.GetProtocolDetails()),
 		TLS:             NewTLSDetailsFromProto(msg.GetTls()),
+		ProtocolDetails: unwrapDetails(msg),
 	}
+
 	return
 }
 
-func guessDetailsFromApp(any *anypb.Any) Details {
-	var detailsProto proto.Message
-	var err error
-	if detailsProto, err = any.UnmarshalNew(); err != nil {
-		return nil
+func unwrapDetails(msg *auditv1.EventEntity) Details {
+	if mapping, ok := wire2AppMapping[reflect.TypeOf(msg.ProtocolDetails)]; ok {
+		return mapping(msg)
 	}
-	switch any.TypeUrl {
-	case "type.googleapis.com/inetmock.audit.v1.HTTPDetailsEntity":
-		return details.NewHTTPFromWireFormat(detailsProto.(*auditv1.HTTPDetailsEntity))
-	case "type.googleapis.com/inetmock.audit.v1.DNSDetailsEntity":
-		return details.NewDNSFromWireFormat(detailsProto.(*auditv1.DNSDetailsEntity))
-	case "type.googleapis.com/inetmock.audit.v1.DHCPDetailsEntity":
-		return details.NewDHCPFromWireFormat(detailsProto.(*auditv1.DHCPDetailsEntity))
-	default:
-		return nil
-	}
+	return nil
 }

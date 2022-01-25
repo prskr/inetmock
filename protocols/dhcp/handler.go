@@ -27,30 +27,30 @@ type dhcpHandler struct {
 	server     *Server4
 }
 
-func (h *dhcpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+func (h *dhcpHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
 	var (
 		options ProtocolOptions
 		conn    *ipv4.PacketConn
 	)
 	h.logger = h.logger.With(zap.String("protocol_handler", name))
-	if o, err := LoadFromConfig(lifecycle, h.stateStore); err != nil {
+	if o, err := LoadFromConfig(startupSpec, h.stateStore); err != nil {
 		return err
 	} else {
 		options = o
 	}
 
-	if c, err := setupPacketConn(lifecycle.Uplink()); err != nil {
+	if c, err := setupPacketConn(startupSpec.Uplink); err != nil {
 		return err
 	} else {
 		conn = c
 	}
 
-	h.logger = h.logger.With(zap.String("address", lifecycle.Uplink().Addr.String()))
+	h.logger = h.logger.With(zap.String("address", startupSpec.Addr.String()))
 	rh := &RuledHandler{
-		HandlerName:     lifecycle.Name(),
+		HandlerName:     startupSpec.Name,
 		ProtocolOptions: options,
 		Logger:          h.logger,
-		StateStore:      h.stateStore.WithSuffixes(lifecycle.Name()),
+		StateStore:      h.stateStore.WithSuffixes(startupSpec.Name),
 	}
 
 	for idx := range options.Rules {
@@ -76,6 +76,13 @@ func (h *dhcpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 	go h.serve(ctx, conn)
 
 	return nil
+}
+
+func (h *dhcpHandler) Stop(context.Context) error {
+	err := h.server.Shutdown()
+	h.server = nil
+
+	return err
 }
 
 func (h *dhcpHandler) serve(ctx context.Context, conn *ipv4.PacketConn) {

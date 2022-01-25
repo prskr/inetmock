@@ -110,7 +110,7 @@ func Test_pprofHandler_Start(t *testing.T) {
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
 			listener := test.NewInMemoryListener(t)
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.NewUplink(listener), nil)
+			lifecycle := endpoint.NewStartupSpec(t.Name(), endpoint.NewUplink(listener), nil)
 
 			if err := p.Start(ctx, lifecycle); err != nil {
 				if !tt.wantErr {

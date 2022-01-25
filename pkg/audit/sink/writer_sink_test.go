@@ -13,7 +13,6 @@ import (
 
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
 	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
@@ -33,7 +32,7 @@ var testEvents = []*audit.Event{
 			CipherSuite: tls.CipherSuiteName(tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA),
 			ServerName:  "localhost",
 		},
-		ProtocolDetails: details.HTTP{
+		ProtocolDetails: &audit.HTTP{
 			Method: "GET",
 			Host:   "localhost",
 			URI:    "http://localhost/asdf",

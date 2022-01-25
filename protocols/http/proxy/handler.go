@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 
@@ -34,9 +33,9 @@ func (h *httpProxy) Matchers() []cmux.Matcher {
 	return []cmux.Matcher{multiplexing.HTTP()}
 }
 
-func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+func (h *httpProxy) Start(_ context.Context, startupSpec *endpoint.StartupSpec) error {
 	var opts httpProxyOptions
-	if err := lifecycle.UnmarshalOptions(&opts); err != nil {
+	if err := startupSpec.UnmarshalOptions(&opts); err != nil {
 		return err
 	}
 
@@ -45,14 +44,14 @@ func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) err
 		ConnContext: audit.StoreConnPropertiesInContext,
 	}
 	h.logger = h.logger.With(
-		zap.String("handler_name", lifecycle.Name()),
-		zap.String("address", lifecycle.Uplink().Addr.String()),
+		zap.String("handler_name", startupSpec.Name),
+		zap.String("address", startupSpec.Addr.String()),
 	)
 
 	tlsConfig := h.certStore.TLSConfig()
 
 	proxyHandler := &proxyHTTPHandler{
-		handlerName: lifecycle.Name(),
+		handlerName: startupSpec.Name,
 		options:     opts,
 		logger:      h.logger,
 	}
@@ -64,27 +63,14 @@ func (h *httpProxy) Start(ctx context.Context, lifecycle endpoint.Lifecycle) err
 
 	h.proxy.OnRequest().Do(proxyHandler)
 	h.proxy.OnRequest().HandleConnect(proxyHTTPSHandler)
-	go h.startProxy(lifecycle.Uplink().Listener)
-	go h.shutdownOnContextDone(ctx)
+	go h.startProxy(startupSpec.Listener)
 	return nil
 }
 
 func (h *httpProxy) startProxy(listener net.Listener) {
-	if err := h.server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := endpoint.IgnoreShutdownError(h.server.Serve(listener)); err != nil {
 		h.logger.Error(
 			"failed to start proxy server",
-			zap.Error(err),
-		)
-	}
-}
-
-func (h *httpProxy) shutdownOnContextDone(ctx context.Context) {
-	<-ctx.Done()
-	var err error
-	h.logger.Info("Shutting down HTTP proxy")
-	if err = h.server.Close(); err != nil {
-		h.logger.Error(
-			"failed to shutdown proxy endpoint",
 			zap.Error(err),
 		)
 	}

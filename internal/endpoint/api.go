@@ -31,17 +31,73 @@ var (
 
 type UnmarshalOption func(cfg *mapstructure.DecoderConfig)
 
-type Lifecycle interface {
-	Name() string
-	Uplink() Uplink
-	UnmarshalOptions(cfg interface{}, opts ...UnmarshalOption) error
+func NewStartupSpec(name string, uplink Uplink, opts map[string]interface{}) *StartupSpec {
+	return &StartupSpec{
+		Name:    name,
+		Uplink:  uplink,
+		Options: opts,
+	}
 }
 
-type ProtocolHandler interface {
-	Start(ctx context.Context, lifecycle Lifecycle) error
+type StartupSpec struct {
+	Uplink
+	Name    string
+	Options map[string]interface{}
 }
 
-type MultiplexHandler interface {
-	ProtocolHandler
-	Matchers() []cmux.Matcher
+func (s StartupSpec) UnmarshalOptions(cfg interface{}, opts ...UnmarshalOption) error {
+	var (
+		decoderConfig = new(mapstructure.DecoderConfig)
+		decoder       *mapstructure.Decoder
+	)
+	for idx := range opts {
+		opts[idx](decoderConfig)
+	}
+
+	decoderConfig.Result = cfg
+
+	if d, err := mapstructure.NewDecoder(decoderConfig); err != nil {
+		return err
+	} else {
+		decoder = d
+	}
+
+	return decoder.Decode(s.Options)
 }
+
+type (
+	ProtocolHandler interface {
+		Start(ctx context.Context, ss *StartupSpec) error
+	}
+
+	MultiplexHandler interface {
+		ProtocolHandler
+		Matchers() []cmux.Matcher
+	}
+
+	StoppableHandler interface {
+		ProtocolHandler
+		Stop(ctx context.Context) error
+	}
+)
+
+type (
+	Host interface {
+		ConfiguredGroups() []GroupInfo
+		ServeGroup(ctx context.Context, groupName string) error
+		ServeGroups(ctx context.Context) error
+		Shutdown(ctx context.Context) error
+		ShutdownGroup(ctx context.Context, groupName string) error
+	}
+
+	HostBuilder interface {
+		ConfigureGroup(spec ListenerSpec) (err error)
+		ConfiguredGroups() []GroupInfo
+	}
+
+	GroupInfo struct {
+		Name      string
+		Endpoints []string
+		Serving   bool
+	}
+)

@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/pkg/metrics"
@@ -100,12 +99,12 @@ func (s *Server) ServeDNS(w mdns.ResponseWriter, req *mdns.Msg) {
 }
 
 func (s *Server) recordRequest(m *mdns.Msg, localAddr, remoteAddr net.Addr) {
-	dnsDetails := &details.DNS{
+	dnsDetails := &audit.DNS{
 		OPCode: auditv1.DNSOpCode(m.Opcode),
 	}
 
 	for _, q := range m.Question {
-		dnsDetails.Questions = append(dnsDetails.Questions, details.DNSQuestion{
+		dnsDetails.Questions = append(dnsDetails.Questions, audit.DNSQuestion{
 			RRType: auditv1.ResourceRecordType(q.Qtype),
 			Name:   q.Name,
 		})

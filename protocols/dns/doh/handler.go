@@ -2,7 +2,6 @@ package doh
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"strings"
@@ -35,17 +34,17 @@ func (d dohHandler) Matchers() []cmux.Matcher {
 	}
 }
 
-func (d *dohHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+func (d *dohHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec) error {
 	var options *dns.Options
-	if opts, err := dns.OptionsFromLifecycle(lifecycle); err != nil {
+	if opts, err := dns.OptionsFromLifecycle(startupSpec); err != nil {
 		return err
 	} else {
 		options = opts
 	}
 
 	d.logger = d.logger.With(
-		zap.String("handler_name", lifecycle.Name()),
-		zap.String("address", lifecycle.Uplink().Addr.String()),
+		zap.String("handler_name", startupSpec.Name),
+		zap.String("address", startupSpec.Addr.String()),
 	)
 
 	ruleHandler := &dns.RuleHandler{
@@ -72,22 +71,12 @@ func (d *dohHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 	emittingHandler := audit.EmittingHandler(d.emitter, auditv1.AppProtocol_APP_PROTOCOL_DNS_OVER_HTTPS, queryHandler)
 	d.server = NewServer(emittingHandler)
 
-	go d.startServer(lifecycle.Uplink().Listener)
-	go d.shutdownOnEnd(ctx)
+	go d.startServer(startupSpec.Listener)
 	return nil
 }
 
 func (d *dohHandler) startServer(listener net.Listener) {
-	if err := d.server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := endpoint.IgnoreShutdownError(d.server.Serve(listener)); err != nil {
 		d.logger.Error("Failed to start DoH server", zap.Error(err))
-	}
-}
-
-func (d *dohHandler) shutdownOnEnd(ctx context.Context) {
-	<-ctx.Done()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
-	if err := d.server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		d.logger.Error("Failed to close server", zap.Error(err))
 	}
 }

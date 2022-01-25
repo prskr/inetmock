@@ -7,7 +7,9 @@ RUN go install github.com/go-delve/delve/cmd/dlv@latest && \
 
 WORKDIR /work
 
+ENV GOPROXY=https://goproxy.io,direct
+
 ADD go.mod go.sum ./
-RUN go mod download
+RUN go mod download -x
 
 EXPOSE 2345

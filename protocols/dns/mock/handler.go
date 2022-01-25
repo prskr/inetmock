@@ -2,7 +2,6 @@ package mock
 
 import (
 	"context"
-	"time"
 
 	mdns "github.com/miekg/dns"
 	"go.uber.org/zap"
@@ -13,25 +12,23 @@ import (
 	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
-const shutdownTimeout = 100 * time.Millisecond
-
 type dnsHandler struct {
 	logger    logging.Logger
 	emitter   audit.Emitter
 	dnsServer *mdns.Server
 }
 
-func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+func (d *dnsHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec) error {
 	var options *dns.Options
-	if opts, err := dns.OptionsFromLifecycle(lifecycle); err != nil {
+	if opts, err := dns.OptionsFromLifecycle(startupSpec); err != nil {
 		return err
 	} else {
 		options = opts
 	}
 
 	d.logger = d.logger.With(
-		zap.String("handler_name", lifecycle.Name()),
-		zap.String("address", lifecycle.Uplink().Addr.String()),
+		zap.String("handler_name", startupSpec.Name),
+		zap.String("address", startupSpec.Addr.String()),
 	)
 
 	ruleHandler := &dns.RuleHandler{
@@ -49,7 +46,7 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 	}
 
 	serverHandler := &Server{
-		Name: lifecycle.Name(),
+		Name: startupSpec.Name,
 		Handler: &dns.CacheHandler{
 			Cache:    options.Cache,
 			TTL:      options.TTL,
@@ -59,37 +56,27 @@ func (d *dnsHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) er
 		Emitter: d.emitter,
 	}
 
-	if lifecycle.Uplink().Listener != nil {
+	if startupSpec.IsTCP() {
 		d.dnsServer = &mdns.Server{
-			Listener: lifecycle.Uplink().Listener,
+			Listener: startupSpec.Listener,
 			Handler:  serverHandler,
 		}
 	} else {
 		d.dnsServer = &mdns.Server{
-			PacketConn: lifecycle.Uplink().PacketConn,
+			PacketConn: startupSpec.PacketConn,
 			Handler:    serverHandler,
 		}
 	}
 
 	go d.startServer()
-	go d.shutdownOnEnd(ctx)
 	return nil
 }
 
 func (d *dnsHandler) startServer() {
-	if err := d.dnsServer.ActivateAndServe(); err != nil {
+	if err := endpoint.IgnoreShutdownError(d.dnsServer.ActivateAndServe()); err != nil {
 		d.logger.Error(
 			"failed to start DNS server listener",
 			zap.Error(err),
 		)
-	}
-}
-
-func (d *dnsHandler) shutdownOnEnd(ctx context.Context) {
-	<-ctx.Done()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
-	if err := d.dnsServer.ShutdownContext(shutdownCtx); err != nil {
-		d.logger.Error("failed to shutdown DNS server", zap.Error(err))
 	}
 }

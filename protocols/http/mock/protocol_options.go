@@ -8,7 +8,7 @@ type httpOptions struct {
 	Rules []string
 }
 
-func loadFromConfig(lifecycle endpoint.Lifecycle) (opts httpOptions, err error) {
-	err = lifecycle.UnmarshalOptions(&opts)
+func loadFromConfig(startupSpec *endpoint.StartupSpec) (opts httpOptions, err error) {
+	err = startupSpec.UnmarshalOptions(&opts)
 	return
 }

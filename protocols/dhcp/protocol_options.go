@@ -28,7 +28,7 @@ type ProtocolOptions struct {
 	Fallback DHCPv4MessageHandler
 }
 
-func LoadFromConfig(lifecycle endpoint.Lifecycle, stateStore state.KVStore) (opts ProtocolOptions, err error) {
+func LoadFromConfig(startupSpec *endpoint.StartupSpec, stateStore state.KVStore) (opts ProtocolOptions, err error) {
 	var (
 		composedHook       mapstructure.DecodeHookFunc
 		defaultHandlerHook = endpoint.NewOptionByTypeDecoderBuilderFor(&opts.Fallback)
@@ -42,7 +42,7 @@ func LoadFromConfig(lifecycle endpoint.Lifecycle, stateStore state.KVStore) (opt
 		mapstructure.StringToTimeDurationHookFunc(),
 	)
 
-	if err := lifecycle.UnmarshalOptions(&opts, endpoint.WithDecodeHook(composedHook)); err != nil {
+	if err := startupSpec.UnmarshalOptions(&opts, endpoint.WithDecodeHook(composedHook)); err != nil {
 		return ProtocolOptions{}, err
 	}
 

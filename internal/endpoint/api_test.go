@@ -2,31 +2,36 @@ package endpoint_test
 
 import (
 	"context"
-	"sync/atomic"
-	"testing"
+
+	"github.com/soheilhy/cmux"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 )
 
-type ProtocolHandlerDelegate func(ctx context.Context, lifecycle endpoint.Lifecycle) error
-
-func (p ProtocolHandlerDelegate) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
-	return p(ctx, lifecycle)
+type MultiplexHandlerMock struct {
+	endpoint.ProtocolHandler
+	MultiplexMatchers []cmux.Matcher
 }
 
-func VerifiedProtocolHandler(
-	tb testing.TB,
-	delegate func(ctx context.Context, lifecycle endpoint.Lifecycle) error,
-) endpoint.ProtocolHandler {
-	tb.Helper()
-	var called int32
-	tb.Cleanup(func() {
-		if atomic.LoadInt32(&called) < 1 {
-			tb.Error("ProtocolHandler got not called")
-		}
-	})
-	return ProtocolHandlerDelegate(func(ctx context.Context, lifecycle endpoint.Lifecycle) error {
-		atomic.AddInt32(&called, 1)
-		return delegate(ctx, lifecycle)
-	})
+func (h MultiplexHandlerMock) Matchers() []cmux.Matcher {
+	return h.MultiplexMatchers
+}
+
+type ProtocolHandlerFunc func(ctx context.Context, startupSpec *endpoint.StartupSpec) error
+
+func (p ProtocolHandlerFunc) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
+	return p(ctx, startupSpec)
+}
+
+type StoppableProtocolHandlerMock struct {
+	OnStart func(ctx context.Context, startupSpec *endpoint.StartupSpec) error
+	OnStop  func(ctx context.Context) error
+}
+
+func (p StoppableProtocolHandlerMock) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
+	return p.OnStart(ctx, startupSpec)
+}
+
+func (p StoppableProtocolHandlerMock) Stop(ctx context.Context) error {
+	return p.OnStop(ctx)
 }

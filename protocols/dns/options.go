@@ -74,7 +74,7 @@ type Options struct {
 	TTL     time.Duration
 }
 
-func OptionsFromLifecycle(lifecycle endpoint.Lifecycle) (*Options, error) {
+func OptionsFromLifecycle(startupSpec *endpoint.StartupSpec) (*Options, error) {
 	var (
 		composedHook    mapstructure.DecodeHookFunc
 		opts            = new(Options)
@@ -94,7 +94,7 @@ func OptionsFromLifecycle(lifecycle endpoint.Lifecycle) (*Options, error) {
 		mapstructure.StringToTimeDurationHookFunc(),
 	)
 
-	if err := lifecycle.UnmarshalOptions(&opts, endpoint.WithDecodeHook(composedHook)); err != nil {
+	if err := startupSpec.UnmarshalOptions(&opts, endpoint.WithDecodeHook(composedHook)); err != nil {
 		return nil, err
 	}
 

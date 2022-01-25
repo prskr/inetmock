@@ -2,7 +2,17 @@
   <configuration default="false" name="imctl" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="inetmock" />
     <working_directory value="$PROJECT_DIR$" />
-    <parameters value="check run -i 'doh.A(&quot;mail.google.com&quot;) =&gt; NotEmpty() -&gt; ResolvedIP(1.1.1.1)'" />
+    <parameters value="check run -i 'http2.GET(&quot;https://stackoverflow.com/index.html&quot;) =&gt; Status(200) -&gt; Header(&quot;Content-Type&quot;, &quot;text/html&quot;) -&gt; Contains(`&lt;title&gt;INetSim default HTML page&lt;/title&gt;`)'" />
+    <EXTENSION ID="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+      </ENTRIES>
+    </EXTENSION>
     <kind value="PACKAGE" />
     <package value="gitlab.com/inetmock/inetmock/cmd/imctl" />
     <directory value="$PROJECT_DIR$" />

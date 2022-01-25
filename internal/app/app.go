@@ -143,7 +143,6 @@ func NewApp(spec Spec) App {
 
 	lateInitTasks = append(lateInitTasks, spec.LateInitTasks...)
 
-	a.rootCmd.AddCommand(completionCmd)
 	a.rootCmd.AddCommand(spec.SubCommands...)
 
 	a.rootCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "Path to config file that should be used")

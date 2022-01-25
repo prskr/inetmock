@@ -24,15 +24,15 @@ type metricsExporter struct {
 	server  *http.Server
 }
 
-func (m *metricsExporter) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+func (m *metricsExporter) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
 	var exporterOptions metricsExporterOptions
-	if err := lifecycle.UnmarshalOptions(&exporterOptions); err != nil {
+	if err := startupSpec.UnmarshalOptions(&exporterOptions); err != nil {
 		return err
 	}
 
 	m.logger = m.logger.With(
-		zap.String("handler_name", lifecycle.Name()),
-		zap.String("address", lifecycle.Uplink().Addr.String()),
+		zap.String("handler_name", startupSpec.Name),
+		zap.String("address", startupSpec.Addr.String()),
 	)
 
 	mux := http.NewServeMux()
@@ -44,7 +44,7 @@ func (m *metricsExporter) Start(ctx context.Context, lifecycle endpoint.Lifecycl
 	}
 
 	go func() {
-		if err := m.server.Serve(lifecycle.Uplink().Listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := endpoint.IgnoreShutdownError(m.server.Serve(startupSpec.Listener)); err != nil {
 			m.logger.Error(
 				"Error occurred while serving metrics",
 				zap.Error(err),

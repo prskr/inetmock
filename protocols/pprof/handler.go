@@ -2,7 +2,6 @@ package pprof
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -30,7 +29,7 @@ type pprofHandler struct {
 	server  *http.Server
 }
 
-func (p *pprofHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+func (p *pprofHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
 	pprofMux := new(http.ServeMux)
 	pprofMux.HandleFunc(pprofIndexPath, pprof.Index)
 	pprofMux.HandleFunc(pprofCmdLinePath, pprof.Cmdline)
@@ -44,23 +43,17 @@ func (p *pprofHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) 
 	}
 
 	p.logger = p.logger.With(
-		zap.String("address", lifecycle.Uplink().Addr.String()),
+		zap.String("address", startupSpec.Addr.String()),
 	)
 
-	go p.startServer(lifecycle.Uplink().Listener)
+	go p.startServer(startupSpec.Listener)
 	go p.stopServer(ctx)
 
 	return nil
 }
 
 func (p *pprofHandler) startServer(listener net.Listener) {
-	defer func() {
-		if err := listener.Close(); err != nil {
-			p.logger.Warn("Failed to close listeners", zap.Error(err))
-		}
-	}()
-
-	if err := p.server.Serve(listener); err != nil && errors.Is(err, http.ErrServerClosed) {
+	if err := endpoint.IgnoreShutdownError(p.server.Serve(listener)); err != nil {
 		p.logger.Error("Failed to start pprof HTTP listener", zap.Error(err))
 	}
 }

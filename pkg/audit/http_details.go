@@ -1,9 +1,8 @@
-package details
+package audit
 
 import (
 	"net/http"
-
-	"google.golang.org/protobuf/types/known/anypb"
+	"reflect"
 
 	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
@@ -31,7 +30,40 @@ var (
 		auditv1.HTTPMethod_HTTP_METHOD_OPTIONS: http.MethodOptions,
 		auditv1.HTTPMethod_HTTP_METHOD_TRACE:   http.MethodTrace,
 	}
+	_ Details = (*HTTP)(nil)
 )
+
+func init() {
+	AddMapping(reflect.TypeOf(new(auditv1.EventEntity_Http)), func(msg *auditv1.EventEntity) Details {
+		var entity *auditv1.HTTPDetailsEntity
+
+		if e, ok := msg.ProtocolDetails.(*auditv1.EventEntity_Http); !ok {
+			return nil
+		} else {
+			entity = e.Http
+		}
+
+		headers := http.Header{}
+		for name, values := range entity.Headers {
+			for idx := range values.Values {
+				headers.Add(name, values.Values[idx])
+			}
+		}
+
+		method := ""
+		if mappedMethod, known := httpWireToGoMapping[entity.Method]; known {
+			method = mappedMethod
+		}
+
+		return &HTTP{
+			Method:  method,
+			Host:    entity.Host,
+			URI:     entity.Uri,
+			Proto:   entity.Proto,
+			Headers: headers,
+		}
+	})
+}
 
 type HTTP struct {
 	Method  string
@@ -41,29 +73,7 @@ type HTTP struct {
 	Headers http.Header
 }
 
-func NewHTTPFromWireFormat(entity *auditv1.HTTPDetailsEntity) HTTP {
-	headers := http.Header{}
-	for name, values := range entity.Headers {
-		for idx := range values.Values {
-			headers.Add(name, values.Values[idx])
-		}
-	}
-
-	method := ""
-	if mappedMethod, known := httpWireToGoMapping[entity.Method]; known {
-		method = mappedMethod
-	}
-
-	return HTTP{
-		Method:  method,
-		Host:    entity.Host,
-		URI:     entity.Uri,
-		Proto:   entity.Proto,
-		Headers: headers,
-	}
-}
-
-func (d HTTP) MarshalToWireFormat() (any *anypb.Any, err error) {
+func (d *HTTP) AddToMsg(msg *auditv1.EventEntity) {
 	method := auditv1.HTTPMethod_HTTP_METHOD_UNSPECIFIED
 	if methodValue, known := httpGoToWireMapping[d.Method]; known {
 		method = methodValue
@@ -85,6 +95,5 @@ func (d HTTP) MarshalToWireFormat() (any *anypb.Any, err error) {
 		Headers: headers,
 	}
 
-	any, err = anypb.New(protoDetails)
-	return
+	msg.ProtocolDetails = &auditv1.EventEntity_Http{Http: protoDetails}
 }

@@ -101,7 +101,7 @@ func TestOptionsFromLifecycle(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			lifecycle := endpoint.NewEndpointLifecycle("", endpoint.NewUplink(nil), tt.args.opts)
+			lifecycle := endpoint.NewStartupSpec("", endpoint.NewUplink(nil), tt.args.opts)
 			got, err := dns.OptionsFromLifecycle(lifecycle)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OptionsFromLifecycle() error = %v, wantErr %v", err, tt.wantErr)

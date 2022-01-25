@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"io"
 	"io/fs"
+	"net"
 	"os"
+	"strings"
 
 	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
@@ -100,20 +104,29 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	endpointOrchestrator := endpoint.NewOrchestrator(certStore, registry, appLogger.Named("orchestrator"))
-	rpcAPI := rpc.NewINetMockAPI(cfg.APIURL(), appLogger, checker, eventStream, cfg.Data.Audit, cfg.Data.PCAP)
+	serverBuilder := endpoint.NewServerBuilder(certStore.TLSConfig(), registry, appLogger.Named("orchestrator"))
+	srv := serverBuilder.Server()
+	srv.ErrorHandler = append(srv.ErrorHandler, endpointErrorHandler(appLogger))
+
+	rpcAPI := rpc.NewINetMockAPI(cfg.APIURL(), appLogger, checker, eventStream, srv, cfg.Data.Audit, cfg.Data.PCAP)
 
 	for name, spec := range cfg.Listeners {
 		if spec.Name == "" {
 			spec.Name = name
 		}
-		if err := endpointOrchestrator.RegisterListener(spec); err != nil {
+		if err := serverBuilder.ConfigureGroup(spec); err != nil {
 			appLogger.Error("Failed to register listener", zap.Error(err))
 			return err
 		}
 	}
 
-	errChan := endpointOrchestrator.StartEndpoints(serverApp.Context())
+	if err := srv.ServeGroups(context.Background()); err != nil {
+		appLogger.Error("Failed to serve listener groups", zap.Error(err))
+		return err
+	}
+
+	srv.ShutdownOnCancel(serverApp.Context())
+
 	if err := rpcAPI.StartServer(); err != nil {
 		serverApp.Shutdown()
 		appLogger.Error(
@@ -127,23 +140,8 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return
 	}*/
 
-loop:
-	for {
-		select {
-		case err := <-errChan:
-			switch e := err.(type) {
-			case cmux.ErrNotMatched:
-				appLogger.Error("Not matched error",
-					zap.Bool("temporary", e.Temporary()),
-					zap.Bool("timeoutError", e.Timeout()),
-					zap.String("error", e.Error()),
-				)
-			default:
-				appLogger.Error("got error from endpoint", zap.Error(err))
-			}
-		case <-serverApp.Context().Done():
-			break loop
-		}
+	select {
+	case <-serverApp.Context().Done():
 	}
 	appLogger.Info("App context canceled - shutting down")
 	rpcAPI.StopServer()
@@ -213,4 +211,27 @@ func startAuditConsumer(eventStream audit.EventStream) error {
 
 	_, err := recorder.StartRecording(serverApp.Context(), "lo", auditConsumer)
 	return err
+}
+
+func endpointErrorHandler(logger logging.Logger) endpoint.ErrorHandler {
+	return endpoint.ErrorHandlerFunc(func(err error) {
+		var (
+			unmatched cmux.ErrNotMatched
+			netOp     = new(net.OpError)
+		)
+		switch {
+		case errors.As(err, &unmatched):
+			logger.Error("Not matched error",
+				zap.Bool("temporary", unmatched.Temporary()),
+				zap.Bool("timeoutError", unmatched.Timeout()),
+				zap.String("error", unmatched.Error()),
+			)
+		case errors.As(err, &netOp):
+			if !strings.EqualFold(netOp.Op, "accept") && !netOp.Temporary() {
+				logger.Error("got error from endpoint", zap.Error(err))
+			}
+		default:
+			logger.Error("got error from endpoint", zap.Error(err))
+		}
+	})
 }

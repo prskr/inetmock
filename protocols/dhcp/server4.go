@@ -58,6 +58,10 @@ func (s *Server4) Serve(ctx context.Context, conn *ipv4.PacketConn) error {
 	return ctx.Err()
 }
 
+func (s *Server4) Shutdown() error {
+	return s.conn.Close()
+}
+
 func (s *Server4) HandleMessage(req *dhcpv4.DHCPv4, oob *ipv4.ControlMessage, addr net.Addr) {
 	var resp *dhcpv4.DHCPv4
 	if r, err := dhcpv4.NewReplyFromRequest(req); err != nil {

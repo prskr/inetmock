@@ -15,7 +15,6 @@ import (
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/protocols/http/mock"
@@ -56,7 +55,7 @@ func Test_httpHandler_Start(t *testing.T) {
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
 				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
-				"ProtocolDetails": td.Struct(details.HTTP{}, td.StructFields{
+				"ProtocolDetails": td.Struct(new(audit.HTTP), td.StructFields{
 					"Host":   "www.google.de",
 					"URI":    "/index.html",
 					"Method": http.MethodGet,
@@ -83,7 +82,7 @@ func Test_httpHandler_Start(t *testing.T) {
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
 				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
-				"ProtocolDetails": td.Struct(details.HTTP{}, td.StructFields{
+				"ProtocolDetails": td.Struct(new(audit.HTTP), td.StructFields{
 					"Host":   "www.google.de",
 					"URI":    "/asdf.html",
 					"Method": http.MethodGet,
@@ -114,7 +113,7 @@ func Test_httpHandler_Start(t *testing.T) {
 			},
 			wantEvent: td.Struct(audit.Event{}, td.StructFields{
 				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
-				"ProtocolDetails": td.Struct(details.HTTP{}, td.StructFields{
+				"ProtocolDetails": td.Struct(new(audit.HTTP), td.StructFields{
 					"Host":   "www.google.de",
 					"URI":    "/asdf",
 					"Method": http.MethodGet,
@@ -145,7 +144,7 @@ func Test_httpHandler_Start(t *testing.T) {
 			t.Cleanup(cancel)
 			logger := logging.CreateTestLogger(t)
 			listener := test.NewInMemoryListener(t)
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.NewUplink(listener), tt.args.opts)
+			lifecycle := endpoint.NewStartupSpec(t.Name(), endpoint.NewUplink(listener), tt.args.opts)
 			emitterMock := audit_mock.NewMockEmitter(ctrl)
 			if !tt.wantErr {
 				emitterMock.EXPECT().Emit(test.GenericMatcher(t, tt.wantEvent))

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+
+	"go.uber.org/multierr"
 )
 
 type IPPort struct {
@@ -37,5 +39,21 @@ func MustParseMAC(rawMac string) net.HardwareAddr {
 		panic(err)
 	} else {
 		return m
+	}
+}
+
+func RandomPort() (port int, err error) {
+	var listener net.Listener
+	if l, err := net.Listen("tcp", "127.0.0.1:0"); err != nil {
+		return 0, err
+	} else {
+		listener = l
+		defer multierr.AppendInvoke(&err, multierr.Close(listener))
+	}
+
+	if addr, ok := listener.Addr().(*net.TCPAddr); !ok {
+		return 0, errors.New("not a TCP address")
+	} else {
+		return addr.Port, nil
 	}
 }

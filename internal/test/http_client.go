@@ -6,26 +6,26 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
 	"golang.org/x/net/http2"
 )
 
-func HTTPClientForListener(tb testing.TB, lis net.Listener) *http.Client {
-	tb.Helper()
-	switch l := lis.(type) {
-	case *net.TCPListener:
+func HTTPClientForAddr(tb testing.TB, addr net.Addr) *http.Client {
+	switch l := addr.(type) {
+	case *net.TCPAddr:
 		dialer := new(net.Dialer)
 		tlsDialer := new(tls.Dialer)
-		listenerAddr := l.Addr()
+		hostPort := net.JoinHostPort(l.IP.String(), strconv.Itoa(l.Port))
 		return &http.Client{
 			Transport: &http.Transport{
 				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-					return dialer.DialContext(ctx, listenerAddr.Network(), listenerAddr.String())
+					return dialer.DialContext(ctx, "tcp", hostPort)
 				},
 				DialTLSContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-					return tlsDialer.DialContext(ctx, listenerAddr.Network(), listenerAddr.String())
+					return tlsDialer.DialContext(ctx, "tcp", hostPort)
 				},
 				MaxIdleConns:          5,
 				IdleConnTimeout:       90 * time.Second,
@@ -37,6 +37,11 @@ func HTTPClientForListener(tb testing.TB, lis net.Listener) *http.Client {
 		tb.Fatal("not a TCP listener")
 		return nil
 	}
+}
+
+func HTTPClientForListener(tb testing.TB, lis net.Listener) *http.Client {
+	tb.Helper()
+	return HTTPClientForAddr(tb, lis.Addr())
 }
 
 func HTTPClientForInMemListener(lis InMemListener) *http.Client {

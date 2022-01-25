@@ -129,14 +129,13 @@ default:
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
 			emitter := auditmock.NewMockEmitter(ctrl)
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.NewUplink(listener), optsMap)
 			if !tt.wantErr {
 				emitter.EXPECT().
 					Emit(gomock.Any()).
 					MinTimes(1)
 			}
 			handler := mock.New(logging.CreateTestLogger(t), emitter)
-			if err := handler.Start(ctx, lifecycle); err != nil {
+			if err := handler.Start(ctx, endpoint.NewStartupSpec(t.Name(), endpoint.NewUplink(listener), optsMap)); err != nil {
 				if !tt.wantErr {
 					t.Errorf("Start() error = %v, wantErr %v", err, tt.wantErr)
 				}

@@ -190,7 +190,7 @@ func Test_dhcpHandler_Start(t *testing.T) {
 			}
 
 			srvAddr := randomUDPAddr(t)
-			lifecycle := endpoint.NewEndpointLifecycle(t.Name(), endpoint.NewUplink(srvAddr), tt.args.opts)
+			lifecycle := endpoint.NewStartupSpec(t.Name(), endpoint.NewUplink(srvAddr), tt.args.opts)
 			handler := dhcp.New(logger, emitterMock, statetest.NewTestStore(t))
 			if err := handler.Start(ctx, lifecycle); err != nil {
 				if !tt.wantErr {

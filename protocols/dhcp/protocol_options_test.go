@@ -154,7 +154,7 @@ func TestLoadFromConfig(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			lifecycle := endpoint.NewEndpointLifecycle(tt.name, endpoint.NewUplink(nil), tt.args)
+			lifecycle := endpoint.NewStartupSpec(tt.name, endpoint.NewUplink(nil), tt.args)
 			gotOpts, err := dhcp.LoadFromConfig(lifecycle, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadFromConfig() error = %v, wantErr %v", err, tt.wantErr)

@@ -56,7 +56,11 @@ func (i *inMemListener) Close() error {
 }
 
 func (i inMemListener) Addr() net.Addr {
-	return new(inMemAddr)
+	return &net.TCPAddr{
+		IP:   net.IPv4(127, 1, 10, 1),
+		Port: 1337,
+		Zone: "pipe",
+	}
 }
 
 func (i inMemListener) DialContext(_ context.Context, network, addr string) (net.Conn, error) {
@@ -75,14 +79,4 @@ func (i inMemListener) Dial(_, _ string) (net.Conn, error) {
 	serverSide, clientSide := net.Pipe()
 	i.connections <- serverSide
 	return clientSide, nil
-}
-
-type inMemAddr struct{}
-
-func (i inMemAddr) Network() string {
-	return "pipe"
-}
-
-func (i inMemAddr) String() string {
-	return ""
 }

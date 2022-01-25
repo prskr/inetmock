@@ -2,7 +2,6 @@ package mock
 
 import (
 	"context"
-	"errors"
 	"io/fs"
 	"net"
 	"net/http"
@@ -35,7 +34,7 @@ func (p *httpHandler) Matchers() []cmux.Matcher {
 	return []cmux.Matcher{multiplexing.HTTP()}
 }
 
-func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) error {
+func (p *httpHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec) error {
 	p.logger = p.logger.With(
 		zap.String("protocol_handler", name),
 	)
@@ -45,16 +44,16 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 		err     error
 	)
 
-	if options, err = loadFromConfig(lifecycle); err != nil {
+	if options, err = loadFromConfig(startupSpec); err != nil {
 		return err
 	}
 
 	p.logger = p.logger.With(
-		zap.String("address", lifecycle.Uplink().Addr.String()),
+		zap.String("address", startupSpec.Addr.String()),
 	)
 
 	router := &Router{
-		HandlerName: lifecycle.Name(),
+		HandlerName: startupSpec.Name,
 		Logger:      p.logger,
 		FakeFileFS:  p.fakeFileFS,
 	}
@@ -72,29 +71,12 @@ func (p *httpHandler) Start(ctx context.Context, lifecycle endpoint.Lifecycle) e
 		}
 	}
 
-	go p.startServer(lifecycle.Uplink().Listener)
-	go p.shutdownOnCancel(ctx)
+	go p.startServer(startupSpec.Listener)
 	return nil
 }
 
-func (p *httpHandler) shutdownOnCancel(ctx context.Context) {
-	<-ctx.Done()
-	p.logger.Info("Shutting down HTTP mock")
-	if err := p.server.Close(); err != nil {
-		p.logger.Error(
-			"failed to shutdown HTTP server",
-			zap.Error(err),
-		)
-	}
-}
-
 func (p *httpHandler) startServer(listener net.Listener) {
-	defer func() {
-		if err := listener.Close(); err != nil {
-			p.logger.Warn("Failed to close listener", zap.Error(err))
-		}
-	}()
-	if err := p.server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := endpoint.IgnoreShutdownError(p.server.Serve(listener)); err != nil {
 		p.logger.Error("Failed to start HTTP listener", zap.Error(err))
 	}
 }

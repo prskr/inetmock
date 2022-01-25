@@ -4,13 +4,12 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit/details"
 	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
 
 func EmittingHandler(emitter Emitter, app auditv1.AppProtocol, delegate http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
-		httpDetails := details.HTTP{
+		httpDetails := &HTTP{
 			Method:  req.Method,
 			Host:    req.Host,
 			URI:     req.RequestURI,

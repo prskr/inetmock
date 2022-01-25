@@ -1,24 +1,23 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="inetmock" type="GoApplicationRunConfiguration" factoryName="Go Application">
-    <module name="inetmock" />
-    <target name="sha256:6dfbb674a246" />
-    <working_directory value="$PROJECT_DIR$" />
-    <parameters value="serve" />
-    <sudo value="true" />
-    <EXTENSION ID="net.ashald.envfile">
-      <option name="IS_ENABLED" value="false" />
-      <option name="IS_SUBST" value="false" />
-      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-      <option name="IS_IGNORE_MISSING_FILES" value="false" />
-      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-      <ENTRIES>
-        <ENTRY IS_ENABLED="true" PARSER="runconfig" />
-      </ENTRIES>
-    </EXTENSION>
-    <kind value="PACKAGE" />
-    <package value="gitlab.com/inetmock/inetmock/cmd/inetmock" />
-    <directory value="$PROJECT_DIR$" />
-    <filePath value="$PROJECT_DIR$/cmd/inetmock/main.go" />
-    <method v="2" />
-  </configuration>
+    <configuration default="false" name="inetmock" type="GoApplicationRunConfiguration" factoryName="Go Application">
+        <module name="inetmock"/>
+        <working_directory value="$PROJECT_DIR$"/>
+        <parameters value="serve"/>
+        <sudo value="true"/>
+        <EXTENSION ID="net.ashald.envfile">
+            <option name="IS_ENABLED" value="false"/>
+            <option name="IS_SUBST" value="false"/>
+            <option name="IS_PATH_MACRO_SUPPORTED" value="false"/>
+            <option name="IS_IGNORE_MISSING_FILES" value="false"/>
+            <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false"/>
+            <ENTRIES>
+                <ENTRY IS_ENABLED="true" PARSER="runconfig"/>
+            </ENTRIES>
+        </EXTENSION>
+        <kind value="PACKAGE"/>
+        <package value="gitlab.com/inetmock/inetmock/cmd/inetmock"/>
+        <directory value="$PROJECT_DIR$"/>
+        <filePath value="$PROJECT_DIR$/cmd/inetmock/main.go"/>
+        <method v="2"/>
+    </configuration>
 </component>

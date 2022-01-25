@@ -12,6 +12,7 @@
 ./main
 **/*.mock.go
 .go/
+__debug_bin
 
 ###############
 # directories #
