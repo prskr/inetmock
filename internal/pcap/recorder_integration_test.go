@@ -41,7 +41,7 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 	go srv.Listen(t, listener)
 	client := test.HTTPClientForListener(t, listener)
 
-	listenerPort := uint16(listener.(*net.TCPListener).Addr().(*net.TCPAddr).Port)
+	listenerPort := uint16(listener.Addr().(*net.TCPAddr).Port)
 
 	recorder := pcap.NewRecorder()
 	t.Cleanup(func() {

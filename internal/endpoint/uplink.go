@@ -2,9 +2,32 @@ package endpoint
 
 import (
 	"net"
+	"time"
 
 	"go.uber.org/multierr"
 )
+
+const defaultTCPKeepAlivePeriod = 30 * time.Second
+
+type AutoLingeringListener struct {
+	net.Listener
+}
+
+func (l AutoLingeringListener) Accept() (c net.Conn, err error) {
+	c, err = l.Listener.Accept()
+	if err != nil {
+		return nil, err
+	}
+
+	if tcpConn, ok := c.(*net.TCPConn); ok {
+		err = multierr.Combine(
+			tcpConn.SetLinger(0),
+			tcpConn.SetKeepAlive(true),
+			tcpConn.SetKeepAlivePeriod(defaultTCPKeepAlivePeriod),
+		)
+	}
+	return
+}
 
 func NewUplink(conn interface{}) (u Uplink) {
 	switch c := conn.(type) {
@@ -45,7 +68,7 @@ func (u *Uplink) Close() (err error) {
 		u.Listener = nil
 	}
 	if u.PacketConn != nil {
-		multierr.AppendInvoke(&err, multierr.Close(u.PacketConn))
+		err = multierr.Combine(err, u.PacketConn.SetDeadline(time.Now()), u.PacketConn.Close())
 		u.PacketConn = nil
 	}
 	return

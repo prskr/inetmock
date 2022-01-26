@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -19,6 +20,7 @@ import (
 var knownResponseHandlers = map[string]func(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (http.Handler, error){
 	"file":   FileHandler,
 	"status": StatusHandler,
+	"json":   JSONHandler,
 }
 
 func HandlerForRoutingRule(rule *rules.SingleResponsePipeline, logger logging.Logger, fakeFileFS fs.FS) (http.Handler, error) {
@@ -47,8 +49,8 @@ func FileHandler(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (
 	}
 
 	logger = logger.With(
-		zap.String("handlerType", "FileHandler"),
-		zap.String("filePath", filePath),
+		zap.String("handler_type", "FileHandler"),
+		zap.String("file_path", filePath),
 	)
 
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -88,12 +90,42 @@ func StatusHandler(logger logging.Logger, _ fs.FS, args ...rules.Param) (http.Ha
 	}
 
 	logger = logger.With(
-		zap.String("handlerType", "StatusHandler"),
+		zap.String("handler_type", "StatusHandler"),
 		zap.Int("code", statusCodeToReturn),
 	)
 
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		logger.Debug("Returning status code")
 		writer.WriteHeader(statusCodeToReturn)
+	}), nil
+}
+
+func JSONHandler(logger logging.Logger, _ fs.FS, args ...rules.Param) (http.Handler, error) {
+	if err := rules.ValidateParameterCount(args, 1); err != nil {
+		return nil, err
+	}
+
+	var jsonString string
+	if s, err := args[0].AsString(); err != nil {
+		return nil, err
+	} else {
+		jsonString = s
+	}
+
+	jsonBytes := []byte(jsonString)
+	into := make(map[string]interface{})
+	if err := json.Unmarshal(jsonBytes, &into); err != nil {
+		return nil, err
+	}
+
+	logger = logger.With(
+		zap.String("handler_type", "JSONHandler"),
+	)
+
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		logger.Debug("Returning status code")
+		if _, err := writer.Write(jsonBytes); err != nil {
+			logger.Warn("Failed to write JSON response", zap.Error(err))
+		}
 	}), nil
 }

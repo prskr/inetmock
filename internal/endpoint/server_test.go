@@ -38,8 +38,15 @@ func TestServer_ServeGroups_Success(t *testing.T) {
 		resp = r
 	}
 
+	t.Cleanup(func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Failed to close response body error = %v", err)
+		}
+	})
+
 	if resp.StatusCode != 204 {
 		t.Errorf("Status is %d expected 204", resp.StatusCode)
+		return
 	}
 }
 
@@ -65,7 +72,7 @@ func prepareServer(tb testing.TB, emitter audit.Emitter, logger logging.Logger) 
 			"plain": {
 				HandlerRef: "http_mock",
 				Options: map[string]interface{}{
-					"rules": []string{` => Status(204)`},
+					"rules": []string{`=> Status(204)`},
 				},
 			},
 		},

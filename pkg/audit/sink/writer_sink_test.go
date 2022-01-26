@@ -106,7 +106,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 			}
 
 			select {
-			case <-time.After(100 * time.Millisecond):
+			case <-time.After(150 * time.Millisecond):
 				t.Errorf("not all events recorded in time")
 			case <-wait.ForWaitGroupDone(wg):
 			}

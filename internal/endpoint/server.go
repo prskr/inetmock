@@ -206,7 +206,9 @@ func (s *Server) setupUplink(grp *ListenerGroup) (u *Uplink, err error) {
 	case *net.UDPAddr:
 		u.PacketConn, err = net.ListenUDP("udp", a)
 	case *net.TCPAddr:
-		u.Listener, err = net.ListenTCP("tcp", a)
+		var autoLingerListener AutoLingeringListener
+		autoLingerListener.Listener, err = net.ListenTCP("tcp", a)
+		u.Listener = autoLingerListener
 	}
 	return
 }

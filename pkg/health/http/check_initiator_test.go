@@ -369,7 +369,7 @@ func TestRequestInitiatorForMethod(t *testing.T) {
 
 			client := setupServer(t, tt.args.routingRules)
 
-			ctx, cancel := context.WithTimeout(test.Context(t), 50*time.Millisecond)
+			ctx, cancel := context.WithTimeout(test.Context(t), 150*time.Millisecond)
 			t.Cleanup(cancel)
 
 			var resp *gohttp.Response

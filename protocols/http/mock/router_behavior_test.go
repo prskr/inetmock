@@ -20,7 +20,6 @@ import (
 func TestStatusHandler(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		fakeFileFS          fs.FS
 		args                []rules.Param
 		responseWriterSetup func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter
 		request             *http.Request
@@ -33,7 +32,6 @@ func TestStatusHandler(t *testing.T) {
 		{
 			name: "Get status 204",
 			args: args{
-				fakeFileFS: nil,
 				args: []rules.Param{
 					{
 						Int: rules.IntP(204),
@@ -52,16 +50,14 @@ func TestStatusHandler(t *testing.T) {
 		{
 			name: "Expect error due to missing argument",
 			args: args{
-				fakeFileFS: nil,
-				args:       []rules.Param{},
-				request:    new(http.Request),
+				args:    []rules.Param{},
+				request: new(http.Request),
 			},
 			wantErr: true,
 		},
 		{
 			name: "Expect error due to argument type mismatch",
 			args: args{
-				fakeFileFS: nil,
 				args: []rules.Param{
 					{
 						String: rules.StringP("Hello, World"),
@@ -78,7 +74,7 @@ func TestStatusHandler(t *testing.T) {
 			t.Parallel()
 			logger := logging.CreateTestLogger(t)
 			ctrl := gomock.NewController(t)
-			got, err := mock.StatusHandler(logger, tt.args.fakeFileFS, tt.args.args...)
+			got, err := mock.StatusHandler(logger, nil, tt.args.args...)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("StatusHandler() error = %v, wantErr %v", err, tt.wantErr)
@@ -189,6 +185,140 @@ func TestFileHandler(t *testing.T) {
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("StatusHandler() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+
+			got.ServeHTTP(tt.args.responseWriterSetup(t, ctrl), tt.args.request)
+		})
+	}
+}
+
+func TestJSONHandler(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		args                []rules.Param
+		responseWriterSetup func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter
+		request             *http.Request
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    http.Handler
+		wantErr bool
+	}{
+		{
+			name: "Get status empty JSON",
+			args: args{
+				args: []rules.Param{
+					{
+						String: rules.StringP(`{}`),
+					},
+				},
+				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
+					tb.Helper()
+					rwMock := httpmock.NewMockResponseWriter(ctrl)
+					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{}`)))
+					return rwMock
+				},
+				request: new(http.Request),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Get non-empty JSON",
+			args: args{
+				args: []rules.Param{
+					{
+						String: rules.StringP(`{"Name": "Ted Tester"}`),
+					},
+				},
+				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
+					tb.Helper()
+					rwMock := httpmock.NewMockResponseWriter(ctrl)
+					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester"}`)))
+					return rwMock
+				},
+				request: new(http.Request),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Get nested JSON",
+			args: args{
+				args: []rules.Param{
+					{
+						String: rules.StringP(`{"Name": "Ted Tester", "Address": {"Street": "Some street 1"}}`),
+					},
+				},
+				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
+					tb.Helper()
+					rwMock := httpmock.NewMockResponseWriter(ctrl)
+					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester", "Address": {"Street": "Some street 1"}}`)))
+					return rwMock
+				},
+				request: new(http.Request),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Get nested empty array JSON",
+			args: args{
+				args: []rules.Param{
+					{
+						String: rules.StringP(`{"Name": "Ted Tester", "Colleagues": []}`),
+					},
+				},
+				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
+					tb.Helper()
+					rwMock := httpmock.NewMockResponseWriter(ctrl)
+					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester", "Colleagues": []}`)))
+					return rwMock
+				},
+				request: new(http.Request),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Get nested array JSON",
+			args: args{
+				args: []rules.Param{
+					{
+						String: rules.StringP(`{"Name": "Ted Tester", "Colleagues": [{"Name": "Carl"}]}`),
+					},
+				},
+				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
+					tb.Helper()
+					rwMock := httpmock.NewMockResponseWriter(ctrl)
+					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester", "Colleagues": [{"Name": "Carl"}]}`)))
+					return rwMock
+				},
+				request: new(http.Request),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid JSON",
+			args: args{
+				args: []rules.Param{
+					{
+						String: rules.StringP(`{`),
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			logger := logging.CreateTestLogger(t)
+			ctrl := gomock.NewController(t)
+			got, err := mock.JSONHandler(logger, nil, tt.args.args...)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("JSONHandler() error = %v, wantErr %v", err, tt.wantErr)
 				}
 				return
 			}
