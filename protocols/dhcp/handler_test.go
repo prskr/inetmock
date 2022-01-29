@@ -23,7 +23,6 @@ import (
 	"gitlab.com/inetmock/inetmock/protocols/dhcp"
 )
 
-//nolint:dupl // fuck duplicates in tests
 func Test_dhcpHandler_Start(t *testing.T) {
 	t.Parallel()
 	anyInterface, ifAddr := anyPhysicalInterface(t)

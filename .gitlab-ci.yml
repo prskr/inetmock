@@ -20,23 +20,10 @@ variables:
   DOCKER_TLS_VERIFY: 1
   DOCKER_HOST: 'tcp://docker:2376'
   DOCKER_IMAGE: registry.gitlab.com/inetmock/inetmock:$CI_COMMIT_SHORT_SHA
-  SAST_EXCLUDED_ANALYZERS: "eslint"
-
-.go-cache:
-  variables:
-    GOCACHE: $CI_PROJECT_DIR/.go/build-cache
-    GOMODCACHE: $CI_PROJECT_DIR/.go/mod-cache
-    GOLANGCI_LINT_CACHE: $CI_PROJECT_DIR/.go/golangci-lint
-  before_script:
-    - mkdir -p .go/build-cache .go/mod-cache .go/golangci-lint
-  cache:
-    key: e74f07d2-d20d-4e79-82b9-9da46be444df
-    paths:
-      - .go/
+  SAST_EXCLUDED_ANALYZERS: "eslint,nodejs-scan,bandit,flawfinder,spotbugs"
 
 test:
   stage: test
-  extends: .go-cache
   needs: [ ]
   script:
     - task test-all html-cover-report
@@ -52,9 +39,8 @@ test:
 
 lint:
   stage: test
-  extends: .go-cache
   script:
-    - task deps generate protobuf-lint
+    - task protobuf-lint
     - golangci-lint run --timeout 5m --issues-exit-code 0 --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
   artifacts:
     expire_in: 7 days
@@ -65,7 +51,6 @@ lint:
 
 snapshot-release:
   stage: release
-  extends: .go-cache
   services:
     - docker:dind
   needs:
@@ -81,7 +66,6 @@ snapshot-release:
 
 release:
   stage: release
-  extends: .go-cache
   services:
     - docker:dind
   needs:
@@ -96,7 +80,6 @@ release:
 
 integration-test:
   stage: validate
-  extends: .go-cache
   variables:
     DOCKER_ENDPOINT: docker
   needs:

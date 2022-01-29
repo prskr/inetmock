@@ -57,6 +57,7 @@ func (i *inMemListener) Close() error {
 
 func (i inMemListener) Addr() net.Addr {
 	return &net.TCPAddr{
+		//nolint:gomnd
 		IP:   net.IPv4(127, 1, 10, 1),
 		Port: 1337,
 		Zone: "pipe",

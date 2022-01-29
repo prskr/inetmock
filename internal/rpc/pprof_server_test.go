@@ -1,4 +1,3 @@
-//nolint:dupl // some APIs are rather similar but tests won't be easier to read if merged
 package rpc_test
 
 import (

@@ -54,7 +54,7 @@ var (
 	}
 )
 
-//nolint:gocyclo // central setup point
+//nolint:funlen //startup code
 func startINetMock(_ *cobra.Command, _ []string) error {
 	registry := endpoint.NewHandlerRegistry()
 
@@ -140,9 +140,7 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return
 	}*/
 
-	select {
-	case <-serverApp.Context().Done():
-	}
+	<-serverApp.Context().Done()
 	appLogger.Info("App context canceled - shutting down")
 	rpcAPI.StopServer()
 	return nil

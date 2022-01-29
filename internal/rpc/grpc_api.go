@@ -42,7 +42,6 @@ type inetmockAPI struct {
 	checker       health.Checker
 	eventStream   audit.EventStream
 	epHost        endpoint.Host
-	hostBuilder   endpoint.HostBuilder
 	auditDataDir  string
 	pcapDataDir   string
 	serverRunning chan struct{}

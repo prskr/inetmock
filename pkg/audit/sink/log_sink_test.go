@@ -16,7 +16,6 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/wait"
 )
 
-//nolint:dupl
 func Test_logSink_OnSubscribe(t *testing.T) {
 	t.Parallel()
 	type fields struct {

@@ -31,14 +31,6 @@ tasks:
       - goimports -local gitlab.com/inetmock/inetmock -w $(git ls-files --modified --others | grep -v -E "^.go/" | grep -E ".go$")
       - gofumpt -l -w $(git ls-files --modified --others | grep -v -E "^.go/" | grep -E ".go$")
 
-  deps:
-    desc: download dependencies
-    sources:
-      - go.mod
-      - go.sum
-    cmds:
-      - go mod download
-
   dep-graph:
     desc: generate dependency graph
     sources:
@@ -51,8 +43,6 @@ tasks:
   golangci-lint:
     desc: run Go linter
     deps:
-      - deps
-      - generate
       - format
     cmds:
       - golangci-lint run --timeout 5m
@@ -83,8 +73,6 @@ tasks:
 
   go-generate:
     desc: run all go:generate directives
-    deps:
-      - deps
     sources:
       - "**/*.go"
     generates:
@@ -106,9 +94,6 @@ tasks:
       - "**/*.go"
     env:
       CGO_ENABLED: 1
-    deps:
-      - deps
-      - generate
     cmds:
       - mkdir -p {{ .OUT_DIR }}
       - go test -race -shuffle=on -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./...
@@ -119,9 +104,6 @@ tasks:
     desc: run all unit tests
     sources:
       - "**/*.go"
-    deps:
-      - deps
-      - generate
     env:
       CGO_ENABLED: 1
     cmds:
@@ -133,16 +115,12 @@ tasks:
 
   integration-test:
     desc: run all benchmarks/integration tests
-    deps:
-      - deps
-      - generate
     cmds:
       - cat testdata/integration.imcs | go run ./cmd/imctl check run --insecure --target {{ .DOCKER_ENDPOINT }} --log-level debug
 
   debug-integration-test:
     desc: run all benchmarks/integration tests
     deps:
-      - deps
       - generate
     cmds:
       - cat testdata/integration.imcs | dlv debug --headless --listen=:2345 --api-version=2 --accept-multiclient ./cmd/imctl -- check run --insecure --target {{ .DOCKER_ENDPOINT }} --log-level debug
@@ -183,7 +161,6 @@ tasks:
   build:
     desc: build all binaries
     deps:
-      - deps
       - generate
     vars:
       TARGET_ID: '{{ default "" .TARGET_ID }}'
@@ -195,7 +172,6 @@ tasks:
   snapshot-release:
     desc: create a snapshot/test release without publishing any artifacts
     deps:
-      - deps
       - generate
     cmds:
       - goreleaser release --snapshot --skip-publish --rm-dist
@@ -203,7 +179,6 @@ tasks:
   release:
     desc: create a release - includes artifact publishing
     deps:
-      - deps
       - generate
     cmds:
       - goreleaser release --rm-dist

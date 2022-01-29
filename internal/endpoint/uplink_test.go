@@ -257,7 +257,7 @@ func (fl fakeListener) Addr() net.Addr {
 
 var (
 	_       net.PacketConn = (*fakePacketConn)(nil)
-	mockErr                = errors.New("this ain't a real PacketConn")
+	errMock                = errors.New("this ain't a real PacketConn")
 )
 
 type fakePacketConn struct {
@@ -266,11 +266,11 @@ type fakePacketConn struct {
 }
 
 func (f fakePacketConn) ReadFrom([]byte) (n int, addr net.Addr, err error) {
-	return 0, nil, mockErr
+	return 0, nil, errMock
 }
 
 func (f fakePacketConn) WriteTo([]byte, net.Addr) (n int, err error) {
-	return 0, mockErr
+	return 0, errMock
 }
 
 func (f fakePacketConn) Close() error {
