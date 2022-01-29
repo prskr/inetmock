@@ -14,6 +14,7 @@ import (
 )
 
 func HTTPClientForAddr(tb testing.TB, addr net.Addr) *http.Client {
+	tb.Helper()
 	switch l := addr.(type) {
 	case *net.TCPAddr:
 		dialer := new(net.Dialer)

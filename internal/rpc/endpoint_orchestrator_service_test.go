@@ -1,4 +1,3 @@
-//nolint:dupl
 package rpc_test
 
 import (

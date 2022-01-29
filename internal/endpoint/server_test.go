@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"golang.org/x/net/context/ctxhttp"
 
 	"gitlab.com/inetmock/inetmock/internal/endpoint"
 	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
@@ -31,7 +32,8 @@ func TestServer_ServeGroups_Success(t *testing.T) {
 	httpClient := test.HTTPClientForAddr(t, listenAddr)
 
 	var resp *http.Response
-	if r, err := httpClient.Get("http://www.stackoverflow.com/"); err != nil {
+
+	if r, err := ctxhttp.Get(context.Background(), httpClient, "http://www.stackoverflow.com/"); err != nil {
 		t.Errorf("httpClient.Get() error = %v", err)
 		return
 	} else {

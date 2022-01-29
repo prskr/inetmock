@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
@@ -17,8 +16,6 @@ import (
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
-
-const shutdownTimeout = 100 * time.Millisecond
 
 type dohHandler struct {
 	logger  logging.Logger

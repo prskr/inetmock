@@ -17,7 +17,6 @@ import (
 	"gitlab.com/inetmock/inetmock/protocols/dns/doh"
 )
 
-//nolint:dupl
 func Test_dohHandler_Start(t *testing.T) {
 	t.Parallel()
 	type args struct {

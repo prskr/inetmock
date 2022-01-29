@@ -113,6 +113,7 @@ issues:
         - gomnd
         - funlen
         - govet
+        - dupl
 
 run:
   build-tags:
@@ -120,9 +121,11 @@ run:
     - integration
   skip-dirs:
     - internal/mock
+    - vendor/
   skip-files:
     - ".*\\.pb\\.go$"
     - ".*.mock.\\.go$"
+  modules-download-mode: vendor
 
 service:
   golangci-lint-version: 1.42.x # use the fixed version to not introduce new linters unexpectedly

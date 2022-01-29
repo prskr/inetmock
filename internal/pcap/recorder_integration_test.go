@@ -3,7 +3,6 @@
 
 package pcap_test
 
-// nolint:typecheck
 import (
 	"bytes"
 	"context"

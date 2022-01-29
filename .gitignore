@@ -10,7 +10,6 @@
 /inetmock
 /imctl
 ./main
-**/*.mock.go
 .go/
 __debug_bin
 
