@@ -20,7 +20,7 @@ require (
 	github.com/miekg/dns v1.1.45
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/prometheus/client_golang v1.12.0
+	github.com/prometheus/client_golang v1.12.1
 	github.com/soheilhy/cmux v0.1.5
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c

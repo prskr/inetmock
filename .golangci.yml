@@ -117,6 +117,7 @@ issues:
 run:
   build-tags:
     - sudo
+    - integration
   skip-dirs:
     - internal/mock
   skip-files:
