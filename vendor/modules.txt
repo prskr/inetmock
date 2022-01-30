@@ -380,7 +380,7 @@ go.uber.org/zap/zapcore
 # golang.org/x/mod v0.5.0
 ## explicit; go 1.17
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20220127074510-2fabfed7e28f
+# golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 ## explicit; go 1.17
 golang.org/x/net/bpf
 golang.org/x/net/context
