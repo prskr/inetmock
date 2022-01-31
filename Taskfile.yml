@@ -28,8 +28,8 @@ tasks:
   format:
     desc: Format all changed source files
     cmds:
-      - goimports -local gitlab.com/inetmock/inetmock -w $(git ls-files --modified --others | grep -v -E "^.go/" | grep -E ".go$")
-      - gofumpt -l -w $(git ls-files --modified --others | grep -v -E "^.go/" | grep -E ".go$")
+      - goimports -local gitlab.com/inetmock/inetmock -w $(go list -f \{\{.Dir\}\} ./... | grep -v /vendor/)
+      - gofumpt -l -w ./
 
   dep-graph:
     desc: generate dependency graph

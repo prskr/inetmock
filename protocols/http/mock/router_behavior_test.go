@@ -1,17 +1,16 @@
 package mock_test
 
 import (
+	"io"
 	"io/fs"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"testing/fstest"
 
-	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/td"
 
-	httpmock "gitlab.com/inetmock/inetmock/internal/mock/http"
 	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/internal/test"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 	"gitlab.com/inetmock/inetmock/protocols/http/mock"
 )
@@ -19,32 +18,29 @@ import (
 func TestStatusHandler(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		args                []rules.Param
-		responseWriterSetup func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter
-		request             *http.Request
+		args    []rules.Param
+		request *http.Request
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
+		want    interface{}
 	}{
 		{
 			name: "Get status 204",
 			args: args{
 				args: []rules.Param{
 					{
-						Int: rules.IntP(204),
+						Int: rules.IntP(http.StatusNoContent),
 					},
-				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().WriteHeader(204)
-					return rwMock
 				},
 				request: new(http.Request),
 			},
 			wantErr: false,
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusNoContent,
+			}, td.StructFields{}),
 		},
 		{
 			name: "Expect error due to missing argument",
@@ -72,8 +68,7 @@ func TestStatusHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			logger := logging.CreateTestLogger(t)
-			ctrl := gomock.NewController(t)
-			got, err := mock.StatusHandler(logger, nil, tt.args.args...)
+			handler, err := mock.StatusHandler(logger, nil, tt.args.args...)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("StatusHandler() error = %v, wantErr %v", err, tt.wantErr)
@@ -81,7 +76,10 @@ func TestStatusHandler(t *testing.T) {
 				return
 			}
 
-			got.ServeHTTP(tt.args.responseWriterSetup(t, ctrl), tt.args.request)
+			recorder := httptest.NewRecorder()
+			handler.ServeHTTP(recorder, tt.args.request)
+			got := recorder.Result()
+			td.Cmp(t, got, tt.want)
 		})
 	}
 }
@@ -89,15 +87,15 @@ func TestStatusHandler(t *testing.T) {
 func TestFileHandler(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		fakeFileFS          fs.FS
-		args                []rules.Param
-		responseWriterSetup func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter
-		request             *http.Request
+		fakeFileFS fs.FS
+		args       []rules.Param
+		request    *http.Request
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
+		want    interface{}
 	}{
 		{
 			name: "Get default HTML content",
@@ -108,16 +106,13 @@ func TestFileHandler(t *testing.T) {
 						String: rules.StringP("default.html"),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().Header().Return(http.Header{}).MinTimes(1)
-					rwMock.EXPECT().WriteHeader(200)
-					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.Contains("<title>INetSim default HTML page</title>")))
-					return rwMock
-				},
 				request: new(http.Request),
 			},
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusOK,
+			}, td.StructFields{
+				"Body": readerSmuggle(td.Contains("<title>INetSim default HTML page</title>")),
+			}),
 			wantErr: false,
 		},
 		{
@@ -129,16 +124,13 @@ func TestFileHandler(t *testing.T) {
 						String: rules.StringP("default.html"),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().Header().Return(http.Header{}).MinTimes(1)
-					rwMock.EXPECT().WriteHeader(500)
-					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.Contains("open default.html: file does not exist")))
-					return rwMock
-				},
 				request: new(http.Request),
 			},
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusInternalServerError,
+			}, td.StructFields{
+				"Body": readerSmuggle(td.Contains("open default.html: file does not exist")),
+			}),
 			wantErr: false,
 		},
 		{
@@ -146,12 +138,7 @@ func TestFileHandler(t *testing.T) {
 			args: args{
 				fakeFileFS: nil,
 				args:       []rules.Param{},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					return rwMock
-				},
-				request: new(http.Request),
+				request:    new(http.Request),
 			},
 			wantErr: true,
 		},
@@ -164,11 +151,6 @@ func TestFileHandler(t *testing.T) {
 						Int: rules.IntP(42),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					return rwMock
-				},
 				request: new(http.Request),
 			},
 			wantErr: true,
@@ -179,16 +161,16 @@ func TestFileHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			logger := logging.CreateTestLogger(t)
-			ctrl := gomock.NewController(t)
-			got, err := mock.FileHandler(logger, tt.args.fakeFileFS, tt.args.args...)
+			fileHandler, err := mock.FileHandler(logger, tt.args.fakeFileFS, tt.args.args...)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("StatusHandler() error = %v, wantErr %v", err, tt.wantErr)
 				}
 				return
 			}
-
-			got.ServeHTTP(tt.args.responseWriterSetup(t, ctrl), tt.args.request)
+			recorder := httptest.NewRecorder()
+			fileHandler.ServeHTTP(recorder, tt.args.request)
+			td.Cmp(t, recorder.Result(), tt.want)
 		})
 	}
 }
@@ -196,14 +178,13 @@ func TestFileHandler(t *testing.T) {
 func TestJSONHandler(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		args                []rules.Param
-		responseWriterSetup func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter
-		request             *http.Request
+		args    []rules.Param
+		request *http.Request
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    http.Handler
+		want    interface{}
 		wantErr bool
 	}{
 		{
@@ -214,14 +195,13 @@ func TestJSONHandler(t *testing.T) {
 						String: rules.StringP(`{}`),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{}`)))
-					return rwMock
-				},
 				request: new(http.Request),
 			},
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusOK,
+			}, td.StructFields{
+				"Body": readerSmuggle(td.String(`{}`)),
+			}),
 			wantErr: false,
 		},
 		{
@@ -232,14 +212,13 @@ func TestJSONHandler(t *testing.T) {
 						String: rules.StringP(`{"Name": "Ted Tester"}`),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester"}`)))
-					return rwMock
-				},
 				request: new(http.Request),
 			},
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusOK,
+			}, td.StructFields{
+				"Body": readerSmuggle(td.String(`{"Name": "Ted Tester"}`)),
+			}),
 			wantErr: false,
 		},
 		{
@@ -250,14 +229,13 @@ func TestJSONHandler(t *testing.T) {
 						String: rules.StringP(`{"Name": "Ted Tester", "Address": {"Street": "Some street 1"}}`),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester", "Address": {"Street": "Some street 1"}}`)))
-					return rwMock
-				},
 				request: new(http.Request),
 			},
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusOK,
+			}, td.StructFields{
+				"Body": readerSmuggle(td.String(`{"Name": "Ted Tester", "Address": {"Street": "Some street 1"}}`)),
+			}),
 			wantErr: false,
 		},
 		{
@@ -268,14 +246,13 @@ func TestJSONHandler(t *testing.T) {
 						String: rules.StringP(`{"Name": "Ted Tester", "Colleagues": []}`),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester", "Colleagues": []}`)))
-					return rwMock
-				},
 				request: new(http.Request),
 			},
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusOK,
+			}, td.StructFields{
+				"Body": readerSmuggle(td.String(`{"Name": "Ted Tester", "Colleagues": []}`)),
+			}),
 			wantErr: false,
 		},
 		{
@@ -286,14 +263,13 @@ func TestJSONHandler(t *testing.T) {
 						String: rules.StringP(`{"Name": "Ted Tester", "Colleagues": [{"Name": "Carl"}]}`),
 					},
 				},
-				responseWriterSetup: func(tb testing.TB, ctrl *gomock.Controller) http.ResponseWriter {
-					tb.Helper()
-					rwMock := httpmock.NewMockResponseWriter(ctrl)
-					rwMock.EXPECT().Write(test.GenericMatcher(tb, td.String(`{"Name": "Ted Tester", "Colleagues": [{"Name": "Carl"}]}`)))
-					return rwMock
-				},
 				request: new(http.Request),
 			},
+			want: td.Struct(&http.Response{
+				StatusCode: http.StatusOK,
+			}, td.StructFields{
+				"Body": readerSmuggle(td.String(`{"Name": "Ted Tester", "Colleagues": [{"Name": "Carl"}]}`)),
+			}),
 			wantErr: false,
 		},
 		{
@@ -313,7 +289,6 @@ func TestJSONHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			logger := logging.CreateTestLogger(t)
-			ctrl := gomock.NewController(t)
 			got, err := mock.JSONHandler(logger, nil, tt.args.args...)
 			if err != nil {
 				if !tt.wantErr {
@@ -322,7 +297,16 @@ func TestJSONHandler(t *testing.T) {
 				return
 			}
 
-			got.ServeHTTP(tt.args.responseWriterSetup(t, ctrl), tt.args.request)
+			recorder := httptest.NewRecorder()
+			got.ServeHTTP(recorder, tt.args.request)
+			td.Cmp(t, recorder.Result(), tt.want)
 		})
 	}
+}
+
+func readerSmuggle(expected interface{}) interface{} {
+	return td.Smuggle(func(reader io.Reader) (string, error) {
+		data, err := io.ReadAll(reader)
+		return string(data), err
+	}, expected)
 }

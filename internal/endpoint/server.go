@@ -11,6 +11,7 @@ import (
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
 
+	"gitlab.com/inetmock/inetmock/internal/netutils"
 	"gitlab.com/inetmock/inetmock/pkg/logging"
 )
 
@@ -206,9 +207,7 @@ func (s *Server) setupUplink(grp *ListenerGroup) (u *Uplink, err error) {
 	case *net.UDPAddr:
 		u.PacketConn, err = net.ListenUDP("udp", a)
 	case *net.TCPAddr:
-		var autoLingerListener AutoLingeringListener
-		autoLingerListener.Listener, err = net.ListenTCP("tcp", a)
-		u.Listener = autoLingerListener
+		u.Listener, err = netutils.ListenTCP(a)
 	}
 	return
 }
