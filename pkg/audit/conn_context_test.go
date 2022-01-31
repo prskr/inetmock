@@ -4,11 +4,10 @@ import (
 	"context"
 	"net"
 	"testing"
+	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/soheilhy/cmux"
 
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
 	"gitlab.com/inetmock/inetmock/pkg/audit"
 )
 
@@ -29,20 +28,7 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					ctrl := gomock.NewController(tb)
-					connMock := audit_mock.NewMockConn(ctrl)
-
-					connMock.
-						EXPECT().
-						LocalAddr().
-						Return(new(net.TCPAddr))
-
-					connMock.
-						EXPECT().
-						RemoteAddr().
-						Return(new(net.TCPAddr))
-
-					return connMock
+					return stubConn(new(net.TCPAddr), new(net.TCPAddr))
 				},
 			},
 			wantLocalAddr:  true,
@@ -54,20 +40,8 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					ctrl := gomock.NewController(tb)
-					connMock := audit_mock.NewMockConn(ctrl)
 
-					connMock.
-						EXPECT().
-						RemoteAddr().
-						Return(nil)
-
-					connMock.
-						EXPECT().
-						LocalAddr().
-						Return(new(net.TCPAddr))
-
-					return connMock
+					return connStub{FakeLocalAddr: new(net.TCPAddr)}
 				},
 			},
 			wantLocalAddr:  true,
@@ -79,20 +53,7 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					ctrl := gomock.NewController(tb)
-					connMock := audit_mock.NewMockConn(ctrl)
-
-					connMock.
-						EXPECT().
-						RemoteAddr().
-						Return(new(net.TCPAddr))
-
-					connMock.
-						EXPECT().
-						LocalAddr().
-						Return(nil)
-
-					return connMock
+					return stubConn(nil, new(net.TCPAddr))
 				},
 			},
 			wantLocalAddr:  false,
@@ -104,18 +65,7 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			args: args{
 				connSetup: func(tb testing.TB) net.Conn {
 					tb.Helper()
-					ctrl := gomock.NewController(tb)
-					connMock := audit_mock.NewMockConn(ctrl)
-
-					connMock.
-						EXPECT().
-						RemoteAddr().
-						Return(new(net.TCPAddr))
-
-					connMock.
-						EXPECT().
-						LocalAddr().
-						Return(new(net.TCPAddr))
+					connMock := stubConn(new(net.TCPAddr), new(net.TCPAddr))
 					return &cmux.MuxConn{
 						Conn: connMock,
 					}
@@ -144,4 +94,56 @@ func TestStoreConnPropertiesInContext(t *testing.T) {
 			}
 		})
 	}
+}
+
+var _ net.Conn = (*connStub)(nil)
+
+func stubConn(localAddr, remoteAddr net.Addr) net.Conn {
+	return connStub{
+		FakeLocalAddr:  localAddr,
+		FakeRemoteAddr: remoteAddr,
+	}
+}
+
+type connStub struct {
+	FakeLocalAddr  net.Addr
+	FakeRemoteAddr net.Addr
+}
+
+func (c connStub) Read(b []byte) (n int, err error) {
+	panic("implement me")
+}
+
+func (c connStub) Write(b []byte) (n int, err error) {
+	panic("implement me")
+}
+
+func (c connStub) Close() error {
+	panic("implement me")
+}
+
+func (c connStub) LocalAddr() net.Addr {
+	if c.FakeLocalAddr != nil {
+		return c.FakeLocalAddr
+	}
+	return nil
+}
+
+func (c connStub) RemoteAddr() net.Addr {
+	if c.FakeRemoteAddr != nil {
+		return c.FakeRemoteAddr
+	}
+	return nil
+}
+
+func (c connStub) SetDeadline(t time.Time) error {
+	panic("implement me")
+}
+
+func (c connStub) SetReadDeadline(t time.Time) error {
+	panic("implement me")
+}
+
+func (c connStub) SetWriteDeadline(t time.Time) error {
+	panic("implement me")
 }
