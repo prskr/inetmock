@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
@@ -35,6 +36,7 @@ import (
 
 const (
 	defaultEventBufferSize = 10
+	startGroupsTimeout     = 1 * time.Second
 )
 
 var (
@@ -120,10 +122,13 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	if err := srv.ServeGroups(context.Background()); err != nil {
+	startGroupsCtx, startGroupsCancel := context.WithTimeout(serverApp.Context(), startGroupsTimeout)
+	if err := srv.ServeGroups(startGroupsCtx); err != nil {
+		startGroupsCancel()
 		appLogger.Error("Failed to serve listener groups", zap.Error(err))
 		return err
 	}
+	startGroupsCancel()
 
 	srv.ShutdownOnCancel(serverApp.Context())
 
@@ -134,11 +139,6 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 			zap.Error(err),
 		)
 	}
-
-	//nolint:gocritic
-	/*if err = startAuditConsumer(); err != nil {
-		return
-	}*/
 
 	<-serverApp.Context().Done()
 	appLogger.Info("App context canceled - shutting down")

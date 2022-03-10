@@ -29,7 +29,7 @@ type pprofHandler struct {
 	server  *http.Server
 }
 
-func (p *pprofHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
+func (p *pprofHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec) error {
 	pprofMux := new(http.ServeMux)
 	pprofMux.HandleFunc(pprofIndexPath, pprof.Index)
 	pprofMux.HandleFunc(pprofCmdLinePath, pprof.Cmdline)
@@ -47,7 +47,6 @@ func (p *pprofHandler) Start(ctx context.Context, startupSpec *endpoint.StartupS
 	)
 
 	go p.startServer(startupSpec.Listener)
-	go p.stopServer(ctx)
 
 	return nil
 }
@@ -55,13 +54,5 @@ func (p *pprofHandler) Start(ctx context.Context, startupSpec *endpoint.StartupS
 func (p *pprofHandler) startServer(listener net.Listener) {
 	if err := endpoint.IgnoreShutdownError(p.server.Serve(listener)); err != nil {
 		p.logger.Error("Failed to start pprof HTTP listener", zap.Error(err))
-	}
-}
-
-func (p *pprofHandler) stopServer(ctx context.Context) {
-	<-ctx.Done()
-	p.logger.Info("Shutting down pprof HTTP protocols")
-	if err := p.server.Close(); err != nil {
-		p.logger.Error("Failed to shutdown pprof HTTP protocols", zap.Error(err))
 	}
 }

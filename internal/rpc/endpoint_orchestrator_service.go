@@ -77,7 +77,7 @@ func (s *endpointOrchestratorServer) StartListenerGroup(
 	ctx context.Context,
 	req *rpcv1.StartListenerGroupRequest,
 ) (*rpcv1.StartListenerGroupResponse, error) {
-	if err := s.epHost.ServeGroup(context.Background(), req.GroupName); err != nil {
+	if err := s.epHost.ServeGroup(ctx, req.GroupName); err != nil {
 		return nil, status.Errorf(codes.Unknown, err.Error())
 	}
 	return new(rpcv1.StartListenerGroupResponse), nil
@@ -86,7 +86,7 @@ func (s *endpointOrchestratorServer) StartListenerGroup(
 func (s *endpointOrchestratorServer) StartAllGroups(
 	ctx context.Context,
 	_ *rpcv1.StartAllGroupsRequest) (*rpcv1.StartAllGroupsResponse, error) {
-	if err := s.epHost.ServeGroups(context.Background()); err != nil {
+	if err := s.epHost.ServeGroups(ctx); err != nil {
 		s.logger.Error("Failed to start serving groups", zap.Error(err))
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
@@ -122,7 +122,7 @@ func (s *endpointOrchestratorServer) RestartListenerGroup(
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 
-	if err := s.epHost.ServeGroup(context.Background(), req.GroupName); err != nil {
+	if err := s.epHost.ServeGroup(ctx, req.GroupName); err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 
@@ -137,7 +137,7 @@ func (s *endpointOrchestratorServer) RestartAllGroups(
 		return nil, status.Error(codes.FailedPrecondition, err.Error())
 	}
 
-	if err := s.epHost.ServeGroups(context.Background()); err != nil {
+	if err := s.epHost.ServeGroups(ctx); err != nil {
 		s.logger.Error("Failed to start serving groups", zap.Error(err))
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
