@@ -32,7 +32,7 @@ func (h *dhcpHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSp
 		options ProtocolOptions
 		conn    *ipv4.PacketConn
 	)
-	h.logger = h.logger.With(zap.String("protocol_handler", name))
+
 	if o, err := LoadFromConfig(startupSpec, h.stateStore); err != nil {
 		return err
 	} else {
@@ -87,7 +87,7 @@ func (h *dhcpHandler) Stop(context.Context) error {
 
 func (h *dhcpHandler) serve(ctx context.Context, conn *ipv4.PacketConn) {
 	if err := h.server.Serve(ctx, conn); err != nil {
-		h.logger.Error("Failed to serve")
+		h.logger.Error("Failed to serve", zap.Error(err))
 	}
 }
 

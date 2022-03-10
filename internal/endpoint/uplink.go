@@ -41,6 +41,9 @@ func (u Uplink) IsTCP() bool {
 }
 
 func (u *Uplink) Close() (err error) {
+	if u.Unmanaged {
+		return nil
+	}
 	if u.Listener != nil {
 		multierr.AppendInvoke(&err, multierr.Close(u.Listener))
 		u.Listener = nil
