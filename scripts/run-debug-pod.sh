@@ -17,12 +17,13 @@ join_container_to_ns &
 podman run \
     --rm \
     -ti \
+    --ip 10.10.1.1 \
     --cap-add=CAP_NET_RAW \
     --cap-add=CAP_NET_BIND_SERVICE \
     --cap-add=CAP_NET_ADMIN \
     --security-opt=seccomp=unconfined \
-    --network=inetmock \
+    --replace \
+    --network=libvirt \
     -v "$(pwd):/work" \
-    -p 127.0.0.1:2345:2345 \
     --name inetmock \
     inetmock-debug

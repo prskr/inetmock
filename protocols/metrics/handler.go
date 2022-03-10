@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -24,7 +23,7 @@ type metricsExporter struct {
 	server  *http.Server
 }
 
-func (m *metricsExporter) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
+func (m *metricsExporter) Start(_ context.Context, startupSpec *endpoint.StartupSpec) error {
 	var exporterOptions metricsExporterOptions
 	if err := startupSpec.UnmarshalOptions(&exporterOptions); err != nil {
 		return err
@@ -52,11 +51,5 @@ func (m *metricsExporter) Start(ctx context.Context, startupSpec *endpoint.Start
 		}
 	}()
 
-	go func() {
-		<-ctx.Done()
-		if err := m.server.Close(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			m.logger.Error("failed to stop metrics server", zap.Error(err))
-		}
-	}()
 	return nil
 }

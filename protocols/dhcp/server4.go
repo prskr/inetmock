@@ -1,16 +1,17 @@
 package dhcp
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/insomniacslk/dhcp/dhcpv4"
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/net/ipv4"
 
@@ -30,21 +31,20 @@ var (
 )
 
 type Server4 struct {
-	conn    *ipv4.PacketConn
-	Handler DHCPv4MessageHandler
-	Logger  logging.Logger
+	PacketConn *ipv4.PacketConn
+	Handler    DHCPv4MessageHandler
+	Logger     logging.Logger
 }
 
-func (s *Server4) Serve(ctx context.Context, conn *ipv4.PacketConn) error {
-	s.conn = conn
-	if err := s.conn.SetControlMessage(ipv4.FlagInterface, true); err != nil {
+func (s *Server4) Serve() error {
+	if err := s.PacketConn.SetControlMessage(ipv4.FlagInterface, true); err != nil {
 		return err
 	}
-	for ctx.Err() == nil {
+	for {
 		bufBytes := bufPool.Get().(*[]byte)
 		b := *bufBytes
 		b = b[:MaxDatagram] // Reslice to max capacity in case the buffer in pool was resliced smaller
-		n, oob, peer, err := s.conn.ReadFrom(b)
+		n, oob, peer, err := s.PacketConn.ReadFrom(b)
 		if err != nil {
 			return err
 		}
@@ -55,11 +55,16 @@ func (s *Server4) Serve(ctx context.Context, conn *ipv4.PacketConn) error {
 		}
 		bufPool.Put(bufBytes)
 	}
-	return ctx.Err()
 }
 
 func (s *Server4) Shutdown() error {
-	return s.conn.Close()
+	err := multierr.Combine(
+		s.PacketConn.SetDeadline(time.Now()),
+		s.PacketConn.Close(),
+	)
+
+	s.PacketConn = nil
+	return err
 }
 
 func (s *Server4) HandleMessage(req *dhcpv4.DHCPv4, oob *ipv4.ControlMessage, addr net.Addr) {
@@ -114,7 +119,7 @@ func (s *Server4) HandleMessage(req *dhcpv4.DHCPv4, oob *ipv4.ControlMessage, ad
 			return
 		}
 	} else {
-		if _, err := s.conn.WriteTo(resp.ToBytes(), woob, peer); err != nil {
+		if _, err := s.PacketConn.WriteTo(resp.ToBytes(), woob, peer); err != nil {
 			s.Logger.Error("Failed to write DHCP response", zap.Error(err))
 			return
 		}

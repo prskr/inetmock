@@ -27,7 +27,7 @@ type dhcpHandler struct {
 	server     *Server4
 }
 
-func (h *dhcpHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSpec) error {
+func (h *dhcpHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec) error {
 	var (
 		options ProtocolOptions
 		conn    *ipv4.PacketConn
@@ -45,7 +45,6 @@ func (h *dhcpHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSp
 		conn = c
 	}
 
-	h.logger = h.logger.With(zap.String("address", startupSpec.Addr.String()))
 	rh := &RuledHandler{
 		HandlerName:     startupSpec.Name,
 		ProtocolOptions: options,
@@ -62,6 +61,7 @@ func (h *dhcpHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSp
 	}
 
 	h.server = &Server4{
+		PacketConn: conn,
 		Handler: &EmittingHandler{
 			Upstream: &FallbackHandler{
 				Previous:       rh,
@@ -73,7 +73,7 @@ func (h *dhcpHandler) Start(ctx context.Context, startupSpec *endpoint.StartupSp
 		Logger: h.logger,
 	}
 
-	go h.serve(ctx, conn)
+	go h.serve()
 
 	return nil
 }
@@ -85,8 +85,8 @@ func (h *dhcpHandler) Stop(context.Context) error {
 	return err
 }
 
-func (h *dhcpHandler) serve(ctx context.Context, conn *ipv4.PacketConn) {
-	if err := h.server.Serve(ctx, conn); err != nil {
+func (h *dhcpHandler) serve() {
+	if err := h.server.Serve(); err != nil {
 		h.logger.Error("Failed to serve", zap.Error(err))
 	}
 }

@@ -9,7 +9,4 @@ WORKDIR /work
 
 ENV GOPROXY=https://goproxy.io,direct
 
-ADD go.mod go.sum ./
-RUN go mod download -x
-
 EXPOSE 2345
