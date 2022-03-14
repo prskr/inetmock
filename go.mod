@@ -17,7 +17,7 @@ require (
 	github.com/insomniacslk/dhcp v0.0.0-20220119180841-3c283ff8b7dd
 	github.com/jinzhu/copier v0.3.5
 	github.com/maxatome/go-testdeep v1.11.0
-	github.com/miekg/dns v1.1.46
+	github.com/miekg/dns v1.1.47
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.12.1
@@ -90,7 +90,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/mod v0.5.0 // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.6-0.20210726203631-07bc1bf47fb2 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
@@ -102,7 +102,7 @@ require (
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.6.1
 	github.com/docker/docker => github.com/moby/moby v20.10.12+incompatible
-	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20211124091904-a10d380ef3cd
+	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20220314074627-3272f0ec1510
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
 	golang.org/x/text => golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
