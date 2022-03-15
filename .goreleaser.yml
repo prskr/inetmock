@@ -69,6 +69,10 @@ dockers:
       - registry.gitlab.com/inetmock/inetmock:{{ .Tag }}
       - registry.gitlab.com/inetmock/inetmock:{{ .Major }}
       - registry.gitlab.com/inetmock/inetmock:{{ .ShortCommit}}
+      - ghcr.io/baez90/inetmock:latest
+      - ghcr.io/baez90/inetmock:{{ .Tag }}
+      - ghcr.io/baez90/inetmock:{{ .Major }}
+      - ghcr.io/baez90/inetmock:{{ .ShortCommit}}
 
     dockerfile: build/docker/inetmock.dockerfile
     build_flag_templates:
