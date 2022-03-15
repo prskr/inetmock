@@ -15,8 +15,8 @@ func TestNewUplink(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name string
-		conn interface{}
-		want interface{}
+		conn any
+		want any
 	}{
 		{
 			name: "nil value want empty struct",

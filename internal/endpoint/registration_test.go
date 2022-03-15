@@ -19,7 +19,7 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 	tests := []struct {
 		name                  string
 		handlerRegistrySetup  func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry
-		wantAvailableHandlers interface{}
+		wantAvailableHandlers any
 	}{
 		{
 			name: "Empty registry",
@@ -74,7 +74,7 @@ func Test_handlerRegistry_HandlerForName(t *testing.T) {
 		name                 string
 		handlerRegistrySetup func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry
 		handlerRef           endpoint.HandlerReference
-		wantInstance         interface{}
+		wantInstance         any
 		wantOk               bool
 	}{
 		{

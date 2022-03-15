@@ -26,16 +26,16 @@ func Test_httpHandler_Start(t *testing.T) {
 		fakeFileFS fs.FS
 	}
 	type args struct {
-		opts map[string]interface{}
+		opts map[string]any
 		req  *http.Request
 	}
 	tests := []struct {
 		name       string
 		fields     fields
 		args       args
-		wantStatus interface{}
-		wantBody   interface{}
-		wantEvent  interface{}
+		wantStatus any
+		wantBody   any
+		wantEvent  any
 		wantErr    bool
 	}{
 		{
@@ -44,7 +44,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 					},
@@ -71,7 +71,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 					},
@@ -98,7 +98,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 						`Header("Accept", "text/html") => File("default.html")`,
@@ -126,7 +126,7 @@ func Test_httpHandler_Start(t *testing.T) {
 		{
 			name: "Error because of syntax error in rule",
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`= > File("default.html")`,
 					},

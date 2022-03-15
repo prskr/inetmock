@@ -15,19 +15,19 @@ func TestLoadFromConfig(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
-		args    map[string]interface{}
-		want    interface{}
+		args    map[string]any
+		want    any
 		wantErr bool
 	}{
 		{
 			name:    "Empty args",
-			args:    make(map[string]interface{}),
+			args:    make(map[string]any),
 			want:    td.Struct(dhcp.ProtocolOptions{}, td.StructFields{}),
 			wantErr: false,
 		},
 		{
 			name: "Single rule",
-			args: map[string]interface{}{
+			args: map[string]any{
 				"rules": []string{"some rule"},
 			},
 			want: td.Struct(dhcp.ProtocolOptions{
@@ -37,7 +37,7 @@ func TestLoadFromConfig(t *testing.T) {
 		},
 		{
 			name: "Multiple rules",
-			args: map[string]interface{}{
+			args: map[string]any{
 				"rules": []string{
 					"some rule",
 					"some other rule",
@@ -53,8 +53,8 @@ func TestLoadFromConfig(t *testing.T) {
 		},
 		{
 			name: "Default ServerID",
-			args: map[string]interface{}{
-				"default": map[string]interface{}{
+			args: map[string]any{
+				"default": map[string]any{
 					"serverID": "1.2.3.4",
 				},
 			},
@@ -67,8 +67,8 @@ func TestLoadFromConfig(t *testing.T) {
 		},
 		{
 			name: "Default single DNS",
-			args: map[string]interface{}{
-				"default": map[string]interface{}{
+			args: map[string]any{
+				"default": map[string]any{
 					"dns": []string{
 						"1.2.3.4",
 					},
@@ -83,8 +83,8 @@ func TestLoadFromConfig(t *testing.T) {
 		},
 		{
 			name: "Default multiple DNS",
-			args: map[string]interface{}{
-				"default": map[string]interface{}{
+			args: map[string]any{
+				"default": map[string]any{
 					"dns": []string{
 						"1.2.3.4",
 						"1.2.3.5",
@@ -103,8 +103,8 @@ func TestLoadFromConfig(t *testing.T) {
 		},
 		{
 			name: "Default netmask",
-			args: map[string]interface{}{
-				"default": map[string]interface{}{
+			args: map[string]any{
+				"default": map[string]any{
 					"netmask": "255.255.255.0",
 				},
 			},
@@ -117,8 +117,8 @@ func TestLoadFromConfig(t *testing.T) {
 		},
 		{
 			name: "Default lease time",
-			args: map[string]interface{}{
-				"default": map[string]interface{}{
+			args: map[string]any{
+				"default": map[string]any{
 					"leaseTime": "1h",
 				},
 			},
@@ -131,8 +131,8 @@ func TestLoadFromConfig(t *testing.T) {
 		},
 		{
 			name: "Range fallback handler",
-			args: map[string]interface{}{
-				"fallback": map[string]interface{}{
+			args: map[string]any{
+				"fallback": map[string]any{
 					"type":    "range",
 					"ttl":     "1h",
 					"startIP": "172.20.0.100",

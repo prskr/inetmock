@@ -18,7 +18,7 @@ func TestRuleHandler_AnswerDNSQuestion(t *testing.T) {
 		name     string
 		rawRules []string
 		question dns.Question
-		want     interface{}
+		want     any
 		wantErr  bool
 	}{
 		{

@@ -4,7 +4,7 @@ import "time"
 
 type Entry struct {
 	Key     string
-	Value   interface{}
+	Value   any
 	timeout time.Time
 	index   int
 }

@@ -18,8 +18,8 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		target  interface{}
-		want    interface{}
+		target  any
+		want    any
 		wantErr bool
 	}{
 		{

@@ -30,7 +30,7 @@ func TestHttpClient(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		want    interface{}
+		want    any
 	}{
 		{
 			name: "Get StackOverflow",

@@ -113,7 +113,7 @@ func JSONHandler(logger logging.Logger, _ fs.FS, args ...rules.Param) (http.Hand
 	}
 
 	jsonBytes := []byte(jsonString)
-	into := make(map[string]interface{})
+	into := make(map[string]any)
 	if err := json.Unmarshal(jsonBytes, &into); err != nil {
 		return nil, err
 	}

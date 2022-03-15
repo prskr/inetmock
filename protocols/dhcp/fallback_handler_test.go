@@ -17,7 +17,7 @@ func TestFallbackHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name           string
 		DefaultOptions dhcp.DefaultOptions
-		want           interface{}
+		want           any
 		wantErr        bool
 	}{
 		{

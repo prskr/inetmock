@@ -27,7 +27,7 @@ func TestCacheHandler_AnswerDNSQuestion(t *testing.T) {
 		fields   fields
 		question dns.Question
 
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

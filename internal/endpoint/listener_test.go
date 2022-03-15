@@ -18,7 +18,7 @@ func TestListenerSpec_Addr(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

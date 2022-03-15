@@ -23,7 +23,7 @@ const MaxDatagram = 1 << 16
 var (
 	ErrDropRequest = errors.New("request should be dropped")
 	bufPool        = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			buf := make([]byte, MaxDatagram)
 			return &buf
 		},

@@ -90,7 +90,7 @@ func main() {
 			Short:       "INetMock is lightweight internet mock",
 			Config:      &cfg,
 			SubCommands: []*cobra.Command{serveCmd, generateCaCmd},
-			Defaults: map[string]interface{}{
+			Defaults: map[string]any{
 				"api.listen":                            "tcp://:0",
 				"data.pcap":                             "/var/lib/inetmock/data/pcap",
 				"data.audit":                            "/var/lib/inetmock/data/audit",

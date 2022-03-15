@@ -20,7 +20,7 @@ func TestResolver_LookupA(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantRes interface{}
+		wantRes any
 		wantErr bool
 	}{
 		{
@@ -98,7 +98,7 @@ func TestResolver_LookupAAAA(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantRes interface{}
+		wantRes any
 		wantErr bool
 	}{
 		{
@@ -176,7 +176,7 @@ func TestResolver_LookupPTR(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantRes interface{}
+		wantRes any
 		wantErr bool
 	}{
 		{

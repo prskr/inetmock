@@ -21,7 +21,7 @@ func TestFallbackHandler_AnswerDNSQuestion(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

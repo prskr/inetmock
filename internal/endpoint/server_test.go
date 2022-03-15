@@ -73,7 +73,7 @@ func prepareServer(tb testing.TB, emitter audit.Emitter, logger logging.Logger) 
 		Endpoints: map[string]endpoint.Spec{
 			"plain": {
 				HandlerRef: "http_mock",
-				Options: map[string]interface{}{
+				Options: map[string]any{
 					"rules": []string{`=> Status(204)`},
 				},
 			},

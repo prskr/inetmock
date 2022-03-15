@@ -18,7 +18,7 @@ func Test_endpointOrchestratorServer_ListAllServingGroups(t *testing.T) {
 	tests := []struct {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{
@@ -132,7 +132,7 @@ func Test_endpointOrchestratorServer_ListAllConfiguredGroups(t *testing.T) {
 	tests := []struct {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{
@@ -261,7 +261,7 @@ func Test_endpointOrchestratorServer_StartListenerGroup(t *testing.T) {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
 		req       *rpcv1.StartListenerGroupRequest
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{
@@ -315,7 +315,7 @@ func Test_endpointOrchestratorServer_StartAllGroups(t *testing.T) {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
 		req       *rpcv1.StartListenerGroupRequest
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{

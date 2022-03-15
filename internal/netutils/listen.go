@@ -1,26 +1,58 @@
 package netutils
 
 import (
-	"errors"
 	"net"
 	"time"
 
+	"github.com/valyala/tcplisten"
 	"go.uber.org/multierr"
 )
 
-var ErrNotATCPListener = errors.New("is not a TCP listener")
-
-func WrapToManaged(listener net.Listener) (net.Listener, error) {
-	if tcpListener, ok := listener.(*net.TCPListener); ok {
-		return &managedListener{TCPListener: tcpListener}, nil
+type (
+	TCPListenOption interface {
+		apply(cfg *tcplisten.Config)
 	}
-	return nil, ErrNotATCPListener
+	TCPListenOptionFunc func(cfg *tcplisten.Config)
+)
+
+func (f TCPListenOptionFunc) apply(cfg *tcplisten.Config) {
+	f(cfg)
 }
 
-func ListenTCP(addr *net.TCPAddr) (listener net.Listener, err error) {
-	const network = "tcp"
+var (
+	WithDeferAccept = func(deferAccept bool) TCPListenOption {
+		return TCPListenOptionFunc(func(cfg *tcplisten.Config) {
+			cfg.DeferAccept = deferAccept
+		})
+	}
+
+	WithReusePort = func(reusePort bool) TCPListenOption {
+		return TCPListenOptionFunc(func(cfg *tcplisten.Config) {
+			cfg.ReusePort = reusePort
+		})
+	}
+
+	WithFastOpen = func(fastOpen bool) TCPListenOption {
+		return TCPListenOptionFunc(func(cfg *tcplisten.Config) {
+			cfg.FastOpen = fastOpen
+		})
+	}
+)
+
+func WrapToManaged(listener net.Listener) net.Listener {
+	return &managedListener{Listener: listener}
+}
+
+func ListenTCP(addr *net.TCPAddr, opts ...TCPListenOption) (listener net.Listener, err error) {
+	const network = "tcp4"
 	l := new(managedListener)
-	l.TCPListener, err = net.ListenTCP(network, addr)
+	listenerCfg := new(tcplisten.Config)
+
+	for i := range opts {
+		opts[i].apply(listenerCfg)
+	}
+
+	l.Listener, err = listenerCfg.NewListener(network, addr.String())
 	if err != nil {
 		return nil, err
 	}
@@ -29,13 +61,13 @@ func ListenTCP(addr *net.TCPAddr) (listener net.Listener, err error) {
 }
 
 type managedListener struct {
-	*net.TCPListener
+	net.Listener
 }
 
 func (l *managedListener) Accept() (c net.Conn, err error) {
 	const defaultTCPKeepAlivePeriod = 30 * time.Second
 
-	c, err = l.TCPListener.Accept()
+	c, err = l.Listener.Accept()
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +82,9 @@ func (l *managedListener) Accept() (c net.Conn, err error) {
 	return
 }
 
-func (l *managedListener) Close() error {
-	return multierr.Append(l.TCPListener.SetDeadline(time.Now()), l.TCPListener.Close())
+func (l *managedListener) Close() (err error) {
+	if deadline, ok := l.Listener.(interface{ SetDeadline(t time.Time) error }); ok {
+		err = deadline.SetDeadline(time.Now())
+	}
+	return multierr.Append(err, l.Listener.Close())
 }

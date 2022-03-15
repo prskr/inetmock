@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	defaultKeyProvider = func(options Options) func() (key interface{}, err error) {
-		return func() (key interface{}, err error) {
+	defaultKeyProvider = func(options Options) func() (key any, err error) {
+		return func() (key any, err error) {
 			return privateKeyForCurve(options)
 		}
 	}
@@ -25,7 +25,7 @@ var (
 	ipv4LoopbackIP = net.IPv4(127, 0, 0, 1)
 )
 
-type KeyProvider func() (key interface{}, err error)
+type KeyProvider func() (key any, err error)
 
 type Store interface {
 	CACert() *tls.Certificate
@@ -159,7 +159,7 @@ func (s *store) loadCACert() error {
 	return nil
 }
 
-func privateKeyForCurve(options Options) (privateKey interface{}, err error) {
+func privateKeyForCurve(options Options) (privateKey any, err error) {
 	switch options.Curve {
 	case CurveTypeP224:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)

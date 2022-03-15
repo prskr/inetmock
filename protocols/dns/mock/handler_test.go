@@ -119,7 +119,7 @@ default:
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			optsMap := make(map[string]interface{})
+			optsMap := make(map[string]any)
 			if err := yaml.Unmarshal([]byte(tt.args.opts), optsMap); err != nil {
 				t.Errorf("yaml.Unmarshal() err = %v", err)
 				return

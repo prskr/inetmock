@@ -27,7 +27,7 @@ var (
 		"sha256":   ResponseBodyHashSHA256Filter,
 	}
 	searchBufferPool = &sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			data := make([]byte, defaultSearchBufferSize)
 			return &data
 		},

@@ -109,7 +109,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
 		name    string
-		want    interface{}
+		want    any
 		wantErr bool
 	}
 	tests := []testCase{
@@ -175,7 +175,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 	type testCase struct {
 		name              string
 		req               *rpcv1.StartPCAPFileRecordingRequest
-		wantResp          interface{}
+		wantResp          any
 		wantSubscriptions []pcap.Subscription
 		wantErr           bool
 	}

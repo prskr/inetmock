@@ -14,7 +14,7 @@ import (
 func TestMsgPackEncoding_Encode(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		v interface{}
+		v any
 	}
 	tests := []struct {
 		name string

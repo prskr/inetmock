@@ -94,6 +94,10 @@ func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) error {
 	return nil
 }
 
+func (e *Event) Dispose() {
+	eventPool.Put(e)
+}
+
 func NewEventFromProto(msg *auditv1.EventEntity) (ev Event) {
 	ev = Event{
 		ID:              msg.GetId(),

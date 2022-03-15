@@ -18,7 +18,7 @@ func Test_healthHandler_ServeHTTP(t *testing.T) {
 		name       string
 		checks     []health.Check
 		wantStatus int
-		wantBody   interface{}
+		wantBody   any
 	}{
 		{
 			name:       "Empty checker - no error",

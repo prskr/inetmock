@@ -26,7 +26,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		fields     fields
 		args       args
 		wantErr    bool
-		wantStatus interface{}
+		wantStatus any
 		want       string
 	}{
 		{

@@ -53,5 +53,5 @@ type Spec struct {
 	HandlerRef HandlerReference `mapstructure:"handler"`
 	TLS        bool
 	Handler    ProtocolHandler `mapstructure:"-"`
-	Options    map[string]interface{}
+	Options    map[string]any
 }

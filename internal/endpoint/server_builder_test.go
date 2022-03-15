@@ -20,7 +20,7 @@ func TestServerBuilder_ConfigureGroup(t *testing.T) {
 		registrySetup func(tb testing.TB) endpoint.HandlerRegistry
 		args          args
 		wantErr       bool
-		wantEndpoints interface{}
+		wantEndpoints any
 	}{
 		{
 			name: "Empty listener - nothing registered",

@@ -68,7 +68,7 @@ func Test_cache_ForwardLookup(t *testing.T) {
 		args  args
 		times int
 		seeds []seed
-		want  interface{}
+		want  any
 	}{
 		{
 			name: "Lookup with known entry",

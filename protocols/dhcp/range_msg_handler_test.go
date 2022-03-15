@@ -37,7 +37,7 @@ func TestRangeMessageHandler_Handle(t *testing.T) {
 		fields     fields
 		req        *dhcpv4.DHCPv4
 		storeSetup statetest.StoreSetup
-		want       interface{}
+		want       any
 		wantErr    bool
 	}{
 		{

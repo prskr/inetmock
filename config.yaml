@@ -139,7 +139,7 @@ listeners:
     name: ''
     protocol: udp
     listenAddress: ''
-    port: 53
+    port: 1053
     endpoints:
       plainDns:
         handler: dns_mock
@@ -148,7 +148,7 @@ listeners:
     name: ''
     protocol: tcp
     listenAddress: ''
-    port: 53
+    port: 1053
     endpoints:
       plainDns:
         handler: dns_mock
@@ -157,7 +157,7 @@ listeners:
     name: ''
     protocol: udp
     listenAddress: ''
-    port: 67
+    port: 1067
     unmanaged: true
     endpoints:
       dhcp_mock:

@@ -43,7 +43,7 @@ func (a *auditServer) ListSinks(context.Context, *rpcv1.ListSinksRequest) (*rpcv
 func (a *auditServer) WatchEvents(req *rpcv1.WatchEventsRequest, srv rpcv1.AuditService_WatchEventsServer) (err error) {
 	logger := a.logger
 	logger.Info("watcher attached", zap.String("name", req.WatcherName))
-	err = a.eventStream.RegisterSink(srv.Context(), sink.NewGenericSink(req.WatcherName, func(ev audit.Event) {
+	err = a.eventStream.RegisterSink(srv.Context(), sink.NewGenericSink(req.WatcherName, func(ev *audit.Event) {
 		if err = srv.Send(&rpcv1.WatchEventsResponse{Entity: ev.ProtoMessage()}); err != nil {
 			return
 		}

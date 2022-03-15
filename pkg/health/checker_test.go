@@ -77,7 +77,7 @@ func Test_checker_Status(t *testing.T) {
 	tests := []struct {
 		name    string
 		checker health.Checker
-		wantRes interface{}
+		wantRes any
 	}{
 		{
 			name:    "Get status of empty checker - expect empty result",
@@ -103,7 +103,7 @@ func Test_checker_Status(t *testing.T) {
 				_ = checker.AddCheck(newCheckOfResult("MySQL", nil))
 				return checker
 			}(),
-			wantRes: td.Map(health.Result{}, map[interface{}]interface{}{
+			wantRes: td.Map(health.Result{}, map[any]any{
 				"MySQL": nil,
 				"Redis": nil,
 			}),
@@ -117,7 +117,7 @@ func Test_checker_Status(t *testing.T) {
 				_ = checker.AddCheck(newCheckOfResult("HTTP", errors.New("there's something strange in the neighborhood")))
 				return checker
 			}(),
-			wantRes: td.Map(health.Result{}, map[interface{}]interface{}{
+			wantRes: td.Map(health.Result{}, map[any]any{
 				"MySQL": nil,
 				"Redis": nil,
 				"HTTP":  errors.New("there's something strange in the neighborhood"),

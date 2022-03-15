@@ -16,8 +16,6 @@ func NewTCPListener(tb testing.TB, rawAddr string) (listener net.Listener) {
 	if !td.CmpNoError(tb, err) {
 		return
 	}
-	if listener, err = netutils.WrapToManaged(listener); !td.CmpNoError(tb, err) {
-		return nil
-	}
-	return
+
+	return netutils.WrapToManaged(listener)
 }

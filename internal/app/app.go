@@ -39,9 +39,9 @@ type Spec struct {
 	Name                    string
 	Short                   string
 	LogEncoding             string
-	Config                  interface{}
+	Config                  any
 	IgnoreMissingConfigFile bool
-	Defaults                map[string]interface{}
+	Defaults                map[string]any
 	FlagBindings            map[string]func(flagSet *pflag.FlagSet) *pflag.Flag
 	SubCommands             []*cobra.Command
 	LateInitTasks           []func(cmd *cobra.Command, args []string) (err error)
@@ -95,7 +95,7 @@ func (a *app) Shutdown() {
 
 func NewApp(spec Spec) App {
 	if spec.Defaults == nil {
-		spec.Defaults = make(map[string]interface{})
+		spec.Defaults = make(map[string]any)
 	}
 
 	a := &app{
@@ -121,7 +121,7 @@ func NewApp(spec Spec) App {
 				logging.WithLevel(logging.ParseLevel(logLevel)),
 				logging.WithDevelopment(developmentLogs),
 				logging.WithEncoding(spec.LogEncoding),
-				logging.WithInitialFields(map[string]interface{}{
+				logging.WithInitialFields(map[string]any{
 					"cwd":  cwd,
 					"cmd":  cmd.Name(),
 					"args": args,

@@ -44,13 +44,13 @@ func TestStore_Get(t *testing.T) {
 
 	type args struct {
 		key string
-		v   interface{}
+		v   any
 	}
 	tests := []struct {
 		name    string
 		args    args
 		setup   statetest.StoreSetup
-		want    interface{}
+		want    any
 		wantErr error
 	}{
 		{
@@ -107,20 +107,20 @@ func TestStore_GetAll(t *testing.T) {
 
 	type args struct {
 		prefix string
-		into   func() interface{}
+		into   func() any
 	}
 	tests := []struct {
 		name    string
 		args    args
 		setup   statetest.StoreSetup
-		want    interface{}
+		want    any
 		wantErr error
 	}{
 		{
 			name: "Empty database - empty result",
 			args: args{
 				prefix: "",
-				into: func() interface{} {
+				into: func() any {
 					return new([]sampleStruct)
 				},
 			},
@@ -130,7 +130,7 @@ func TestStore_GetAll(t *testing.T) {
 			name: "Empty database - non-existing prefix - empty result",
 			args: args{
 				prefix: "teachers",
-				into: func() interface{} {
+				into: func() any {
 					return new([]sampleStruct)
 				},
 			},
@@ -139,7 +139,7 @@ func TestStore_GetAll(t *testing.T) {
 		{
 			name: "Single result",
 			args: args{
-				into: func() interface{} {
+				into: func() any {
 					return new([]sampleStruct)
 				},
 			},
@@ -152,7 +152,7 @@ func TestStore_GetAll(t *testing.T) {
 		{
 			name: "Single result - as reference",
 			args: args{
-				into: func() interface{} {
+				into: func() any {
 					return new([]*sampleStruct)
 				},
 			},
@@ -165,7 +165,7 @@ func TestStore_GetAll(t *testing.T) {
 		{
 			name: "Multiple results",
 			args: args{
-				into: func() interface{} {
+				into: func() any {
 					return new([]sampleStruct)
 				},
 			},
@@ -182,7 +182,7 @@ func TestStore_GetAll(t *testing.T) {
 			name: "Single result with filter",
 			args: args{
 				prefix: "teachers",
-				into: func() interface{} {
+				into: func() any {
 					return new([]sampleStruct)
 				},
 			},
@@ -199,7 +199,7 @@ func TestStore_GetAll(t *testing.T) {
 			name: "Multiple results with filter",
 			args: args{
 				prefix: "teachers",
-				into: func() interface{} {
+				into: func() any {
 					return new([]sampleStruct)
 				},
 			},
@@ -216,7 +216,7 @@ func TestStore_GetAll(t *testing.T) {
 		{
 			name: "Err not a pointer",
 			args: args{
-				into: func() interface{} {
+				into: func() any {
 					return make([]sampleStruct, 0)
 				},
 			},
@@ -225,7 +225,7 @@ func TestStore_GetAll(t *testing.T) {
 		{
 			name: "Err not a slice",
 			args: args{
-				into: func() interface{} {
+				into: func() any {
 					return new(sampleStruct)
 				},
 			},
@@ -256,7 +256,7 @@ func TestStore_Set(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		key  string
-		v    interface{}
+		v    any
 		opts []state.SetOption
 	}
 	tests := []struct {

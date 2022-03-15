@@ -80,7 +80,7 @@ type cacheConfig struct {
 }
 
 type cacheQueue interface {
-	Push(name string, value interface{}, ttl time.Duration) *queue.Entry
+	Push(name string, value any, ttl time.Duration) *queue.Entry
 	UpdateTTL(e *queue.Entry, newTTL time.Duration)
 	OnEvicted(callback queue.EvictionCallback)
 }

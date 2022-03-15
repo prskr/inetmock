@@ -24,7 +24,7 @@ func NewEventWriter(target io.Writer, opts ...EventWriterOption) Writer {
 	writer := &eventWriter{
 		target: target,
 		lengthPool: &sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return make([]byte, lengthBufferSize)
 			},
 		},

@@ -24,7 +24,7 @@ func TestServer_ServeDNS(t *testing.T) {
 		name          string
 		fields        fields
 		req           *mdns.Msg
-		want          interface{}
+		want          any
 		wantEmitCalls int
 	}{
 		{

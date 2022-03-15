@@ -20,7 +20,7 @@ func Test_profilingServer_ProfileDump(t *testing.T) {
 	tests := []struct {
 		name    string
 		req     *rpcv1.ProfileDumpRequest
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -99,7 +99,7 @@ func Test_profilingServer_CPUProfile(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -154,7 +154,7 @@ func Test_profilingServer_Trace(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

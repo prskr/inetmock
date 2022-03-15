@@ -22,7 +22,7 @@ func TestCheckForRule(t *testing.T) {
 	tests := []struct {
 		name          string
 		args          args
-		wantResp      interface{}
+		wantResp      any
 		wantParseErr  bool
 		wantErr       bool
 		wantResolvErr bool
@@ -136,7 +136,7 @@ func TestPTRInitiator(t *testing.T) {
 	tests := []struct {
 		name          string
 		args          args
-		wantResp      interface{}
+		wantResp      any
 		wantErr       bool
 		wantResolvErr bool
 	}{
@@ -254,7 +254,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 	tests := []struct {
 		name          string
 		args          args
-		wantResp      interface{}
+		wantResp      any
 		wantErr       bool
 		wantResolvErr bool
 	}{

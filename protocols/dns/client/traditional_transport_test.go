@@ -16,7 +16,7 @@ func TestTraditionalTransport_RoundTrip(t *testing.T) {
 	tests := []struct {
 		name     string
 		question *mdns.Msg
-		wantResp interface{}
+		wantResp any
 		wantErr  bool
 	}{
 		{

@@ -14,22 +14,22 @@ import (
 func TestOptionsFromLifecycle(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		opts map[string]interface{}
+		opts map[string]any
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
 			name: "None cache config",
 			args: args{
-				opts: map[string]interface{}{
-					"cache": map[string]interface{}{
+				opts: map[string]any{
+					"cache": map[string]any{
 						"type": "none",
 					},
-					"default": map[string]interface{}{
+					"default": map[string]any{
 						"type": "random",
 						"cidr": "192.168.0.1/24",
 					},
@@ -42,12 +42,12 @@ func TestOptionsFromLifecycle(t *testing.T) {
 		{
 			name: "TTL cache config",
 			args: args{
-				opts: map[string]interface{}{
-					"cache": map[string]interface{}{
+				opts: map[string]any{
+					"cache": map[string]any{
 						"type": "inMemory",
 						"ttl":  30 * time.Second,
 					},
-					"default": map[string]interface{}{
+					"default": map[string]any{
 						"type": "random",
 						"cidr": "192.168.0.1/24",
 					},
@@ -60,11 +60,11 @@ func TestOptionsFromLifecycle(t *testing.T) {
 		{
 			name: "Random IP resolver",
 			args: args{
-				opts: map[string]interface{}{
-					"cache": map[string]interface{}{
+				opts: map[string]any{
+					"cache": map[string]any{
 						"type": "none",
 					},
-					"default": map[string]interface{}{
+					"default": map[string]any{
 						"type": "random",
 						"cidr": "192.168.0.1/24",
 					},
@@ -80,11 +80,11 @@ func TestOptionsFromLifecycle(t *testing.T) {
 		{
 			name: "Incremental IP resolver",
 			args: args{
-				opts: map[string]interface{}{
-					"cache": map[string]interface{}{
+				opts: map[string]any{
+					"cache": map[string]any{
 						"type": "none",
 					},
-					"default": map[string]interface{}{
+					"default": map[string]any{
 						"type": "incremental",
 						"cidr": "192.168.0.1/24",
 					},

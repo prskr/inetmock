@@ -28,7 +28,7 @@ func TestContextErrorConverter(t *testing.T) {
 		{
 			name: "Not a context error",
 			args: args{
-				handler: func(context.Context, interface{}) (interface{}, error) {
+				handler: func(context.Context, any) (any, error) {
 					return nil, errors.New("there's something strange in the neighborhood")
 				},
 			},
@@ -38,7 +38,7 @@ func TestContextErrorConverter(t *testing.T) {
 		{
 			name: "Not an error at all",
 			args: args{
-				handler: func(context.Context, interface{}) (interface{}, error) {
+				handler: func(context.Context, any) (any, error) {
 					return nil, nil
 				},
 			},
@@ -47,7 +47,7 @@ func TestContextErrorConverter(t *testing.T) {
 		{
 			name: "Context canceled error",
 			args: args{
-				handler: func(context.Context, interface{}) (interface{}, error) {
+				handler: func(context.Context, any) (any, error) {
 					return nil, context.Canceled
 				},
 			},
@@ -57,7 +57,7 @@ func TestContextErrorConverter(t *testing.T) {
 		{
 			name: "Context DeadlineExceeded error",
 			args: args{
-				handler: func(context.Context, interface{}) (interface{}, error) {
+				handler: func(context.Context, any) (any, error) {
 					return nil, context.DeadlineExceeded
 				},
 			},

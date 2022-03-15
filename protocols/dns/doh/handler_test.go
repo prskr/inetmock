@@ -20,26 +20,26 @@ import (
 func Test_dohHandler_Start(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		opts      map[string]interface{}
+		opts      map[string]any
 		query     string
 		queryType uint16
 	}
 	tests := []struct {
 		name         string
 		args         args
-		want         interface{}
+		want         any
 		wantErr      bool
 		wantQueryErr bool
 	}{
 		{
 			name: "Resolve fake dns.google",
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"ttl": 30 * time.Second,
-					"cache": map[string]interface{}{
+					"cache": map[string]any{
 						"type": "none",
 					},
-					"default": map[string]interface{}{
+					"default": map[string]any{
 						"type": "incremental",
 						"cidr": "10.10.0.0/16",
 					},
@@ -63,12 +63,12 @@ func Test_dohHandler_Start(t *testing.T) {
 		{
 			name: "Resolve fake reddit",
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"ttl": 30 * time.Second,
-					"cache": map[string]interface{}{
+					"cache": map[string]any{
 						"type": "none",
 					},
-					"default": map[string]interface{}{
+					"default": map[string]any{
 						"type": "incremental",
 						"cidr": "10.10.0.0/16",
 					},

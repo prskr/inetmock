@@ -64,7 +64,7 @@ func init() {
 
 // Parse takes a raw rule and parses it into the given target instance
 // currently only SingleResponsePipeline and Check are supported for parsing
-func Parse(rule string, target interface{}) error {
+func Parse(rule string, target any) error {
 	parser, available := parsers[reflect.TypeOf(target)]
 	if !available {
 		return ErrNoParser

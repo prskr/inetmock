@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	defaultEventBufferSize = 10
+	defaultEventBufferSize = 1000
 	startGroupsTimeout     = 1 * time.Second
 )
 
@@ -219,11 +219,13 @@ func endpointErrorHandler(logger logging.Logger) endpoint.ErrorHandler {
 		)
 		switch {
 		case errors.As(err, &unmatched):
-			logger.Error("Not matched error",
-				zap.Bool("temporary", unmatched.Temporary()),
-				zap.Bool("timeoutError", unmatched.Timeout()),
-				zap.String("error", unmatched.Error()),
-			)
+			if !unmatched.Temporary() {
+				logger.Error("Not matched error",
+					zap.Bool("temporary", unmatched.Temporary()),
+					zap.Bool("timeoutError", unmatched.Timeout()),
+					zap.String("error", unmatched.Error()),
+				)
+			}
 		case errors.As(err, &netOp):
 			if !strings.EqualFold(netOp.Op, "accept") && !netOp.Temporary() {
 				logger.Error("got error from endpoint", zap.Error(err))

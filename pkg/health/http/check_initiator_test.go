@@ -26,7 +26,7 @@ func TestInitiatorForRule(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -156,7 +156,7 @@ func TestRequestInitiatorForMethod(t *testing.T) {
 		args               args
 		wantInitiatorError bool
 		wantRequestError   bool
-		wantResponse       interface{}
+		wantResponse       any
 	}{
 		{
 			name: "Run a GET request",

@@ -139,7 +139,7 @@ func (t *TTL) Evict() {
 	t.doEvict()
 }
 
-func (t *TTL) Push(name string, value interface{}, ttl time.Duration) *Entry {
+func (t *TTL) Push(name string, value any, ttl time.Duration) *Entry {
 	t.modLock.Lock()
 	defer t.modLock.Unlock()
 

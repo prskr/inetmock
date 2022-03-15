@@ -27,7 +27,7 @@ func TestRequestPackerPOST(t *testing.T) {
 		name    string
 		packer  client.RequestPacker
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -99,7 +99,7 @@ func TestHTTPTransport_RoundTrip(t *testing.T) {
 		name     string
 		fields   fields
 		question *mdns.Msg
-		wantResp interface{}
+		wantResp any
 		wantErr  bool
 	}{
 		{

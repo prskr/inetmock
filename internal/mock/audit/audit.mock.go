@@ -6,12 +6,163 @@ package audit_mock
 
 import (
 	context "context"
+	net "net"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 
 	audit "gitlab.com/inetmock/inetmock/pkg/audit"
+	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
 )
+
+// MockEventBuilder is a mock of EventBuilder interface.
+type MockEventBuilder struct {
+	ctrl     *gomock.Controller
+	recorder *MockEventBuilderMockRecorder
+}
+
+// MockEventBuilderMockRecorder is the mock recorder for MockEventBuilder.
+type MockEventBuilderMockRecorder struct {
+	mock *MockEventBuilder
+}
+
+// NewMockEventBuilder creates a new mock instance.
+func NewMockEventBuilder(ctrl *gomock.Controller) *MockEventBuilder {
+	mock := &MockEventBuilder{ctrl: ctrl}
+	mock.recorder = &MockEventBuilderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockEventBuilder) EXPECT() *MockEventBuilderMockRecorder {
+	return m.recorder
+}
+
+// Emit mocks base method.
+func (m *MockEventBuilder) Emit() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Emit")
+}
+
+// Emit indicates an expected call of Emit.
+func (mr *MockEventBuilderMockRecorder) Emit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Emit", reflect.TypeOf((*MockEventBuilder)(nil).Emit))
+}
+
+// WithApplication mocks base method.
+func (m *MockEventBuilder) WithApplication(app auditv1.AppProtocol) audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithApplication", app)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// WithApplication indicates an expected call of WithApplication.
+func (mr *MockEventBuilderMockRecorder) WithApplication(app interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithApplication", reflect.TypeOf((*MockEventBuilder)(nil).WithApplication), app)
+}
+
+// WithDestination mocks base method.
+func (m *MockEventBuilder) WithDestination(ip net.IP, port uint16) audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithDestination", ip, port)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// WithDestination indicates an expected call of WithDestination.
+func (mr *MockEventBuilderMockRecorder) WithDestination(ip, port interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithDestination", reflect.TypeOf((*MockEventBuilder)(nil).WithDestination), ip, port)
+}
+
+// WithDestinationFromAddr mocks base method.
+func (m *MockEventBuilder) WithDestinationFromAddr(addr net.Addr) (audit.EventBuilder, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithDestinationFromAddr", addr)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WithDestinationFromAddr indicates an expected call of WithDestinationFromAddr.
+func (mr *MockEventBuilderMockRecorder) WithDestinationFromAddr(addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithDestinationFromAddr", reflect.TypeOf((*MockEventBuilder)(nil).WithDestinationFromAddr), addr)
+}
+
+// WithProtocolDetails mocks base method.
+func (m *MockEventBuilder) WithProtocolDetails(details audit.Details) audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithProtocolDetails", details)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// WithProtocolDetails indicates an expected call of WithProtocolDetails.
+func (mr *MockEventBuilderMockRecorder) WithProtocolDetails(details interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithProtocolDetails", reflect.TypeOf((*MockEventBuilder)(nil).WithProtocolDetails), details)
+}
+
+// WithSource mocks base method.
+func (m *MockEventBuilder) WithSource(ip net.IP, port uint16) audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithSource", ip, port)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// WithSource indicates an expected call of WithSource.
+func (mr *MockEventBuilderMockRecorder) WithSource(ip, port interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithSource", reflect.TypeOf((*MockEventBuilder)(nil).WithSource), ip, port)
+}
+
+// WithSourceFromAddr mocks base method.
+func (m *MockEventBuilder) WithSourceFromAddr(addr net.Addr) (audit.EventBuilder, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithSourceFromAddr", addr)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WithSourceFromAddr indicates an expected call of WithSourceFromAddr.
+func (mr *MockEventBuilderMockRecorder) WithSourceFromAddr(addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithSourceFromAddr", reflect.TypeOf((*MockEventBuilder)(nil).WithSourceFromAddr), addr)
+}
+
+// WithTLSDetails mocks base method.
+func (m *MockEventBuilder) WithTLSDetails(details *audit.TLSDetails) audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithTLSDetails", details)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// WithTLSDetails indicates an expected call of WithTLSDetails.
+func (mr *MockEventBuilderMockRecorder) WithTLSDetails(details interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithTLSDetails", reflect.TypeOf((*MockEventBuilder)(nil).WithTLSDetails), details)
+}
+
+// WithTransport mocks base method.
+func (m *MockEventBuilder) WithTransport(transport auditv1.TransportProtocol) audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithTransport", transport)
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// WithTransport indicates an expected call of WithTransport.
+func (mr *MockEventBuilderMockRecorder) WithTransport(transport interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithTransport", reflect.TypeOf((*MockEventBuilder)(nil).WithTransport), transport)
+}
 
 // MockEmitter is a mock of Emitter interface.
 type MockEmitter struct {
@@ -36,8 +187,22 @@ func (m *MockEmitter) EXPECT() *MockEmitterMockRecorder {
 	return m.recorder
 }
 
+// Builder mocks base method.
+func (m *MockEmitter) Builder() audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Builder")
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// Builder indicates an expected call of Builder.
+func (mr *MockEmitterMockRecorder) Builder() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Builder", reflect.TypeOf((*MockEmitter)(nil).Builder))
+}
+
 // Emit mocks base method.
-func (m *MockEmitter) Emit(ev audit.Event) {
+func (m *MockEmitter) Emit(ev *audit.Event) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Emit", ev)
 }
@@ -86,7 +251,7 @@ func (mr *MockSinkMockRecorder) Name() *gomock.Call {
 }
 
 // OnSubscribe mocks base method.
-func (m *MockSink) OnSubscribe(evs <-chan audit.Event) {
+func (m *MockSink) OnSubscribe(evs <-chan *audit.Event) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "OnSubscribe", evs)
 }
@@ -120,6 +285,20 @@ func (m *MockEventStream) EXPECT() *MockEventStreamMockRecorder {
 	return m.recorder
 }
 
+// Builder mocks base method.
+func (m *MockEventStream) Builder() audit.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Builder")
+	ret0, _ := ret[0].(audit.EventBuilder)
+	return ret0
+}
+
+// Builder indicates an expected call of Builder.
+func (mr *MockEventStreamMockRecorder) Builder() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Builder", reflect.TypeOf((*MockEventStream)(nil).Builder))
+}
+
 // Close mocks base method.
 func (m *MockEventStream) Close() error {
 	m.ctrl.T.Helper()
@@ -135,7 +314,7 @@ func (mr *MockEventStreamMockRecorder) Close() *gomock.Call {
 }
 
 // Emit mocks base method.
-func (m *MockEventStream) Emit(ev audit.Event) {
+func (m *MockEventStream) Emit(ev *audit.Event) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Emit", ev)
 }

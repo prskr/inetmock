@@ -110,17 +110,16 @@ func (s *Server) recordRequest(m *mdns.Msg, localAddr, remoteAddr net.Addr) {
 		})
 	}
 
-	ev := audit.Event{
-		Transport:       guessTransportFromAddr(localAddr),
-		Application:     auditv1.AppProtocol_APP_PROTOCOL_DNS,
-		ProtocolDetails: dnsDetails,
-	}
+	builder := s.Emitter.Builder().
+		WithTransport(guessTransportFromAddr(localAddr)).
+		WithApplication(auditv1.AppProtocol_APP_PROTOCOL_DNS).
+		WithProtocolDetails(dnsDetails)
 
 	// it's considered to be okay if these details are missing
-	_ = ev.SetSourceIPFromAddr(remoteAddr)
-	_ = ev.SetDestinationIPFromAddr(localAddr)
+	builder, _ = builder.WithSourceFromAddr(remoteAddr)
+	builder, _ = builder.WithDestinationFromAddr(localAddr)
 
-	s.Emitter.Emit(ev)
+	builder.Emit()
 }
 
 func guessTransportFromAddr(addr net.Addr) auditv1.TransportProtocol {

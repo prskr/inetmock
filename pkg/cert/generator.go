@@ -48,7 +48,7 @@ type generator struct {
 	timeSource TimeSource
 }
 
-func (g *generator) privateKey() (key interface{}, err error) {
+func (g *generator) privateKey() (key any, err error) {
 	if g.provider != nil {
 		return g.provider()
 	} else {
@@ -67,7 +67,7 @@ func (g *generator) ServerCert(options GenerationOptions, ca *tls.Certificate) (
 		return nil, err
 	}
 
-	var privateKey interface{}
+	var privateKey any
 	if privateKey, err = g.privateKey(); err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (g *generator) CACert(options GenerationOptions) (*tls.Certificate, error) 
 		return nil, err
 	}
 
-	var privateKey interface{}
+	var privateKey any
 	var serialNumber *big.Int
 	if serialNumber, err = generateSerialNumber(); err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func generateSerialNumber() (*big.Int, error) {
 	return rand.Int(rand.Reader, serialNumberLimit)
 }
 
-func publicKey(privateKey interface{}) interface{} {
+func publicKey(privateKey any) any {
 	switch k := privateKey.(type) {
 	case *ecdsa.PrivateKey:
 		return &k.PublicKey

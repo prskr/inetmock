@@ -1,6 +1,6 @@
 module gitlab.com/inetmock/inetmock
 
-go 1.17
+go 1.18
 
 require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7
@@ -26,6 +26,8 @@ require (
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.10.1
 	github.com/testcontainers/testcontainers-go v0.12.0
+	github.com/valyala/bytebufferpool v1.0.0
+	github.com/valyala/tcplisten v1.0.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/multierr v1.8.0
 	go.uber.org/zap v1.21.0

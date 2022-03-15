@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -17,6 +16,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/valyala/bytebufferpool"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -239,7 +239,9 @@ func setupClients(
 }
 
 func addCACertToPool(pool *x509.CertPool) (err error) {
-	buffer := bytes.NewBuffer(nil)
+	buffer := bytebufferpool.Get()
+	defer bytebufferpool.Put(buffer)
+
 	var reader io.ReadCloser
 	if reader, err = os.Open(args.CACertPath); err != nil {
 		return err

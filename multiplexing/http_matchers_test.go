@@ -25,7 +25,7 @@ func TestHTTP(t *testing.T) {
 		matcher         cmux.Matcher
 		httpClientSetup func(lis test.InMemListener) *http.Client
 		wantErr         bool
-		want            interface{}
+		want            any
 	}{
 		{
 			name: "Match a HTTP/1.1 request",

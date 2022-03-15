@@ -42,20 +42,20 @@ func Test_OptionByTypeDecoderBuilder_DecodeHook(t *testing.T) {
 	tests := []struct {
 		name     string
 		mappings map[string]endpoint.Mapping
-		input    interface{}
-		want     interface{}
+		input    any
+		want     any
 	}{
 		{
 			name: "Single mapping",
 			mappings: map[string]endpoint.Mapping{
-				"friendly": endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+				"friendly": endpoint.MappingFunc(func(in any) (any, error) {
 					i := new(friendlyGreeter)
 					return i, mapstructure.Decode(in, i)
 				}),
 			},
-			input: map[string]interface{}{
+			input: map[string]any{
 				"greeting": "Tom",
-				"greeter": map[string]interface{}{
+				"greeter": map[string]any{
 					"type": "friendly",
 					"id":   1234,
 				},
@@ -67,18 +67,18 @@ func Test_OptionByTypeDecoderBuilder_DecodeHook(t *testing.T) {
 		{
 			name: "Simple mapping with multiple mappings",
 			mappings: map[string]endpoint.Mapping{
-				"friendly": endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+				"friendly": endpoint.MappingFunc(func(in any) (any, error) {
 					i := new(friendlyGreeter)
 					return i, mapstructure.Decode(in, i)
 				}),
-				"insulting": endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+				"insulting": endpoint.MappingFunc(func(in any) (any, error) {
 					i := new(anotherGreeter)
 					return i, mapstructure.Decode(in, i)
 				}),
 			},
-			input: map[string]interface{}{
+			input: map[string]any{
 				"greeting": "Tom",
-				"greeter": map[string]interface{}{
+				"greeter": map[string]any{
 					"type":   "insulting",
 					"Insult": "now go and fuck yourself!",
 				},

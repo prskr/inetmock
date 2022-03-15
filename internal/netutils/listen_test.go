@@ -9,7 +9,12 @@ import (
 
 func TestManagedListener(t *testing.T) {
 	t.Parallel()
-	listener, err := netutils.ListenTCP(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1)})
+	addr := &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1)}
+	listener, err := netutils.ListenTCP(
+		addr,
+		netutils.WithFastOpen(true),
+		netutils.WithReusePort(true),
+	)
 	if err != nil {
 		t.Errorf("netutils.ListenTCP() error = %v", err)
 		return
@@ -27,12 +32,13 @@ func TestManagedListener(t *testing.T) {
 		return
 	}
 
+	buf := make([]byte, 1024)
+
 	if err = listener.Close(); err != nil {
 		t.Errorf("listener.Close() error = %v", err)
 		return
 	}
 
-	buf := make([]byte, 1024)
 	if _, err = conn.Read(buf); err == nil {
 		t.Errorf("Expected error but got none")
 	} else {

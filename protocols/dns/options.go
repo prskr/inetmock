@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	incrementalIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
-		if m, ok := in.(map[string]interface{}); ok {
+	incrementalIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in any) (any, error) {
+		if m, ok := in.(map[string]any); ok {
 			if cidr, ok := m[cidrKey].(string); ok {
 				_, n, err := net.ParseCIDR(cidr)
 				if err != nil {
@@ -33,8 +33,8 @@ var (
 		}
 		return nil, errors.New("couldn't convert to map structure")
 	})
-	randomIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
-		if m, ok := in.(map[string]interface{}); ok {
+	randomIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in any) (any, error) {
+		if m, ok := in.(map[string]any); ok {
 			if cidr, ok := m[cidrKey].(string); ok {
 				_, n, err := net.ParseCIDR(cidr)
 				if err != nil {
@@ -45,7 +45,7 @@ var (
 		}
 		return nil, errors.New("couldn't convert to map structure")
 	})
-	ttlCacheMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+	ttlCacheMapping endpoint.Mapping = endpoint.MappingFunc(func(in any) (any, error) {
 		var (
 			cacheOpts = &struct {
 				TTL             time.Duration

@@ -5,10 +5,10 @@ import (
 )
 
 func NewNoOpSink(name string) audit.Sink {
-	return NewGenericSink(name, func(_ audit.Event) {})
+	return NewGenericSink(name, func(_ *audit.Event) {})
 }
 
-func NewGenericSink(name string, consumer func(ev audit.Event)) audit.Sink {
+func NewGenericSink(name string, consumer func(ev *audit.Event)) audit.Sink {
 	return &genericSink{
 		name:     name,
 		consumer: consumer,
@@ -17,15 +17,15 @@ func NewGenericSink(name string, consumer func(ev audit.Event)) audit.Sink {
 
 type genericSink struct {
 	name     string
-	consumer func(ev audit.Event)
+	consumer func(ev *audit.Event)
 }
 
 func (g genericSink) Name() string {
 	return g.name
 }
 
-func (g genericSink) OnSubscribe(evs <-chan audit.Event) {
-	go func(consumer func(ev audit.Event), evs <-chan audit.Event) {
+func (g genericSink) OnSubscribe(evs <-chan *audit.Event) {
+	go func(consumer func(ev *audit.Event), evs <-chan *audit.Event) {
 		for ev := range evs {
 			consumer(ev)
 		}

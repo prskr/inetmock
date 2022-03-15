@@ -25,13 +25,15 @@ func NewEventReader(source io.Reader, opts ...EventReaderOption) Reader {
 	reader := &eventReader{
 		source: source,
 		lengthPool: &sync.Pool{
-			New: func() interface{} {
-				return make([]byte, lengthBufferSize)
+			New: func() any {
+				buf := make([]byte, lengthBufferSize)
+				return &buf
 			},
 		},
 		payloadPool: &sync.Pool{
-			New: func() interface{} {
-				return make([]byte, defaultPayloadBufferSize)
+			New: func() any {
+				buf := make([]byte, defaultPayloadBufferSize)
+				return &buf
 			},
 		},
 	}
@@ -50,7 +52,10 @@ type eventReader struct {
 }
 
 func (e eventReader) Read() (ev Event, err error) {
-	lengthBuf := e.lengthPool.Get().([]byte)
+	lengthBufRef := e.lengthPool.Get().(*[]byte)
+	defer e.lengthPool.Put(lengthBufRef)
+
+	lengthBuf := *lengthBufRef
 	if _, err = e.source.Read(lengthBuf); err != nil {
 		return
 	}
@@ -58,7 +63,10 @@ func (e eventReader) Read() (ev Event, err error) {
 	length := binary.BigEndian.Uint32(lengthBuf)
 	var msgBuf []byte
 	if length <= defaultPayloadBufferSize {
-		msgBuf = e.payloadPool.Get().([]byte)[:length]
+		bufRef := e.payloadPool.Get().(*[]byte)
+		defer e.payloadPool.Put(bufRef)
+
+		msgBuf = (*bufRef)[:length]
 	} else {
 		msgBuf = make([]byte, length)
 	}

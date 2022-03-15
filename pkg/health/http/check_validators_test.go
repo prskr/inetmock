@@ -443,7 +443,7 @@ func TestCheckFiltersForRule(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        args
-		wantFilters interface{}
+		wantFilters any
 		wantErr     bool
 	}{
 		{

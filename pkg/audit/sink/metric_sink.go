@@ -26,8 +26,8 @@ func (metricSink) Name() string {
 	return "metrics"
 }
 
-func (m metricSink) OnSubscribe(evs <-chan audit.Event) {
-	go func(evs <-chan audit.Event) {
+func (m metricSink) OnSubscribe(evs <-chan *audit.Event) {
+	go func(evs <-chan *audit.Event) {
 		for ev := range evs {
 			m.eventCounter.WithLabelValues(ev.Application.String(), ev.Transport.String()).Inc()
 		}

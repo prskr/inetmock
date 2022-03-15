@@ -207,7 +207,12 @@ func (s *Server) setupUplink(grp *ListenerGroup) (u *Uplink, err error) {
 	case *net.UDPAddr:
 		u.PacketConn, err = net.ListenUDP("udp", a)
 	case *net.TCPAddr:
-		u.Listener, err = netutils.ListenTCP(a)
+		u.Listener, err = netutils.ListenTCP(
+			a,
+			netutils.WithReusePort(true),
+			netutils.WithFastOpen(true),
+			netutils.WithDeferAccept(true),
+		)
 	}
 	return
 }

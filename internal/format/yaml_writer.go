@@ -8,6 +8,6 @@ type yamlWriter struct {
 	encoder *yaml.Encoder
 }
 
-func (y *yamlWriter) Write(in interface{}) (err error) {
+func (y *yamlWriter) Write(in any) (err error) {
 	return y.encoder.Encode(in)
 }

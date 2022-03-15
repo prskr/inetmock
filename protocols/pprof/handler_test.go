@@ -26,8 +26,8 @@ func Test_pprofHandler_Start(t *testing.T) {
 		name       string
 		args       args
 		wantErr    bool
-		wantStatus interface{}
-		wantEvent  interface{}
+		wantStatus any
+		wantEvent  any
 	}{
 		{
 			name: "Expect /debug/pprof/ index to succeed",

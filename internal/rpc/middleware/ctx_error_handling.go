@@ -11,10 +11,10 @@ import (
 
 var ContextErrorConverter grpc.UnaryServerInterceptor = func(
 	ctx context.Context,
-	req interface{},
+	req any,
 	_ *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
-) (resp interface{}, err error) {
+) (resp any, err error) {
 	resp, err = handler(ctx, req)
 	switch {
 	case errors.Is(err, context.DeadlineExceeded):

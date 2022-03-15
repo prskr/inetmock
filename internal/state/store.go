@@ -22,11 +22,11 @@ var (
 
 type (
 	TxnReader interface {
-		Get(key string, v interface{}) error
-		GetAll(prefix string, into interface{}) error
+		Get(key string, v any) error
+		GetAll(prefix string, into any) error
 	}
 	TxnWriter interface {
-		Set(key string, v interface{}, opts ...SetOption) error
+		Set(key string, v any, opts ...SetOption) error
 	}
 	TxnReaderWriter interface {
 		TxnReader
@@ -136,13 +136,13 @@ func (s *Store) WithSuffixes(suffixes ...string) KVStore {
 	}
 }
 
-func (s *Store) Get(key string, v interface{}) error {
+func (s *Store) Get(key string, v any) error {
 	return s.db.View(func(txn *badger.Txn) (err error) {
 		return newBadgerTx(s.prefix, txn, s.encoding).Get(key, v)
 	})
 }
 
-func (s *Store) GetAll(prefix string, into interface{}) error {
+func (s *Store) GetAll(prefix string, into any) error {
 	return s.db.View(func(txn *badger.Txn) error {
 		return newBadgerTx(s.prefix, txn, s.encoding).GetAll(prefix, into)
 	})
@@ -164,7 +164,7 @@ func (t WithTTL) Apply(e *badger.Entry) {
 	e.WithTTL(time.Duration(t))
 }
 
-func (s *Store) Set(key string, v interface{}, opts ...SetOption) error {
+func (s *Store) Set(key string, v any, opts ...SetOption) error {
 	return s.db.Update(func(txn *badger.Txn) error {
 		return newBadgerTx(s.prefix, txn, s.encoding).Set(key, v, opts...)
 	})

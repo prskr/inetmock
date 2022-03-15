@@ -26,7 +26,7 @@ func Test_tblWriter_Write(t *testing.T) {
 	}
 
 	type args struct {
-		in interface{}
+		in any
 	}
 	type testCase struct {
 		name       string

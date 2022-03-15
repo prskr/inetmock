@@ -16,6 +16,8 @@ const (
 	emitTimeout = 10 * time.Millisecond
 )
 
+var _ EventStream = (*eventStream)(nil)
+
 func init() {
 	snowflake.Epoch = time.Unix(0, 0).Unix()
 }
@@ -31,17 +33,16 @@ type eventStream struct {
 	sinkConsumptionTimeout time.Duration
 }
 
-type registeredSink struct {
-	downstream chan Event
-	lock       sync.Locker
+func (e *eventStream) Builder() EventBuilder {
+	return &eventBuilder{
+		ev:      eventPool.Get().(*Event),
+		emitter: e,
+	}
 }
 
-func MustNewEventStream(logger logging.Logger, options ...EventStreamOption) EventStream {
-	if stream, err := NewEventStream(logger, options...); err != nil {
-		panic(err)
-	} else {
-		return stream
-	}
+type registeredSink struct {
+	downstream chan *Event
+	lock       sync.Locker
 }
 
 func NewEventStream(logger logging.Logger, options ...EventStreamOption) (EventStream, error) {
@@ -78,10 +79,10 @@ func NewEventStream(logger logging.Logger, options ...EventStreamOption) (EventS
 	return underlying, err
 }
 
-func (e *eventStream) Emit(ev Event) {
+func (e *eventStream) Emit(ev *Event) {
 	ev.ApplyDefaults(e.idGenerator.Generate().Int64())
 	select {
-	case e.buffer <- &ev:
+	case e.buffer <- ev:
 		e.logger.Debug("pushed event to distribute loop")
 	case <-time.After(emitTimeout):
 		e.logger.Warn("buffer is full")
@@ -115,7 +116,7 @@ func (e *eventStream) RegisterSink(ctx context.Context, s Sink) error {
 	}
 
 	rs := &registeredSink{
-		downstream: make(chan Event, e.sinkBufferSize),
+		downstream: make(chan *Event, e.sinkBufferSize),
 		lock:       new(sync.Mutex),
 	}
 
@@ -158,7 +159,7 @@ func (e *eventStream) distribute() {
 			rs.lock.Lock()
 			e.logger.Debug("notify sink", zap.String("sink", name))
 			select {
-			case rs.downstream <- *ev:
+			case rs.downstream <- ev:
 				e.logger.Debug("pushed event to sink channel")
 			case <-time.After(e.sinkConsumptionTimeout):
 				e.logger.Warn("sink consummation timed out")
@@ -166,5 +167,6 @@ func (e *eventStream) distribute() {
 			rs.lock.Unlock()
 		}
 		e.readLock.Unlock()
+		ev.Dispose()
 	}
 }
