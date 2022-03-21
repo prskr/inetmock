@@ -30,7 +30,7 @@ jobs:
       - name: Install Task
         uses: arduino/setup-task@v1
 
-      - uses: bufbuild/buf-setup-action@v1.1.0
+      - uses: bufbuild/buf-setup-action@v1.1.1
         with:
           version: 'latest'
 
