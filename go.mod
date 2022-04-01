@@ -17,7 +17,7 @@ require (
 	github.com/insomniacslk/dhcp v0.0.0-20220119180841-3c283ff8b7dd
 	github.com/jinzhu/copier v0.3.5
 	github.com/maxatome/go-testdeep v1.11.0
-	github.com/miekg/dns v1.1.47
+	github.com/miekg/dns v1.1.48
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.12.1
