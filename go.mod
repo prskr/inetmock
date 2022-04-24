@@ -7,7 +7,7 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/docker/go-connections v0.4.0
-	github.com/elazarl/goproxy v0.0.0-20220403042543-a53172b9392e
+	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94
 	github.com/golang/mock v1.6.0
 	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.3.0
