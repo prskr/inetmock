@@ -35,7 +35,9 @@ test:
     expose_as: Coverage Report
     reports:
       junit: out/report.xml
-      cobertura: out/coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: out/coverage.xml
 
 lint:
   stage: test
