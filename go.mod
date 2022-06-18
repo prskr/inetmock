@@ -14,7 +14,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.13
-	github.com/insomniacslk/dhcp v0.0.0-20220405050111-12fbdcb11b41
+	github.com/insomniacslk/dhcp v0.0.0-20221001123530-5308ebe5334c
 	github.com/jinzhu/copier v0.3.5
 	github.com/magefile/mage v1.14.0
 	github.com/maxatome/go-testdeep v1.11.0
