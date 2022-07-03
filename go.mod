@@ -23,7 +23,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.12.2
 	github.com/soheilhy/cmux v0.1.5
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.12.0
 	github.com/testcontainers/testcontainers-go v0.14.0
