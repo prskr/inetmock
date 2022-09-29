@@ -1,0 +1,67 @@
+version: v0
+runs:
+  - name: Test and lint
+    tasks:
+      - name: Checkout code
+        runtime:
+          containers:
+            - image: docker.io/alpine/git
+        steps:
+          - clone:
+          - save_to_workspace:
+              contents:
+                - source_dir: .
+                  dest_dir: .
+                  paths:
+                    - '**'
+      - name: Test
+        runtime:
+          containers:
+            - image: code.icb4dc0.de/inetmock/ci-images/go-ci:latest
+        steps:
+          - restore_workspace:
+              dest_dir: .
+          - run:
+              name: run all tests
+              command: task test-all cli-cover-report
+        depends:
+          - Checkout code
+
+      - name: Lint code
+        runtime:
+          containers:
+            - image: code.icb4dc0.de/inetmock/ci-images/go-ci:latest
+        environment:
+          GO111MODULE: "on"
+          CGO_ENABLED: "0"
+        steps:
+          - restore_workspace:
+              dest_dir: .
+          - run:
+              name: Run protobuf lint
+              command: task protobuf-lint
+          - run:
+              name: Run golangci-lint
+              command: golangci-lint run -v --issues-exit-code 0
+        depends:
+          - Checkout code
+
+      - name: Integration test
+        runtime:
+          containers:
+            - image: code.icb4dc0.de/inetmock/ci-images/go-ci:latest
+              environment:
+                DOCKER_HOST: tcp://127.0.0.1:2375
+            - image: code.icb4dc0.de/prskr/ci-images/dind:latest
+              privileged: true
+        environment:
+          GO111MODULE: "on"
+          CGO_ENABLED: "0"
+        steps:
+          - restore_workspace:
+              dest_dir: .
+          - run:
+              name: Run protobuf lint
+              command: task integration-test
+        depends:
+          - Test
