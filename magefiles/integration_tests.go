@@ -31,7 +31,7 @@ func init() {
 	workingDir = wd
 	outDir = filepath.Join(workingDir, "out")
 
-	if err = os.MkdirAll(outDir, defaultDirPermissions; err != nil {
+	if err = os.MkdirAll(outDir, defaultDirPermissions); err != nil {
 		panic(err)
 	}
 }

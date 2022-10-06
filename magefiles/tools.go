@@ -6,4 +6,5 @@ var (
 	GoReleaser   = sh.RunCmd("goreleaser")
 	GoTestSum    = sh.RunCmd("go", "run", "gotest.tools/gotestsum")
 	GoLangCiLint = sh.RunCmd("golangci-lint")
+	Buf          = sh.RunCmd("buf")
 )

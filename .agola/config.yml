@@ -40,11 +40,8 @@ runs:
           - restore_workspace:
               dest_dir: .
           - run:
-              name: Run protobuf lint
-              command: task protobuf-lint
-          - run:
               name: Run golangci-lint
-              command: golangci-lint run -v --issues-exit-code 0
+              command: go run github.com/magefile/mage lint
         depends:
           - Checkout code
 
