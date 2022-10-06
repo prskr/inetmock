@@ -18,12 +18,14 @@ runs:
         runtime:
           containers:
             - image: code.icb4dc0.de/inetmock/ci-images/go-ci:latest
+        environment:
+          MAGEFILE_VERBOSE: "true"
         steps:
           - restore_workspace:
               dest_dir: .
           - run:
               name: run all tests
-              command: task test-all cli-cover-report
+              command: go run github.com/magefile/mage testAll
         depends:
           - Checkout code
 
@@ -61,7 +63,7 @@ runs:
           - restore_workspace:
               dest_dir: .
           - run:
-              name: Run protobuf lint
-              command: task integration-test
+              name: Run integration tests
+              command: go run github.com/magefile/mage testIntegration
         depends:
           - Test

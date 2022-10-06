@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"testing"
+	"time"
 
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -30,7 +31,8 @@ func NewTestHTTPServer(tb testing.TB, rawBehavior []string, fakeFileFS fs.FS) *H
 
 	server := &HTTPServer{
 		server: &http.Server{
-			Handler: h2c.NewHandler(router, new(http2.Server)),
+			Handler:           h2c.NewHandler(router, new(http2.Server)),
+			ReadHeaderTimeout: 50 * time.Millisecond,
 		},
 	}
 

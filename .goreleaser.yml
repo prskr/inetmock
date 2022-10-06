@@ -19,6 +19,8 @@ builds:
       - -trimpath
     ldflags:
       - -w -s
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
@@ -64,11 +66,13 @@ dockers:
   - ids:
       - inetmock
       - imctl
+    goos: linux
+    goarch: amd64
     image_templates:
-      - registry.gitlab.com/inetmock/inetmock:latest
-      - registry.gitlab.com/inetmock/inetmock:{{ .Tag }}
-      - registry.gitlab.com/inetmock/inetmock:{{ .Major }}
-      - registry.gitlab.com/inetmock/inetmock:{{ .ShortCommit}}
+      - code.icb4dc0.de/inetmock/inetmock:latest
+      - code.icb4dc0.de/inetmock/inetmock:{{ .Tag }}
+      - code.icb4dc0.de/inetmock/inetmock:{{ .Major }}
+      - code.icb4dc0.de/inetmock/inetmock:{{ .ShortCommit}}
       - ghcr.io/baez90/inetmock:latest
       - ghcr.io/baez90/inetmock:{{ .Tag }}
       - ghcr.io/baez90/inetmock:{{ .Major }}

@@ -63,7 +63,6 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    - deadcode
     - dogsled
     - dupl
     - errcheck
@@ -93,17 +92,14 @@ linters:
     - prealloc
     - promlinter
     - staticcheck
-    - structcheck
     - stylecheck
     - testpackage
     - thelper
     - typecheck
     - unconvert
     - unparam
-    - varcheck
     - whitespace
-
-    #- unused
+    - unused
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
@@ -121,11 +117,10 @@ run:
     - integration
   skip-dirs:
     - internal/mock
-    - vendor/
   skip-files:
     - ".*\\.pb\\.go$"
     - ".*.mock.\\.go$"
-  modules-download-mode: vendor
+  modules-download-mode: readonly
   timeout: 5m
 
 service:
