@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
@@ -59,8 +60,9 @@ func (p *httpHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec
 	}
 
 	p.server = &http.Server{
-		Handler:     h2c.NewHandler(audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP, router), new(http2.Server)),
-		ConnContext: audit.StoreConnPropertiesInContext,
+		Handler:           h2c.NewHandler(audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP, router), new(http2.Server)),
+		ConnContext:       audit.StoreConnPropertiesInContext,
+		ReadHeaderTimeout: 50 * time.Millisecond,
 	}
 
 	for idx := range options.Rules {

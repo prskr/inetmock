@@ -15,7 +15,7 @@ type RandomIPResolver struct {
 	CIDR   *net.IPNet
 }
 
-// nolint:gosec // pseudo-random is desired for this purpose
+//nolint:gosec // pseudo-random is desired for this purpose
 func NewRandomIPResolver(cidr *net.IPNet) *RandomIPResolver {
 	return &RandomIPResolver{
 		Random: rand.New(app.RandomSource()),

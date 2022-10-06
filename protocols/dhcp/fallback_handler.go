@@ -45,7 +45,7 @@ func (h *FallbackHandler) handleRouter(_, resp *dhcpv4.DHCPv4) error {
 
 func (h *FallbackHandler) handleNetmask(_, resp *dhcpv4.DHCPv4) error {
 	if !resp.Options.Has(dhcpv4.OptionSubnetMask) {
-		if ip := h.Netmask.To4(); ip != nil && len(ip) > 3 {
+		if ip := h.Netmask.To4(); len(ip) == net.IPv4len {
 			h.Logger.Info("Set fallback netmask", logging.IP("ip_value", h.Netmask))
 			resp.Options.Update(dhcpv4.OptSubnetMask(net.IPv4Mask(ip[0], ip[1], ip[2], ip[3])))
 		}

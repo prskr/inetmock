@@ -201,7 +201,7 @@ func setupEndpointHandlers(
 	return nil
 }
 
-//nolint:deadcode
+//nolint:unused
 func startAuditConsumer(eventStream audit.EventStream) error {
 	recorder := pcap.NewRecorder()
 

@@ -3,6 +3,7 @@ package metrics
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -39,7 +40,8 @@ func (m *metricsExporter) Start(_ context.Context, startupSpec *endpoint.Startup
 	mux.Handle(healthRoute, health.NewHealthHandler(m.checker))
 
 	m.server = &http.Server{
-		Handler: mux,
+		Handler:           mux,
+		ReadHeaderTimeout: 50 * time.Millisecond,
 	}
 
 	go func() {

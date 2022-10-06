@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/elazarl/goproxy"
 	"github.com/soheilhy/cmux"
@@ -40,8 +41,9 @@ func (h *httpProxy) Start(_ context.Context, startupSpec *endpoint.StartupSpec) 
 	}
 
 	h.server = &http.Server{
-		Handler:     audit.EmittingHandler(h.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP_PROXY, h.proxy),
-		ConnContext: audit.StoreConnPropertiesInContext,
+		Handler:           audit.EmittingHandler(h.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP_PROXY, h.proxy),
+		ConnContext:       audit.StoreConnPropertiesInContext,
+		ReadHeaderTimeout: 50 * time.Millisecond,
 	}
 	h.logger = h.logger.With(
 		zap.String("handler_name", startupSpec.Name),

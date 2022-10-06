@@ -1,4 +1,3 @@
-//nolint:testpackage // testing internal code - needs to be in the same package
 package main
 
 import (

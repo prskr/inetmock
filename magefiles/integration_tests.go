@@ -15,6 +15,8 @@ import (
 	"go.uber.org/multierr"
 )
 
+const defaultDirPermissions = 0o755
+
 var (
 	workingDir string
 	outDir     string
@@ -29,7 +31,7 @@ func init() {
 	workingDir = wd
 	outDir = filepath.Join(workingDir, "out")
 
-	if err = os.MkdirAll(outDir, 0x755); err != nil {
+	if err = os.MkdirAll(outDir, defaultDirPermissions; err != nil {
 		panic(err)
 	}
 }

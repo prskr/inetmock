@@ -95,7 +95,7 @@ linters:
     - stylecheck
     - testpackage
     - thelper
-    - typecheck
+    # - typecheck
     - unconvert
     - unparam
     - whitespace
@@ -110,6 +110,9 @@ issues:
         - funlen
         - govet
         - dupl
+    - path: magefiles/.*\.go
+      linters:
+        - typecheck
 
 run:
   build-tags:

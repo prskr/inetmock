@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"time"
 
 	mdns "github.com/miekg/dns"
 	"go.uber.org/zap"
@@ -40,8 +41,9 @@ func NewServer(handler http.Handler) *Server {
 	mux.Handle("/dns-query", handler)
 	return &Server{
 		server: &http.Server{
-			Handler:     h2c.NewHandler(mux, new(http2.Server)),
-			ConnContext: audit.StoreConnPropertiesInContext,
+			Handler:           h2c.NewHandler(mux, new(http2.Server)),
+			ConnContext:       audit.StoreConnPropertiesInContext,
+			ReadHeaderTimeout: 50 * time.Millisecond,
 		},
 	}
 }

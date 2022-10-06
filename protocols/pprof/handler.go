@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -38,8 +39,9 @@ func (p *pprofHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpe
 	pprofMux.HandleFunc(pprofTracePath, pprof.Trace)
 
 	p.server = &http.Server{
-		Handler:     audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_PPROF, pprofMux),
-		ConnContext: audit.StoreConnPropertiesInContext,
+		Handler:           audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_PPROF, pprofMux),
+		ConnContext:       audit.StoreConnPropertiesInContext,
+		ReadHeaderTimeout: 50 * time.Millisecond,
 	}
 
 	p.logger = p.logger.With(

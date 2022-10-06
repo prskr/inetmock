@@ -85,7 +85,8 @@ func (s *endpointOrchestratorServer) StartListenerGroup(
 
 func (s *endpointOrchestratorServer) StartAllGroups(
 	ctx context.Context,
-	_ *rpcv1.StartAllGroupsRequest) (*rpcv1.StartAllGroupsResponse, error) {
+	_ *rpcv1.StartAllGroupsRequest,
+) (*rpcv1.StartAllGroupsResponse, error) {
 	if err := s.epHost.ServeGroups(ctx); err != nil {
 		s.logger.Error("Failed to start serving groups", zap.Error(err))
 		return nil, status.Error(codes.Unknown, err.Error())
@@ -107,7 +108,8 @@ func (s *endpointOrchestratorServer) StopListenerGroup(
 
 func (s *endpointOrchestratorServer) StopAllGroups(
 	ctx context.Context,
-	_ *rpcv1.StopAllGroupsRequest) (*rpcv1.StopAllGroupsResponse, error) {
+	_ *rpcv1.StopAllGroupsRequest,
+) (*rpcv1.StopAllGroupsResponse, error) {
 	if err := s.epHost.Shutdown(ctx); err != nil {
 		return nil, status.Error(codes.FailedPrecondition, err.Error())
 	}

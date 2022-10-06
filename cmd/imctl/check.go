@@ -91,7 +91,7 @@ var (
 	args = new(runCheckArgs)
 )
 
-// nolint:lll // still better readable than breaking these lines
+//nolint:lll
 func init() {
 	const (
 		defaultHTTPPort  int = 80
@@ -257,7 +257,7 @@ func addCACertToPool(pool *x509.CertPool) (err error) {
 
 func resolveTargetIP(ctx context.Context, logger logging.Logger, target string) (string, error) {
 	logger = logger.With(zap.String("target", target))
-	if targetIP := net.ParseIP(target); targetIP != nil && len(targetIP) > 0 {
+	if targetIP := net.ParseIP(target); len(targetIP) > 0 {
 		logger.Debug("target is an IP address - will be set for clients")
 		return target, nil
 	}

@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -168,7 +167,7 @@ func setupHTTPClient() (*http.Client, error) {
 	}
 
 	var demoCABytes []byte
-	if demoCABytes, err = ioutil.ReadFile(filepath.Join(repoRoot, "assets", "demoCA", "ca.pem")); err != nil {
+	if demoCABytes, err = os.ReadFile(filepath.Join(repoRoot, "assets", "demoCA", "ca.pem")); err != nil {
 		return nil, err
 	}
 

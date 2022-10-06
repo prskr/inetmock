@@ -103,6 +103,7 @@ func setupServer(tb testing.TB, rules []string) health.Config {
 	}
 
 	go func(lis net.Listener, handler http.Handler) {
+		//nolint:gosec // fine for testing purposes
 		_ = http.Serve(lis, handler)
 	}(listener, &router)
 
