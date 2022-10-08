@@ -415,7 +415,7 @@ func setupServer(tb testing.TB, routingRules []string) *gohttp.Client {
 	go func(tb testing.TB, listener net.Listener, handler gohttp.Handler) {
 		tb.Helper()
 		switch err := gohttp.Serve(listener, handler); {
-		case errors.Is(err, nil), errors.Is(err, gohttp.ErrServerClosed):
+		case errors.Is(err, nil), errors.Is(err, gohttp.ErrServerClosed), errors.Is(err, test.ErrListenerClosed):
 		default:
 			tb.Errorf("srv.Serve() error = %v", err)
 		}

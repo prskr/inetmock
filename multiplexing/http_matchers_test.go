@@ -102,7 +102,7 @@ func TestHTTP(t *testing.T) {
 			c := cmux.New(inMemListener)
 			multiplexerListener := c.Match(tt.matcher)
 			go func() {
-				if err := c.Serve(); !errors.Is(err, http.ErrServerClosed) {
+				if err := c.Serve(); !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, test.ErrListenerClosed) {
 					t.Logf("Serve() error = %v", err)
 				}
 			}()

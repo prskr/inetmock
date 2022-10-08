@@ -10,6 +10,7 @@ import (
 func TestShort() error {
 	return GoTestSum(
 		"--packages=./...",
+		"--rerun-fails=5",
 		"--",
 		"-timeout=5m",
 		"-short",
@@ -23,6 +24,7 @@ func TestShort() error {
 func TestAll() error {
 	return GoTestSum(
 		"--packages=./...",
+		"--rerun-fails=5",
 		"--",
 		"-timeout=10m",
 		"--tags=sudo",

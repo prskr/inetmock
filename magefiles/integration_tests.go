@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 
 	"github.com/magefile/mage/mg"
 	tc "github.com/testcontainers/testcontainers-go"
@@ -52,6 +53,7 @@ func IntegrationTests(ctx context.Context) error {
 				"443/tcp",
 				"53/udp",
 			},
+			SkipReaper: parseBoolFromEnv("DISABLE_REAPER"),
 			Privileged: true,
 			WaitingFor: wait.ForExec([]string{
 				"/usr/lib/inetmock/bin/imctl",
@@ -128,4 +130,17 @@ func lookupImCtl() (string, error) {
 	}
 
 	return matches[0], nil
+}
+
+func parseBoolFromEnv(envName string) bool {
+	val := os.Getenv(envName)
+	if val == "" {
+		return false
+	}
+
+	if parsed, err := strconv.ParseBool(val); err != nil {
+		return false
+	} else {
+		return parsed
+	}
 }
