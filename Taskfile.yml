@@ -28,8 +28,7 @@ tasks:
   format:
     desc: Format all changed source files
     cmds:
-      - goimports -local gitlab.com/inetmock/inetmock -w $(go list -f \{\{.Dir\}\} ./... | grep -v /vendor/)
-      - gofumpt -l -w ./
+      - go run github.com/magefile/mage format
 
   dep-graph:
     desc: generate dependency graph
@@ -40,83 +39,30 @@ tasks:
       - mkdir -p {{ .OUT_DIR }}
       - gomod graph "**" | dot -Gdpi=0 -T svg -o {{ .OUT_DIR }}/dependency_graph.svg
 
-  golangci-lint:
-    desc: run Go linter
-    deps:
-      - format
-    cmds:
-      - golangci-lint run --timeout 5m
-
-  protobuf-lint:
-    desc: run protobuf linter
-    sources:
-      - "api/proto/**/*.proto"
-    cmds:
-      - buf lint
-
   lint:
     desc: run all linters
-    deps:
-      - golangci-lint
-      - protobuf-lint
-
-  protoc:
-    desc: generate Go files from protobuf files
-    deps:
-      - protobuf-lint
-    sources:
-      - "api/proto/**/*.proto"
-    generates:
-      - "**/*.pb.go"
     cmds:
-      - buf generate
-
-  go-generate:
-    desc: run all go:generate directives
-    sources:
-      - "**/*.go"
-    generates:
-      - "**/*.mock.go"
-    cmds:
-      - go generate -x ./...
+      - go run github.com/magefile/mage testAll
 
   generate:
     desc: run all code generation steps
-    deps:
-      - go-generate
-      - protoc
     cmds:
-      - task: format
+      - go run github.com/magefile/mage generate
 
   test:
     desc: run short running unit tests that do not need sudo
-    sources:
-      - "**/*.go"
-    env:
-      CGO_ENABLED: 1
     cmds:
-      - mkdir -p {{ .OUT_DIR }}
-      - go test -race -shuffle=on -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./...
-      - grep -Ev "gitlab.com/inetmock/inetmock/pkg/logging" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
-      - go tool cover -func={{ .OUT_DIR }}/cov.out
+      - go run github.com/magefile/mage generate testShort
 
   test-all:
     desc: run all unit tests
-    sources:
-      - "**/*.go"
-    env:
-      CGO_ENABLED: 1
     cmds:
-      - mkdir -p {{ .OUT_DIR }}
-      - gotestsum --junitfile={{ .OUT_DIR }}/report.xml  -- --tags sudo -race -shuffle=on -coverprofile={{ .OUT_DIR }}/cov-raw.out -covermode atomic ./...
-      - grep -Ev "gitlab.com/inetmock/inetmock/pkg/logging|_enum.go" {{ .OUT_DIR }}/cov-raw.out > {{ .OUT_DIR }}/cov.out
-      - gocover-cobertura < {{ .OUT_DIR }}/cov.out > {{ .OUT_DIR }}/coverage.xml
-      - rm -f {{ .OUT_DIR }}/cov-raw.out
+      - go run github.com/magefile/mage generate testAll
 
   integration-test:
     desc: run all benchmarks/integration tests
     cmds:
-      - cat testdata/integration.imcs | go run ./cmd/imctl check run --insecure --target {{ .DOCKER_ENDPOINT }} --log-level debug
+      - go run github.com/magefile/mage generate integrationTests
 
   debug-integration-test:
     desc: run all benchmarks/integration tests

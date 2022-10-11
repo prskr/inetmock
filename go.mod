@@ -1,6 +1,6 @@
 module gitlab.com/inetmock/inetmock
 
-go 1.17
+go 1.19
 
 require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha9
@@ -30,11 +30,13 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/multierr v1.8.0
 	go.uber.org/zap v1.21.0
+	golang.org/x/exp v0.0.0-20221011175825-a46a59553dc7
 	golang.org/x/net v0.0.0-20221004154528-8021a29435af
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	google.golang.org/grpc v1.50.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
+	gotest.tools/gotestsum v1.8.2
 )
 
 require (
@@ -104,7 +106,6 @@ require (
 	google.golang.org/genproto v0.0.0-20220930163606-c98284e70a91 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gotest.tools/gotestsum v1.8.2 // indirect
 )
 
 replace (

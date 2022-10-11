@@ -4,11 +4,17 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 	_ "gotest.tools/gotestsum/cmd"
 )
 
 func TestShort() error {
-	return GoTestSum(
+	mg.Deps(Generate)
+
+	return sh.RunV(
+		"go", "run",
+		"gotest.tools/gotestsum",
 		"--packages=./...",
 		"--rerun-fails=5",
 		"--",
@@ -22,7 +28,11 @@ func TestShort() error {
 }
 
 func TestAll() error {
-	return GoTestSum(
+	mg.Deps(Generate)
+
+	return sh.RunV(
+		"go", "run",
+		"gotest.tools/gotestsum",
 		"--packages=./...",
 		"--rerun-fails=5",
 		"--",
