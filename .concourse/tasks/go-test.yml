@@ -6,15 +6,12 @@ image_resource:
   source:
     repository: code.icb4dc0.de/inetmock/ci-images/go-ci
     tag: latest
-    username: ((GITEA_USER))
-    password: ((GITEA_PASSWORD))
+    username: ((gitea-credentials.user))
+    password: ((gitea-credentials.token))
 
 inputs:
 - name: repo
   path: .
-
-params:
-  MODULE:
 
 run:
   path: sh

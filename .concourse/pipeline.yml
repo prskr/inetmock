@@ -13,5 +13,6 @@ jobs:
   - get: inetmock.git
     trigger: true
   - task: unit
+    tags: [linux,vm]
     file: inetmock.git/.concourse/tasks/go-test.yml
-    input_mapping: {repo: branch}
+    input_mapping: {repo: inetmock.git}
