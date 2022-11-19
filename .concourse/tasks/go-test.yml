@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: code.icb4dc0.de/inetmock/ci-images/go-ci
+    tag: latest
+    username: ((GITEA_USER))
+    password: ((GITEA_PASSWORD))
+
+inputs:
+- name: repo
+  path: .
+
+params:
+  MODULE:
+
+run:
+  path: sh
+  args:
+  - -ce
+  - |
+    go run github.com/magefile/mage testAll

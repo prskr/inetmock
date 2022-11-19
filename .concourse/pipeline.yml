@@ -1,0 +1,17 @@
+---
+resources:
+- name: inetmock.git
+  type: git
+  icon: github
+  source:
+    uri: https://code.icb4dc0.de/inetmock/inetmock.git
+    branch: ((branch))
+
+jobs:
+- name: test
+  plan:
+  - get: inetmock.git
+    trigger: true
+  - task: unit
+    file: inetmock.git/.concourse/tasks/go-test.yml
+    input_mapping: {repo: branch}
