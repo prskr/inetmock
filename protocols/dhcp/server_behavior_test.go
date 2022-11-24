@@ -162,8 +162,11 @@ func TestHandlerForRoutingRule(t *testing.T) {
 				ProtocolOptions: tt.args.opts,
 			}
 
-			rule := new(rules.ChainedResponsePipeline)
-			if err := rules.Parse(tt.args.rawRule, rule); err != nil {
+			var (
+				rule *rules.ChainedResponsePipeline
+				err  error
+			)
+			if rule, err = rules.Parse[rules.ChainedResponsePipeline](tt.args.rawRule); err != nil {
 				t.Errorf("rules.Parse() error = %v", err)
 				return
 			}

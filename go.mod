@@ -3,7 +3,7 @@ module gitlab.com/inetmock/inetmock
 go 1.19
 
 require (
-	github.com/alecthomas/participle/v2 v2.0.0-alpha9
+	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/docker/go-connections v0.4.0

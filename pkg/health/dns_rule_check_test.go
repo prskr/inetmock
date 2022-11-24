@@ -86,8 +86,11 @@ func TestNewDNSRuleCheck(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			parsedCheck := new(rules.Check)
-			if err := rules.Parse(tt.args.check, parsedCheck); (err != nil) != tt.wantParseErr {
+			var (
+				parsedCheck *rules.Check
+				err         error
+			)
+			if parsedCheck, err = rules.Parse[rules.Check](tt.args.check); (err != nil) != tt.wantParseErr {
 				t.Errorf("rules.Parse() error = %v", err)
 				return
 			}

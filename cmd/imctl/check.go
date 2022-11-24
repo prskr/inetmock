@@ -120,10 +120,9 @@ func runCheck(
 	httpClients health.HTTPClientForModule,
 	dnsResolvers health.ResolverForModule,
 ) error {
-	checkScript := new(rules.CheckScript)
 	checkLogger := logger.Named("check")
-
-	if err := rules.Parse(script, checkScript); err != nil {
+	checkScript, err := rules.Parse[rules.CheckScript](script)
+	if err != nil {
 		return err
 	}
 

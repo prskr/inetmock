@@ -33,8 +33,11 @@ func NewFromConfig(logger logging.Logger, cfg Config, tlsConfig *tls.Config) (Ch
 
 	for idx := range cfg.Rules {
 		rawRule := cfg.Rules[idx]
-		check := new(rules.Check)
-		if err := rules.Parse(rawRule.Rule, check); err != nil {
+		var (
+			check *rules.Check
+			err   error
+		)
+		if check, err = rules.Parse[rules.Check](rawRule.Rule); err != nil {
 			return nil, err
 		}
 		switch strings.ToLower(check.Initiator.Module) {

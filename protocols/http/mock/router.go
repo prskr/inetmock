@@ -42,15 +42,17 @@ type Router struct {
 
 func (r *Router) RegisterRule(rawRule string) error {
 	r.Logger.Debug("Adding routing rule", zap.String("rawRule", rawRule))
-	rule := new(rules.SingleResponsePipeline)
-	if err := rules.Parse(rawRule, rule); err != nil {
+
+	var (
+		rule *rules.SingleResponsePipeline
+		err  error
+	)
+
+	if rule, err = rules.Parse[rules.SingleResponsePipeline](rawRule); err != nil {
 		return err
 	}
 
-	var (
-		conditionalHandler ConditionalHandler
-		err                error
-	)
+	var conditionalHandler ConditionalHandler
 
 	if conditionalHandler.Chain, err = RequestFiltersForRoutingRule(rule); err != nil {
 		return err

@@ -66,8 +66,11 @@ func TestRequestFiltersForRoutingRule(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			chain := new(rules.ChainedResponsePipeline)
-			if err := rules.Parse(tt.args.rule, chain); err != nil {
+			var (
+				chain *rules.ChainedResponsePipeline
+				err   error
+			)
+			if chain, err = rules.Parse[rules.ChainedResponsePipeline](tt.args.rule); err != nil {
 				t.Errorf("rules.Parse() error = %v", err)
 				return
 			}

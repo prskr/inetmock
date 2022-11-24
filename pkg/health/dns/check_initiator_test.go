@@ -94,12 +94,12 @@ func TestCheckForRule(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			var (
-				parsedRule = new(rules.Check)
+				parsedRule *rules.Check
 				initiator  dns.Initiator
 				resp       *dns.Response
 				err        error
 			)
-			if err = rules.Parse(tt.args.rule, parsedRule); err != nil {
+			if parsedRule, err = rules.Parse[rules.Check](tt.args.rule); err != nil {
 				if !tt.wantParseErr {
 					t.Errorf("rules.Parse() error = %v", err)
 				}

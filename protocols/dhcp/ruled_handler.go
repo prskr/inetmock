@@ -64,15 +64,15 @@ type RuledHandler struct {
 
 func (h *RuledHandler) RegisterRule(rawRule string) error {
 	h.Logger.Debug("Adding routing rule", zap.String("rawRule", rawRule))
-	rule := new(rules.ChainedResponsePipeline)
-	if err := rules.Parse(rawRule, rule); err != nil {
+	var (
+		rule *rules.ChainedResponsePipeline
+		err  error
+	)
+	if rule, err = rules.Parse[rules.ChainedResponsePipeline](rawRule); err != nil {
 		return err
 	}
 
-	var (
-		conditionalHandler ConditionalHandler
-		err                error
-	)
+	var conditionalHandler ConditionalHandler
 
 	if conditionalHandler.Chain, err = RequestFiltersForRoutingRule(rule); err != nil {
 		return err

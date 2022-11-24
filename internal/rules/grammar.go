@@ -4,20 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"reflect"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
 var (
-	ErrNoParser     = errors.New("no parser available for given type")
 	ErrTypeMismatch = errors.New("param has a different type")
-	parsers         map[reflect.Type]*participle.Parser
+	ruleLexer       lexer.Definition
 )
 
 func init() {
-	ruleLexer := lexer.Must(lexer.NewSimple([]lexer.SimpleRule{
+	ruleLexer = lexer.Must(lexer.NewSimple([]lexer.SimpleRule{
 		{Name: "Comment", Pattern: `(?:#|//)[^\n]*\n?`},
 		{Name: `Module`, Pattern: `[a-z]{1}[A-z0-9]+`},
 		{Name: `Ident`, Pattern: `[A-Z][a-zA-Z0-9_]*`},
@@ -31,47 +29,24 @@ func init() {
 		{Name: "whitespace", Pattern: `\s+`},
 		{Name: "Punct", Pattern: `[-[!@#$%^&*()+_={}\|:;\."'<,>?/]|]`},
 	}))
-
-	parsers = map[reflect.Type]*participle.Parser{
-		reflect.TypeOf(new(SingleResponsePipeline)): participle.MustBuild(
-			new(SingleResponsePipeline),
-			participle.Lexer(ruleLexer),
-			participle.Unquote("String"),
-			participle.Unquote("RawString"),
-		),
-		reflect.TypeOf(new(ChainedResponsePipeline)): participle.MustBuild(
-			new(ChainedResponsePipeline),
-			participle.Lexer(ruleLexer),
-			participle.Unquote("String"),
-			participle.Unquote("RawString"),
-		),
-		reflect.TypeOf(new(Check)): participle.MustBuild(
-			new(Check),
-			participle.Lexer(ruleLexer),
-			participle.Unquote("String"),
-			participle.Unquote("RawString"),
-		),
-		reflect.TypeOf(new(CheckScript)): participle.MustBuild(
-			new(CheckScript),
-			participle.Lexer(ruleLexer),
-			participle.Elide("Comment"),
-			participle.Unquote("String"),
-			participle.Unquote("RawString"),
-		),
-	}
 }
 
 // Parse takes a raw rule and parses it into the given target instance
 // currently only SingleResponsePipeline and Check are supported for parsing
-func Parse(rule string, target interface{}) error {
-	parser, available := parsers[reflect.TypeOf(target)]
-	if !available {
-		return ErrNoParser
+func Parse[T any](rule string) (*T, error) {
+
+	parser, err := participle.Build[T](
+		participle.Lexer(ruleLexer),
+		participle.Elide("Comment"),
+		participle.Unquote("String"),
+		participle.Unquote("RawString"),
+	)
+
+	if err != nil {
+		return nil, err
 	}
-	if err := parser.ParseString("", rule, target); err != nil {
-		return err
-	}
-	return nil
+
+	return parser.ParseString("", rule)
 }
 
 type FilteredPipeline interface {

@@ -10,24 +10,45 @@ import (
 	"gitlab.com/inetmock/inetmock/internal/rules"
 )
 
+type testCase interface {
+	Run(t *testing.T)
+	Name() string
+}
+
+type parseTest[T any] struct {
+	name    string
+	rule    string
+	parser  func(rule string) (*T, error)
+	want    any
+	wantErr bool
+}
+
+func (t parseTest[T]) Name() string {
+	return t.name
+}
+
+func (t parseTest[T]) Run(tt *testing.T) {
+	tt.Parallel()
+	got, err := t.parser(t.rule)
+
+	if (err != nil) != t.wantErr {
+		tt.Errorf("t.wantErr = %v but got error %v", t.wantErr, err)
+	}
+
+	if t.wantErr {
+		return
+	}
+
+	td.Cmp(tt, got, t.want)
+}
+
 func TestParse(t *testing.T) {
 	t.Parallel()
-	type args struct {
-		rule string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		target  interface{}
-		want    interface{}
-		wantErr bool
-	}{
-		{
-			name: "SingleResponsePipeline - Response only - string argument",
-			args: args{
-				rule: `=> File("default.html")`,
-			},
-			target: new(rules.SingleResponsePipeline),
+	tests := []testCase{
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response only - string argument",
+			rule:   `=> File("default.html")`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "File",
@@ -36,23 +57,19 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response only - no argument",
-			args: args{
-				rule: `=> NoContent()`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response only - no argument",
+			rule:   `=> NoContent()`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{Name: "NoContent"},
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response with module - no argument",
-			args: args{
-				rule: `=> http.NoContent()`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response with module - no argument",
+			rule:   `=> http.NoContent()`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Module: "http",
@@ -61,20 +78,16 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response only do not support method name not starting with capital letter",
-			args: args{
-				rule: `=> file("default.html")`,
-			},
-			target:  new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:    "SingleResponsePipeline - Response only do not support method name not starting with capital letter",
+			rule:    `=> file("default.html")`,
+			parser:  rules.Parse[rules.SingleResponsePipeline],
 			wantErr: true,
 		},
-		{
-			name: "SingleResponsePipeline - Response with module - string argument",
-			args: args{
-				rule: `=> http.File("default.html")`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response with module - string argument",
+			rule:   `=> http.File("default.html")`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Module: "http",
@@ -84,12 +97,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response only - int argument",
-			args: args{
-				rule: `=> ReturnInt(1)`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response only - int argument",
+			rule:   `=> ReturnInt(1)`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "ReturnInt",
@@ -98,12 +109,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response with module - int argument",
-			args: args{
-				rule: `=> http.ReturnInt(1)`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response with module - int argument",
+			rule:   `=> http.ReturnInt(1)`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Module: "http",
@@ -113,12 +122,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response only - int argument, multiple digits",
-			args: args{
-				rule: `=> ReturnInt(1337)`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response only - int argument, multiple digits",
+			rule:   `=> ReturnInt(1337)`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "ReturnInt",
@@ -127,12 +134,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response with Module - int argument, multiple digits",
-			args: args{
-				rule: `=> http.ReturnInt(1337)`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response with Module - int argument, multiple digits",
+			rule:   `=> http.ReturnInt(1337)`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Module: "http",
@@ -142,12 +147,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response only - float argument",
-			args: args{
-				rule: `=> ReturnFloat(13.37)`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response only - float argument",
+			rule:   `=> ReturnFloat(13.37)`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "ReturnFloat",
@@ -156,12 +159,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response only - IP argument",
-			args: args{
-				rule: `=> IP(8.8.8.8)`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response only - IP argument",
+			rule:   `=> IP(8.8.8.8)`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "IP",
@@ -170,12 +171,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - Response only - CIDR argument",
-			args: args{
-				rule: `=> IP(8.8.8.8/32)`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - Response only - CIDR argument",
+			rule:   `=> IP(8.8.8.8/32)`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "IP",
@@ -184,12 +183,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - path pattern and terminator",
-			args: args{
-				rule: `PathPattern(".*\\.(?i)png") => ReturnFile("default.html")`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - path pattern and terminator",
+			rule:   `PathPattern(".*\\.(?i)png") => ReturnFile("default.html")`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "ReturnFile",
@@ -206,12 +203,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - path pattern and terminator with Modules",
-			args: args{
-				rule: `http.PathPattern(".*\\.(?i)png") => http.ReturnFile("default.html")`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - path pattern and terminator with Modules",
+			rule:   `http.PathPattern(".*\\.(?i)png") => http.ReturnFile("default.html")`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Module: "http",
@@ -230,12 +225,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - HTTP method, path pattern and terminator",
-			args: args{
-				rule: `Method("GET") -> PathPattern("/index.html") => ReturnFile("default.html")`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - HTTP method, path pattern and terminator",
+			rule:   `Method("GET") -> PathPattern("/index.html") => ReturnFile("default.html")`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Name:   "ReturnFile",
@@ -256,12 +249,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "SingleResponsePipeline - HTTP method, path pattern and terminator with modules",
-			args: args{
-				rule: `http.Method("GET") -> http.PathPattern("/index.html") => http.ReturnFile("default.html")`,
-			},
-			target: new(rules.SingleResponsePipeline),
+		parseTest[rules.SingleResponsePipeline]{
+			name:   "SingleResponsePipeline - HTTP method, path pattern and terminator with modules",
+			rule:   `http.Method("GET") -> http.PathPattern("/index.html") => http.ReturnFile("default.html")`,
+			parser: rules.Parse[rules.SingleResponsePipeline],
 			want: &rules.SingleResponsePipeline{
 				Response: &rules.Call{
 					Module: "http",
@@ -285,23 +276,19 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "ChainedResponsePipeline - single response only - IP argument",
-			args: args{
-				rule: `=> IP(1.2.3.4)`,
-			},
-			target: new(rules.ChainedResponsePipeline),
+		parseTest[rules.ChainedResponsePipeline]{
+			name:   "ChainedResponsePipeline - single response only - IP argument",
+			rule:   `=> IP(1.2.3.4)`,
+			parser: rules.Parse[rules.ChainedResponsePipeline],
 			want: &rules.ChainedResponsePipeline{
 				Response: []rules.Call{{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})}},
 			},
 			wantErr: false,
 		},
-		{
-			name: "ChainedResponsePipeline - multi-response only - IP arguments",
-			args: args{
-				rule: `=> IP(1.2.3.4) => Router(1.2.3.1)`,
-			},
-			target: new(rules.ChainedResponsePipeline),
+		parseTest[rules.ChainedResponsePipeline]{
+			name:   "ChainedResponsePipeline - multi-response only - IP arguments",
+			rule:   `=> IP(1.2.3.4) => Router(1.2.3.1)`,
+			parser: rules.Parse[rules.ChainedResponsePipeline],
 			want: &rules.ChainedResponsePipeline{
 				Response: calls(
 					rules.Call{Name: "IP", Params: params(rules.Param{IP: net.IPv4(1, 2, 3, 4)})},
@@ -310,12 +297,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "ChainedResponsePipeline - single response - single filter - IP argument",
-			args: args{
-				rule: `MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
-			},
-			target: new(rules.ChainedResponsePipeline),
+		parseTest[rules.ChainedResponsePipeline]{
+			name:   "ChainedResponsePipeline - single response - single filter - IP argument",
+			rule:   `MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
+			parser: rules.Parse[rules.ChainedResponsePipeline],
 			want: &rules.ChainedResponsePipeline{
 				FilterChain: &rules.Filters{
 					Chain: []rules.Call{
@@ -329,12 +314,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "ChainedResponsePipeline - single response - single filter - IP argument",
-			args: args{
-				rule: `MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
-			},
-			target: new(rules.ChainedResponsePipeline),
+		parseTest[rules.ChainedResponsePipeline]{
+			name:   "ChainedResponsePipeline - single response - single filter - IP argument",
+			rule:   `MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
+			parser: rules.Parse[rules.ChainedResponsePipeline],
 			want: &rules.ChainedResponsePipeline{
 				FilterChain: &rules.Filters{
 					Chain: []rules.Call{
@@ -348,12 +331,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "ChainedResponsePipeline - single response - multiple filters - IP argument",
-			args: args{
-				rule: `RequestType('Discover') -> MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
-			},
-			target: new(rules.ChainedResponsePipeline),
+		parseTest[rules.ChainedResponsePipeline]{
+			name:   "ChainedResponsePipeline - single response - multiple filters - IP argument",
+			rule:   `RequestType('Discover') -> MatchMAC("00:06:7C:.*") => IP(1.2.3.4)`,
+			parser: rules.Parse[rules.ChainedResponsePipeline],
 			want: &rules.ChainedResponsePipeline{
 				FilterChain: &rules.Filters{
 					Chain: []rules.Call{
@@ -371,12 +352,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "ChainedResponsePipeline - multiple responses - multiple filters - IP argument",
-			args: args{
-				rule: `RequestType('Discover') -> MatchMAC("00:06:7C:.*") => IP(1.2.3.4) => Router(1.2.3.1)`,
-			},
-			target: new(rules.ChainedResponsePipeline),
+		parseTest[rules.ChainedResponsePipeline]{
+			name:   "ChainedResponsePipeline - multiple responses - multiple filters - IP argument",
+			rule:   `RequestType('Discover') -> MatchMAC("00:06:7C:.*") => IP(1.2.3.4) => Router(1.2.3.1)`,
+			parser: rules.Parse[rules.ChainedResponsePipeline],
 			want: &rules.ChainedResponsePipeline{
 				FilterChain: &rules.Filters{
 					Chain: []rules.Call{
@@ -397,12 +376,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "Check - Initiator only - string argument",
-			args: args{
-				rule: `http.Get("https://www.microsoft.com/")`,
-			},
-			target: new(rules.Check),
+		parseTest[rules.Check]{
+			name:   "Check - Initiator only - string argument",
+			rule:   `http.Get("https://www.microsoft.com/")`,
+			parser: rules.Parse[rules.Check],
 			want: &rules.Check{
 				Initiator: &rules.Call{
 					Module: "http",
@@ -412,12 +389,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "Check - Initiator only - raw string argument",
-			args: args{
-				rule: "http.Post(\"https://www.microsoft.com/\", `{\"Name\":\"Ted.Tester\"}`)",
-			},
-			target: new(rules.Check),
+		parseTest[rules.Check]{
+			name:   "Check - Initiator only - raw string argument",
+			rule:   "http.Post(\"https://www.microsoft.com/\", `{\"Name\":\"Ted.Tester\"}`)",
+			parser: rules.Parse[rules.Check],
 			want: &rules.Check{
 				Initiator: &rules.Call{
 					Module: "http",
@@ -434,12 +409,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "Check - Initiator and single filter",
-			args: args{
-				rule: `http.Get("https://www.microsoft.com/") => Status(200)`,
-			},
-			target: new(rules.Check),
+		parseTest[rules.Check]{
+			name:   "Check - Initiator and single filter",
+			rule:   `http.Get("https://www.microsoft.com/") => Status(200)`,
+			parser: rules.Parse[rules.Check],
 			want: &rules.Check{
 				Initiator: &rules.Call{
 					Module: "http",
@@ -461,12 +434,10 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "Check - Initiator and multiple filters",
-			args: args{
-				rule: `http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text/html")`,
-			},
-			target: new(rules.Check),
+		parseTest[rules.Check]{
+			name:   "Check - Initiator and multiple filters",
+			rule:   `http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text/html")`,
+			parser: rules.Parse[rules.Check],
 			want: &rules.Check{
 				Initiator: &rules.Call{
 					Module: "http",
@@ -499,31 +470,27 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
+		parseTest[rules.CheckScript]{
 			name: "CheckScript without comments",
-			args: args{
-				rule: `
+			rule: `
 http.Get("https://www.gogol.com/") => Status(404)
 http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text.html")
 `,
-			},
-			target: new(rules.CheckScript),
+			parser: rules.Parse[rules.CheckScript],
 			want: td.Struct(new(rules.CheckScript), td.StructFields{
 				"Checks": td.Len(2),
 			}),
 		},
-		{
+		parseTest[rules.CheckScript]{
 			name: "CheckScript with comments",
-			args: args{
-				rule: `
+			rule: `
 # GET https://www.gogol.com/ expect a not found response
 http.Get("https://www.gogol.com/") => Status(404)
 
 // GET https://www.microsoft.com/ - expect status OK and HTML content
 http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", "text/html")
 `,
-			},
-			target: new(rules.CheckScript),
+			parser: rules.Parse[rules.CheckScript],
 			want: td.Struct(new(rules.CheckScript), td.StructFields{
 				"Checks": td.Len(2),
 			}),
@@ -531,17 +498,7 @@ http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", 
 	}
 	for _, tc := range tests {
 		tt := tc
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			err := rules.Parse(tt.args.rule, tt.target)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				}
-				return
-			}
-			td.Cmp(t, tt.target, tt.want)
-		})
+		t.Run(tt.Name(), tt.Run)
 	}
 }
 

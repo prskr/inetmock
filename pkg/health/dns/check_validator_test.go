@@ -551,8 +551,13 @@ func TestValidatorsForRule(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			rule := new(rules.Check)
-			if err := rules.Parse(tt.args.rule, rule); err != nil {
+
+			var (
+				rule *rules.Check
+				err  error
+			)
+
+			if rule, err = rules.Parse[rules.Check](tt.args.rule); err != nil {
 				if !tt.wantErr {
 					t.Errorf("rules.Parse() error = %v", err)
 				}

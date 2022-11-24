@@ -36,15 +36,15 @@ func (r RuleHandler) AnswerDNSQuestion(q Question) (ResourceRecord, error) {
 }
 
 func (r *RuleHandler) RegisterRule(rawRule string) error {
-	rule := new(rules.SingleResponsePipeline)
-	if err := rules.Parse(rawRule, rule); err != nil {
+	var (
+		rule *rules.SingleResponsePipeline
+		err  error
+	)
+	if rule, err = rules.Parse[rules.SingleResponsePipeline](rawRule); err != nil {
 		return err
 	}
 
-	var (
-		conditionalResolver ConditionalResolver
-		err                 error
-	)
+	var conditionalResolver ConditionalResolver
 
 	if conditionalResolver.Predicates, err = QuestionPredicatesForRoutingRule(rule); err != nil {
 		return err
