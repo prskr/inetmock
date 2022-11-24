@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 )
 
 func Lint(ctx context.Context) {
@@ -23,7 +24,8 @@ func LintProtobuf(ctx context.Context) error {
 }
 
 func LintGo(context.Context) error {
-	return GoLangCiLint(
+	return sh.RunV(
+		"golangci-lint",
 		"run",
 		"-v",
 		"--issues-exit-code=1",

@@ -43,6 +43,10 @@ func GenerateProtobuf() error {
 	}
 
 	lastProtobufModification, err := target.NewestModTime(ProtobufSourceFiles...)
+	if err != nil {
+		return err
+	}
+
 	if lastProtobufGeneration.After(lastProtobufModification) {
 		logger.Info("Skipping unnecessary protobuf generation")
 		return nil

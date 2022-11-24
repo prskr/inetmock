@@ -1,0 +1,36 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: code.icb4dc0.de/inetmock/ci-images/go-ci
+    tag: latest
+    username: ((gitea-credentials.user))
+    password: ((gitea-credentials.token))
+
+inputs:
+  - name: repo
+    path: .
+
+params:
+  GO111MODULE: "on"
+  CGO_ENABLED: "0"
+  GITEA_TOKEN: ((gitea-credentials.token))
+
+run:
+  path: sh
+  args:
+    - -ce
+    - |
+      if go run github.com/magefile/mage lint; then
+        curl -X 'POST' "https://code.icb4dc0.de/api/v1/repos/inetmock/inetmock/statuses/$(git rev-parse HEAD)?token=$GITEA_TOKEN" \
+          -H 'accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -d '{"context": "concourse-ci/golangci-lint", "description": "golangci-lint run", "state": "success", "target_url": "https://concourse.icb4dc0.de/teams/inetmock/pipelines"}'
+      else
+        curl -X 'POST' "https://code.icb4dc0.de/api/v1/repos/inetmock/inetmock/statuses/$(git rev-parse HEAD)?token=$GITEA_TOKEN" \
+          -H 'accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -d '{"context": "concourse-ci/golangci-lint", "description": "golangci-lint run", "state": "failure", "target_url": "https://concourse.icb4dc0.de/teams/inetmock/pipelines"}'
+      fi

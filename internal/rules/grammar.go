@@ -34,14 +34,12 @@ func init() {
 // Parse takes a raw rule and parses it into the given target instance
 // currently only SingleResponsePipeline and Check are supported for parsing
 func Parse[T any](rule string) (*T, error) {
-
 	parser, err := participle.Build[T](
 		participle.Lexer(ruleLexer),
 		participle.Elide("Comment"),
 		participle.Unquote("String"),
 		participle.Unquote("RawString"),
 	)
-
 	if err != nil {
 		return nil, err
 	}

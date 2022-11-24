@@ -23,23 +23,24 @@ type parseTest[T any] struct {
 	wantErr bool
 }
 
-func (t parseTest[T]) Name() string {
-	return t.name
+func (pt parseTest[T]) Name() string {
+	return pt.name
 }
 
-func (t parseTest[T]) Run(tt *testing.T) {
-	tt.Parallel()
-	got, err := t.parser(t.rule)
+func (pt parseTest[T]) Run(t *testing.T) {
+	t.Helper()
+	t.Parallel()
+	got, err := pt.parser(pt.rule)
 
-	if (err != nil) != t.wantErr {
-		tt.Errorf("t.wantErr = %v but got error %v", t.wantErr, err)
+	if (err != nil) != pt.wantErr {
+		t.Errorf("pt.wantErr = %v but got error %v", pt.wantErr, err)
 	}
 
-	if t.wantErr {
+	if pt.wantErr {
 		return
 	}
 
-	td.Cmp(tt, got, t.want)
+	td.Cmp(t, got, pt.want)
 }
 
 func TestParse(t *testing.T) {
@@ -496,6 +497,7 @@ http.Get("https://www.microsoft.com/") => Status(200) -> Header("Content-Type", 
 			}),
 		},
 	}
+	//nolint:paralleltest // is actually called in Run function
 	for _, tc := range tests {
 		tt := tc
 		t.Run(tt.Name(), tt.Run)

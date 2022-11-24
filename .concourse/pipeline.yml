@@ -12,6 +12,9 @@ jobs:
   plan:
   - get: inetmock.git
     trigger: true
+  - task: lint
+    file: inetmock.git/.concourse/tasks/lint.yml
+    input_mapping: {repo: inetmock.git}
   - task: unit
     tags: [linux,vm]
     privileged: true
