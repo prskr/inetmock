@@ -1,4 +1,5 @@
 version: v1
+name: buf.build/baez0r/inetmock
 breaking:
   use:
     - FILE

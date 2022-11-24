@@ -12,8 +12,8 @@ import (
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"go.uber.org/multierr"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
 )
 
 const rangeHandlerStatePrefix = "range"

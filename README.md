@@ -22,44 +22,57 @@ anything except no kittens will be harmed!_
 
 ## Use cases
 
-While the original use case was to simulate an internet connection both server and client might be used for other things too:
+While the original use case was to simulate an internet connection both server and client might be used for other things
+too:
 
-- serving as a mock API while developing an HTTP client library where you exactly know which requests should return which responses because you can match requests exactly with path and headers and return inline JSON, JSON from files, set status codes, ...
-- serving as an advanced client CLI if you design an HTTP server application because you can run integration tests very easy including validation of results
-- serving as an advanced client CLI if you design a custom DNS server because it's very easy to run queries (also from scripts) including support for custom ports - DoT and DoH client support is planned soon
+- serving as a mock API while developing an HTTP client library where you exactly know which requests should return
+  which responses because you can match requests exactly with path and headers and return inline JSON, JSON from files,
+  set status codes, ...
+- serving as an advanced client CLI if you design an HTTP server application because you can run integration tests very
+  easy including validation of results
+- serving as an advanced client CLI if you design a custom DNS server because it's very easy to run queries (also from
+  scripts) including support for custom ports - DoT and DoH client support is planned soon
 
 ## Qickstart
 
-So you're asking 'how do I get started to see what this thing can do for me?!' - then this is for you! 
+So you're asking 'how do I get started to see what this thing can do for me?!' - then this is for you!
 
 ### Docker/Podman
 
 The probably easiest way to get started is to use the pre-built container image.
 The current tags can be found in the [releases](https://gitlab.com/inetmock/inetmock/-/releases).
-The pre-built container image is configured with the [config-container.yaml](config-container.yaml) but you can always mount your own config.
+The pre-built container image is configured with the [config-container.yaml](config-container.yaml) but you can always
+mount your own config.
 Because the default config binds to the ports 53, 80 and 443 it requires some additional capabilities:
 
 ```bash
-docker/podman run --rm -ti --cap-add CAP_NET_RAW --cap-add CAP_NET_BIND_SERVICE registry.gitlab.com/inetmock/inetmock:latest 
+docker/podman run --rm -ti --cap-add CAP_NET_RAW --cap-add CAP_NET_BIND_SERVICE --cap-add CAP_SYS_ADMIN registry.gitlab.com/inetmock/inetmock:latest
 ```
 
-Depending on your use case it makes either sense to publish the ports of the container, run it in network mode `host` or isolate it to an internal network with the workload you're analyzing.
-A very basic example how to run a Vagrant VM with an INetMock instanced running with Podman in a 'private' network can be found [here](https://gitlab.com/inetmock/examples/-/tree/master/vagrant-libvirt).
+Depending on your use case it makes either sense to publish the ports of the container, run it in network mode `host` or
+isolate it to an internal network with the workload you're analyzing.
+A very basic example how to run a Vagrant VM with an INetMock instanced running with Podman in a 'private' network can
+be found [here](https://gitlab.com/inetmock/examples/-/tree/master/vagrant-libvirt).
 
 To run the container with a custom config just override the existing one like so:
 
 ```bash
-docker/podman run --rm -ti -v `pwd`/config.yaml:/etc/inetmock/config.yaml:ro --cap-add CAP_NET_RAW --cap-add CAP_NET_BIND_SERVICE registry.gitlab.com/inetmock/inetmock:latest 
+docker/podman run --rm -ti -v `pwd`/config.yaml:/etc/inetmock/config.yaml:ro --cap-add CAP_NET_RAW --cap-add CAP_NET_BIND_SERVICE --cap-add CAP_SYS_ADMIN  registry.gitlab.com/inetmock/inetmock:latest
 ```
 
 _Note:_ The pre-built container image is based on the 'distroless/static:nonroot'.
-In consequence every file or directory you expect the container to access/modify needs corresponding access rights or you have to run the container with a different user.
+In consequence every file or directory you expect the container to access/modify needs corresponding access rights or
+you have to run the container with a different user.
+
+_Note:_ `CAP_SYS_ADMIN` is only required if you want to use the eBPF based network monitoring
 
 ### Binaries
 
 Binaries can also be found on the [releases](https://gitlab.com/inetmock/inetmock/-/release) page.
-Due to dependencies to some Linux sub-systems (e.g. the whole PCAP recording stuff) there is only a Linux binary of the INetMock server.
-The client CLI `imctl` is available for Linux, MacOS and Windows (while it has to be noted that Windows and MacOS are not tested).
+Due to dependencies to some Linux sub-systems (e.g. the whole PCAP recording stuff) there is only a Linux binary of the
+INetMock server.
+The client CLI `imctl` is available for Linux, MacOS and Windows (while it has to be noted that Windows and MacOS are
+not tested).
 
 By default the server looks for `config.yaml` files in the following places:
 
@@ -67,22 +80,32 @@ By default the server looks for `config.yaml` files in the following places:
 - `$HOME/.inetmock/config.yaml`
 - `./config.yaml`
 
-Because INetMock requires a lot of setup it's not possible to configure it completely from flags hence you need a config in any of the aforementioned places.
-If you don't know where to start the default `config.yaml` from this repository might be a good start because it's also the one that is used during development and therefore always up-to-date.
+Because INetMock requires a lot of setup it's not possible to configure it completely from flags hence you need a config
+in any of the aforementioned places.
+If you don't know where to start the default `config.yaml` from this repository might be a good start because it's also
+the one that is used during development and therefore always up-to-date.
 
 ### `imctl`
 
-To interact with the gRPC API of INetMock without having to write your own application `imctl` helps you to control your INetMock instance.
+To interact with the gRPC API of INetMock without having to write your own application `imctl` helps you to control your
+INetMock instance.
 `imctl` can be used to (probably not exhaustive):
 
-- interact with the audit API - the audit API allows you to monitor which requests INetMock handled in near-realtime, register an audit monitoring file to get a structured log, read those protobuf files to JSON and to remove an audit sink
-- interact with the health API - runs the defined health checks on the server side and returns the result including an exit code != 0 if any check fails
-- interact with the PCAP API - start/stop recording of network interface traffic to PCAP files, list available interfaces, list active recordings
-- run check scripts like the [integration test](testdata/integration.imcs) or run single check commands like `imctl check run "http.GET('https://google.com/favicon.ico') => Status(200)"`
+- interact with the audit API - the audit API allows you to monitor which requests INetMock handled in near-realtime,
+  register an audit monitoring file to get a structured log, read those protobuf files to JSON and to remove an audit
+  sink
+- interact with the health API - runs the defined health checks on the server side and returns the result including an
+  exit code != 0 if any check fails
+- interact with the PCAP API - start/stop recording of network interface traffic to PCAP files, list available
+  interfaces, list active recordings
+- run check scripts like the [integration test](testdata/integration.imcs) or run single check commands
+  like `imctl check run "http.GET('https://google.com/favicon.ico') => Status(200)"`
 
-Everything that can be done from the CLI is documented with `--help` switches hence no huge documentation that will be outdated as soon as it is pushed here.
+Everything that can be done from the CLI is documented with `--help` switches hence no huge documentation that will be
+outdated as soon as it is pushed here.
 
-In general it always is a good idea to check the [Taskfile.yml](Taskfile.yml) and the [.gitlab-ci.yml](.gitlab-ci.yml) files for examples on how to use client and server for different use cases.
+In general it always is a good idea to check the [Taskfile.yml](Taskfile.yml) and the [.gitlab-ci.yml](.gitlab-ci.yml)
+files for examples on how to use client and server for different use cases.
 
 ## Docs
 

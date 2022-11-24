@@ -6,8 +6,8 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func TestHostnameQuestionFilter(t *testing.T) {
@@ -143,7 +143,7 @@ func TestQuestionPredicatesForRoutingRule(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        args
-		wantFilters interface{}
+		wantFilters any
 		wantErr     bool
 	}{
 		{

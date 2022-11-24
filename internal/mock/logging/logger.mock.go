@@ -10,7 +10,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	zap "go.uber.org/zap"
 
-	logging "gitlab.com/inetmock/inetmock/pkg/logging"
+	logging "inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 // MockLogger is a mock of Logger interface.

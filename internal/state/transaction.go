@@ -26,7 +26,7 @@ type badgerTxn struct {
 	encoding EncoderDecoder
 }
 
-func (t *badgerTxn) Get(key string, v interface{}) (err error) {
+func (t *badgerTxn) Get(key string, v any) (err error) {
 	if reflect.TypeOf(v).Kind() != reflect.Ptr {
 		return ErrReceiverNotAPointer
 	}
@@ -41,7 +41,7 @@ func (t *badgerTxn) Get(key string, v interface{}) (err error) {
 	})
 }
 
-func (t *badgerTxn) GetAll(prefix string, into interface{}) error {
+func (t *badgerTxn) GetAll(prefix string, into any) error {
 	sliceType := reflect.TypeOf(into)
 	if sliceType.Kind() != reflect.Ptr {
 		return ErrReceiverNotAPointer
@@ -77,7 +77,7 @@ func (t *badgerTxn) GetAll(prefix string, into interface{}) error {
 	return nil
 }
 
-func (t *badgerTxn) Set(key string, v interface{}, opts ...SetOption) error {
+func (t *badgerTxn) Set(key string, v any, opts ...SetOption) error {
 	itemKey := itemKey(t.prefix, key)
 	data, err := t.encoding.Encode(v)
 	if err != nil {

@@ -3,12 +3,12 @@ package metrics
 import (
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
-func AddMetricsExporter(registry endpoint.HandlerRegistry, logger logging.Logger, checker health.Checker) (err error) {
+func AddMetricsExporter(registry endpoint.HandlerRegistry, logger logging.Logger, checker health.Checker) {
 	logger = logger.With(
 		zap.String("protocol_handler", name),
 	)
@@ -19,5 +19,4 @@ func AddMetricsExporter(registry endpoint.HandlerRegistry, logger logging.Logger
 			checker: checker,
 		}
 	})
-	return
 }

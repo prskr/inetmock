@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
 )
 
 func EmittingHandler(emitter Emitter, app auditv1.AppProtocol, delegate http.Handler) http.Handler {
@@ -17,25 +17,24 @@ func EmittingHandler(emitter Emitter, app auditv1.AppProtocol, delegate http.Han
 			Headers: req.Header,
 		}
 
-		ev := Event{
-			Transport:       auditv1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
-			Application:     app,
-			ProtocolDetails: httpDetails,
-		}
+		builder := emitter.Builder().
+			WithTransport(auditv1.TransportProtocol_TRANSPORT_PROTOCOL_TCP).
+			WithApplication(app).
+			WithProtocolDetails(httpDetails)
 
 		if state, ok := TLSConnectionState(req.Context()); ok {
-			ev.TLS = &TLSDetails{
+			builder = builder.WithTLSDetails(&TLSDetails{
 				Version:     TLSVersionToEntity(state.Version).String(),
 				CipherSuite: tls.CipherSuiteName(state.CipherSuite),
 				ServerName:  state.ServerName,
-			}
+			})
 		}
 
 		// it's considered to be okay if these details are missing
-		_ = ev.SetDestinationIPFromAddr(LocalAddr(req.Context()))
-		_ = ev.SetSourceIPFromAddr(RemoteAddr(req.Context()))
+		builder, _ = builder.WithSourceFromAddr(RemoteAddr(req.Context()))
+		builder, _ = builder.WithDestinationFromAddr(LocalAddr(req.Context()))
 
-		emitter.Emit(ev)
+		builder.Emit()
 
 		delegate.ServeHTTP(writer, req)
 	})

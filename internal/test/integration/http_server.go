@@ -11,8 +11,8 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func NewTestHTTPServer(tb testing.TB, rawBehavior []string, fakeFileFS fs.FS) *HTTPServer {

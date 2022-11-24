@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -18,8 +19,8 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/path"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/path"
 )
 
 var (
@@ -39,9 +40,10 @@ type Spec struct {
 	Name                    string
 	Short                   string
 	LogEncoding             string
-	Config                  interface{}
+	Config                  any
+	ConfigDecodingOptions   []viper.DecoderConfigOption
 	IgnoreMissingConfigFile bool
-	Defaults                map[string]interface{}
+	Defaults                map[string]any
 	FlagBindings            map[string]func(flagSet *pflag.FlagSet) *pflag.Flag
 	SubCommands             []*cobra.Command
 	LateInitTasks           []func(cmd *cobra.Command, args []string) (err error)
@@ -95,7 +97,7 @@ func (a *app) Shutdown() {
 
 func NewApp(spec Spec) App {
 	if spec.Defaults == nil {
-		spec.Defaults = make(map[string]interface{})
+		spec.Defaults = make(map[string]any)
 	}
 
 	a := &app{
@@ -121,7 +123,7 @@ func NewApp(spec Spec) App {
 				logging.WithLevel(logging.ParseLevel(logLevel)),
 				logging.WithDevelopment(developmentLogs),
 				logging.WithEncoding(spec.LogEncoding),
-				logging.WithInitialFields(map[string]interface{}{
+				logging.WithInitialFields(map[string]any{
 					"cwd":  cwd,
 					"cmd":  cmd.Name(),
 					"args": args,
@@ -196,12 +198,13 @@ func (s Spec) readConfig(rootCmd *cobra.Command) error {
 	}
 
 	if err := viperCfg.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !(ok && s.IgnoreMissingConfigFile) {
+		viperErr := new(viper.ConfigFileNotFoundError)
+		if !(errors.As(err, viperErr) && s.IgnoreMissingConfigFile) {
 			return err
 		}
 	}
 
-	if err := viperCfg.Unmarshal(s.Config); err != nil {
+	if err := viperCfg.Unmarshal(s.Config, s.ConfigDecodingOptions...); err != nil {
 		return err
 	}
 

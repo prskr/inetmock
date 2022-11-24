@@ -7,7 +7,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
 )
 
 type testCase interface {

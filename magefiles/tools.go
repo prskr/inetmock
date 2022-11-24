@@ -18,6 +18,7 @@ import (
 var (
 	GoReleaser = sh.RunCmd("goreleaser")
 	GoInstall  = sh.RunCmd("go", "install")
+	GoBuild    = sh.RunCmd("go", "build")
 )
 
 func ensureURLTool(ctx context.Context, toolName, downloadURL string) error {
@@ -29,7 +30,8 @@ func ensureURLTool(ctx context.Context, toolName, downloadURL string) error {
 
 		defer multierr.AppendInvoke(&err, multierr.Close(resp.Body))
 
-		outFile, err := os.Create(filepath.Join("usr", "local", "bin", toolName))
+		const ownerExecute = 0o755
+		outFile, err := os.OpenFile(filepath.Join("/", "usr", "local", "bin", toolName), os.O_RDWR|os.O_CREATE|os.O_TRUNC, ownerExecute)
 		if err != nil {
 			return err
 		}
@@ -40,7 +42,6 @@ func ensureURLTool(ctx context.Context, toolName, downloadURL string) error {
 	})
 }
 
-//nolint:unparam // subject to be changed in the future
 func ensureGoTool(toolName, importPath, version string) error {
 	return checkForTool(toolName, func() error {
 		logger := zap.L()

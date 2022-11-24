@@ -5,7 +5,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
 )
 
 type (

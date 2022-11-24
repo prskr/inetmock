@@ -7,7 +7,7 @@ import (
 	"go.uber.org/multierr"
 )
 
-func NewUplink(conn interface{}) (u Uplink) {
+func NewUplink(conn any) (u Uplink) {
 	switch c := conn.(type) {
 	case net.Listener:
 		u.Listener = c

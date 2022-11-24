@@ -9,15 +9,14 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/ipv4"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/state"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const (
-	name               = "dhcp_mock"
-	handlerNameLblName = "handler_name"
+	name = "dhcp_mock"
 )
 
 type dhcpHandler struct {

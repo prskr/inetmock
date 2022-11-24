@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/format"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/format"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 const (
@@ -30,15 +30,15 @@ var (
 		Use:          "list-devices",
 		Aliases:      []string{"lis-dev", "ls-dev"},
 		Short:        "List all devices that might be monitored",
-		RunE:         runListAvailableDevices,
 		SilenceUsage: true,
+		RunE:         runListAvailableDevices,
 	}
 	listCurrentlyRecordingsCmd = &cobra.Command{
 		Use:          "list-recordings",
 		Aliases:      []string{"lis-rec", "ls-rec", "ls-recs"},
 		Short:        "List currently active recordings",
-		RunE:         runListActiveRecordings,
 		SilenceUsage: true,
+		RunE:         runListActiveRecordings,
 	}
 	promiscuousMode bool
 	readTimeout     time.Duration

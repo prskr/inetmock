@@ -14,6 +14,7 @@ x-response-rules: &httpResponseRules
     - Method("GET") -> PathPattern(".*\\.(?i)txt$") => File("default.txt")
     - Method("GET") -> Header("Accept", "text/html") => File("default.html")
     - Method("GET") -> PathPattern(".*\\.(?i)htm(l)?$") => File("default.html")
+    - 'Method("GET") -> Header("Accept", "application/json") => JSON(`{"name": "tester", "givenName": "ted"}`)'
     - Method("GET") => File("default.html")
     - => Status(204)
 
@@ -22,8 +23,6 @@ x-dns-response-rules: &dnsResponseRules
     ttl: 30s
     cache:
       type: inMemory
-      ttl: 30s
-      initialCapacity: 500
     rules:
       - A(`.*\\.google\\.com`) => IP(1.1.1.1)
       - AAAA(`.*\\.google\\.com`) => IP(1.1.1.1)
@@ -34,7 +33,7 @@ x-dns-response-rules: &dnsResponseRules
       - A(`.*\\.stackoverflow\\.com`) => Incremental(10.20.0.0/16)
     default:
       type: incremental
-      cidr: 10.10.0.0/16
+      cidr: 10.1.0.0/16
 
 x-http-handlers: &httpHandlers
   endpoints:
@@ -62,6 +61,11 @@ data:
   state: /var/lib/inetmock/data/state/inetmock.db
   # where to load fake files from
   fakeFiles: ./assets/fakeFiles
+
+caches:
+  dns:
+    ttl: 30s
+    initialCapacity: 500
 
 api:
   listen: unix:///var/run/inetmock/inetmock.sock
@@ -139,7 +143,7 @@ listeners:
     name: ''
     protocol: udp
     listenAddress: ''
-    port: 53
+    port: 1053
     endpoints:
       plainDns:
         handler: dns_mock
@@ -148,7 +152,7 @@ listeners:
     name: ''
     protocol: tcp
     listenAddress: ''
-    port: 53
+    port: 1053
     endpoints:
       plainDns:
         handler: dns_mock
@@ -157,7 +161,7 @@ listeners:
     name: ''
     protocol: udp
     listenAddress: ''
-    port: 67
+    port: 1067
     unmanaged: true
     endpoints:
       dhcp_mock:
@@ -249,3 +253,53 @@ listeners:
     endpoints:
       traces:
         handler: go_pprof
+
+netFlow:
+  firewall:
+    enp4s0:
+      removeMemLock: true
+      defaultPolicy: drop
+      monitor: true
+      rules:
+        - dest: 53/tcp
+          policy: pass
+        - dest: 53/udp
+          policy: pass
+        - dest: 80/tcp
+          policy: pass
+        - dest: 443/tcp
+          policy: pass
+        - dest: 853/tcp
+          policy: pass
+        - dest: 3128/tcp
+          policy: pass
+        - dest: 8080/tcp
+          policy: pass
+        - dest: 8443/tcp
+          policy: pass
+
+        - dest: 22/tcp
+          policy: pass
+          monitor: false
+        - dest: 2345/tcp
+          policy: pass
+          monitor: false
+  nat:
+    enp4s0:
+      translations:
+        - dest: 0.0.0.0:53/tcp
+          redirectTo: interface
+        - dest: 0.0.0.0:53/udp
+          redirectTo: interface
+        - dest: 0.0.0.0:80/tcp
+          redirectTo: interface
+        - dest: 0.0.0.0:443/tcp
+          redirectTo: interface
+        - dest: 0.0.0.0:853/tcp
+          redirectTo: interface
+        - dest: 0.0.0.0:3128/tcp
+          redirectTo: interface
+        - dest: 0.0.0.0:8080/tcp
+          redirectTo: interface
+        - dest: 0.0.0.0:8443/tcp
+          redirectTo: interface

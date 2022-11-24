@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package inetmock.rpc.v1;
+
+enum PacketForwardAction {
+  PACKET_FORWARD_ACTION_UNSPECIFIED = 0;
+  PACKET_FORWARD_ACTION_DROP = 1;
+  PACKET_FORWARD_ACTION_PASS = 2;
+}
+
+message ListControlledInterfacesRequest {
+
+}
+
+message ListControlledInterfacesResponse {
+  repeated string controlled_interfaces = 1;
+}
+
+message ListAvailableNetworkInterfacesRequest {}
+
+message ListAvailableNetworkInterfacesResponse {
+  message NetworkInterface {
+    string name = 1;
+    repeated bytes addresses = 2;
+  }
+  repeated NetworkInterface available_devices = 1;
+}
+
+message StartPacketFlowControlRequest {
+  string interface_name = 1; // Name of the network interface to monitor
+  repeated uint32 whitelist_ports = 2; // Whitelist of destination ports that are ignored - maximum 32
+  repeated bytes source_ip_whitelist = 3; // Whitelist of source IPs that are ignore - maximum 20
+  repeated bytes destination_ip_whitelist = 4; // Whitelist of destination IPs that are ignored - maximum 20
+  repeated uint32 ports_to_intercept = 5;
+  bool remove_rlimit_memlock = 7; // possibly required for kernels < 5.11
+}
+
+message StartPacketFlowControlResponse {
+
+}
+
+message StopPacketFlowControlRequest {
+  string interface_name = 1;
+
+}
+
+message StopPacketFlowControlResponse {
+  bool interface_was_controlled = 1;
+}
+
+service NetFlowControlService {
+  rpc ListAvailableNetworkInterfaces(ListAvailableNetworkInterfacesRequest) returns (ListAvailableNetworkInterfacesResponse);
+  rpc ListControlledInterfaces(ListControlledInterfacesRequest) returns (ListControlledInterfacesResponse);
+  rpc StartPacketFlowControl(StartPacketFlowControlRequest) returns (StartPacketFlowControlResponse);
+  rpc StopPacketFlowControl(StopPacketFlowControlRequest) returns (StopPacketFlowControlResponse);
+}

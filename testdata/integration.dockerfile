@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.17-alpine as build
+FROM docker.io/library/golang:1.19-alpine as build
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY ./ ./
 
 RUN go build -o inetmock ./cmd/inetmock
 
-FROM alpine:3.13
+FROM alpine:3.17
 
 WORKDIR /app
 

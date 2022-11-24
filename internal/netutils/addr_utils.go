@@ -2,35 +2,19 @@ package netutils
 
 import (
 	"errors"
-	"fmt"
 	"net"
 
 	"go.uber.org/multierr"
 )
 
-type IPPort struct {
-	IP   net.IP
-	Port int
-}
-
-func (i IPPort) String() string {
-	return fmt.Sprintf("%s:%d", i.IP.String(), i.Port)
-}
-
-func IPPortFromAddress(addr net.Addr) (ipPort *IPPort, err error) {
+func IPPortFromAddress(addr net.Addr) (ip net.IP, port int, err error) {
 	switch casted := addr.(type) {
 	case *net.TCPAddr:
-		return &IPPort{
-			IP:   casted.IP,
-			Port: casted.Port,
-		}, nil
+		return casted.IP, casted.Port, nil
 	case *net.UDPAddr:
-		return &IPPort{
-			IP:   casted.IP,
-			Port: casted.Port,
-		}, nil
+		return casted.IP, casted.Port, nil
 	default:
-		return nil, errors.New("unknown address type")
+		return nil, 0, errors.New("unknown address type")
 	}
 }
 

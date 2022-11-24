@@ -1,0 +1,30 @@
+defaultBaseImage: gcr.io/distroless/static:nonroot
+
+builds:
+  - id: "inetmock"
+    main: ./cmd/inetmock/
+    flags:
+      - -trimpath
+      - -a
+      - -installsuffix=cgo
+    ldflags:
+      - -w -s
+      - -linkmode=external
+      - -extldflags -static
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: "imctl"
+    main: ./cmd/imctl/
+    flags:
+      - -trimpath
+    ldflags:
+      - -w -s
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64

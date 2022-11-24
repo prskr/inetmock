@@ -10,8 +10,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const (
@@ -37,17 +37,16 @@ type Initiator interface {
 }
 
 func InitiatorForRule(rule *rules.Check, logger logging.Logger) (Initiator, error) {
-	initiator := rule.Initiator
-	if initiator == nil {
+	if rule.Initiator == nil {
 		return nil, rules.ErrNoInitiatorDefined
 	}
 
-	switch m := strings.ToLower(initiator.Module); m {
+	switch m := strings.ToLower(rule.Initiator.Module); m {
 	case "http", "http2":
-		if constructor, ok := knownInitiators[strings.ToLower(initiator.Name)]; !ok {
-			return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, initiator.Name)
+		if constructor, ok := knownInitiators[strings.ToLower(rule.Initiator.Name)]; !ok {
+			return nil, fmt.Errorf("%w %s", rules.ErrUnknownInitiator, rule.Initiator.Name)
 		} else {
-			return constructor(logger, initiator.Params...)
+			return constructor(logger, rule.Initiator.Params...)
 		}
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrNotAnHTTPInitiator, m)

@@ -8,8 +8,8 @@ import (
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/dhcp"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/dhcp"
 )
 
 func TestFallbackHandler_Handle(t *testing.T) {
@@ -17,7 +17,7 @@ func TestFallbackHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name           string
 		DefaultOptions dhcp.DefaultOptions
-		want           interface{}
+		want           any
 		wantErr        bool
 	}{
 		{

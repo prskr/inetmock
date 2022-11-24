@@ -3,7 +3,7 @@ package audit
 import (
 	"reflect"
 
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
 )
 
 var _ Details = (*DHCP)(nil)

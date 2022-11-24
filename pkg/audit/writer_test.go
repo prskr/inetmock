@@ -10,8 +10,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
+	audit_mock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
 )
 
 type WriterCloserSyncer interface {
@@ -33,14 +33,14 @@ func Test_eventWriter_Write(t *testing.T) {
 		{
 			name: "Write a single event",
 			args: args{
-				evs: testEvents[:1],
+				evs: testEvents()[:1],
 			},
 			wantErr: false,
 		},
 		{
 			name: "Write multiple events",
 			args: args{
-				evs: testEvents,
+				evs: testEvents(),
 			},
 			wantErr: false,
 		},

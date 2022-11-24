@@ -3,7 +3,7 @@ package audit
 import (
 	"crypto/tls"
 
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
 )
 
 var tlsToEntity = map[uint16]auditv1.TLSVersion{

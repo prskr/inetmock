@@ -8,7 +8,7 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func TestRuleHandler_AnswerDNSQuestion(t *testing.T) {
@@ -18,7 +18,7 @@ func TestRuleHandler_AnswerDNSQuestion(t *testing.T) {
 		name     string
 		rawRules []string
 		question dns.Question
-		want     interface{}
+		want     any
 		wantErr  bool
 	}{
 		{

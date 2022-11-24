@@ -10,12 +10,12 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/health/http"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/health/http"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func TestInitiatorForRule(t *testing.T) {
@@ -26,7 +26,7 @@ func TestInitiatorForRule(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -156,7 +156,7 @@ func TestRequestInitiatorForMethod(t *testing.T) {
 		args               args
 		wantInitiatorError bool
 		wantRequestError   bool
-		wantResponse       interface{}
+		wantResponse       any
 	}{
 		{
 			name: "Run a GET request",

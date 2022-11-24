@@ -31,7 +31,7 @@ var (
 
 type UnmarshalOption func(cfg *mapstructure.DecoderConfig)
 
-func NewStartupSpec(name string, uplink Uplink, opts map[string]interface{}) *StartupSpec {
+func NewStartupSpec(name string, uplink Uplink, opts map[string]any) *StartupSpec {
 	return &StartupSpec{
 		Name:    name,
 		Uplink:  uplink,
@@ -42,10 +42,10 @@ func NewStartupSpec(name string, uplink Uplink, opts map[string]interface{}) *St
 type StartupSpec struct {
 	Uplink
 	Name    string
-	Options map[string]interface{}
+	Options map[string]any
 }
 
-func (s StartupSpec) UnmarshalOptions(cfg interface{}, opts ...UnmarshalOption) error {
+func (s StartupSpec) UnmarshalOptions(cfg any, opts ...UnmarshalOption) error {
 	var (
 		decoderConfig = new(mapstructure.DecoderConfig)
 		decoder       *mapstructure.Decoder

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"gitlab.com/inetmock/inetmock/protocols/dns/client"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns/client"
 )
 
 func DNSResolverForInMemListener(lis InMemListener) *client.Resolver {

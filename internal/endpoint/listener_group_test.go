@@ -8,7 +8,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 
 var defaultListenerSpec = endpoint.ListenerSpec{Protocol: "tcp", Port: 1234, Unmanaged: false}
@@ -23,7 +23,7 @@ func TestListenerGroup_ConfigureEndpoint(t *testing.T) {
 		name string
 		spec endpoint.ListenerSpec
 		args args
-		want interface{}
+		want any
 	}{
 		{
 			name: "nil value - nothing added",
@@ -70,8 +70,8 @@ func TestListenerGroup_GroupByTLS(t *testing.T) {
 		name          string
 		spec          endpoint.ListenerSpec
 		registrations []registration
-		wantPlainGrp  interface{}
-		wantTLSGrp    interface{}
+		wantPlainGrp  any
+		wantTLSGrp    any
 		wantErr       bool
 	}{
 		{
@@ -206,7 +206,7 @@ func TestNewListenerGroup(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantGrp interface{}
+		wantGrp any
 		wantErr bool
 	}{
 		{

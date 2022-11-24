@@ -14,7 +14,7 @@
       </ENTRIES>
     </EXTENSION>
     <kind value="PACKAGE" />
-    <package value="gitlab.com/inetmock/inetmock/cmd/imctl" />
+    <package value="inetmock.icb4dc0.de/inetmock/cmd/imctl" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/cmd/imctl/main.go" />
     <method v="2" />

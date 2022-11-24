@@ -7,11 +7,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	dnsmock "gitlab.com/inetmock/inetmock/protocols/dns/mock"
-	httpmock "gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	audit_mock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	dnsmock "inetmock.icb4dc0.de/inetmock/protocols/dns/mock"
+	httpmock "inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
@@ -19,7 +19,7 @@ func Test_handlerRegistry_AvailableHandlers(t *testing.T) {
 	tests := []struct {
 		name                  string
 		handlerRegistrySetup  func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry
-		wantAvailableHandlers interface{}
+		wantAvailableHandlers any
 	}{
 		{
 			name: "Empty registry",
@@ -74,7 +74,7 @@ func Test_handlerRegistry_HandlerForName(t *testing.T) {
 		name                 string
 		handlerRegistrySetup func(tb testing.TB, ctrl *gomock.Controller) endpoint.HandlerRegistry
 		handlerRef           endpoint.HandlerReference
-		wantInstance         interface{}
+		wantInstance         any
 		wantOk               bool
 	}{
 		{

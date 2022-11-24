@@ -8,8 +8,8 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	mdns "github.com/miekg/dns"
 
-	dnsmock "gitlab.com/inetmock/inetmock/internal/mock/dns"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	dnsmock "inetmock.icb4dc0.de/inetmock/internal/mock/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func TestCacheHandler_AnswerDNSQuestion(t *testing.T) {
@@ -27,7 +27,7 @@ func TestCacheHandler_AnswerDNSQuestion(t *testing.T) {
 		fields   fields
 		question dns.Question
 
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

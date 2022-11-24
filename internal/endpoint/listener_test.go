@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 
 func TestListenerSpec_Addr(t *testing.T) {
@@ -18,7 +18,7 @@ func TestListenerSpec_Addr(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

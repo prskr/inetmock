@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/internal/format"
+	"inetmock.icb4dc0.de/inetmock/internal/format"
 )
 
 func Test_tblWriter_Write(t *testing.T) {
@@ -26,7 +26,7 @@ func Test_tblWriter_Write(t *testing.T) {
 	}
 
 	type args struct {
-		in interface{}
+		in any
 	}
 	type testCase struct {
 		name       string

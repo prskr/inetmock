@@ -13,9 +13,9 @@ import (
 	. "github.com/maxatome/go-testdeep/td"
 	mdns "github.com/miekg/dns"
 
-	protocolmock "gitlab.com/inetmock/inetmock/internal/mock/protocol"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/protocols/dns/client"
+	protocolmock "inetmock.icb4dc0.de/inetmock/internal/mock/protocol"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns/client"
 )
 
 func TestRequestPackerPOST(t *testing.T) {
@@ -27,7 +27,7 @@ func TestRequestPackerPOST(t *testing.T) {
 		name    string
 		packer  client.RequestPacker
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -99,7 +99,7 @@ func TestHTTPTransport_RoundTrip(t *testing.T) {
 		name     string
 		fields   fields
 		question *mdns.Msg
-		wantResp interface{}
+		wantResp any
 		wantErr  bool
 	}{
 		{

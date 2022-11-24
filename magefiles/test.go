@@ -12,7 +12,10 @@ import (
 func TestShort() error {
 	mg.Deps(Generate)
 
-	return sh.RunV(
+	return sh.RunWithV(
+		map[string]string{
+			"CGO_ENABLED": "1",
+		},
 		"go", "run",
 		"gotest.tools/gotestsum",
 		"--packages=./...",
@@ -22,7 +25,7 @@ func TestShort() error {
 		"-short",
 		"-race",
 		"-shuffle=on",
-		fmt.Sprintf("-coverprofile=%s", filepath.Join(outDir, "cov-raw.out")),
+		fmt.Sprintf("-coverprofile=%s", filepath.Join(OutDir, "cov-raw.out")),
 		"-covermode=atomic",
 	)
 }
@@ -30,7 +33,10 @@ func TestShort() error {
 func TestAll() error {
 	mg.Deps(Generate)
 
-	return sh.RunV(
+	return sh.RunWithV(
+		map[string]string{
+			"CGO_ENABLED": "1",
+		},
 		"go", "run",
 		"gotest.tools/gotestsum",
 		"--packages=./...",
@@ -40,7 +46,7 @@ func TestAll() error {
 		"--tags=sudo",
 		"-race",
 		"-shuffle=on",
-		fmt.Sprintf("-coverprofile=%s", filepath.Join(outDir, "cov-raw.out")),
+		fmt.Sprintf("-coverprofile=%s", filepath.Join(OutDir, "cov-raw.out")),
 		"-covermode=atomic",
 	)
 }

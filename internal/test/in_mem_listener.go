@@ -34,7 +34,7 @@ type inMemListener struct {
 	connections chan net.Conn
 }
 
-func (i *inMemListener) Accept() (net.Conn, error) {
+func (i inMemListener) Accept() (net.Conn, error) {
 	select {
 	case newConnection := <-i.connections:
 		return newConnection, nil
@@ -56,7 +56,7 @@ func (i *inMemListener) Close() error {
 	return nil
 }
 
-func (i *inMemListener) Addr() net.Addr {
+func (i inMemListener) Addr() net.Addr {
 	return &net.TCPAddr{
 		//nolint:gomnd
 		IP:   net.IPv4(127, 1, 10, 1),
@@ -65,11 +65,11 @@ func (i *inMemListener) Addr() net.Addr {
 	}
 }
 
-func (i *inMemListener) DialContext(_ context.Context, network, addr string) (net.Conn, error) {
+func (i inMemListener) DialContext(_ context.Context, network, addr string) (net.Conn, error) {
 	return i.Dial(network, addr)
 }
 
-func (i *inMemListener) Dial(_, _ string) (net.Conn, error) {
+func (i inMemListener) Dial(_, _ string) (net.Conn, error) {
 	select {
 	case _, more := <-i.state:
 		if !more {

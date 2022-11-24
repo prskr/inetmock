@@ -1,4 +1,6 @@
-FROM registry.gitlab.com/inetmock/ci-image/go
+ARG BASE_IMAGE=code.icb4dc0.de/inetmock/ci-images/go-ci
+
+FROM ${BASE_IMAGE}
 
 RUN go install github.com/go-delve/delve/cmd/dlv@latest && \
     echo 'dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec $@' >> /usr/local/bin/exec.sh && \

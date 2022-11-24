@@ -9,7 +9,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols"
 )
 
 type proxyHTTPSHandler struct {
@@ -33,8 +34,7 @@ type proxyHTTPHandler struct {
 }
 
 func (p *proxyHTTPHandler) Handle(req *http.Request, ctx *goproxy.ProxyCtx) (retReq *http.Request, resp *http.Response) {
-	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(p.handlerName))
-	defer timer.ObserveDuration()
+	defer prometheus.NewTimer(protocols.RequestDurationHistogram.WithLabelValues("http_proxy", p.handlerName)).ObserveDuration()
 
 	retReq = req
 

@@ -11,7 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	cmux "github.com/soheilhy/cmux"
 
-	endpoint "gitlab.com/inetmock/inetmock/internal/endpoint"
+	endpoint "inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 
 // MockProtocolHandler is a mock of ProtocolHandler interface.

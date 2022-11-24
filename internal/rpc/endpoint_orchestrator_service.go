@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 var _ rpcv1.EndpointOrchestratorServiceServer = (*endpointOrchestratorServer)(nil)

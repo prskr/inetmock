@@ -139,7 +139,7 @@ func (t *TTL) Evict() {
 	t.doEvict()
 }
 
-func (t *TTL) Push(name string, value interface{}, ttl time.Duration) *Entry {
+func (t *TTL) Push(name string, value any, ttl time.Duration) *Entry {
 	t.modLock.Lock()
 	defer t.modLock.Unlock()
 
@@ -202,6 +202,9 @@ func (t *TTL) OnEvicted(callback EvictionCallback) {
 
 	t.evictionCache = make(chan []*Entry, evictionCacheSized)
 	go func(in <-chan []*Entry, callback EvictionCallback) {
+		if callback == nil {
+			return
+		}
 		for e := range in {
 			callback.OnEvicted(e)
 		}

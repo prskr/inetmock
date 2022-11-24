@@ -18,4 +18,5 @@ run:
   args:
   - -ce
   - |
+    mount -t debugfs debugfs /sys/kernel/debug
     go run github.com/magefile/mage testAll

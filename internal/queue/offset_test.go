@@ -6,7 +6,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/queue"
+	"inetmock.icb4dc0.de/inetmock/internal/queue"
 )
 
 func TestOffset_Next(t *testing.T) {

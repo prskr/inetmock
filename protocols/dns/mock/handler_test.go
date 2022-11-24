@@ -6,17 +6,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"github.com/maxatome/go-testdeep/td"
 	"gopkg.in/yaml.v3"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	auditmock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	auditmock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns/mock"
 )
 
-//nolint:gocognit
 func Test_dnsHandler_Start(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -119,20 +118,21 @@ default:
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			optsMap := make(map[string]interface{})
+			optsMap := make(map[string]any)
 			if err := yaml.Unmarshal([]byte(tt.args.opts), optsMap); err != nil {
 				t.Errorf("yaml.Unmarshal() err = %v", err)
 				return
 			}
-			ctrl := gomock.NewController(t)
 			listener := test.NewInMemoryListener(t)
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
-			emitter := auditmock.NewMockEmitter(ctrl)
+			emitter := new(auditmock.EmitterMock)
 			if !tt.wantErr {
-				emitter.EXPECT().
-					Emit(gomock.Any()).
-					MinTimes(1)
+				t.Cleanup(func() {
+					emitter.WithCalls(func(calls *auditmock.EmitterMockCalls) {
+						td.Cmp(t, calls.Emit(), td.Len(td.Gt(0)))
+					})
+				})
 			}
 			handler := mock.New(logging.CreateTestLogger(t), emitter)
 			if err := handler.Start(ctx, endpoint.NewStartupSpec(t.Name(), endpoint.NewUplink(listener), optsMap)); err != nil {

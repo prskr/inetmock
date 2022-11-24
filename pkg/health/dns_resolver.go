@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net"
 
-	"gitlab.com/inetmock/inetmock/pkg/health/dns"
-	"gitlab.com/inetmock/inetmock/protocols/dns/client"
+	"inetmock.icb4dc0.de/inetmock/pkg/health/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns/client"
 )
 
 type (

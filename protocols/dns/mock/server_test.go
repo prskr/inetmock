@@ -7,12 +7,12 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	mdns "github.com/miekg/dns"
 
-	auditmock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	dnsmock "gitlab.com/inetmock/inetmock/internal/mock/dns"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
-	"gitlab.com/inetmock/inetmock/protocols/dns/mock"
+	auditmock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	dnsmock "inetmock.icb4dc0.de/inetmock/internal/mock/dns"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns/mock"
 )
 
 func TestServer_ServeDNS(t *testing.T) {
@@ -24,7 +24,7 @@ func TestServer_ServeDNS(t *testing.T) {
 		name          string
 		fields        fields
 		req           *mdns.Msg
-		want          interface{}
+		want          any
 		wantEmitCalls int
 	}{
 		{
@@ -75,8 +75,8 @@ func TestServer_ServeDNS(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			emitter := &auditmock.EmitterMock{
-				OnEmit: func(state auditmock.EmitterMockCallsContext, ev audit.Event) {
-					if callCount := len(state.Emit); callCount != tt.wantEmitCalls {
+				OnEmit: func(state *auditmock.EmitterMockCallsContext, ev *audit.Event) {
+					if callCount := len(state.Emit()); callCount != tt.wantEmitCalls {
 						t.Errorf("Want call count: %d, got: %d", tt.wantEmitCalls, callCount)
 					}
 					t.Logf("Got event: %v", ev)
@@ -99,7 +99,9 @@ func TestServer_ServeDNS(t *testing.T) {
 			}
 
 			s.ServeDNS(writerMock, tt.req)
-			td.Cmp(t, len(emitter.Calls.Emit), tt.wantEmitCalls)
+			emitter.WithCalls(func(calls *auditmock.EmitterMockCalls) {
+				td.Cmp(t, len(calls.Emit()), tt.wantEmitCalls)
+			})
 		})
 	}
 }

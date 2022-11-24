@@ -8,9 +8,9 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	"github.com/soheilhy/cmux"
 
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/internal/test/integration"
-	"gitlab.com/inetmock/inetmock/multiplexing"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/internal/test/integration"
+	"inetmock.icb4dc0.de/inetmock/multiplexing"
 )
 
 func TestHTTP(t *testing.T) {
@@ -25,7 +25,7 @@ func TestHTTP(t *testing.T) {
 		matcher         cmux.Matcher
 		httpClientSetup func(lis test.InMemListener) *http.Client
 		wantErr         bool
-		want            interface{}
+		want            any
 	}{
 		{
 			name: "Match a HTTP/1.1 request",

@@ -8,14 +8,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const (
-	name        = "metrics_exporter"
-	healthRoute = "/health"
+	name                     = "metrics_exporter"
+	healthRoute              = "/health"
+	defaultReadHeaderTimeout = 100 * time.Millisecond
 )
 
 type metricsExporter struct {
@@ -41,7 +42,7 @@ func (m *metricsExporter) Start(_ context.Context, startupSpec *endpoint.Startup
 
 	m.server = &http.Server{
 		Handler:           mux,
-		ReadHeaderTimeout: 50 * time.Millisecond,
+		ReadHeaderTimeout: defaultReadHeaderTimeout,
 	}
 
 	go func() {

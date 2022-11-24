@@ -10,13 +10,13 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 var (
-	defaultKeyProvider = func(options Options) func() (key interface{}, err error) {
-		return func() (key interface{}, err error) {
+	defaultKeyProvider = func(options Options) func() (key any, err error) {
+		return func() (key any, err error) {
 			return privateKeyForCurve(options)
 		}
 	}
@@ -25,7 +25,7 @@ var (
 	ipv4LoopbackIP = net.IPv4(127, 0, 0, 1)
 )
 
-type KeyProvider func() (key interface{}, err error)
+type KeyProvider func() (key any, err error)
 
 type Store interface {
 	CACert() *tls.Certificate
@@ -107,24 +107,23 @@ func (s *store) TLSConfig() *tls.Config {
 		MinVersion:               s.options.MinTLSVersion.TLSVersion(),
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
-		GetCertificate: func(info *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
-			var localIP *netutils.IPPort
-			if localIP, err = netutils.IPPortFromAddress(info.Conn.LocalAddr()); err != nil {
-				localIP = &netutils.IPPort{
-					IP: ipv4LoopbackIP,
-				}
+		GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+			localIP := ipv4LoopbackIP
+			if ip, _, err := netutils.IPPortFromAddress(info.Conn.LocalAddr()); err == nil {
+				localIP = ip
 			}
 
-			if cert, err = s.Certificate(info.ServerName, localIP.IP); err != nil {
+			if cert, err := s.Certificate(info.ServerName, localIP); err != nil {
 				s.logger.Error(
 					"error while resolving certificate",
 					zap.String("serverName", info.ServerName),
 					zap.String("localAddr", localIP.String()),
 					zap.Error(err),
 				)
+				return nil, err
+			} else {
+				return cert, nil
 			}
-
-			return
 		},
 		RootCAs: rootCaPool,
 	}
@@ -159,7 +158,7 @@ func (s *store) loadCACert() error {
 	return nil
 }
 
-func privateKeyForCurve(options Options) (privateKey interface{}, err error) {
+func privateKeyForCurve(options Options) (privateKey any, err error) {
 	switch options.Curve {
 	case CurveTypeP224:
 		privateKey, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)

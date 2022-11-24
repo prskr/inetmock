@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/internal/queue"
-	"gitlab.com/inetmock/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/queue"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
 )
 
 const (

@@ -12,12 +12,12 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	"google.golang.org/grpc"
 
-	"gitlab.com/inetmock/inetmock/internal/pcap"
-	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"gitlab.com/inetmock/inetmock/internal/rpc/test"
-	tst "gitlab.com/inetmock/inetmock/internal/test"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap/consumers"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc/test"
+	tst "inetmock.icb4dc0.de/inetmock/internal/test"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 const (
@@ -109,7 +109,7 @@ func Test_pcapServer_ListAvailableDevices(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
 		name    string
-		want    interface{}
+		want    any
 		wantErr bool
 	}
 	tests := []testCase{
@@ -175,7 +175,7 @@ func Test_pcapServer_StartPCAPFileRecording(t *testing.T) {
 	type testCase struct {
 		name              string
 		req               *rpcv1.StartPCAPFileRecordingRequest
-		wantResp          interface{}
+		wantResp          any
 		wantSubscriptions []pcap.Subscription
 		wantErr           bool
 	}

@@ -2,8 +2,8 @@ version: "3"
 
 vars:
   OUT_DIR: ./out
-  INETMOCK_PKG: gitlab.com/inetmock/inetmock/cmd/inetmock
-  IMCTL_PKG: gitlab.com/inetmock/inetmock/cmd/imctl
+  INETMOCK_PKG: inetmock.icb4dc0.de/inetmock/cmd/inetmock
+  IMCTL_PKG: inetmock.icb4dc0.de/inetmock/cmd/imctl
   DOCKER_ENDPOINT:
     sh: echo "${DOCKER_ENDPOINT:-localhost}"
 

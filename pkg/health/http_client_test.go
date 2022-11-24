@@ -10,10 +10,10 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func TestHttpClient(t *testing.T) {
@@ -30,7 +30,7 @@ func TestHttpClient(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		want    interface{}
+		want    any
 	}{
 		{
 			name: "Get StackOverflow",
@@ -103,7 +103,7 @@ func setupServer(tb testing.TB, rules []string) health.Config {
 	}
 
 	go func(lis net.Listener, handler http.Handler) {
-		//nolint:gosec // fine for testing purposes
+		//nolint:gosec // timeout support is not needed in tests
 		_ = http.Serve(lis, handler)
 	}(listener, &router)
 

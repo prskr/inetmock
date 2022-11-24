@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 var (

@@ -3,8 +3,8 @@ package sink
 import (
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const (
@@ -25,30 +25,26 @@ func (logSink) Name() string {
 	return logSinkName
 }
 
-func (l logSink) OnSubscribe(evs <-chan audit.Event) {
-	go func(logger logging.Logger, evs <-chan audit.Event) {
-		for ev := range evs {
-			eventLogger := logger
+func (l logSink) OnEvent(ev *audit.Event) {
+	eventLogger := l.logger
 
-			if ev.TLS != nil {
-				eventLogger = eventLogger.With(
-					zap.String("tls_server_name", ev.TLS.ServerName),
-					zap.String("tls_cipher_suite", ev.TLS.CipherSuite),
-					zap.String("tls_version", ev.TLS.Version),
-				)
-			}
+	if ev.TLS != nil {
+		eventLogger = eventLogger.With(
+			zap.String("tls_server_name", ev.TLS.ServerName),
+			zap.String("tls_cipher_suite", ev.TLS.CipherSuite),
+			zap.String("tls_version", ev.TLS.Version),
+		)
+	}
 
-			eventLogger.Info(
-				"handled request",
-				zap.Time("timestamp", ev.Timestamp),
-				zap.String("application", ev.Application.String()),
-				zap.String("transport", ev.Transport.String()),
-				zap.String("source_ip", ev.SourceIP.String()),
-				zap.Uint16("source_port", ev.SourcePort),
-				zap.String("destination_ip", ev.DestinationIP.String()),
-				zap.Uint16("destination_port", ev.DestinationPort),
-				zap.Any("details", ev.ProtocolDetails),
-			)
-		}
-	}(l.logger, evs)
+	eventLogger.Info(
+		"handled request",
+		zap.Time("timestamp", ev.Timestamp),
+		zap.String("application", ev.Application.String()),
+		zap.String("transport", ev.Transport.String()),
+		logging.IP("source_ip", ev.SourceIP),
+		zap.Uint16("source_port", ev.SourcePort),
+		logging.IP("destination_ip", ev.DestinationIP),
+		zap.Uint16("destination_port", ev.DestinationPort),
+		zap.Any("details", ev.ProtocolDetails),
+	)
 }

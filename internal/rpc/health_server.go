@@ -10,8 +10,8 @@ import (
 	v1 "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 var _ v1.HealthServer = (*healthServer)(nil)

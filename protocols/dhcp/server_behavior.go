@@ -8,9 +8,9 @@ import (
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/internal/state"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 var knownResponseHandlers = map[string]func(opts HandlerOptions, args ...rules.Param) (DHCPv4MessageHandler, error){

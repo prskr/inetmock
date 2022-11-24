@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/gopacket"
 
-	"gitlab.com/inetmock/inetmock/internal/pcap"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
 )
 
 const (

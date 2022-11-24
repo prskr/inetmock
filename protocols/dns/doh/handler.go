@@ -9,12 +9,12 @@ import (
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/multiplexing"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/multiplexing"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 type dohHandler struct {
@@ -64,7 +64,7 @@ func (d *dohHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec)
 		Fallback: dns.FallbackHandler(ruleHandler, options.Default, options.TTL),
 	}
 
-	queryHandler := DNSQueryHandler(d.logger, handler)
+	queryHandler := DNSQueryHandler(d.logger, startupSpec.Name, handler)
 	emittingHandler := audit.EmittingHandler(d.emitter, auditv1.AppProtocol_APP_PROTOCOL_DNS_OVER_HTTPS, queryHandler)
 	d.server = NewServer(emittingHandler)
 

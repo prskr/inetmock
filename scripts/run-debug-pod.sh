@@ -12,18 +12,23 @@ fi
 
 go build -gcflags "all=-N -l" -o out/inetmock ./cmd/inetmock
 
-join_container_to_ns &
+# join_container_to_ns &
 
 podman run \
     --rm \
     -ti \
     --ip 10.10.1.1 \
     --cap-add=CAP_NET_RAW \
-    --cap-add=CAP_NET_BIND_SERVICE \
     --cap-add=CAP_NET_ADMIN \
+    --cap-add=CAP_SYS_ADMIN \
+    --ulimit memlock=33554432:33554432 \
     --security-opt=seccomp=unconfined \
     --replace \
     --network=libvirt \
+    -v /sys:/sys:ro \
     -v "$(pwd):/work" \
+    -p 2345:2345 \
+    -p 8080:80 \
+    -p 9010:9010 \
     --name inetmock \
-    inetmock-debug
+    inetmock-debug $@

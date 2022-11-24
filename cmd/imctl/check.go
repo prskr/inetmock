@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -17,13 +16,14 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/valyala/bytebufferpool"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 type runCheckArgs struct {
@@ -91,7 +91,7 @@ var (
 	args = new(runCheckArgs)
 )
 
-//nolint:lll
+//nolint:lll // still better readable than breaking these lines
 func init() {
 	const (
 		defaultHTTPPort  int = 80
@@ -238,7 +238,9 @@ func setupClients(
 }
 
 func addCACertToPool(pool *x509.CertPool) (err error) {
-	buffer := bytes.NewBuffer(nil)
+	buffer := bytebufferpool.Get()
+	defer bytebufferpool.Put(buffer)
+
 	var reader io.ReadCloser
 	if reader, err = os.Open(args.CACertPath); err != nil {
 		return err
@@ -256,7 +258,7 @@ func addCACertToPool(pool *x509.CertPool) (err error) {
 
 func resolveTargetIP(ctx context.Context, logger logging.Logger, target string) (string, error) {
 	logger = logger.With(zap.String("target", target))
-	if targetIP := net.ParseIP(target); len(targetIP) > 0 {
+	if targetIP := net.ParseIP(target); len(targetIP) >= net.IPv4len {
 		logger.Debug("target is an IP address - will be set for clients")
 		return target, nil
 	}

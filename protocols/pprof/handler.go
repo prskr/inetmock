@@ -9,10 +9,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const (
@@ -22,6 +22,8 @@ const (
 	pprofProfilePath = "/debug/pprof/profile"
 	pprofSymbolPath  = "/debug/pprof/symbol"
 	pprofTracePath   = "/debug/pprof/trace"
+
+	defaultReadHeaderTimeout = 100 * time.Millisecond
 )
 
 type pprofHandler struct {
@@ -41,7 +43,7 @@ func (p *pprofHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpe
 	p.server = &http.Server{
 		Handler:           audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_PPROF, pprofMux),
 		ConnContext:       audit.StoreConnPropertiesInContext,
-		ReadHeaderTimeout: 50 * time.Millisecond,
+		ReadHeaderTimeout: defaultReadHeaderTimeout,
 	}
 
 	p.logger = p.logger.With(

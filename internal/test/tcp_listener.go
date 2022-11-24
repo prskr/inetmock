@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/maxatome/go-testdeep/td"
-
-	"gitlab.com/inetmock/inetmock/internal/netutils"
 )
 
 func NewTCPListener(tb testing.TB, rawAddr string) (listener net.Listener) {
@@ -15,9 +13,6 @@ func NewTCPListener(tb testing.TB, rawAddr string) (listener net.Listener) {
 	listener, err = net.Listen("tcp4", rawAddr)
 	if !td.CmpNoError(tb, err) {
 		return
-	}
-	if listener, err = netutils.WrapToManaged(listener); !td.CmpNoError(tb, err) {
-		return nil
 	}
 	return
 }

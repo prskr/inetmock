@@ -23,14 +23,4 @@ run:
   args:
     - -ce
     - |
-      if go run github.com/magefile/mage lint; then
-        curl -X 'POST' "https://code.icb4dc0.de/api/v1/repos/inetmock/inetmock/statuses/$(git rev-parse HEAD)?token=$GITEA_TOKEN" \
-          -H 'accept: application/json' \
-          -H 'Content-Type: application/json' \
-          -d '{"context": "concourse-ci/lint", "description": "lint", "state": "success", "target_url": "https://concourse.icb4dc0.de/teams/inetmock/pipelines"}'
-      else
-        curl -X 'POST' "https://code.icb4dc0.de/api/v1/repos/inetmock/inetmock/statuses/$(git rev-parse HEAD)?token=$GITEA_TOKEN" \
-          -H 'accept: application/json' \
-          -H 'Content-Type: application/json' \
-          -d '{"context": "concourse-ci/lint", "description": "lint", "state": "failure", "target_url": "https://concourse.icb4dc0.de/teams/inetmock/pipelines"}'
-      fi
+      go run github.com/magefile/mage lint

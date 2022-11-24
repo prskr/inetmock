@@ -4,7 +4,7 @@ managed:
   java_multiple_files: true
   optimize_for: CODE_SIZE
   go_package_prefix:
-    default: gitlab.com/inetmock/inetmock/pkg
+    default: inetmock.icb4dc0.de/inetmock/pkg
     except:
       - buf.build/googleapis/googleapis
 plugins:

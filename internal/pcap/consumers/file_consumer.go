@@ -11,7 +11,7 @@ import (
 	"github.com/google/gopacket/pcapgo"
 	"go.uber.org/multierr"
 
-	"gitlab.com/inetmock/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
 )
 
 const defaultSnapshotLength = 65536

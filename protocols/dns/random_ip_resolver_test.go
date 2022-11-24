@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func TestRandomIPResolver_Lookup(t *testing.T) {

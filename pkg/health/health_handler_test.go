@@ -9,7 +9,7 @@ import (
 	"github.com/maxatome/go-testdeep/helpers/tdhttp"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
 )
 
 func Test_healthHandler_ServeHTTP(t *testing.T) {
@@ -18,7 +18,7 @@ func Test_healthHandler_ServeHTTP(t *testing.T) {
 		name       string
 		checks     []health.Check
 		wantStatus int
-		wantBody   interface{}
+		wantBody   any
 	}{
 		{
 			name:       "Empty checker - no error",

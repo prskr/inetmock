@@ -8,9 +8,9 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/health/dns"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/health/dns"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 func NewDNSRuleCheck(name string, resolvers ResolverForModule, logger logging.Logger, check *rules.Check) (Check, error) {

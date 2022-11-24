@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/wait"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit/sink"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/wait"
 )
 
 func Test_genericSink_OnSubscribe(t *testing.T) {
@@ -21,11 +21,11 @@ func Test_genericSink_OnSubscribe(t *testing.T) {
 	tests := []testCase{
 		{
 			name:   "Get a single log line",
-			events: testEvents[:1],
+			events: testEvents()[:1],
 		},
 		{
 			name:   "Get multiple events",
-			events: testEvents,
+			events: testEvents(),
 		},
 	}
 	for _, tc := range tests {
@@ -35,7 +35,7 @@ func Test_genericSink_OnSubscribe(t *testing.T) {
 			wg := new(sync.WaitGroup)
 			wg.Add(len(tt.events))
 
-			genericSink := sink.NewGenericSink(t.Name(), func(ev audit.Event) {
+			genericSink := sink.NewGenericSink(t.Name(), func(ev *audit.Event) {
 				wg.Done()
 			})
 
@@ -52,7 +52,7 @@ func Test_genericSink_OnSubscribe(t *testing.T) {
 			}
 
 			for _, ev := range tt.events {
-				evs.Emit(*ev)
+				evs.Emit(ev)
 			}
 
 			select {

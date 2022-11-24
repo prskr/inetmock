@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/format"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/format"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 var (
@@ -176,7 +176,7 @@ func runReadFile(_ *cobra.Command, args []string) (err error) {
 	}
 
 	eventReader := audit.NewEventReader(reader)
-	var ev audit.Event
+	var ev *audit.Event
 
 	for err == nil {
 		if ev, err = eventReader.Read(); err == nil {

@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package inetmock.audit.v1;
+
+message NetMonDetailsEntity {
+  string reverse_resolved_host = 1;
+}

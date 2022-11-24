@@ -41,5 +41,5 @@ func Writer(format string, writer io.Writer) ConsoleWriter {
 }
 
 type ConsoleWriter interface {
-	Write(in interface{}) (err error)
+	Write(in any) (err error)
 }

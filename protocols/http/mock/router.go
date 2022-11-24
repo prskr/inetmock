@@ -7,8 +7,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols"
 )
 
 type (
@@ -69,8 +70,7 @@ func (r *Router) RegisterRule(rawRule string) error {
 }
 
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(r.HandlerName))
-	defer timer.ObserveDuration()
+	defer prometheus.NewTimer(protocols.RequestDurationHistogram.WithLabelValues("http", r.HandlerName)).ObserveDuration()
 
 	for idx := range r.handlers {
 		if r.handlers[idx].Chain.Matches(request) {

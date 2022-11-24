@@ -9,21 +9,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/metrics"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/metrics"
+	"inetmock.icb4dc0.de/inetmock/protocols"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 const name = "dns_mock"
 
 var (
-	handlerNameLblName          = "handler_name"
-	totalHandledRequestsCounter *prometheus.CounterVec
-	unhandledRequestsCounter    *prometheus.CounterVec
-	requestDurationHistogram    *prometheus.HistogramVec
-	initLock                    sync.Locker = new(sync.Mutex)
+	handlerNameLblName             = "handler_name"
+	totalProcessedQuestionsCounter *prometheus.CounterVec
+	initLock                       sync.Locker = new(sync.Mutex)
 )
 
 func init() {
@@ -31,35 +30,13 @@ func init() {
 	defer initLock.Unlock()
 
 	var err error
-	if totalHandledRequestsCounter == nil {
-		if totalHandledRequestsCounter, err = metrics.Counter(
+	if totalProcessedQuestionsCounter == nil {
+		if totalProcessedQuestionsCounter, err = metrics.Counter(
 			name,
-			"handled_requests_total",
+			"handled_questions_total",
 			"",
 			handlerNameLblName,
-		); err != nil {
-			panic(err)
-		}
-	}
-
-	if unhandledRequestsCounter == nil {
-		if unhandledRequestsCounter, err = metrics.Counter(
-			name,
-			"unhandled_requests_total",
-			"",
-			handlerNameLblName,
-		); err != nil {
-			panic(err)
-		}
-	}
-
-	if requestDurationHistogram == nil {
-		if requestDurationHistogram, err = metrics.Histogram(
-			name,
-			"request_duration",
-			"",
-			nil,
-			handlerNameLblName,
+			"answered",
 		); err != nil {
 			panic(err)
 		}
@@ -74,10 +51,7 @@ type Server struct {
 }
 
 func (s *Server) ServeDNS(w mdns.ResponseWriter, req *mdns.Msg) {
-	if requestDurationHistogram != nil {
-		timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(s.Name))
-		defer timer.ObserveDuration()
-	}
+	defer prometheus.NewTimer(protocols.RequestDurationHistogram.WithLabelValues("dns", s.Name)).ObserveDuration()
 
 	s.recordRequest(req, w.LocalAddr(), w.RemoteAddr())
 
@@ -87,8 +61,12 @@ func (s *Server) ServeDNS(w mdns.ResponseWriter, req *mdns.Msg) {
 	for qIdx := range req.Question {
 		question := req.Question[qIdx]
 		if rr, err := s.Handler.AnswerDNSQuestion(dns.Question(question)); !errors.Is(err, nil) {
-			s.Logger.Error("Error occurred while answering DNS question", zap.Error(err))
+			if errors.Is(err, dns.ErrNoAnswerForQuestion) {
+				totalProcessedQuestionsCounter.WithLabelValues(s.Name, "false")
+			}
+			s.Logger.Error("Error occurred while answering DNS question", zap.String("question", question.Name), zap.Error(err))
 		} else {
+			totalProcessedQuestionsCounter.WithLabelValues(s.Name, "true")
 			resp.Answer = append(resp.Answer, rr)
 		}
 	}
@@ -110,17 +88,16 @@ func (s *Server) recordRequest(m *mdns.Msg, localAddr, remoteAddr net.Addr) {
 		})
 	}
 
-	ev := audit.Event{
-		Transport:       guessTransportFromAddr(localAddr),
-		Application:     auditv1.AppProtocol_APP_PROTOCOL_DNS,
-		ProtocolDetails: dnsDetails,
-	}
+	builder := s.Emitter.Builder().
+		WithTransport(guessTransportFromAddr(localAddr)).
+		WithApplication(auditv1.AppProtocol_APP_PROTOCOL_DNS).
+		WithProtocolDetails(dnsDetails)
 
 	// it's considered to be okay if these details are missing
-	_ = ev.SetSourceIPFromAddr(remoteAddr)
-	_ = ev.SetDestinationIPFromAddr(localAddr)
+	builder, _ = builder.WithSourceFromAddr(remoteAddr)
+	builder, _ = builder.WithDestinationFromAddr(localAddr)
 
-	s.Emitter.Emit(ev)
+	builder.Emit()
 }
 
 func guessTransportFromAddr(addr net.Addr) auditv1.TransportProtocol {

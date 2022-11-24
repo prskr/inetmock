@@ -8,8 +8,8 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	dns2 "gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func Test_cache_PutRecord(t *testing.T) {
@@ -42,7 +42,7 @@ func Test_cache_PutRecord(t *testing.T) {
 		t.Run(tt.name, func(tb *testing.T) {
 			tb.Parallel()
 			t := td.NewT(tb)
-			c := dns2.NewCache(dns2.WithTTL(100*time.Millisecond), dns2.WithInitialSize(500))
+			c := dns.NewCache(dns.WithTTL(100*time.Millisecond), dns.WithInitialSize(500))
 			c.PutRecord(tt.args.host, tt.args.address)
 			t.Cmp(c.ForwardLookup(tt.args.host), tt.args.address)
 			host, miss := c.ReverseLookup(tt.args.address)
@@ -57,7 +57,7 @@ func Test_cache_ForwardLookup(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		host     string
-		resolver dns2.IPResolver
+		resolver dns.IPResolver
 	}
 	type seed struct {
 		host    string
@@ -68,7 +68,7 @@ func Test_cache_ForwardLookup(t *testing.T) {
 		args  args
 		times int
 		seeds []seed
-		want  interface{}
+		want  any
 	}{
 		{
 			name: "Lookup with known entry",
@@ -87,7 +87,7 @@ func Test_cache_ForwardLookup(t *testing.T) {
 			name: "Lookup with resolver",
 			args: args{
 				host: "mail.gogle.ru",
-				resolver: dns2.IPResolverFunc(func(host string) net.IP {
+				resolver: dns.IPResolverFunc(func(host string) net.IP {
 					return netutils.Uint32ToIP(rand.Uint32())
 				}),
 			},
@@ -99,7 +99,7 @@ func Test_cache_ForwardLookup(t *testing.T) {
 		t.Run(tt.name, func(tb *testing.T) {
 			tb.Parallel()
 			t := td.NewT(tb)
-			c := dns2.NewCache(dns2.WithTTL(200*time.Millisecond), dns2.WithInitialSize(500))
+			c := dns.NewCache(dns.WithTTL(200*time.Millisecond), dns.WithInitialSize(500))
 			for _, s := range tt.seeds {
 				c.PutRecord(s.host, s.address)
 			}

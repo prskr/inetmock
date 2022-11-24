@@ -12,16 +12,16 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/multiplexing"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/multiplexing"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const (
-	name               = "http_mock"
-	handlerNameLblName = "handler_name"
+	name                     = "http_mock"
+	defaultReadHeaderTimeout = 100 * time.Millisecond
 )
 
 type httpHandler struct {
@@ -62,7 +62,7 @@ func (p *httpHandler) Start(_ context.Context, startupSpec *endpoint.StartupSpec
 	p.server = &http.Server{
 		Handler:           h2c.NewHandler(audit.EmittingHandler(p.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP, router), new(http2.Server)),
 		ConnContext:       audit.StoreConnPropertiesInContext,
-		ReadHeaderTimeout: 50 * time.Millisecond,
+		ReadHeaderTimeout: defaultReadHeaderTimeout,
 	}
 
 	for idx := range options.Rules {

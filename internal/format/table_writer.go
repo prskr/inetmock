@@ -14,7 +14,7 @@ type tblWriter struct {
 }
 
 //nolint:exhaustive
-func (t *tblWriter) Write(in interface{}) (err error) {
+func (t *tblWriter) Write(in any) (err error) {
 	v := reflect.ValueOf(in)
 
 	if v.Kind() == reflect.Ptr {

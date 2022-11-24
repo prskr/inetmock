@@ -5,8 +5,6 @@ import (
 	"net"
 
 	mdns "github.com/miekg/dns"
-
-	"gitlab.com/inetmock/inetmock/protocols/dns"
 )
 
 var (
@@ -45,11 +43,11 @@ func (r Resolver) Do(ctx context.Context, msg *mdns.Msg) (resp *mdns.Msg, err er
 	return r.Transport.RoundTrip(ctx, msg)
 }
 
-func (r Resolver) Question(ctx context.Context, question dns.Question) (resp *mdns.Msg, err error) {
+func (r Resolver) Question(ctx context.Context, question mdns.Question) (resp *mdns.Msg, err error) {
 	req := new(mdns.Msg)
 	req.Id = mdns.Id()
 	req.RecursionDesired = true
-	req.Question = []mdns.Question{mdns.Question(question)}
+	req.Question = []mdns.Question{question}
 	return r.Do(ctx, req)
 }
 

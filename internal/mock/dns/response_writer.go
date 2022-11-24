@@ -5,7 +5,7 @@ import (
 
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/internal/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/mock"
 )
 
 type ResponseWriterMock struct {

@@ -8,16 +8,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	audit_mock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func Test_httpHandler_Start(t *testing.T) {
@@ -26,16 +25,16 @@ func Test_httpHandler_Start(t *testing.T) {
 		fakeFileFS fs.FS
 	}
 	type args struct {
-		opts map[string]interface{}
+		opts map[string]any
 		req  *http.Request
 	}
 	tests := []struct {
 		name       string
 		fields     fields
 		args       args
-		wantStatus interface{}
-		wantBody   interface{}
-		wantEvent  interface{}
+		wantStatus any
+		wantBody   any
+		wantEvent  any
 		wantErr    bool
 	}{
 		{
@@ -44,7 +43,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 					},
@@ -53,7 +52,7 @@ func Test_httpHandler_Start(t *testing.T) {
 					URL: test.MustParseURL("https://www.google.de/index.html"),
 				},
 			},
-			wantEvent: td.Struct(audit.Event{}, td.StructFields{
+			wantEvent: td.Struct(new(audit.Event), td.StructFields{
 				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
 				"ProtocolDetails": td.Struct(new(audit.HTTP), td.StructFields{
 					"Host":   "www.google.de",
@@ -71,7 +70,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 					},
@@ -80,7 +79,7 @@ func Test_httpHandler_Start(t *testing.T) {
 					URL: test.MustParseURL("https://www.google.de/asdf.html"),
 				},
 			},
-			wantEvent: td.Struct(audit.Event{}, td.StructFields{
+			wantEvent: td.Struct(new(audit.Event), td.StructFields{
 				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
 				"ProtocolDetails": td.Struct(new(audit.HTTP), td.StructFields{
 					"Host":   "www.google.de",
@@ -98,7 +97,7 @@ func Test_httpHandler_Start(t *testing.T) {
 				fakeFileFS: defaultFakeFileFS,
 			},
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`PathPattern("\\.(?i)(htm|html)$") => File("default.html")`,
 						`Header("Accept", "text/html") => File("default.html")`,
@@ -111,7 +110,7 @@ func Test_httpHandler_Start(t *testing.T) {
 					},
 				},
 			},
-			wantEvent: td.Struct(audit.Event{}, td.StructFields{
+			wantEvent: td.Struct(new(audit.Event), td.StructFields{
 				"Application": auditv1.AppProtocol_APP_PROTOCOL_HTTP,
 				"ProtocolDetails": td.Struct(new(audit.HTTP), td.StructFields{
 					"Host":   "www.google.de",
@@ -126,7 +125,7 @@ func Test_httpHandler_Start(t *testing.T) {
 		{
 			name: "Error because of syntax error in rule",
 			args: args{
-				opts: map[string]interface{}{
+				opts: map[string]any{
 					"rules": []string{
 						`= > File("default.html")`,
 					},
@@ -139,15 +138,21 @@ func Test_httpHandler_Start(t *testing.T) {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := gomock.NewController(t)
 			ctx, cancel := context.WithCancel(test.Context(t))
 			t.Cleanup(cancel)
 			logger := logging.CreateTestLogger(t)
 			listener := test.NewInMemoryListener(t)
 			lifecycle := endpoint.NewStartupSpec(t.Name(), endpoint.NewUplink(listener), tt.args.opts)
-			emitterMock := audit_mock.NewMockEmitter(ctrl)
+			emitterMock := new(audit_mock.EmitterMock)
+
 			if !tt.wantErr {
-				emitterMock.EXPECT().Emit(test.GenericMatcher(t, tt.wantEvent))
+				t.Cleanup(func() {
+					emitterMock.WithCalls(func(calls *audit_mock.EmitterMockCalls) {
+						for _, call := range calls.Emit() {
+							td.Cmp(t, call.Params.Ev, tt.wantEvent)
+						}
+					})
+				})
 			}
 			handler := mock.New(logger, emitterMock, tt.fields.fakeFileFS)
 			if err := handler.Start(ctx, lifecycle); err != nil {

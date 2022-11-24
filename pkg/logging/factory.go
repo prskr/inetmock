@@ -39,7 +39,7 @@ func WithEncoding(encoding string) LoggingOption {
 	})
 }
 
-func WithInitialFields(initialFields map[string]interface{}) LoggingOption {
+func WithInitialFields(initialFields map[string]any) LoggingOption {
 	return LoggingOptionFunc(func(cfg *zap.Config) {
 		cfg.InitialFields = initialFields
 	})

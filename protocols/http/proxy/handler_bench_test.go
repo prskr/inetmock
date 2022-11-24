@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package proxy_test
 
@@ -23,7 +22,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 
-	"gitlab.com/inetmock/inetmock/internal/test/integration"
+	"inetmock.icb4dc0.de/inetmock/internal/test/integration"
 )
 
 const (

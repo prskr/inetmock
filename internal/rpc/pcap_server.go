@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 	"io"
-	"net"
 	"os"
 	"path/filepath"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"gitlab.com/inetmock/inetmock/internal/pcap"
-	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap/consumers"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 var _ rpcv1.PCAPServiceServer = (*pcapServer)(nil)
@@ -48,8 +48,10 @@ func (p *pcapServer) ListAvailableDevices(
 	context.Context,
 	*rpcv1.ListAvailableDevicesRequest,
 ) (*rpcv1.ListAvailableDevicesResponse, error) {
-	var err error
-	var devs []pcap.Device
+	var (
+		devs []pcap.Device
+		err  error
+	)
 	if devs, err = p.recorder.AvailableDevices(); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -58,7 +60,7 @@ func (p *pcapServer) ListAvailableDevices(
 	for i := range devs {
 		resp.AvailableDevices = append(resp.AvailableDevices, &rpcv1.ListAvailableDevicesResponse_PCAPDevice{
 			Name:      devs[i].Name,
-			Addresses: ipAddressesToBytes(devs[i].IPAddresses),
+			Addresses: netutils.IPAddressesToBytes(devs[i].IPAddresses),
 		})
 	}
 
@@ -96,6 +98,7 @@ func (p *pcapServer) StartPCAPFileRecording(
 	}
 
 	var result *pcap.StartRecordingResult
+	//nolint:contextcheck // is running independent of request context
 	if result, err = p.recorder.StartRecordingWithOptions(context.Background(), req.Device, consumer, opts); err != nil {
 		if errors.Is(err, pcap.ErrConsumerAlreadyRegistered) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -115,12 +118,5 @@ func (p *pcapServer) StopPCAPFileRecording(
 ) (resp *rpcv1.StopPCAPFileRecordingResponse, _ error) {
 	resp = new(rpcv1.StopPCAPFileRecordingResponse)
 	resp.Removed = p.recorder.StopRecording(request.ConsumerKey) == nil
-	return
-}
-
-func ipAddressesToBytes(addresses []net.IP) (result [][]byte) {
-	for i := range addresses {
-		result = append(result, addresses[i])
-	}
 	return
 }

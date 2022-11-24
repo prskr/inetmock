@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 
 type httpOptions struct {

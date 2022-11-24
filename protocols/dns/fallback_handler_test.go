@@ -8,7 +8,7 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func TestFallbackHandler_AnswerDNSQuestion(t *testing.T) {
@@ -21,7 +21,7 @@ func TestFallbackHandler_AnswerDNSQuestion(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

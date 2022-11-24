@@ -10,17 +10,17 @@ import (
 
 	"google.golang.org/grpc"
 
-	auditm "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"gitlab.com/inetmock/inetmock/internal/rpc/test"
-	tst "gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	auditm "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc/test"
+	tst "inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 const (
-	grpcTimeout = 100 * time.Millisecond
+	grpcTimeout = 500 * time.Millisecond
 )
 
 func Test_auditServer_RemoveFileSink(t *testing.T) {

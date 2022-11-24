@@ -9,11 +9,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"go.uber.org/zap"
 
-	logging_mock "gitlab.com/inetmock/inetmock/internal/mock/logging"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/wait"
+	logging_mock "inetmock.icb4dc0.de/inetmock/internal/mock/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit/sink"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/wait"
 )
 
 func Test_logSink_OnSubscribe(t *testing.T) {
@@ -51,7 +51,7 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 					return loggerMock
 				},
 			},
-			events: testEvents[:1],
+			events: testEvents()[:1],
 		},
 		{
 			name: "Get multiple events",
@@ -77,37 +77,38 @@ func Test_logSink_OnSubscribe(t *testing.T) {
 					return loggerMock
 				},
 			},
-			events: testEvents,
+			events: testEvents(),
 		},
 	}
 	for _, tc := range tests {
 		tt := tc
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			wg := new(sync.WaitGroup)
+			var (
+				wg  sync.WaitGroup
+				evs audit.EventStream
+				err error
+			)
 			wg.Add(len(tt.events))
 
-			logSink := sink.NewLogSink(tt.fields.loggerSetup(t, wg))
-			var evs audit.EventStream
-			var err error
-			if evs, err = audit.NewEventStream(logging.CreateTestLogger(t)); err != nil {
+			if evs, err = audit.NewEventStream(logging.CreateTestLogger(t), audit.WithBufferSize(10)); err != nil {
 				t.Errorf("NewEventStream() error = %v", err)
 			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
-			if err = evs.RegisterSink(ctx, logSink); err != nil {
+			if err = evs.RegisterSink(ctx, sink.NewLogSink(tt.fields.loggerSetup(t, &wg))); err != nil {
 				t.Errorf("RegisterSink() error = %v", err)
 			}
 
 			for _, ev := range tt.events {
-				evs.Emit(*ev)
+				evs.Emit(ev)
 			}
 
 			select {
 			case <-time.After(100 * time.Millisecond):
 				t.Errorf("not all events recorded in time")
-			case <-wait.ForWaitGroupDone(wg):
+			case <-wait.ForWaitGroupDone(&wg):
 			}
 		})
 	}

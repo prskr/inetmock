@@ -9,7 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 
-	audit "gitlab.com/inetmock/inetmock/pkg/audit"
+	audit "inetmock.icb4dc0.de/inetmock/pkg/audit"
 )
 
 // MockWriter is a mock of Writer interface.

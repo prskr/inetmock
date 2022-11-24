@@ -3,8 +3,8 @@ package sink
 import (
 	"github.com/prometheus/client_golang/prometheus"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/metrics"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/metrics"
 )
 
 func NewMetricSink() (sink audit.Sink, err error) {
@@ -26,10 +26,6 @@ func (metricSink) Name() string {
 	return "metrics"
 }
 
-func (m metricSink) OnSubscribe(evs <-chan audit.Event) {
-	go func(evs <-chan audit.Event) {
-		for ev := range evs {
-			m.eventCounter.WithLabelValues(ev.Application.String(), ev.Transport.String()).Inc()
-		}
-	}(evs)
+func (m metricSink) OnEvent(ev *audit.Event) {
+	m.eventCounter.WithLabelValues(ev.Application.String(), ev.Transport.String()).Inc()
 }

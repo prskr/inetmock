@@ -127,7 +127,7 @@ func TestConfigureLogging(t *testing.T) {
 		{
 			name: "Test configure with initialFields",
 			opts: []LoggingOption{
-				WithInitialFields(map[string]interface{}{
+				WithInitialFields(map[string]any{
 					"asdf": "hello, World",
 				}),
 			},

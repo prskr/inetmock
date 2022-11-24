@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 var (

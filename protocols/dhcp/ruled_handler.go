@@ -7,9 +7,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/internal/state"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols"
 )
 
 type (
@@ -62,12 +63,9 @@ type RuledHandler struct {
 	handlers        []ConditionalHandler
 }
 
-func (h *RuledHandler) RegisterRule(rawRule string) error {
+func (h *RuledHandler) RegisterRule(rawRule string) (err error) {
 	h.Logger.Debug("Adding routing rule", zap.String("rawRule", rawRule))
-	var (
-		rule *rules.ChainedResponsePipeline
-		err  error
-	)
+	var rule *rules.ChainedResponsePipeline
 	if rule, err = rules.Parse[rules.ChainedResponsePipeline](rawRule); err != nil {
 		return err
 	}
@@ -94,8 +92,7 @@ func (h *RuledHandler) RegisterRule(rawRule string) error {
 }
 
 func (h *RuledHandler) Handle(req, resp *dhcpv4.DHCPv4) error {
-	timer := prometheus.NewTimer(requestDurationHistogram.WithLabelValues(h.HandlerName))
-	defer timer.ObserveDuration()
+	defer prometheus.NewTimer(protocols.RequestDurationHistogram.WithLabelValues("dhcp", h.HandlerName)).ObserveDuration()
 
 	for idx := range h.handlers {
 		handler := h.handlers[idx]

@@ -13,8 +13,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 var knownResponseHandlers = map[string]func(logger logging.Logger, fakeFileFS fs.FS, args ...rules.Param) (http.Handler, error){
@@ -113,7 +113,7 @@ func JSONHandler(logger logging.Logger, _ fs.FS, args ...rules.Param) (http.Hand
 	}
 
 	jsonBytes := []byte(jsonString)
-	into := make(map[string]interface{})
+	into := make(map[string]any)
 	if err := json.Unmarshal(jsonBytes, &into); err != nil {
 		return nil, err
 	}

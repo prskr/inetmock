@@ -10,9 +10,9 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func TestStatusHandler(t *testing.T) {
@@ -25,7 +25,7 @@ func TestStatusHandler(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		want    interface{}
+		want    any
 	}{
 		{
 			name: "Get status 204",
@@ -95,7 +95,7 @@ func TestFileHandler(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		want    interface{}
+		want    any
 	}{
 		{
 			name: "Get default HTML content",
@@ -184,7 +184,7 @@ func TestJSONHandler(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -304,7 +304,7 @@ func TestJSONHandler(t *testing.T) {
 	}
 }
 
-func readerSmuggle(expected interface{}) interface{} {
+func readerSmuggle(expected any) any {
 	return td.Smuggle(func(reader io.Reader) (string, error) {
 		data, err := io.ReadAll(reader)
 		return string(data), err

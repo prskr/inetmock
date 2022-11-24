@@ -8,24 +8,22 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"github.com/maxatome/go-testdeep/td"
 	"golang.org/x/net/context/ctxhttp"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	audit_mock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func TestServer_ServeGroups_Success(t *testing.T) {
 	t.Parallel()
 
-	ctrl := gomock.NewController(t)
-	mockEmitter := audit_mock.NewMockEmitter(ctrl)
-	mockEmitter.EXPECT().Emit(gomock.Any()).MinTimes(1)
+	mockEmitter := new(audit_mock.EmitterMock)
 	testLogger := logging.CreateTestLogger(t)
 
 	listenAddr, _ := prepareServer(t, mockEmitter, testLogger)
@@ -50,6 +48,10 @@ func TestServer_ServeGroups_Success(t *testing.T) {
 		t.Errorf("Status is %d expected 204", resp.StatusCode)
 		return
 	}
+
+	mockEmitter.WithCalls(func(calls *audit_mock.EmitterMockCalls) {
+		td.Cmp(t, calls.Emit(), td.Len(td.Gt(0)))
+	})
 }
 
 func prepareServer(tb testing.TB, emitter audit.Emitter, logger logging.Logger) (*net.TCPAddr, *endpoint.Server) {
@@ -73,7 +75,7 @@ func prepareServer(tb testing.TB, emitter audit.Emitter, logger logging.Logger) 
 		Endpoints: map[string]endpoint.Spec{
 			"plain": {
 				HandlerRef: "http_mock",
-				Options: map[string]interface{}{
+				Options: map[string]any{
 					"rules": []string{`=> Status(204)`},
 				},
 			},

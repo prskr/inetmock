@@ -14,7 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/td"
 
-	certmock "gitlab.com/inetmock/inetmock/internal/mock/cert"
+	certmock "inetmock.icb4dc0.de/inetmock/internal/mock/cert"
 )
 
 const (

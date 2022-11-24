@@ -15,34 +15,35 @@ import (
 	"github.com/insomniacslk/dhcp/dhcpv4/nclient4"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/internal/state/statetest"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/dhcp"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	audit_mock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/internal/state/statetest"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/dhcp"
 )
 
 func Test_dhcpHandler_Start(t *testing.T) {
 	t.Parallel()
 	anyInterface, ifAddr := anyPhysicalInterface(t)
 	type args struct {
-		opts map[string]interface{}
+		opts map[string]any
 		mac  string
 	}
 	tests := []struct {
 		name      string
 		args      args
-		wantEvent interface{}
-		want      interface{}
+		wantEvent any
+		want      any
 		wantErr   bool
 	}{
 		{
 			name: "Exact match test",
 			args: args{
 				mac: "d1:15:b8:0c:0c:9a",
-				opts: map[string]interface{}{
-					"default": map[string]interface{}{
+				opts: map[string]any{
+					"default": map[string]any{
 						"serverID": "1.2.3.4",
 						"netmask":  "255.255.255.0",
 						"dns": []string{
@@ -68,8 +69,8 @@ func Test_dhcpHandler_Start(t *testing.T) {
 			name: "MatchMAC test",
 			args: args{
 				mac: "db:2d:f0:0f:6e:aa",
-				opts: map[string]interface{}{
-					"default": map[string]interface{}{
+				opts: map[string]any{
+					"default": map[string]any{
 						"serverID": "1.2.3.4",
 						"netmask":  "255.255.255.0",
 						"dns": []string{
@@ -103,8 +104,8 @@ func Test_dhcpHandler_Start(t *testing.T) {
 			name: "Range test",
 			args: args{
 				mac: "db:2d:f0:0f:6e:aa",
-				opts: map[string]interface{}{
-					"default": map[string]interface{}{
+				opts: map[string]any{
+					"default": map[string]any{
 						"serverID": "1.2.4.5",
 						"netmask":  "255.255.255.0",
 						"dns": []string{
@@ -138,8 +139,8 @@ func Test_dhcpHandler_Start(t *testing.T) {
 			name: "Range fallback test",
 			args: args{
 				mac: "db:2d:f0:0f:6e:aa",
-				opts: map[string]interface{}{
-					"default": map[string]interface{}{
+				opts: map[string]any{
+					"default": map[string]any{
 						"serverID": "1.2.4.5",
 						"netmask":  "255.255.255.0",
 						"dns": []string{
@@ -147,7 +148,7 @@ func Test_dhcpHandler_Start(t *testing.T) {
 						},
 						"router": "1.2.4.5",
 					},
-					"fallback": map[string]interface{}{
+					"fallback": map[string]any{
 						"type":    "range",
 						"ttl":     "1h",
 						"startIP": "1.2.4.100",
@@ -185,6 +186,7 @@ func Test_dhcpHandler_Start(t *testing.T) {
 
 			emitterMock := audit_mock.NewMockEmitter(ctrl)
 			if !tt.wantErr {
+				emitterMock.EXPECT().Builder().Return(audit.BuilderForEmitter(emitterMock)).MinTimes(1)
 				emitterMock.EXPECT().Emit(test.GenericMatcher(t, tt.wantEvent)).MinTimes(1)
 			}
 

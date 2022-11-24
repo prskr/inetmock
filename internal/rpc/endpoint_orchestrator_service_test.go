@@ -7,10 +7,10 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 func Test_endpointOrchestratorServer_ListAllServingGroups(t *testing.T) {
@@ -18,7 +18,7 @@ func Test_endpointOrchestratorServer_ListAllServingGroups(t *testing.T) {
 	tests := []struct {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{
@@ -132,7 +132,7 @@ func Test_endpointOrchestratorServer_ListAllConfiguredGroups(t *testing.T) {
 	tests := []struct {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{
@@ -261,7 +261,7 @@ func Test_endpointOrchestratorServer_StartListenerGroup(t *testing.T) {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
 		req       *rpcv1.StartListenerGroupRequest
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{
@@ -315,7 +315,7 @@ func Test_endpointOrchestratorServer_StartAllGroups(t *testing.T) {
 		name      string
 		hostSetup func(tb testing.TB) endpoint.Host
 		req       *rpcv1.StartListenerGroupRequest
-		want      interface{}
+		want      any
 		wantErr   bool
 	}{
 		{

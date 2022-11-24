@@ -1,0 +1,2 @@
+[{*.c, *.h}]
+max_line_length = 150

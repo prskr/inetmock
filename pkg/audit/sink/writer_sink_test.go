@@ -11,45 +11,47 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/wait"
+	audit_mock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit/sink"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/wait"
 )
 
-var testEvents = []*audit.Event{
-	{
-		Transport:       auditv1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
-		Application:     auditv1.AppProtocol_APP_PROTOCOL_HTTP,
-		SourceIP:        net.ParseIP("127.0.0.1").To4(),
-		DestinationIP:   net.ParseIP("127.0.0.1").To4(),
-		SourcePort:      32344,
-		DestinationPort: 80,
-		TLS: &audit.TLSDetails{
-			Version:     audit.TLSVersionToEntity(tls.VersionTLS13).String(),
-			CipherSuite: tls.CipherSuiteName(tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA),
-			ServerName:  "localhost",
-		},
-		ProtocolDetails: &audit.HTTP{
-			Method: "GET",
-			Host:   "localhost",
-			URI:    "http://localhost/asdf",
-			Proto:  "HTTP 1.1",
-			Headers: http.Header{
-				"Accept": []string{"application/json"},
+func testEvents() []*audit.Event {
+	return []*audit.Event{
+		{
+			Transport:       auditv1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
+			Application:     auditv1.AppProtocol_APP_PROTOCOL_HTTP,
+			SourceIP:        net.ParseIP("127.0.0.1").To4(),
+			DestinationIP:   net.ParseIP("127.0.0.1").To4(),
+			SourcePort:      32344,
+			DestinationPort: 80,
+			TLS: &audit.TLSDetails{
+				Version:     audit.TLSVersionToEntity(tls.VersionTLS13).String(),
+				CipherSuite: tls.CipherSuiteName(tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA),
+				ServerName:  "localhost",
+			},
+			ProtocolDetails: &audit.HTTP{
+				Method: "GET",
+				Host:   "localhost",
+				URI:    "http://localhost/asdf",
+				Proto:  "HTTP 1.1",
+				Headers: http.Header{
+					"Accept": []string{"application/json"},
+				},
 			},
 		},
-	},
-	{
-		Transport:       auditv1.TransportProtocol_TRANSPORT_PROTOCOL_UDP,
-		Application:     auditv1.AppProtocol_APP_PROTOCOL_DNS,
-		SourceIP:        net.ParseIP("::1").To16(),
-		DestinationIP:   net.ParseIP("::1").To16(),
-		SourcePort:      32344,
-		DestinationPort: 80,
-	},
+		{
+			Transport:       auditv1.TransportProtocol_TRANSPORT_PROTOCOL_UDP,
+			Application:     auditv1.AppProtocol_APP_PROTOCOL_DNS,
+			SourceIP:        net.ParseIP("::1").To16(),
+			DestinationIP:   net.ParseIP("::1").To16(),
+			SourcePort:      32344,
+			DestinationPort: 80,
+		},
+	}
 }
 
 func Test_writerCloserSink_OnSubscribe(t *testing.T) {
@@ -61,11 +63,11 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 	tests := []testCase{
 		{
 			name:   "Get a single event",
-			events: testEvents[:1],
+			events: testEvents()[:1],
 		},
 		{
 			name:   "Get multiple events",
-			events: testEvents,
+			events: testEvents(),
 		},
 	}
 	for _, tc := range tests {
@@ -102,7 +104,7 @@ func Test_writerCloserSink_OnSubscribe(t *testing.T) {
 			}
 
 			for _, ev := range tt.events {
-				evs.Emit(*ev)
+				evs.Emit(ev)
 			}
 
 			select {

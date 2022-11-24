@@ -2,29 +2,18 @@ package proxy
 
 import (
 	"github.com/elazarl/goproxy"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/cert"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/metrics"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/cert"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
-var (
-	handlerNameLblName       = "handler_name"
-	requestDurationHistogram *prometheus.HistogramVec
-)
-
-func AddHTTPProxy(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store) (err error) {
+func AddHTTPProxy(registry endpoint.HandlerRegistry, logger logging.Logger, emitter audit.Emitter, store cert.Store) {
 	logger = logger.With(
 		zap.String("protocol_handler", name),
 	)
-
-	if requestDurationHistogram, err = metrics.Histogram(name, "request_duration", "", nil, handlerNameLblName); err != nil {
-		return
-	}
 
 	registry.RegisterHandler(name, func() endpoint.ProtocolHandler {
 		return &httpProxy{
@@ -34,6 +23,4 @@ func AddHTTPProxy(registry endpoint.HandlerRegistry, logger logging.Logger, emit
 			proxy:     goproxy.NewProxyHttpServer(),
 		}
 	})
-
-	return
 }

@@ -9,10 +9,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"gitlab.com/inetmock/inetmock/internal/rpc/test"
-	tst "gitlab.com/inetmock/inetmock/internal/test"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc/test"
+	tst "inetmock.icb4dc0.de/inetmock/internal/test"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 func Test_profilingServer_ProfileDump(t *testing.T) {
@@ -20,7 +20,7 @@ func Test_profilingServer_ProfileDump(t *testing.T) {
 	tests := []struct {
 		name    string
 		req     *rpcv1.ProfileDumpRequest
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -99,7 +99,7 @@ func Test_profilingServer_CPUProfile(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{
@@ -154,7 +154,7 @@ func Test_profilingServer_Trace(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

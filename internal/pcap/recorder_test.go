@@ -12,8 +12,8 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/pcap"
-	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap/consumers"
 )
 
 type fakeWriterCloser struct {
@@ -40,8 +40,8 @@ func Test_recorder_Subscriptions(t *testing.T) {
 	type testCase struct {
 		name              string
 		requests          []subscriptionRequest
-		wantResult        interface{}
-		wantSubscriptions interface{}
+		wantResult        any
+		wantSubscriptions any
 	}
 	tests := []testCase{
 		{
@@ -133,7 +133,7 @@ func Test_recorder_StartRecordingWithOptions(t *testing.T) {
 	type testCase struct {
 		name          string
 		args          args
-		want          interface{}
+		want          any
 		wantErr       bool
 		recorderSetup func() (recorder pcap.Recorder, err error)
 	}
@@ -207,7 +207,7 @@ func Test_recorder_AvailableDevices(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
 		name    string
-		want    interface{}
+		want    any
 		wantErr bool
 	}
 	tests := []testCase{

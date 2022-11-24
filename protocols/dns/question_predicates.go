@@ -7,7 +7,7 @@ import (
 
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
 )
 
 var knownRequestFilters = map[string]func(args ...rules.Param) (QuestionPredicate, error){

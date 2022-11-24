@@ -6,15 +6,14 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	audit_mock "gitlab.com/inetmock/inetmock/internal/mock/audit"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/pprof"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	audit_mock "inetmock.icb4dc0.de/inetmock/internal/mock/audit"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/pprof"
 )
 
 func Test_pprofHandler_Start(t *testing.T) {
@@ -26,8 +25,8 @@ func Test_pprofHandler_Start(t *testing.T) {
 		name       string
 		args       args
 		wantErr    bool
-		wantStatus interface{}
-		wantEvent  interface{}
+		wantStatus any
+		wantEvent  any
 	}{
 		{
 			name: "Expect /debug/pprof/ index to succeed",
@@ -100,10 +99,13 @@ func Test_pprofHandler_Start(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := gomock.NewController(t)
-			emitter := audit_mock.NewMockEmitter(ctrl)
+			emitter := new(audit_mock.EmitterMock)
 			if !tt.wantErr {
-				emitter.EXPECT().Emit(test.GenericMatcher(t, tt.wantEvent)).MinTimes(1)
+				t.Cleanup(func() {
+					emitter.WithCalls(func(calls *audit_mock.EmitterMockCalls) {
+						td.Cmp(t, calls.Emit(), td.Len(td.Gt(0)))
+					})
+				})
 			}
 			p := pprof.New(logging.CreateTestLogger(t), emitter)
 

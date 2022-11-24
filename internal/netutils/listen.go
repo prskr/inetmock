@@ -1,55 +1,50 @@
 package netutils
 
 import (
-	"errors"
 	"net"
-	"time"
 
-	"go.uber.org/multierr"
+	"github.com/valyala/tcplisten"
 )
 
-var ErrNotATCPListener = errors.New("is not a TCP listener")
-
-func WrapToManaged(listener net.Listener) (net.Listener, error) {
-	if tcpListener, ok := listener.(*net.TCPListener); ok {
-		return &managedListener{TCPListener: tcpListener}, nil
+type (
+	TCPListenOption interface {
+		apply(cfg *tcplisten.Config)
 	}
-	return nil, ErrNotATCPListener
+	TCPListenOptionFunc func(cfg *tcplisten.Config)
+)
+
+func (f TCPListenOptionFunc) apply(cfg *tcplisten.Config) {
+	f(cfg)
 }
 
-func ListenTCP(addr *net.TCPAddr) (listener net.Listener, err error) {
-	const network = "tcp"
-	l := new(managedListener)
-	l.TCPListener, err = net.ListenTCP(network, addr)
-	if err != nil {
-		return nil, err
+var (
+	WithDeferAccept = func(deferAccept bool) TCPListenOption {
+		return TCPListenOptionFunc(func(cfg *tcplisten.Config) {
+			cfg.DeferAccept = deferAccept
+		})
 	}
 
-	return l, err
-}
-
-type managedListener struct {
-	*net.TCPListener
-}
-
-func (l *managedListener) Accept() (c net.Conn, err error) {
-	const defaultTCPKeepAlivePeriod = 30 * time.Second
-
-	c, err = l.TCPListener.Accept()
-	if err != nil {
-		return nil, err
+	WithReusePort = func(reusePort bool) TCPListenOption {
+		return TCPListenOptionFunc(func(cfg *tcplisten.Config) {
+			cfg.ReusePort = reusePort
+		})
 	}
 
-	if tcpConn, ok := c.(*net.TCPConn); ok {
-		err = multierr.Combine(
-			tcpConn.SetLinger(0),
-			tcpConn.SetKeepAlive(true),
-			tcpConn.SetKeepAlivePeriod(defaultTCPKeepAlivePeriod),
-		)
+	WithFastOpen = func(fastOpen bool) TCPListenOption {
+		return TCPListenOptionFunc(func(cfg *tcplisten.Config) {
+			cfg.FastOpen = fastOpen
+		})
 	}
-	return
-}
+)
 
-func (l *managedListener) Close() error {
-	return multierr.Append(l.TCPListener.SetDeadline(time.Now()), l.TCPListener.Close())
+func ListenTCP(addr *net.TCPAddr, opts ...TCPListenOption) (listener net.Listener, err error) {
+	const network = "tcp4"
+
+	listenerCfg := new(tcplisten.Config)
+
+	for i := range opts {
+		opts[i].apply(listenerCfg)
+	}
+
+	return listenerCfg.NewListener(network, addr.String())
 }

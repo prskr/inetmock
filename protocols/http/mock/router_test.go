@@ -8,8 +8,8 @@ import (
 	"github.com/maxatome/go-testdeep/helpers/tdhttp"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
 )
 
 func TestRouter_ServeHTTP(t *testing.T) {
@@ -26,7 +26,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		fields     fields
 		args       args
 		wantErr    bool
-		wantStatus interface{}
+		wantStatus any
 		want       string
 	}{
 		{

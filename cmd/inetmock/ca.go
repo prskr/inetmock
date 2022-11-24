@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/pkg/cert"
+	"inetmock.icb4dc0.de/inetmock/pkg/cert"
 )
 
 const (

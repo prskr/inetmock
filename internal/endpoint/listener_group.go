@@ -216,7 +216,7 @@ type ListenerEndpoint struct {
 	TLS     bool
 	Handler ProtocolHandler
 	Uplink  Uplink
-	Options map[string]interface{}
+	Options map[string]any
 }
 
 func (le ListenerEndpoint) Close(ctx context.Context) (err error) {

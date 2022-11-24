@@ -5,7 +5,7 @@ import (
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 type FallbackHandler struct {

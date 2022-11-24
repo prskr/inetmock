@@ -5,10 +5,10 @@ import (
 	"net"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/health/dns"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/health/dns"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 func TestNewDNSRuleCheck(t *testing.T) {

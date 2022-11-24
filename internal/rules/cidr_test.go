@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
 )
 
 func TestParseCIDR(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
 )
 
 var (
@@ -43,7 +43,7 @@ func Test_eventReader_Read(t *testing.T) {
 			fields: fields{
 				source: mustDecodeHex(httpPayloadBytesBigEndian),
 			},
-			wantEv:  testEvents[0],
+			wantEv:  testEvents()[0],
 			wantErr: false,
 		},
 		{
@@ -51,7 +51,7 @@ func Test_eventReader_Read(t *testing.T) {
 			fields: fields{
 				source: mustDecodeHex(dnsPayloadBytesBigEndian),
 			},
-			wantEv:  testEvents[1],
+			wantEv:  testEvents()[1],
 			wantErr: false,
 		},
 	}
@@ -66,7 +66,7 @@ func Test_eventReader_Read(t *testing.T) {
 				return
 			}
 
-			td.Cmp(t, gotEv, *tt.wantEv)
+			td.Cmp(t, gotEv, tt.wantEv)
 		})
 	}
 }

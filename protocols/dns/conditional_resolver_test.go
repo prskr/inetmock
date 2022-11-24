@@ -3,7 +3,7 @@ package dns_test
 import (
 	"testing"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func TestConditionalResolver_Matches(t *testing.T) {

@@ -4,8 +4,12 @@ builds:
     main: ./cmd/inetmock/
     flags:
       - -trimpath
+      - -a
+      - -installsuffix=cgo
     ldflags:
       - -w -s
+      - -linkmode=external
+      - -extldflags -static
     env:
       - CGO_ENABLED=0
     goos:
@@ -24,7 +28,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
 archives:
@@ -58,32 +61,6 @@ changelog:
       - '^test:'
 
 release:
-  gitlab:
+  gitea:
     owner: inetmock
     name: inetmock
-
-dockers:
-  - ids:
-      - inetmock
-      - imctl
-    goos: linux
-    goarch: amd64
-    image_templates:
-      - code.icb4dc0.de/inetmock/inetmock:latest
-      - code.icb4dc0.de/inetmock/inetmock:{{ .Tag }}
-      - code.icb4dc0.de/inetmock/inetmock:{{ .Major }}
-      - code.icb4dc0.de/inetmock/inetmock:{{ .ShortCommit}}
-      - ghcr.io/baez90/inetmock:latest
-      - ghcr.io/baez90/inetmock:{{ .Tag }}
-      - ghcr.io/baez90/inetmock:{{ .Major }}
-      - ghcr.io/baez90/inetmock:{{ .ShortCommit}}
-
-    dockerfile: build/docker/inetmock.dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-    extra_files:
-      - config-container.yaml
-      - assets/

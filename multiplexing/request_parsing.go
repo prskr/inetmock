@@ -33,7 +33,7 @@ func parseHTTPVersion(bufferedReader *bufio.Reader) HTTPVersion {
 		return HTTPVersion2
 	}
 
-	for i := 4; i < maxHTTPRead; i++ {
+	for i := 8; i < maxHTTPRead; i++ {
 		if b, err = bufferedReader.Peek(i); err != nil {
 			return HTTPVersionUnknown
 		} else if bytes.HasSuffix(b, []byte("\r\n")) {

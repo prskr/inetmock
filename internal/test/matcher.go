@@ -11,10 +11,10 @@ import (
 
 type genericMatcher struct {
 	tb       testing.TB
-	expected interface{}
+	expected any
 }
 
-func GenericMatcher(tb testing.TB, expected interface{}) gomock.Matcher {
+func GenericMatcher(tb testing.TB, expected any) gomock.Matcher {
 	tb.Helper()
 	return &genericMatcher{
 		tb:       tb,
@@ -22,7 +22,7 @@ func GenericMatcher(tb testing.TB, expected interface{}) gomock.Matcher {
 	}
 }
 
-func (g genericMatcher) Matches(x interface{}) bool {
+func (g genericMatcher) Matches(x any) bool {
 	g.tb.Helper()
 	return td.Cmp(g.tb, x, g.expected)
 }

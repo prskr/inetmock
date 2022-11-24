@@ -2,16 +2,35 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"github.com/magefile/mage/target"
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
+const compilationCommandFormat = `clang \
+-Wno-unused-value \
+-Wno-pointer-sign \
+-Wno-compare-distinct-pointer-types \
+-Wunused \
+-Wall \
+-fno-stack-protector \
+-fno-ident \
+-g \
+-O2 \
+-emit-llvm %s -c -o - | llc -march=bpf -mcpu=probe -filetype=obj -o %s`
+
 func Generate(ctx context.Context) error {
 	errorGroup, groupCtx := errgroup.WithContext(ctx)
+
+	errorGroup.Go(func() error {
+		return ensureGoTool("mockgen", "github.com/golang/mock/mockgen", "v1.6.0")
+	})
 
 	errorGroup.Go(func() error {
 		return ensureGoTool("protoc-gen-go", "google.golang.org/protobuf/cmd/protoc-gen-go", "latest")
@@ -29,7 +48,7 @@ func Generate(ctx context.Context) error {
 		return err
 	}
 
-	mg.Deps(GenerateProtobuf, GenerateGo)
+	mg.Deps(GenerateProtobuf, GenerateGo, CompileEBPF)
 
 	return nil
 }
@@ -47,7 +66,13 @@ func GenerateProtobuf() error {
 		return err
 	}
 
-	if lastProtobufGeneration.After(lastProtobufModification) {
+	if err != nil {
+		return err
+	}
+
+	logger.Debug("Determined last time protobuf files where modified", zap.Time("lastProtobufModification", lastProtobufModification))
+
+	if lastProtobufGeneration.After(lastProtobufModification) && !GenerateAlways {
 		logger.Info("Skipping unnecessary protobuf generation")
 		return nil
 	}
@@ -68,10 +93,41 @@ func GenerateGo() error {
 		return err
 	}
 
-	if lastMockGeneration.After(lastSourceModification) {
+	logger.Debug("Determined last time mocks where generated", zap.Time("lastMockGeneration", lastMockGeneration))
+
+	if lastMockGeneration.After(lastSourceModification) && !GenerateAlways {
 		logger.Info("Skipping unnecessary 'go generate' invocation")
 		return nil
 	}
 
 	return sh.RunV("go", "generate", "-x", "./...")
+}
+
+func CompileEBPF() error {
+	return multierr.Combine(
+		compileEBPFTarget("nat"),
+		compileEBPFTarget("firewall"),
+		compileEBPFTarget("tests"),
+	)
+}
+
+func compileEBPFTarget(targetName string) error {
+	var (
+		eBPFSourceDirectory = filepath.Join("netflow", "ebpf")
+		outFilePath         = filepath.Join(eBPFSourceDirectory, fmt.Sprintf("%s.o", targetName))
+		sourceFilePath      = filepath.Join(eBPFSourceDirectory, fmt.Sprintf("%s.c", targetName))
+		logger              = zap.L().With(zap.String("target", targetName))
+	)
+
+	if compilationRequired, err := target.Glob(outFilePath, sourceFilePath, filepath.Join(eBPFSourceDirectory, "*.h")); err != nil {
+		return err
+	} else if compilationRequired || GenerateAlways {
+		compilationCmd := fmt.Sprintf(compilationCommandFormat, sourceFilePath, outFilePath)
+		logger.Debug("Compile eBPF", zap.String("cmd", compilationCmd))
+		return sh.RunV("sh", "-c", compilationCmd)
+	}
+
+	logger.Info("Skipping eBPF recompilation")
+
+	return nil
 }

@@ -5,7 +5,7 @@ import (
 
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
 )
 
 type RuleHandler struct {
@@ -35,11 +35,8 @@ func (r RuleHandler) AnswerDNSQuestion(q Question) (ResourceRecord, error) {
 	return nil, ErrNoAnswerForQuestion
 }
 
-func (r *RuleHandler) RegisterRule(rawRule string) error {
-	var (
-		rule *rules.SingleResponsePipeline
-		err  error
-	)
+func (r *RuleHandler) RegisterRule(rawRule string) (err error) {
+	var rule *rules.SingleResponsePipeline
 	if rule, err = rules.Parse[rules.SingleResponsePipeline](rawRule); err != nil {
 		return err
 	}

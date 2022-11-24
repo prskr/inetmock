@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "audit/v1/http_details.proto";
 import "audit/v1/dns_details.proto";
 import "audit/v1/dhcp_details.proto";
+import "audit/v1/netmon_details.proto";
 
 enum TransportProtocol {
   TRANSPORT_PROTOCOL_UNSPECIFIED = 0;
@@ -52,5 +53,6 @@ message EventEntity {
     HTTPDetailsEntity http = 20;
     DNSDetailsEntity dns = 21;
     DHCPDetailsEntity dhcp = 22;
+    NetMonDetailsEntity net_mon = 23;
   }
 }

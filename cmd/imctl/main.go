@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"gitlab.com/inetmock/inetmock/internal/app"
+	"inetmock.icb4dc0.de/inetmock/internal/app"
 )
 
 const (
@@ -36,7 +36,7 @@ func main() {
 			Short:       "IMCTL is the CLI app to interact with an INetMock server",
 			LogEncoding: "console",
 			Config:      &cfg,
-			SubCommands: []*cobra.Command{healthCmd, auditCmd, pcapCmd, checkCmd, pprofCmd, endpointsCmd},
+			SubCommands: []*cobra.Command{healthCmd, auditCmd, pcapCmd, checkCmd, pprofCmd, endpointsCmd, netMonCmd},
 			LateInitTasks: []func(cmd *cobra.Command, args []string) (err error){
 				initGRPCConnection,
 			},

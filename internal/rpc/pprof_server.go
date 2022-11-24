@@ -1,28 +1,22 @@
 package rpc
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
 	"sort"
-	"sync"
 	"time"
 
+	"github.com/valyala/bytebufferpool"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 var (
-	bufferPool = sync.Pool{
-		New: func() interface{} {
-			return bytes.NewBuffer(nil)
-		},
-	}
 	profilesApplicableToGCRequest = []string{
 		"heap",
 	}
@@ -54,8 +48,8 @@ func (profilingServer) ProfileDump(_ context.Context, req *rpcv1.ProfileDumpRequ
 		gcIfRequired(req.ProfileName)
 	}
 
-	outBuffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(outBuffer)
+	outBuffer := bytebufferpool.Get()
+	defer bytebufferpool.Put(outBuffer)
 	if err := profile.WriteTo(outBuffer, int(req.Debug)); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to collect profile: %v", err)
 	}
@@ -110,8 +104,8 @@ type profileDataCollector struct {
 }
 
 func (c profileDataCollector) Collect(profileDuration time.Duration) ([]byte, error) {
-	outBuffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(outBuffer)
+	outBuffer := bytebufferpool.Get()
+	defer bytebufferpool.Put(outBuffer)
 
 	if err := c.InitDelegate(outBuffer); err != nil {
 		return nil, err

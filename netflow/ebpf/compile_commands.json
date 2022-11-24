@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf",
+  "command": "/usr/bin/cc  -I/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/. -std=gnu11 -o CMakeFiles/nat.dir/nat.c.o -c /home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/nat.c",
+  "file": "/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/nat.c"
+},
+{
+  "directory": "/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf",
+  "command": "/usr/bin/cc  -I/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/. -std=gnu11 -o CMakeFiles/firewall.dir/firewall.c.o -c /home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/firewall.c",
+  "file": "/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/firewall.c"
+},
+{
+  "directory": "/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf",
+  "command": "/usr/bin/cc  -I/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/. -std=gnu11 -o CMakeFiles/tests.dir/tests.c.o -c /home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/tests.c",
+  "file": "/home/baez/sources/Gitlab/inetmock/inetmock/netflow/ebpf/tests.c"
+}
+]

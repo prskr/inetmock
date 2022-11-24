@@ -7,14 +7,14 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
 )
 
 func TestMsgPackEncoding_Encode(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		v interface{}
+		v any
 	}
 	tests := []struct {
 		name string

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
 )
 
 var knownRequestFilters = map[string]func(args ...rules.Param) (RequestFilter, error){

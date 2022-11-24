@@ -8,7 +8,7 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns/client"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns/client"
 )
 
 func TestTraditionalTransport_RoundTrip(t *testing.T) {
@@ -16,7 +16,7 @@ func TestTraditionalTransport_RoundTrip(t *testing.T) {
 	tests := []struct {
 		name     string
 		question *mdns.Msg
-		wantResp interface{}
+		wantResp any
 		wantErr  bool
 	}{
 		{

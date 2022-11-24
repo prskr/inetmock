@@ -16,9 +16,9 @@ func GoImports() error {
 
 	return sh.RunV(
 		"goimports",
-		"-local=gitlab.com/inetmock/inetmock",
+		"-local=inetmock.icb4dc0.de/inetmock",
 		"-w",
-		workingDir,
+		WorkingDir,
 	)
 }
 
@@ -26,5 +26,5 @@ func GoFumpt() error {
 	if err := ensureGoTool("gofumpt", "mvdan.cc/gofumpt", "latest"); err != nil {
 		return err
 	}
-	return sh.RunV("gofumpt", "-l", "-w", workingDir)
+	return sh.RunV("gofumpt", "-l", "-w", WorkingDir)
 }

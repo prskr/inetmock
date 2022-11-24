@@ -7,7 +7,7 @@ import (
 
 	mdns "github.com/miekg/dns"
 
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
 )
 
 func mustReverseAddr(addr string) string {

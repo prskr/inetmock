@@ -5,9 +5,9 @@ import (
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/protocols/dhcp"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/protocols/dhcp"
 )
 
 func TestRequestFiltersForRoutingRule(t *testing.T) {

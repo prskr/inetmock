@@ -7,12 +7,12 @@ import (
 )
 
 type Mapping interface {
-	MapTo(in interface{}) (interface{}, error)
+	MapTo(in any) (any, error)
 }
 
-type MappingFunc func(in interface{}) (interface{}, error)
+type MappingFunc func(in any) (any, error)
 
-func (m MappingFunc) MapTo(in interface{}) (interface{}, error) {
+func (m MappingFunc) MapTo(in any) (any, error) {
 	return m(in)
 }
 
@@ -21,7 +21,7 @@ type OptionByTypeDecoderBuilder struct {
 	Mappings   map[string]Mapping
 }
 
-func NewOptionByTypeDecoderBuilderFor(opt interface{}) OptionByTypeDecoderBuilder {
+func NewOptionByTypeDecoderBuilderFor(opt any) OptionByTypeDecoderBuilder {
 	return OptionByTypeDecoderBuilder{
 		OptionType: reflect.TypeOf(opt).Elem(),
 		Mappings:   make(map[string]Mapping),
@@ -29,15 +29,15 @@ func NewOptionByTypeDecoderBuilderFor(opt interface{}) OptionByTypeDecoderBuilde
 }
 
 func (o *OptionByTypeDecoderBuilder) AddMappingToType(typeName string, targetType reflect.Type) *OptionByTypeDecoderBuilder {
-	o.Mappings[typeName] = MappingFunc(func(in interface{}) (interface{}, error) {
+	o.Mappings[typeName] = MappingFunc(func(in any) (any, error) {
 		instance := reflect.New(targetType).Interface()
 		return instance, mapstructure.Decode(in, instance)
 	})
 	return o
 }
 
-func (o *OptionByTypeDecoderBuilder) AddMappingToProvider(typeName string, provider func() interface{}) *OptionByTypeDecoderBuilder {
-	o.Mappings[typeName] = MappingFunc(func(data interface{}) (interface{}, error) {
+func (o *OptionByTypeDecoderBuilder) AddMappingToProvider(typeName string, provider func() any) *OptionByTypeDecoderBuilder {
+	o.Mappings[typeName] = MappingFunc(func(data any) (any, error) {
 		instance := provider()
 		return instance, mapstructure.Decode(data, instance)
 	})
@@ -53,7 +53,7 @@ func (o *OptionByTypeDecoderBuilder) AddMappingToMapper(
 }
 
 func (o OptionByTypeDecoderBuilder) Build() mapstructure.DecodeHookFuncType {
-	return func(from reflect.Type, to reflect.Type, data interface{}) (interface{}, error) {
+	return func(from reflect.Type, to reflect.Type, data any) (any, error) {
 		if from.Kind() != reflect.Map {
 			return data, nil
 		}

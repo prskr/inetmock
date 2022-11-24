@@ -6,7 +6,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
 )
 
 func TestResult_IsHealthy(t *testing.T) {
@@ -116,14 +116,14 @@ func Test_resultWriter_WriteResult(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want interface{}
+		want any
 	}{
 		{
 			name: "Successful result",
 			args: args{
 				checkName: "Sample",
 			},
-			want: td.Map(health.Result{}, map[interface{}]interface{}{
+			want: td.Map(health.Result{}, map[any]any{
 				"Sample": nil,
 			}),
 		},
@@ -133,7 +133,7 @@ func Test_resultWriter_WriteResult(t *testing.T) {
 				checkName: "Sample",
 				result:    errors.New("critical error"),
 			},
-			want: td.Map(health.Result{}, map[interface{}]interface{}{
+			want: td.Map(health.Result{}, map[any]any{
 				"Sample": errors.New("critical error"),
 			}),
 		},
@@ -143,7 +143,7 @@ func Test_resultWriter_WriteResult(t *testing.T) {
 				checkName: "Sample",
 				result:    errors.New("critical error"),
 			},
-			want: td.Map(health.Result{}, map[interface{}]interface{}{
+			want: td.Map(health.Result{}, map[any]any{
 				"Sample": errors.New("critical error"),
 			}),
 		},
@@ -164,7 +164,7 @@ func TestResult_MarshalJSON(t *testing.T) {
 	tests := []struct {
 		name    string
 		result  health.Result
-		want    interface{}
+		want    any
 		wantErr bool
 	}{
 		{

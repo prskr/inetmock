@@ -10,13 +10,19 @@ import (
 	"time"
 
 	mdns "github.com/miekg/dns"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/protocols"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
+)
+
+const (
+	defaultReadHeaderTimeout = 100 * time.Millisecond
 )
 
 type Server struct {
@@ -43,13 +49,14 @@ func NewServer(handler http.Handler) *Server {
 		server: &http.Server{
 			Handler:           h2c.NewHandler(mux, new(http2.Server)),
 			ConnContext:       audit.StoreConnPropertiesInContext,
-			ReadHeaderTimeout: 50 * time.Millisecond,
+			ReadHeaderTimeout: defaultReadHeaderTimeout,
 		},
 	}
 }
 
-func DNSQueryHandler(logger logging.Logger, handler dns.Handler) http.Handler {
+func DNSQueryHandler(logger logging.Logger, name string, handler dns.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		defer prometheus.NewTimer(protocols.RequestDurationHistogram.WithLabelValues("doh", name)).ObserveDuration()
 		msg, err := getMsgFromRequest(request)
 		if err != nil {
 			logger.Error("Failed to get request from request", zap.Error(err))

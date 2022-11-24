@@ -9,16 +9,17 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	"gitlab.com/inetmock/inetmock/pkg/wait"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit/sink"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/wait"
 )
 
-var (
-	noOpSink   = sink.NewNoOpSink("test defaultSink")
-	testEvents = []*audit.Event{
+var noOpSink = sink.NewNoOpSink("test defaultSink")
+
+func testEvents() []*audit.Event {
+	return []*audit.Event{
 		{
 			Transport:       auditv1.TransportProtocol_TRANSPORT_PROTOCOL_TCP,
 			Application:     auditv1.AppProtocol_APP_PROTOCOL_HTTP,
@@ -50,13 +51,13 @@ var (
 			DestinationPort: 80,
 		},
 	}
-)
+}
 
 func wgMockSink(tb testing.TB, wg *sync.WaitGroup) audit.Sink {
 	tb.Helper()
 	return sink.NewGenericSink(
 		"WG mock sink",
-		func(event audit.Event) {
+		func(event *audit.Event) {
 			tb.Logf("Got event = %v", event)
 			wg.Done()
 		},
@@ -145,7 +146,7 @@ func Test_eventStream_Emit(t *testing.T) {
 			subscribe: true,
 			args: args{
 				opts: []audit.EventStreamOption{},
-				evs:  testEvents[:1],
+				evs:  testEvents()[:1],
 			},
 		},
 		{
@@ -153,14 +154,14 @@ func Test_eventStream_Emit(t *testing.T) {
 			subscribe: true,
 			args: args{
 				opts: []audit.EventStreamOption{},
-				evs:  testEvents,
+				evs:  testEvents(),
 			},
 		},
 		{
-			name: "Emit without subscribe sink",
+			name: "emit without subscribe sink",
 			args: args{
 				opts: []audit.EventStreamOption{audit.WithBufferSize(0)},
-				evs:  testEvents[:1],
+				evs:  testEvents()[:1],
 			},
 			subscribe: false,
 		},
@@ -195,7 +196,7 @@ func Test_eventStream_Emit(t *testing.T) {
 
 			go func(evs []*audit.Event, wg *sync.WaitGroup) {
 				for _, ev := range evs {
-					e.Emit(*ev)
+					e.Emit(ev)
 					wg.Done()
 				}
 			}(tt.args.evs, emittedWaitGroup)

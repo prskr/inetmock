@@ -11,11 +11,11 @@ import (
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/internal/state"
-	"gitlab.com/inetmock/inetmock/internal/state/statetest"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/protocols/dhcp"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/internal/state/statetest"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/protocols/dhcp"
 )
 
 const defaultTTL = 5 * time.Minute
@@ -37,7 +37,7 @@ func TestRangeMessageHandler_Handle(t *testing.T) {
 		fields     fields
 		req        *dhcpv4.DHCPv4
 		storeSetup statetest.StoreSetup
-		want       interface{}
+		want       any
 		wantErr    bool
 	}{
 		{

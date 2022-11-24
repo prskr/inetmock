@@ -8,8 +8,8 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	dnsmock "gitlab.com/inetmock/inetmock/internal/mock/dns"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	dnsmock "inetmock.icb4dc0.de/inetmock/internal/mock/dns"
 )
 
 const (
@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	incrementalIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
-		if m, ok := in.(map[string]interface{}); ok {
+	incrementalIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in any) (any, error) {
+		if m, ok := in.(map[string]any); ok {
 			if cidr, ok := m[cidrKey].(string); ok {
 				_, n, err := net.ParseCIDR(cidr)
 				if err != nil {
@@ -33,8 +33,8 @@ var (
 		}
 		return nil, errors.New("couldn't convert to map structure")
 	})
-	randomIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
-		if m, ok := in.(map[string]interface{}); ok {
+	randomIPMapping endpoint.Mapping = endpoint.MappingFunc(func(in any) (any, error) {
+		if m, ok := in.(map[string]any); ok {
 			if cidr, ok := m[cidrKey].(string); ok {
 				_, n, err := net.ParseCIDR(cidr)
 				if err != nil {
@@ -46,24 +46,7 @@ var (
 		return nil, errors.New("couldn't convert to map structure")
 	})
 	ttlCacheMapping endpoint.Mapping = endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
-		var (
-			cacheOpts = &struct {
-				TTL             time.Duration
-				InitialCapacity int
-			}{}
-			decoderCfg = &mapstructure.DecoderConfig{
-				DecodeHook: mapstructure.StringToTimeDurationHookFunc(),
-				Result:     cacheOpts,
-			}
-		)
-
-		if decoder, err := mapstructure.NewDecoder(decoderCfg); err != nil {
-			return nil, err
-		} else if err = decoder.Decode(in); err != nil {
-			return nil, err
-		} else {
-			return NewCache(WithInitialSize(cacheOpts.InitialCapacity), WithTTL(cacheOpts.TTL)), nil
-		}
+		return GlobalCache(), nil
 	})
 )
 

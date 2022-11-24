@@ -6,8 +6,8 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
 )
 
 const (
@@ -50,7 +50,7 @@ func LoadFromConfig(startupSpec *endpoint.StartupSpec, stateStore state.KVStore)
 }
 
 func rangeHandlerMappingFunc(store state.KVStore) endpoint.Mapping {
-	return endpoint.MappingFunc(func(in interface{}) (interface{}, error) {
+	return endpoint.MappingFunc(func(in any) (any, error) {
 		h := &RangeMessageHandler{
 			Store: store,
 		}

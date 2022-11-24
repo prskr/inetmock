@@ -10,16 +10,17 @@ import (
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/multiplexing"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
-	"gitlab.com/inetmock/inetmock/pkg/cert"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/multiplexing"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/cert"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const (
-	name = "http_proxy"
+	name                     = "http_proxy"
+	defaultReadHeaderTimeout = 100 * time.Millisecond
 )
 
 type httpProxy struct {
@@ -43,7 +44,7 @@ func (h *httpProxy) Start(_ context.Context, startupSpec *endpoint.StartupSpec) 
 	h.server = &http.Server{
 		Handler:           audit.EmittingHandler(h.emitter, auditv1.AppProtocol_APP_PROTOCOL_HTTP_PROXY, h.proxy),
 		ConnContext:       audit.StoreConnPropertiesInContext,
-		ReadHeaderTimeout: 50 * time.Millisecond,
+		ReadHeaderTimeout: defaultReadHeaderTimeout,
 	}
 	h.logger = h.logger.With(
 		zap.String("handler_name", startupSpec.Name),

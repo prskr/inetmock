@@ -8,9 +8,9 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
-	"gitlab.com/inetmock/inetmock/pkg/health/dns"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/pkg/health/dns"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 func TestCheckForRule(t *testing.T) {
@@ -22,7 +22,7 @@ func TestCheckForRule(t *testing.T) {
 	tests := []struct {
 		name          string
 		args          args
-		wantResp      interface{}
+		wantResp      any
 		wantParseErr  bool
 		wantErr       bool
 		wantResolvErr bool
@@ -136,7 +136,7 @@ func TestPTRInitiator(t *testing.T) {
 	tests := []struct {
 		name          string
 		args          args
-		wantResp      interface{}
+		wantResp      any
 		wantErr       bool
 		wantResolvErr bool
 	}{
@@ -254,7 +254,7 @@ func TestAorAAAAInitiator(t *testing.T) {
 	tests := []struct {
 		name          string
 		args          args
-		wantResp      interface{}
+		wantResp      any
 		wantErr       bool
 		wantResolvErr bool
 	}{

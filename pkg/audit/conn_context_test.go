@@ -8,7 +8,7 @@ import (
 
 	"github.com/soheilhy/cmux"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
 )
 
 func TestStoreConnPropertiesInContext(t *testing.T) {

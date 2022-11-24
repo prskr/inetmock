@@ -21,7 +21,7 @@ func Test_TTL_UpdateTTL(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   interface{}
+		want   any
 	}{
 		{
 			name: "Already evicted item",

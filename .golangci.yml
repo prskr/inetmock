@@ -5,7 +5,7 @@ linters-settings:
     lines: 100
     statements: 50
   gci:
-    local-prefixes: gitlab.com/inetmock/inetmock
+    local-prefixes: inetmock.icb4dc0.de/inetmock
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -18,13 +18,16 @@ linters-settings:
       - ifElseChain
       - octalLiteral
       - wrapperFunc
-    settings:
-      hugeParam:
-        sizeThreshold: 200
+      # see https://github.com/golangci/golangci-lint/issues/2649
+      - hugeParam
+      - rangeValCopy
+    # settings:
+    #   hugeParam:
+    #     sizeThreshold: 200
   gocyclo:
     min-complexity: 15
   goimports:
-    local-prefixes: gitlab.com/inetmock/inetmock
+    local-prefixes: inetmock.icb4dc0.de/inetmock
   golint:
     min-confidence: 0
   gomnd:
@@ -36,15 +39,34 @@ linters-settings:
           - case
           - condition
           - return
+  gomoddirectives:
+    replace-allow-list:
+      # for security reason pinned to newer versions
+      - github.com/moby/buildkit
+      - github.com/containerd/containerd
+      - github.com/docker/cli
+      - github.com/docker/docker
+      - github.com/google/gopacket
+      - github.com/gorilla/mux
+      - github.com/opencontainers/runc
+      - golang.org/x/text
+      - gopkg.in/yaml.v2
+      - k8s.io/api
+      - k8s.io/apimachinery
+      - k8s.io/client-go
+
   govet:
     check-shadowing: true
     enable-all: true
     disable:
       - fieldalignment
+      # see https://github.com/golangci/golangci-lint/issues/2649
+      - nilness
+      - unusedwrite
   importas:
     no-unaliased: true
     alias:
-      - pkg: gitlab.com/inetmock/inetmock/pkg/(audit|rpc)/(v[\w\d]+)
+      - pkg: inetmock.icb4dc0.de/inetmock/pkg/(audit|rpc)/(v[\w\d]+)
         alias: $1$2
       - pkg: github.com/miekg/dns
         alias: mdns
@@ -59,37 +81,43 @@ linters-settings:
     require-specific: false # don't require nolint directives to be specific about which linter is being skipped
 
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
+    - contextcheck
     - dogsled
     - dupl
     - errcheck
+    - errchkjson
+    - errname
+    - errorlint
     - exhaustive
     - exportloopref
     - funlen
     - gocognit
     - goconst
-    - gocritic
+    # - gocritic
     - gocyclo
     - godox
     - gofumpt
     - goimports
+    - gomoddirectives
     - gomnd
     - gosec
     - gosimple
     - govet
     - importas
     - ineffassign
+    # - ireturn - enable later
     - lll
     - misspell
     - nakedret
     - nestif
+    - nilnil
     - noctx
     - nolintlint
     - paralleltest
     - prealloc
+    - predeclared
     - promlinter
     - staticcheck
     - stylecheck
@@ -100,14 +128,17 @@ linters:
     - unparam
     - whitespace
     - unused
+    - wastedassign
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - dupl
         - funlen
+        - gocognit
+        - gomnd
         - govet
         - dupl
     - path: magefiles/.*\.go
@@ -124,6 +155,7 @@ run:
     - ".*\\.pb\\.go$"
     - ".*.mock.\\.go$"
   modules-download-mode: readonly
+  go: "1.19"
   timeout: 5m
 
 service:

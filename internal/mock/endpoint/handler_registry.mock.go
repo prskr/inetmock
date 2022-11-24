@@ -9,7 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 
-	endpoint "gitlab.com/inetmock/inetmock/internal/endpoint"
+	endpoint "inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 
 // MockHandlerRegistry is a mock of HandlerRegistry interface.

@@ -5,8 +5,8 @@ import (
 	"net"
 	"sync"
 
-	"gitlab.com/inetmock/inetmock/internal/app"
-	"gitlab.com/inetmock/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/app"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
 )
 
 type RandomIPResolver struct {

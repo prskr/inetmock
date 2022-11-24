@@ -5,14 +5,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net"
 	"sync"
 
 	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	net "inetmock.icb4dc0.de/inetmock/internal/net"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 var (
@@ -118,6 +117,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func (s *Server) ShutdownOnCancel(ctx context.Context) {
 	go func() {
 		<-ctx.Done()
+		//nolint:contextcheck // ctx cannot be derived for this
 		if err := s.Shutdown(context.Background()); err != nil {
 			s.lock.Lock()
 			defer s.lock.Unlock()
@@ -207,7 +207,12 @@ func (s *Server) setupUplink(grp *ListenerGroup) (u *Uplink, err error) {
 	case *net.UDPAddr:
 		u.PacketConn, err = net.ListenUDP("udp", a)
 	case *net.TCPAddr:
-		u.Listener, err = netutils.ListenTCP(a)
+		u.Listener, err = net.ListenTCP(
+			a,
+			net.WithReusePort(true),
+			net.WithFastOpen(true),
+			net.WithDeferAccept(true),
+		)
 	}
 	return
 }

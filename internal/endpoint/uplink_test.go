@@ -8,15 +8,15 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 
 func TestNewUplink(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name string
-		conn interface{}
-		want interface{}
+		conn any
+		want any
 	}{
 		{
 			name: "nil value want empty struct",

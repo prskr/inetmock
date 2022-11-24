@@ -18,13 +18,14 @@ import (
 	v1Health "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/pcap"
-	"gitlab.com/inetmock/inetmock/internal/rpc/middleware"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc/middleware"
+	"inetmock.icb4dc0.de/inetmock/netflow"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 const gracefulShutdownTimeout = 5 * time.Second
@@ -35,12 +36,14 @@ type INetMockAPI interface {
 }
 
 type inetmockAPI struct {
-	lock          sync.Locker
+	lock          sync.Mutex
 	url           *url.URL
 	server        *grpc.Server
 	logger        logging.Logger
 	checker       health.Checker
 	eventStream   audit.EventStream
+	fw            *netflow.Firewall
+	nat           *netflow.NAT
 	epHost        endpoint.Host
 	auditDataDir  string
 	pcapDataDir   string
@@ -52,15 +55,18 @@ func NewINetMockAPI(
 	logger logging.Logger,
 	checker health.Checker,
 	eventStream audit.EventStream,
+	fw *netflow.Firewall,
+	nat *netflow.NAT,
 	epHost endpoint.Host,
 	auditDataDir, pcapDataDir string,
 ) INetMockAPI {
 	return &inetmockAPI{
-		lock:         new(sync.Mutex),
 		url:          u,
 		logger:       logger.Named("api"),
 		checker:      checker,
 		eventStream:  eventStream,
+		fw:           fw,
+		nat:          nat,
 		epHost:       epHost,
 		auditDataDir: auditDataDir,
 		pcapDataDir:  pcapDataDir,
@@ -91,6 +97,7 @@ func (i *inetmockAPI) StartServer() (err error) {
 	rpcv1.RegisterPCAPServiceServer(i.server, NewPCAPServer(i.pcapDataDir, pcap.NewRecorder()))
 	rpcv1.RegisterProfilingServiceServer(i.server, NewProfilingServer())
 	rpcv1.RegisterEndpointOrchestratorServiceServer(i.server, NewEndpointOrchestratorServer(i.logger, i.epHost))
+	rpcv1.RegisterNetFlowControlServiceServer(i.server, NewNetFlowControlServiceServer(i.fw, i.nat))
 
 	reflection.Register(i.server)
 

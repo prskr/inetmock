@@ -1,11 +1,11 @@
 package state
 
 type Encoder interface {
-	Encode(v interface{}) (data []byte, err error)
+	Encode(v any) (data []byte, err error)
 }
 
 type Decoder interface {
-	Decode(data []byte, v interface{}) error
+	Decode(data []byte, v any) error
 }
 
 type EncoderDecoder interface {

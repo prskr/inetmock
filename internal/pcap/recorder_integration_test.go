@@ -19,10 +19,10 @@ import (
 	"github.com/maxatome/go-testdeep/td"
 	"golang.org/x/net/context/ctxhttp"
 
-	"gitlab.com/inetmock/inetmock/internal/pcap"
-	"gitlab.com/inetmock/inetmock/internal/pcap/consumers"
-	"gitlab.com/inetmock/inetmock/internal/test"
-	"gitlab.com/inetmock/inetmock/internal/test/integration"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap/consumers"
+	"inetmock.icb4dc0.de/inetmock/internal/test"
+	"inetmock.icb4dc0.de/inetmock/internal/test/integration"
 )
 
 const (

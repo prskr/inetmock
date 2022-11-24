@@ -1,0 +1,230 @@
+x-response-rules: &httpResponseRules
+  rules:
+    - Method("GET") -> Header("Accept", "application/octet-stream") => File("sample.exe")
+    - Method("GET") -> Header("Accept", "image/jpeg") => File("default.jpg")
+    - Method("GET") -> PathPattern(".*\\.(?i)(jpg|jpeg)$") => File("default.jpg")
+    - Method("GET") -> Header("Accept", "image/png") => File("default.png")
+    - Method("GET") -> PathPattern(".*\\.(?i)png$") => File("default.png")
+    - Method("GET") -> Header("Accept", "image/gif") => File("default.gif")
+    - Method("GET") -> PathPattern(".*\\.(?i)gif$") => File("default.gif")
+    - Method("GET") -> Header("Accept", "image/x-icon") => File("default.ico")
+    - Method("GET") -> PathPattern(".*\\.(?i)ico$") => File("default.ico")
+    - Method("GET") -> Header("Accept", "text/plain") => File("default.txt")
+    - Method("GET") -> PathPattern(".*\\.(?i)txt$") => File("default.txt")
+    - Method("GET") -> Header("Accept", "text/html") => File("default.html")
+    - Method("GET") -> PathPattern(".*\\.(?i)htm(l)?$") => File("default.html")
+    - Method("GET") => File("default.html")
+    - => Status(204)
+
+x-dns-response-rules: &dnsResponseRules
+  options:
+    ttl: 30s
+    cache:
+      type: inMemory
+      ttl: 30s
+      initialCapacity: 500
+    rules:
+      - A(`.*\\.google\\.com`) => IP(1.1.1.1)
+      - AAAA(`.*\\.google\\.com`) => IP(1.1.1.1)
+      - A(`.*\\.reddit\\.com`) => IP(2.2.2.2)
+      - AAAA(`.*\\.reddit\\.com`) => IP(2.2.2.2)
+      - A(`.*\\.cloudflare\\.com`) => Random(10.1.0.0/16)
+      - AAAA(`.*\\.cloudflare\\.com`) => Random(10.1.0.0/16)
+      - A(`.*\\.stackoverflow\\.com`) => Incremental(10.20.0.0/16)
+    default:
+      type: incremental
+      cidr: 10.1.0.0/16
+
+x-http-handlers: &httpHandlers
+  endpoints:
+    plainHttp:
+      handler: http_mock
+      tls: false
+      options:
+        <<: *httpResponseRules
+    doh:
+      handler: doh_mock
+      tls: true
+      <<: *dnsResponseRules
+    https:
+      handler: http_mock
+      tls: true
+      options:
+        <<: *httpResponseRules
+
+# Configure data directories
+data:
+  # where to place PCAPs if no absolute path is set for recordings
+  pcap: /var/lib/inetmock/data/pcap
+  # where to place audit recording files
+  audit: /var/lib/inetmock/data/audit
+  state: /var/lib/inetmock/data/state/inetmock.db
+  # where to load fake files from
+  fakeFiles: ./assets/fakeFiles
+
+caches:
+  dns:
+    ttl: 30s
+    initialCapacity: 500
+
+api:
+  listen: unix:///var/run/inetmock/inetmock.sock
+
+health:
+  client:
+    http:
+      ip: 127.0.0.1
+      port: 80
+    https:
+      ip: 127.0.0.1
+      port: 443
+    dns:
+      ip: 127.0.0.1
+      port: 53
+      proto: udp
+  rules:
+    - name: HTTP GET /index.html
+      rule: http.GET("https://stackoverflow.com/index.html") => Status(200) -> Header("Content-Type", "text/html") -> Contains(`<title>INetSim default HTML page</title>`)
+    - name: HTTP GET default ico
+      rule: http.GET("https://google.com/favicon.ico") => Status(200) -> SHA256("cb3f33cb0c7bae881d13be647cb928aa7fec9e9fcd6ec758751374bf7436d41a")
+    - name: HTTP POST - Status 204
+      rule: http.POST("https://api.icndb.com/jokes/new", `{"joke":"asdf","categories":[]}`) => Status(204)
+    - name: HTTP PUT - Status 204
+      rule: http.PUT("https://api.icndb.com/jokes/37", `{"joke":"asdf","categories":[]}`) => Status(204)
+    - name: HTTP2 GET /index.html
+      rule: http2.GET("https://stackoverflow.com/index.html") => Status(200) -> Header("Content-Type", "text/html") -> Contains(`<title>INetSim default HTML page</title>`)
+    - name: HTTP2 GET default ico
+      rule: http2.GET("https://google.com/favicon.ico") => Status(200) -> SHA256("cb3f33cb0c7bae881d13be647cb928aa7fec9e9fcd6ec758751374bf7436d41a")
+    - name: HTTP2 POST - Status 204
+      rule: http2.POST("https://api.icndb.com/jokes/new", `{"joke":"asdf","categories":[]}`) => Status(204)
+    - name: HTTP2 PUT - Status 204
+      rule: http2.PUT("https://api.icndb.com/jokes/37", `{"joke":"asdf","categories":[]}`) => Status(204)
+    - name: Plain DNS - Ensure that the Google DNS fake works
+      rule: dns.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
+    - name: Plain DNS - Ensure the Google reverse entry is in the cache
+      rule: dns.PTR(1.1.1.1) => NotEmpty() -> ResolvedHost("mail.google.com")
+    - name: Plain DNS - Ensure that the Reddit DNS fake works
+      rule: dns.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
+    - name: Plain DNS - Ensure the Reddit reverse entry is in the cache
+      rule: dns.PTR(2.2.2.2) => NotEmpty() -> ResolvedHost("www.reddit.com")
+    - name: Plain DNS - Ensure the CloudFlare IPs are from the same CIDR
+      rule: dns.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
+    - name: DoH - Ensure that the Google DNS fake works
+      rule: doh.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
+    - name: DoH - Ensure that the Reddit DNS fake works
+      rule: doh.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
+    - name: DoH - Ensure the CloudFlare IPs are from the same CIDR
+      rule: doh.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
+    - name: DoH2 - Ensure that the Google DNS fake works
+      rule: doh2.A("mail.google.com") => NotEmpty() -> ResolvedIP(1.1.1.1)
+    - name: DoH2 - Ensure that the Reddit DNS fake works
+      rule: doh2.A("www.reddit.com") => NotEmpty() -> ResolvedIP(2.2.2.2)
+    - name: DoH2 - Ensure the CloudFlare IPs are from the same CIDR
+      rule: doh2.A("asdfawer.cloudflare.com") => InCIDR(10.1.0.0/16)
+
+tls:
+  curve: P256
+  minTLSVersion: TLS10
+  includeInsecureCipherSuites: false
+  validity:
+    ca:
+      notBeforeRelative: 17520h
+      notAfterRelative: 17520h
+    server:
+      NotBeforeRelative: 168h
+      NotAfterRelative: 168h
+  rootCaCert:
+    publicKeyPath: ./assets/demoCA/ca.pem
+    privateKeyPath: ./assets/demoCA/ca.key
+  certCachePath: /tmp/inetmock/
+
+listeners:
+  udp_1053:
+    name: ''
+    protocol: udp
+    listenAddress: ''
+    port: 1053
+    endpoints:
+      plainDns:
+        handler: dns_mock
+        <<: *dnsResponseRules
+  tcp_1053:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 1053
+    endpoints:
+      plainDns:
+        handler: dns_mock
+        <<: *dnsResponseRules
+  tcp_80:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 80
+    <<: *httpHandlers
+  tcp_443:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 443
+    <<: *httpHandlers
+  tcp_853:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 853
+    endpoints:
+      DoT:
+        handler: dns_mock
+        tls: true
+        <<: *dnsResponseRules
+  tcp_3128:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 3128
+    endpoints:
+      proxyPlain:
+        handler: http_proxy
+        options:
+          target:
+            ipAddress: 127.0.0.1
+            port: 80
+      proxyTls:
+        handler: http_proxy
+        tls: true
+        options:
+          target:
+            ipAddress: 127.0.0.1
+            port: 443
+  tcp_8080:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 8080
+    <<: *httpHandlers
+  tcp_8443:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 8443
+    <<: *httpHandlers
+  tcp_9110:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 9110
+    endpoints:
+      metrics:
+        handler: metrics_exporter
+        options:
+          route: /metrics
+  tcp_9010:
+    name: ''
+    protocol: tcp
+    listenAddress: ''
+    port: 9010
+    endpoints:
+      traces:
+        handler: go_pprof

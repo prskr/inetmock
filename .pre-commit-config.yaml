@@ -10,7 +10,7 @@ repos:
           - -w
       - id: go-imports
         args:
-          - -local=gitlab.com/inetmock/inetmock
+          - -local=inetmock.icb4dc0.de/inetmock
           - -w
       - id: golangci-lint-repo-mod
         args:

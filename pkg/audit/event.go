@@ -8,13 +8,23 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	auditv1 "gitlab.com/inetmock/inetmock/pkg/audit/v1"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
 )
 
 var (
 	mappingLock     sync.Mutex
 	wire2AppMapping = make(map[reflect.Type]func(msg *auditv1.EventEntity) Details)
+	eventPool       = sync.Pool{
+		New: func() any {
+			return new(Event)
+		},
+	}
+	eventBuilderPool = sync.Pool{
+		New: func() any {
+			return new(eventBuilder)
+		},
+	}
 )
 
 func AddMapping(t reflect.Type, mapper func(msg *auditv1.EventEntity) Details) {
@@ -68,45 +78,59 @@ func (e *Event) ProtoMessage() *auditv1.EventEntity {
 
 func (e *Event) ApplyDefaults(id int64) {
 	e.ID = id
-	emptyTime := time.Time{}
-	if e.Timestamp == emptyTime {
+	if e.Timestamp.IsZero() {
 		e.Timestamp = time.Now().UTC()
 	}
 }
 
 func (e *Event) SetSourceIPFromAddr(remoteAddr net.Addr) error {
-	if ipPort, err := netutils.IPPortFromAddress(remoteAddr); err != nil {
+	if ip, port, err := netutils.IPPortFromAddress(remoteAddr); err != nil {
 		return err
 	} else {
-		e.SourceIP = ipPort.IP
-		e.SourcePort = uint16(ipPort.Port)
+		e.SourceIP = ip
+		e.SourcePort = uint16(port)
 	}
 	return nil
 }
 
 func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) error {
-	if ipPort, err := netutils.IPPortFromAddress(localAddr); err != nil {
+	if ip, port, err := netutils.IPPortFromAddress(localAddr); err != nil {
 		return err
 	} else {
-		e.DestinationIP = ipPort.IP
-		e.DestinationPort = uint16(ipPort.Port)
+		e.DestinationIP = ip
+		e.DestinationPort = uint16(port)
 	}
 	return nil
 }
 
-func NewEventFromProto(msg *auditv1.EventEntity) (ev Event) {
-	ev = Event{
-		ID:              msg.GetId(),
-		Timestamp:       msg.GetTimestamp().AsTime(),
-		Transport:       msg.GetTransport(),
-		Application:     msg.GetApplication(),
-		SourceIP:        msg.SourceIp,
-		DestinationIP:   msg.DestinationIp,
-		SourcePort:      uint16(msg.GetSourcePort()),
-		DestinationPort: uint16(msg.GetDestinationPort()),
-		TLS:             NewTLSDetailsFromProto(msg.GetTls()),
-		ProtocolDetails: unwrapDetails(msg),
-	}
+func (e *Event) Dispose() {
+	eventPool.Put(e)
+}
+
+func (e *Event) Reset() {
+	e.ID = 0
+	e.Timestamp = time.Time{}
+	e.SourceIP = nil
+	e.DestinationIP = nil
+	e.SourcePort = 0
+	e.DestinationPort = 0
+	e.TLS = nil
+	e.Transport = auditv1.TransportProtocol_TRANSPORT_PROTOCOL_UNSPECIFIED
+	e.ProtocolDetails = nil
+}
+
+func NewEventFromProto(msg *auditv1.EventEntity) (ev *Event) {
+	ev = eventFromPool()
+	ev.ID = msg.GetId()
+	ev.Timestamp = msg.GetTimestamp().AsTime()
+	ev.Transport = msg.GetTransport()
+	ev.Application = msg.GetApplication()
+	ev.SourceIP = msg.SourceIp
+	ev.DestinationIP = msg.DestinationIp
+	ev.SourcePort = uint16(msg.GetSourcePort())
+	ev.DestinationPort = uint16(msg.GetDestinationPort())
+	ev.TLS = NewTLSDetailsFromProto(msg.GetTls())
+	ev.ProtocolDetails = unwrapDetails(msg)
 
 	return
 }
@@ -116,4 +140,10 @@ func unwrapDetails(msg *auditv1.EventEntity) Details {
 		return mapping(msg)
 	}
 	return nil
+}
+
+func eventFromPool() *Event {
+	ev := eventPool.Get().(*Event)
+	ev.Reset()
+	return ev
 }

@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	rpcv1 "gitlab.com/inetmock/inetmock/pkg/rpc/v1"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit/sink"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	rpcv1 "inetmock.icb4dc0.de/inetmock/pkg/rpc/v1"
 )
 
 var _ rpcv1.AuditServiceServer = (*auditServer)(nil)
@@ -43,7 +43,7 @@ func (a *auditServer) ListSinks(context.Context, *rpcv1.ListSinksRequest) (*rpcv
 func (a *auditServer) WatchEvents(req *rpcv1.WatchEventsRequest, srv rpcv1.AuditService_WatchEventsServer) (err error) {
 	logger := a.logger
 	logger.Info("watcher attached", zap.String("name", req.WatcherName))
-	err = a.eventStream.RegisterSink(srv.Context(), sink.NewGenericSink(req.WatcherName, func(ev audit.Event) {
+	err = a.eventStream.RegisterSink(srv.Context(), sink.NewGenericSink(req.WatcherName, func(ev *audit.Event) {
 		if err = srv.Send(&rpcv1.WatchEventsResponse{Entity: ev.ProtoMessage()}); err != nil {
 			return
 		}
@@ -69,6 +69,8 @@ func (a *auditServer) RegisterFileSink(_ context.Context, req *rpcv1.RegisterFil
 	if writer, err = os.Create(targetPath); err != nil {
 		return nil, PathToGRPCError(err)
 	}
+
+	//nolint:contextcheck // is running independent of request context
 	if err = a.eventStream.RegisterSink(context.Background(), sink.NewWriterSink(req.TargetPath, audit.NewEventWriter(writer))); err != nil {
 		if errors.Is(err, audit.ErrSinkAlreadyRegistered) {
 			return nil, status.Error(codes.AlreadyExists, err.Error())

@@ -7,7 +7,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/pkg/path"
+	"inetmock.icb4dc0.de/inetmock/pkg/path"
 )
 
 func TestFileExists(t *testing.T) {

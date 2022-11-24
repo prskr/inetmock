@@ -16,3 +16,20 @@ func IPToInt32(ip net.IP) uint32 {
 	result := binary.BigEndian.Uint32(v4)
 	return result
 }
+
+func IPAddressesToBytes(addresses []net.IP) (result [][]byte) {
+	for i := range addresses {
+		result = append(result, addresses[i])
+	}
+	return
+}
+
+func BytesToIPAddresses(input [][]byte) (result []net.IP) {
+	result = make([]net.IP, 0, len(input))
+
+	for idx := range input {
+		result = append(result, net.IP(input[idx]))
+	}
+
+	return result
+}

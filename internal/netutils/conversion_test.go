@@ -6,7 +6,7 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
 )
 
 func TestIPToInt32(t *testing.T) {

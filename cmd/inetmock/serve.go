@@ -15,27 +15,27 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/internal/pcap"
-	audit2 "gitlab.com/inetmock/inetmock/internal/pcap/consumers/audit"
-	"gitlab.com/inetmock/inetmock/internal/rpc"
-	"gitlab.com/inetmock/inetmock/internal/state"
-	"gitlab.com/inetmock/inetmock/pkg/audit"
-	"gitlab.com/inetmock/inetmock/pkg/audit/sink"
-	"gitlab.com/inetmock/inetmock/pkg/cert"
-	"gitlab.com/inetmock/inetmock/pkg/health"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
-	dhcpmock "gitlab.com/inetmock/inetmock/protocols/dhcp"
-	"gitlab.com/inetmock/inetmock/protocols/dns/doh"
-	dnsmock "gitlab.com/inetmock/inetmock/protocols/dns/mock"
-	"gitlab.com/inetmock/inetmock/protocols/http/mock"
-	"gitlab.com/inetmock/inetmock/protocols/http/proxy"
-	"gitlab.com/inetmock/inetmock/protocols/metrics"
-	"gitlab.com/inetmock/inetmock/protocols/pprof"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/internal/rpc"
+	"inetmock.icb4dc0.de/inetmock/internal/state"
+	"inetmock.icb4dc0.de/inetmock/netflow"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit"
+	"inetmock.icb4dc0.de/inetmock/pkg/audit/sink"
+	"inetmock.icb4dc0.de/inetmock/pkg/cert"
+	"inetmock.icb4dc0.de/inetmock/pkg/health"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
+	dhcpmock "inetmock.icb4dc0.de/inetmock/protocols/dhcp"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns"
+	"inetmock.icb4dc0.de/inetmock/protocols/dns/doh"
+	dnsmock "inetmock.icb4dc0.de/inetmock/protocols/dns/mock"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/mock"
+	"inetmock.icb4dc0.de/inetmock/protocols/http/proxy"
+	"inetmock.icb4dc0.de/inetmock/protocols/metrics"
+	"inetmock.icb4dc0.de/inetmock/protocols/pprof"
 )
 
 const (
-	defaultEventBufferSize = 10
+	defaultEventBufferSize = 1000
 	startGroupsTimeout     = 1 * time.Second
 )
 
@@ -47,6 +47,13 @@ var (
 		Long:         ``,
 		RunE:         startINetMock,
 		SilenceUsage: true,
+		PreRunE: func(*cobra.Command, []string) error {
+			dns.ConfigureCache(
+				dns.WithInitialSize(cfg.Caches.DNS.InitialCapacity),
+				dns.WithTTL(cfg.Caches.DNS.TTL),
+			)
+			return nil
+		},
 		PostRunE: func(*cobra.Command, []string) (err error) {
 			for idx := range toClose {
 				err = multierr.Append(err, toClose[idx].Close())
@@ -101,16 +108,32 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err = setupEndpointHandlers(registry, appLogger, eventStream, certStore, stateStore, fakeFileFS, checker); err != nil {
-		appLogger.Error("Failed to run registration", zap.Error(err))
-		return err
-	}
+	setupEndpointHandlers(registry, appLogger, eventStream, certStore, stateStore, fakeFileFS, checker)
 
 	serverBuilder := endpoint.NewServerBuilder(certStore.TLSConfig(), registry, appLogger.Named("orchestrator"))
 	srv := serverBuilder.Server()
 	srv.ErrorHandler = append(srv.ErrorHandler, endpointErrorHandler(appLogger))
 
-	rpcAPI := rpc.NewINetMockAPI(cfg.APIURL(), appLogger, checker, eventStream, srv, cfg.Data.Audit, cfg.Data.PCAP)
+	packetSink := netflow.EmittingPacketSink{
+		Lookup:  dns.GlobalCache(),
+		Emitter: eventStream,
+	}
+	sinkOption := netflow.ErrorSinkOption{ErrorSink: netflow.LoggerErrorSink{Logger: appLogger.Named("netflow")}}
+	firewall := netflow.NewFirewall(packetSink, sinkOption)
+	nat := netflow.NewNAT(sinkOption)
+
+	toClose = append(toClose, firewall, nat)
+	rpcAPI := rpc.NewINetMockAPI(
+		cfg.APIURL(),
+		appLogger,
+		checker,
+		eventStream,
+		firewall,
+		nat,
+		srv,
+		cfg.Data.Audit,
+		cfg.Data.PCAP,
+	)
 
 	for name, spec := range cfg.Listeners {
 		if spec.Name == "" {
@@ -140,7 +163,18 @@ func startINetMock(_ *cobra.Command, _ []string) error {
 		)
 	}
 
+	if err := initFirewall(firewall, cfg.NetFlow.Firewall); err != nil {
+		return err
+	}
+
+	if err := initNAT(nat, cfg.NetFlow.NAT); err != nil {
+		return err
+	}
+
+	appLogger.Info("App startup completed")
+
 	<-serverApp.Context().Done()
+
 	appLogger.Info("App context canceled - shutting down")
 	rpcAPI.StopServer()
 	return nil
@@ -186,29 +220,14 @@ func setupEndpointHandlers(
 	stateStore state.KVStore,
 	fakeFileFS fs.FS,
 	checker health.Checker,
-) (err error) {
+) {
 	mock.AddHTTPMock(registry, logger.Named("http_mock"), emitter, fakeFileFS)
 	dnsmock.AddDNSMock(registry, logger.Named("dns_mock"), emitter)
 	dhcpmock.AddDHCPMock(registry, logger.Named("dhcp_mock"), emitter, stateStore.WithSuffixes("dhcp_mock"))
 	doh.AddDoH(registry, logger.Named("doh_mock"), emitter)
 	pprof.AddPprof(registry, logger.Named("pprof"), emitter)
-	if err = proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, certStore); err != nil {
-		return
-	}
-	if err = metrics.AddMetricsExporter(registry, logger.Named("metrics_exporter"), checker); err != nil {
-		return
-	}
-	return nil
-}
-
-//nolint:unused
-func startAuditConsumer(eventStream audit.EventStream) error {
-	recorder := pcap.NewRecorder()
-
-	auditConsumer := audit2.NewAuditConsumer("audit", eventStream)
-
-	_, err := recorder.StartRecording(serverApp.Context(), "lo", auditConsumer)
-	return err
+	proxy.AddHTTPProxy(registry, logger.Named("http_proxy"), emitter, certStore)
+	metrics.AddMetricsExporter(registry, logger.Named("metrics_exporter"), checker)
 }
 
 func endpointErrorHandler(logger logging.Logger) endpoint.ErrorHandler {
@@ -219,8 +238,10 @@ func endpointErrorHandler(logger logging.Logger) endpoint.ErrorHandler {
 		)
 		switch {
 		case errors.As(err, &unmatched):
+			if unmatched.Temporary() {
+				return
+			}
 			logger.Error("Not matched error",
-				zap.Bool("temporary", unmatched.Temporary()),
 				zap.Bool("timeoutError", unmatched.Timeout()),
 				zap.String("error", unmatched.Error()),
 			)
@@ -232,4 +253,23 @@ func endpointErrorHandler(logger logging.Logger) endpoint.ErrorHandler {
 			logger.Error("got error from endpoint", zap.Error(err))
 		}
 	})
+}
+
+func initFirewall(fw *netflow.Firewall, initialCfg map[string]netflow.FirewallInterfaceConfig) error {
+	for nic, cfg := range initialCfg {
+		if err := fw.AttachToInterface(nic, cfg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func initNAT(nat *netflow.NAT, initialCfg map[string]netflow.NATTableSpec) error {
+	for nic, spec := range initialCfg {
+		if err := nat.AttachToInterface(nic, spec); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/ipv4"
 
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 const MaxDatagram = 1 << 16
@@ -23,7 +23,7 @@ const MaxDatagram = 1 << 16
 var (
 	ErrDropRequest = errors.New("request should be dropped")
 	bufPool        = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			buf := make([]byte, MaxDatagram)
 			return &buf
 		},
@@ -151,7 +151,7 @@ func (s *Server4) sendEthernet(iface net.Interface, resp *dhcpv4.DHCPv4) error {
 
 	err := udp.SetNetworkLayerForChecksum(&ip)
 	if err != nil {
-		return fmt.Errorf("send Ethernet: Couldn't set network layer: %v", err)
+		return fmt.Errorf("send Ethernet: Couldn't set network layer: %w", err)
 	}
 
 	buf := gopacket.NewSerializeBuffer()
@@ -169,13 +169,13 @@ func (s *Server4) sendEthernet(iface net.Interface, resp *dhcpv4.DHCPv4) error {
 	}
 	err = gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp, dhcp)
 	if err != nil {
-		return fmt.Errorf("cannot serialize layer: %v", err)
+		return fmt.Errorf("cannot serialize layer: %w", err)
 	}
 	data := buf.Bytes()
 
 	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, 0)
 	if err != nil {
-		return fmt.Errorf("send Ethernet: Cannot open socket: %v", err)
+		return fmt.Errorf("send Ethernet: Cannot open socket: %w", err)
 	}
 	defer func() {
 		err = syscall.Close(fd)
@@ -199,7 +199,7 @@ func (s *Server4) sendEthernet(iface net.Interface, resp *dhcpv4.DHCPv4) error {
 	}
 	err = syscall.Sendto(fd, data, 0, &ethAddr)
 	if err != nil {
-		return fmt.Errorf("cannot send frame via socket: %v", err)
+		return fmt.Errorf("cannot send frame via socket: %w", err)
 	}
 	return nil
 }

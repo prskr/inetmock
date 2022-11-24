@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/inetmock/inetmock/internal/netutils"
-	"gitlab.com/inetmock/inetmock/internal/queue"
+	"inetmock.icb4dc0.de/inetmock/internal/netutils"
+	"inetmock.icb4dc0.de/inetmock/internal/queue"
 )
 
 const (
@@ -30,6 +30,8 @@ var (
 			}
 		}
 	}
+	configureCacheOnce  sync.Once
+	globalCacheInstance *Cache
 )
 
 type Record struct {
@@ -49,6 +51,10 @@ func (f IPResolverFunc) Lookup(host string) net.IP {
 
 type CacheOption func(cfg *cacheConfig)
 
+func GlobalCache() *Cache {
+	return globalCacheInstance
+}
+
 func NewCache(opts ...CacheOption) *Cache {
 	cfg := cacheConfig{
 		ttl:         defaultTTL,
@@ -60,7 +66,7 @@ func NewCache(opts ...CacheOption) *Cache {
 
 	rwMutex := new(sync.RWMutex)
 
-	cache := &Cache{
+	cacheInstance := &Cache{
 		cfg:          cfg,
 		readLock:     rwMutex.RLocker(),
 		writeLock:    rwMutex,
@@ -69,9 +75,15 @@ func NewCache(opts ...CacheOption) *Cache {
 		queue:        queue.WrapToAutoEvict(queue.NewTTL(cfg.initialSize)),
 	}
 
-	cache.queue.OnEvicted(queue.EvictionCallbackFunc(cache.onCacheEvicted))
+	cacheInstance.queue.OnEvicted(queue.EvictionCallbackFunc(cacheInstance.onCacheEvicted))
 
-	return cache
+	return cacheInstance
+}
+
+func ConfigureCache(opts ...CacheOption) {
+	configureCacheOnce.Do(func() {
+		globalCacheInstance = NewCache(opts...)
+	})
 }
 
 type cacheConfig struct {
@@ -80,7 +92,7 @@ type cacheConfig struct {
 }
 
 type cacheQueue interface {
-	Push(name string, value interface{}, ttl time.Duration) *queue.Entry
+	Push(name string, value any, ttl time.Duration) *queue.Entry
 	UpdateTTL(e *queue.Entry, newTTL time.Duration)
 	OnEvicted(callback queue.EvictionCallback)
 }

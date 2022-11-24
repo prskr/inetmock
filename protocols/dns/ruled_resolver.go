@@ -5,7 +5,7 @@ import (
 	"net"
 	"strings"
 
-	"gitlab.com/inetmock/inetmock/internal/rules"
+	"inetmock.icb4dc0.de/inetmock/internal/rules"
 )
 
 var knownRuleResolvers = map[string]func(params []rules.Param) (IPResolver, error){

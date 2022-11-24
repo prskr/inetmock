@@ -7,7 +7,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/uuid"
 
-	"gitlab.com/inetmock/inetmock/internal/pcap"
+	"inetmock.icb4dc0.de/inetmock/internal/pcap"
 )
 
 var _ pcap.Consumer = (*noopConsumer)(nil)

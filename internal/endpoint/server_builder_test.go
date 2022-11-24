@@ -6,8 +6,8 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 
-	"gitlab.com/inetmock/inetmock/internal/endpoint"
-	"gitlab.com/inetmock/inetmock/pkg/logging"
+	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
+	"inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 
 func TestServerBuilder_ConfigureGroup(t *testing.T) {
@@ -20,7 +20,7 @@ func TestServerBuilder_ConfigureGroup(t *testing.T) {
 		registrySetup func(tb testing.TB) endpoint.HandlerRegistry
 		args          args
 		wantErr       bool
-		wantEndpoints interface{}
+		wantEndpoints any
 	}{
 		{
 			name: "Empty listener - nothing registered",

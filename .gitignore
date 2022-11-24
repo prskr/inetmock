@@ -5,6 +5,8 @@
 **/cov.out
 **/cov-raw.out
 **/*.so
+**/*.o
+**/*.mock.go
 *.key
 *.pem
 /inetmock
@@ -24,3 +26,4 @@ out/
 .task/
 public/
 .fleet/
+cmake-build-debug/
