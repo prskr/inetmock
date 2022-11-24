@@ -1,0 +1,49 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: code.icb4dc0.de/prskr/pipelines/dind-go
+    tag: latest
+    username: ((gitea-credentials.user))
+    password: ((gitea-credentials.token))
+
+inputs:
+  - name: repo
+    path: .
+
+params:
+  GO111MODULE: "on"
+  CGO_ENABLED: "0"
+  DOCKER_HOST: tcp://127.0.0.1:2375
+  GITEA_TOKEN: ((gitea-credentials.token))
+
+run:
+  path: sh
+  args:
+    - -ce
+    - |
+      dockerd -H $DOCKER_HOST >/tmp/docker.log 2>&1 &
+      echo $! > /tmp/docker.pid
+
+      echo waiting for docker to come up...
+      until docker info >/dev/null 2>&1; do
+        sleep 1
+        if ! kill -0 "$(cat /tmp/docker.pid)" 2>/dev/null; then
+          cat /tmp/docker.log
+          return 1
+        fi
+      done
+
+      if go run github.com/magefile/mage integrationTests; then
+        curl -X 'POST' "https://code.icb4dc0.de/api/v1/repos/inetmock/inetmock/statuses/$(git rev-parse HEAD)?token=$GITEA_TOKEN" \
+          -H 'accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -d '{"context": "concourse-ci/test/integration", "description": "integration tests", "state": "success", "target_url": "https://concourse.icb4dc0.de/teams/inetmock/pipelines"}'
+      else
+        curl -X 'POST' "https://code.icb4dc0.de/api/v1/repos/inetmock/inetmock/statuses/$(git rev-parse HEAD)?token=$GITEA_TOKEN" \
+          -H 'accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -d '{"context": "concourse-ci/test/integration", "description": "integration tests", "state": "failure", "target_url": "https://concourse.icb4dc0.de/teams/inetmock/pipelines"}'
+      fi

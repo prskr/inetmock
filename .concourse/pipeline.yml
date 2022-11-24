@@ -8,15 +8,29 @@ resources:
     branch: ((branch))
 
 jobs:
+- name: lint
+  plan:
+    - get: inetmock.git
+      trigger: true
+    - task: lint
+      file: inetmock.git/.concourse/tasks/lint.yml
+      input_mapping: {repo: inetmock.git}
+
 - name: test
   plan:
   - get: inetmock.git
     trigger: true
-  - task: lint
-    file: inetmock.git/.concourse/tasks/lint.yml
-    input_mapping: {repo: inetmock.git}
   - task: unit
     tags: [linux,vm]
     privileged: true
     file: inetmock.git/.concourse/tasks/go-test.yml
     input_mapping: {repo: inetmock.git}
+
+- name: integration-test
+  plan:
+    - get: inetmock.git
+      trigger: true
+    - task: unit
+      privileged: true
+      file: inetmock.git/.concourse/tasks/integration-test.yml
+      input_mapping: {repo: inetmock.git}
