@@ -30,7 +30,7 @@ jobs:
   plan:
     - get: inetmock.git
       trigger: true
-    - task: unit
+    - task: integration
       privileged: true
       file: inetmock.git/.concourse/tasks/integration-test.yml
       input_mapping: {repo: inetmock.git}

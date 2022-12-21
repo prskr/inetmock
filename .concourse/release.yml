@@ -1,0 +1,33 @@
+---
+resources:
+  - name: inetmock.git
+    type: git
+    icon: github
+    source:
+      uri: https://code.icb4dc0.de/inetmock/inetmock.git
+
+jobs:
+  - name: release
+    plan:
+      - get: inetmock.git
+        trigger: true
+      - in_parallel:
+          - task: lint
+            file: inetmock.git/.concourse/tasks/lint.yml
+            input_mapping: { repo: inetmock.git }
+          - task: unit
+            tags: [ linux,vm ]
+            privileged: true
+            file: inetmock.git/.concourse/tasks/go-test.yml
+            input_mapping: { repo: inetmock.git }
+          - task: integration
+            privileged: true
+            file: inetmock.git/.concourse/tasks/integration-test.yml
+            input_mapping: { repo: inetmock.git }
+      - in_parallel:
+        - task: goreleaser
+          file: inetmock.git/.concourse/tasks/goreleaser.yml
+          input_mapping: { repo: inetmock.git }
+        - task: ko
+          file: inetmock.git/.concourse/tasks/container-images.yml
+          input_mapping: { repo: inetmock.git }

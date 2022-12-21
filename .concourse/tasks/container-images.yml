@@ -1,0 +1,28 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: code.icb4dc0.de/inetmock/ci-images/go-ci
+    tag: latest
+    username: ((gitea-credentials.user))
+    password: ((gitea-credentials.token))
+
+inputs:
+  - name: repo
+    path: .
+
+params:
+  GITEA_USER: ((gitea-credentials.user))
+  GITEA_TOKEN: ((gitea-credentials.token))
+  KO_DOCKER_REPO: code.icb4dc0.de/inetmock
+
+run:
+  path: sh
+  args:
+    - -ce
+    - |
+      go run github.com/magefile/mage generate
+      ko login code.icb4dc0.de --username $GITEA_USER --password $GITEA_TOKEN
+      ko build --base-import-paths ./cmd/inetmock
