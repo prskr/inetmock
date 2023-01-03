@@ -3,6 +3,7 @@ module inetmock.icb4dc0.de/inetmock
 go 1.19
 
 require (
+	code.gitea.io/sdk/gitea v0.15.1
 	github.com/DataDog/ebpf-manager v0.1.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
@@ -201,7 +202,7 @@ replace (
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
 	github.com/moby/buildkit => github.com/moby/buildkit v0.10.1-0.20220816171719-55ba9d14360a // same as buildx
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.1.2 // Can be removed on next bump of containerd to > 1.6.4
-	golang.org/x/text => golang.org/x/text v0.3.7
+	golang.org/x/text => golang.org/x/text v0.5.0
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 
 	k8s.io/api => k8s.io/api v0.22.4
