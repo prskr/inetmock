@@ -1,0 +1,56 @@
+---
+resources:
+  - name: inetmock.git
+    type: git
+    icon: github
+    source:
+      uri: https://code.icb4dc0.de/inetmock/inetmock.git
+      branch: ((branch))
+
+  - name: templates.git
+    type: git
+    icon: github
+    source:
+      uri: https://code.icb4dc0.de/prskr/pipeline-templates.git
+
+jobs:
+- name: validate
+  plan:
+    - in_parallel:
+      - get: inetmock.git
+        trigger: true
+      - get: templates.git
+    - task: lint
+      file: inetmock.git/.concourse/tasks/lint.yml
+      input_mapping: {repo: inetmock.git}
+    - in_parallel:
+      - task: snapshot-release
+        file: templates.git/tasks/goreleaser.yml
+        input_mapping: {repo: inetmock.git}
+    - in_parallel:
+      - task: snapshot-release
+        file: templates.git/tasks/goreleaser.yml
+        input_mapping: {repo: inetmock.git}
+      - task: ko
+        file: templates.git/tasks/goreleaser.yml
+        input_mapping: { repo: inetmock.git }
+        vars:
+          docker_repo: code.icb4dc0.de/inetmock
+          build_package: ./cmd/inetmock
+          push_image: 'false'
+
+- name: test
+  plan:
+  - get: inetmock.git
+    trigger: true
+  - in_parallel:
+    - task: unit
+      tags: [linux,vm]
+      privileged: true
+      file: inetmock.git/.concourse/tasks/go-test.yml
+      input_mapping: {repo: inetmock.git}
+    - task: integration
+      tags: [linux,vm]
+      privileged: true
+      file: inetmock.git/.concourse/tasks/integration-test.yml
+      input_mapping: {repo: inetmock.git}

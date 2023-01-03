@@ -22,7 +22,6 @@ resources:
   icon: github
   source:
     uri: https://code.icb4dc0.de/inetmock/inetmock.git
-    fetch_tags: true
 
 jobs:
 - name: set-feature-pipelines
@@ -37,6 +36,6 @@ jobs:
     - var: branch
       values: ((.:branches))
     set_pipeline: dev
-    file: inetmock.git/.concourse/pipeline.yml
+    file: inetmock.git/.concourse/branch-validate.yml
     instance_vars: {feature: ((.:branch.groups.feature))}
-    vars: {branch: ((.:branch.name))}    
+    vars: {branch: ((.:branch.name))}

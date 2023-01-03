@@ -5,12 +5,22 @@ resources:
     icon: github
     source:
       uri: https://code.icb4dc0.de/inetmock/inetmock.git
+      fetch_tags: true
+      tag_filter: "v*"
+
+  - name: templates.git
+    type: git
+    icon: github
+    source:
+      uri: https://code.icb4dc0.de/prskr/pipeline-templates.git
 
 jobs:
   - name: release
     plan:
-      - get: inetmock.git
-        trigger: true
+      - in_parallel:
+        - get: inetmock.git
+          trigger: true
+        - get: templates.git
       - in_parallel:
           - task: lint
             file: inetmock.git/.concourse/tasks/lint.yml
@@ -26,8 +36,12 @@ jobs:
             input_mapping: { repo: inetmock.git }
       - in_parallel:
         - task: goreleaser
-          file: inetmock.git/.concourse/tasks/goreleaser.yml
+          file: templates.git/tasks/goreleaser.yml
           input_mapping: { repo: inetmock.git }
         - task: ko
-          file: inetmock.git/.concourse/tasks/container-images.yml
+          file: templates.git/tasks/goreleaser.yml
           input_mapping: { repo: inetmock.git }
+          vars:
+            docker_repo: code.icb4dc0.de/inetmock
+            build_package: ./cmd/inetmock
+            push_image: 'true'
