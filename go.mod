@@ -3,6 +3,7 @@ module inetmock.icb4dc0.de/inetmock
 go 1.19
 
 require (
+	code.gitea.io/sdk/gitea v0.15.1
 	github.com/DataDog/ebpf-manager v0.1.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
@@ -26,7 +27,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/soheilhy/cmux v0.1.5
 	github.com/spf13/cobra v1.6.1
-	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
+	github.com/spf13/pflag v1.0.6-0.20210604193023-d5e0c0615ace
 	github.com/spf13/viper v1.14.0
 	github.com/testcontainers/testcontainers-go v0.16.0
 	github.com/valyala/bytebufferpool v1.0.0
@@ -44,7 +45,6 @@ require (
 )
 
 require (
-	code.gitea.io/sdk/gitea v0.15.1 // indirect
 	github.com/AlecAivazis/survey/v2 v2.3.6 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/DataDog/gopsutil v1.2.2 // indirect
