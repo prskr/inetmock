@@ -20,13 +20,6 @@ jobs:
       - get: inetmock.git
         trigger: true
       - get: templates.git
-    - task: lint
-      file: inetmock.git/.concourse/tasks/lint.yml
-      input_mapping: {repo: inetmock.git}
-    - in_parallel:
-      - task: snapshot-release
-        file: templates.git/tasks/goreleaser.yml
-        input_mapping: {repo: inetmock.git}
     - in_parallel:
       - task: snapshot-release
         file: templates.git/tasks/goreleaser.yml
@@ -44,6 +37,10 @@ jobs:
   - get: inetmock.git
     trigger: true
   - in_parallel:
+    - task: lint
+      file: inetmock.git/.concourse/tasks/lint.yml
+      tags: [linux,vm]
+      input_mapping: {repo: inetmock.git}
     - task: unit
       tags: [linux,vm]
       privileged: true

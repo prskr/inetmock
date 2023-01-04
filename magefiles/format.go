@@ -6,7 +6,8 @@ import (
 )
 
 func Format() {
-	mg.Deps(GoImports, GoFumpt)
+	mg.Deps(GoImports)
+	mg.Deps(GoFumpt)
 }
 
 func GoImports() error {

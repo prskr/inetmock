@@ -3,7 +3,6 @@ module inetmock.icb4dc0.de/inetmock
 go 1.19
 
 require (
-	code.gitea.io/sdk/gitea v0.15.1
 	github.com/DataDog/ebpf-manager v0.1.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0

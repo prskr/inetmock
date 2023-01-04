@@ -24,6 +24,7 @@ jobs:
       - in_parallel:
           - task: lint
             file: inetmock.git/.concourse/tasks/lint.yml
+            tags: [ linux,vm ]
             input_mapping: { repo: inetmock.git }
           - task: unit
             tags: [ linux,vm ]

@@ -12,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"code.gitea.io/sdk/gitea"
 	"github.com/magefile/mage/mg"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -20,21 +19,6 @@ import (
 
 func IntegrationTests(ctx context.Context) (err error) {
 	mg.CtxDeps(ctx, BuildInetmock)
-
-	notification := commitStatusOption("concourse-ci/test/integration", "integration tests")
-	if err = setCommitStatus(ctx, notification); err != nil {
-		return err
-	}
-
-	defer func() {
-		if err == nil {
-			notification.State = gitea.StatusSuccess
-		} else {
-			notification.State = gitea.StatusFailure
-		}
-
-		err = multierr.Append(err, setCommitStatus(ctx, notification))
-	}()
 
 	//nolint:gosec // that's alright
 	inetmockCmd := exec.Command(

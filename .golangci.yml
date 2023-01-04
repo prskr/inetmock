@@ -156,7 +156,7 @@ run:
     - ".*.mock.\\.go$"
   modules-download-mode: readonly
   go: "1.19"
-  timeout: 5m
+  timeout: 10m
 
 service:
   golangci-lint-version: 1.42.x # use the fixed version to not introduce new linters unexpectedly

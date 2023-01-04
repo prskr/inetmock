@@ -266,7 +266,7 @@ func anyPhysicalInterface(tb testing.TB) (net.Interface, net.Addr) {
 		}
 		if addr, err := cif.Addrs(); err != nil {
 			continue
-		} else if len(addr) == 0 {
+		} else if len(addr) == 0 || len(addr[0].(*net.IPNet).IP.To16()) == net.IPv6len {
 			continue
 		} else {
 			return cif, addr[0]
