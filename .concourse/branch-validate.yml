@@ -52,6 +52,8 @@ jobs:
       - task: snapshot-release
         file: templates.git/tasks/goreleaser.yml
         input_mapping: {repo: inetmock.git}
+        vars:
+          goreleaser_image: code.icb4dc0.de/inetmock/ci-images/go-ci
       - task: ko
         file: templates.git/tasks/ko.yml
         input_mapping: { repo: inetmock.git }
