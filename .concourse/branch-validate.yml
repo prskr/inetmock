@@ -20,11 +20,34 @@ jobs:
       - get: inetmock.git
         trigger: true
       - get: templates.git
+    - load_var: git_ref
+      format: trim
+      file: inetmock.git/.git/ref
     # run lint step here to generate all files e.g. eBPF object files
     - task: lint
       file: inetmock.git/.concourse/tasks/lint.yml
       tags: [ linux,vm ]
       input_mapping: { repo: inetmock.git }
+      on_success:
+        task: report-success
+        file: templates.git/tasks/gitea-status-v2.yml
+        input_mapping: {repo: inetmock.git}
+        vars:
+          project_path: inetmock/inetmock
+          git_ref: ((.:git_ref))
+          context: concourse-ci/lint/golangci-lint
+          description: Lint Go files
+          state: success
+      on_failure:
+        task: report-failure
+        file: templates.git/tasks/gitea-status-v2.yml
+        input_mapping: {repo: inetmock.git}
+        vars:
+          project_path: inetmock/inetmock
+          git_ref: ((.:git_ref))
+          context: concourse-ci/lint/golangci-lint
+          description: Lint Go files
+          state: failure
     - in_parallel:
       - task: snapshot-release
         file: templates.git/tasks/goreleaser.yml
@@ -39,16 +62,61 @@ jobs:
 
 - name: test
   plan:
-  - get: inetmock.git
-    trigger: true
+  - in_parallel:
+      - get: inetmock.git
+        trigger: true
+      - get: templates.git
+  - load_var: git_ref
+    format: trim
+    file: inetmock.git/.git/ref
   - in_parallel:
     - task: unit
       tags: [linux,vm]
       privileged: true
       file: inetmock.git/.concourse/tasks/go-test.yml
       input_mapping: {repo: inetmock.git}
+      on_success:
+        task: report-success
+        file: templates.git/tasks/gitea-status-v2.yml
+        input_mapping: {repo: inetmock.git}
+        vars:
+          project_path: inetmock/inetmock
+          git_ref: ((.:git_ref))
+          context: concourse-ci/test/unit
+          description: Run unit tests
+          state: success
+      on_failure:
+        task: report-failure
+        file: templates.git/tasks/gitea-status-v2.yml
+        input_mapping: {repo: inetmock.git}
+        vars:
+          project_path: inetmock/inetmock
+          git_ref: ((.:git_ref))
+          context: concourse-ci/test/unit
+          description: Run unit tests
+          state: failure
     - task: integration
       tags: [linux,vm]
       privileged: true
       file: inetmock.git/.concourse/tasks/integration-test.yml
       input_mapping: {repo: inetmock.git}
+      on_success:
+        task: report-success
+        file: templates.git/tasks/gitea-status-v2.yml
+        input_mapping: {repo: inetmock.git}
+        vars:
+          project_path: inetmock/inetmock
+          git_ref: ((.:git_ref))
+          context: concourse-ci/test/integration
+          description: Run integration tests
+          state: success
+      on_failure:
+        task: report-failure
+        file: templates.git/tasks/gitea-status-v2.yml
+        input_mapping: {repo: inetmock.git}
+        vars:
+          project_path: inetmock/inetmock
+          git_ref: ((.:git_ref))
+          context: concourse-ci/test/integration
+          description: Run integration tests
+          state: failure
