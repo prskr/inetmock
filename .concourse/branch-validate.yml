@@ -24,39 +24,40 @@ jobs:
       format: trim
       file: inetmock.git/.git/ref
     # run lint step here to generate all files e.g. eBPF object files
-    - task: lint
-      file: inetmock.git/.concourse/tasks/lint.yml
-      tags: [ linux,vm ]
-      input_mapping: { repo: inetmock.git }
-      on_success:
-        task: report-success
-        file: templates.git/tasks/gitea-status-v2.yml
-        input_mapping: {repo: inetmock.git}
-        vars:
-          project_path: inetmock/inetmock
-          git_ref: ((.:git_ref))
-          context: concourse-ci/lint/golangci-lint
-          description: Lint Go files
-          state: success
-      on_failure:
-        task: report-failure
-        file: templates.git/tasks/gitea-status-v2.yml
-        input_mapping: {repo: inetmock.git}
-        vars:
-          project_path: inetmock/inetmock
-          git_ref: ((.:git_ref))
-          context: concourse-ci/lint/golangci-lint
-          description: Lint Go files
-          state: failure
+    - task: generate
+      file: inetmock.git/.concourse/tasks/generate.yml
+      input_mapping: {repo: inetmock.git}
     - in_parallel:
+      - task: lint
+        file: inetmock.git/.concourse/tasks/lint.yml
+        tags: [ linux,vm ]
+        input_mapping: { repo: generated-sources }
+        on_success:
+          task: report-success
+          file: templates.git/tasks/gitea-status-v2.yml
+          input_mapping: {repo: inetmock.git}
+          vars:
+            project_path: inetmock/inetmock
+            git_ref: ((.:git_ref))
+            context: concourse-ci/lint/golangci-lint
+            description: Lint Go files
+            state: success
+        on_failure:
+          task: report-failure
+          file: templates.git/tasks/gitea-status-v2.yml
+          input_mapping: {repo: inetmock.git}
+          vars:
+            project_path: inetmock/inetmock
+            git_ref: ((.:git_ref))
+            context: concourse-ci/lint/golangci-lint
+            description: Lint Go files
+            state: failure
       - task: snapshot-release
         file: templates.git/tasks/goreleaser.yml
-        input_mapping: {repo: inetmock.git}
-        vars:
-          goreleaser_image: code.icb4dc0.de/inetmock/ci-images/go-ci
+        input_mapping: {repo: generated-sources}
       - task: ko
         file: templates.git/tasks/ko.yml
-        input_mapping: { repo: inetmock.git }
+        input_mapping: { repo: generated-sources }
         vars:
           docker_repo: code.icb4dc0.de/inetmock
           build_package: ./cmd/inetmock
