@@ -201,7 +201,7 @@ replace (
 	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
 	github.com/moby/buildkit => github.com/moby/buildkit v0.10.1-0.20220816171719-55ba9d14360a // same as buildx
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.1.2 // Can be removed on next bump of containerd to > 1.6.4
-	golang.org/x/text => golang.org/x/text v0.5.0
+	golang.org/x/text => golang.org/x/text v0.6.0
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 
 	k8s.io/api => k8s.io/api v0.22.4
