@@ -62,6 +62,7 @@ jobs:
           docker_repo: code.icb4dc0.de/inetmock
           build_package: ./cmd/inetmock
           push_image: 'false'
+          git_ref: ((.:git_ref))
 
 - name: test
   plan:
