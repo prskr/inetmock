@@ -23,7 +23,6 @@ params:
   GITEA_TOKEN: ((gitea-credentials.token))
 
 container_limits:
-  cpu: 1500
   memory: 1258291200 # 1200MB
 
 run:

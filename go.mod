@@ -3,7 +3,6 @@ module inetmock.icb4dc0.de/inetmock
 go 1.19
 
 require (
-	code.gitea.io/sdk/gitea v0.15.1
 	github.com/DataDog/ebpf-manager v0.1.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
@@ -35,7 +34,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20221217163422-3c43f8badb15
+	golang.org/x/exp v0.0.0-20230108222341-4b8118a2686a
 	golang.org/x/net v0.4.0
 	golang.org/x/sync v0.1.0
 	google.golang.org/grpc v1.51.0

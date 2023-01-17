@@ -35,8 +35,6 @@ archives:
     builds:
       - inetmock
     name_template: "{{ .ProjectName }}_server_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    replacements:
-      amd64: x86_64
     wrap_in_directory: true
     files:
       - config.yaml
@@ -45,8 +43,6 @@ archives:
     builds:
       - imctl
     name_template: "{{ .ProjectName }}_cli_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    replacements:
-      amd64: x86_64
     wrap_in_directory: true
     files: [ ]
 checksum:
