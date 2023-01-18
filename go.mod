@@ -125,17 +125,9 @@ require (
 )
 
 replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.6.13
-	github.com/docker/cli => github.com/docker/cli v20.10.3-0.20221013132413-1d6c6e2367e2+incompatible // 22.06 master branch
+	github.com/containerd/containerd => github.com/containerd/containerd v1.6.15
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
 	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20220314074627-3272f0ec1510
-	github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
-	github.com/moby/buildkit => github.com/moby/buildkit v0.10.1-0.20220816171719-55ba9d14360a // same as buildx
-	github.com/opencontainers/runc => github.com/opencontainers/runc v1.1.2 // Can be removed on next bump of containerd to > 1.6.4
 	golang.org/x/text => golang.org/x/text v0.6.0
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
-
-	k8s.io/api => k8s.io/api v0.22.4
-	k8s.io/apimachinery => k8s.io/apimachinery v0.22.4
-	k8s.io/client-go => k8s.io/client-go v0.22.4
 )
