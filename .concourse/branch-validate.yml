@@ -35,7 +35,6 @@ jobs:
         on_success:
           task: report-success
           file: templates.git/tasks/gitea-status-v2.yml
-          input_mapping: {repo: inetmock.git}
           vars:
             project_path: inetmock/inetmock
             git_ref: ((.:git_ref))
@@ -45,12 +44,35 @@ jobs:
         on_failure:
           task: report-failure
           file: templates.git/tasks/gitea-status-v2.yml
-          input_mapping: {repo: inetmock.git}
           vars:
             project_path: inetmock/inetmock
             git_ref: ((.:git_ref))
             context: concourse-ci/lint/golangci-lint
             description: Lint Go files
+            state: failure
+      - task: vulnerabilities
+        file: templates.git/tasks/go-vulnerabilities.yml
+        tags: [ linux,vm ]
+        params:
+          GO_BUILD_TAGS: sudo,integration
+        input_mapping: { repo: generated-sources }
+        on_success:
+          task: report-success
+          file: templates.git/tasks/gitea-status-v2.yml
+          vars:
+            project_path: inetmock/inetmock
+            git_ref: ((.:git_ref))
+            context: concourse-ci/lint/vulnerabilities
+            description: Check for vulnerabilities
+            state: success
+        on_failure:
+          task: report-failure
+          file: templates.git/tasks/gitea-status-v2.yml
+          vars:
+            project_path: inetmock/inetmock
+            git_ref: ((.:git_ref))
+            context: concourse-ci/lint/vulnerabilities
+            description: Check for vulnerabilities
             state: failure
       - task: snapshot-release
         file: templates.git/tasks/goreleaser.yml
@@ -82,7 +104,6 @@ jobs:
       on_success:
         task: report-success
         file: templates.git/tasks/gitea-status-v2.yml
-        input_mapping: {repo: inetmock.git}
         vars:
           project_path: inetmock/inetmock
           git_ref: ((.:git_ref))
@@ -92,7 +113,6 @@ jobs:
       on_failure:
         task: report-failure
         file: templates.git/tasks/gitea-status-v2.yml
-        input_mapping: {repo: inetmock.git}
         vars:
           project_path: inetmock/inetmock
           git_ref: ((.:git_ref))
@@ -107,7 +127,6 @@ jobs:
       on_success:
         task: report-success
         file: templates.git/tasks/gitea-status-v2.yml
-        input_mapping: {repo: inetmock.git}
         vars:
           project_path: inetmock/inetmock
           git_ref: ((.:git_ref))
@@ -117,7 +136,6 @@ jobs:
       on_failure:
         task: report-failure
         file: templates.git/tasks/gitea-status-v2.yml
-        input_mapping: {repo: inetmock.git}
         vars:
           project_path: inetmock/inetmock
           git_ref: ((.:git_ref))
