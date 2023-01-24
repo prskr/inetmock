@@ -34,7 +34,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20230116083435-1de6713980de
+	golang.org/x/exp v0.0.0-20230124195608-d38c7dcee874
 	golang.org/x/net v0.5.0
 	golang.org/x/sync v0.1.0
 	google.golang.org/grpc v1.51.0
