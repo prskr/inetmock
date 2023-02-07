@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 
 	mdns "github.com/miekg/dns"
-	"go.uber.org/multierr"
 )
 
 var (
@@ -96,7 +96,9 @@ func (h HTTPTransport) RoundTrip(ctx context.Context, question *mdns.Msg) (resp 
 	}
 
 	if httpResp.Body != nil {
-		defer multierr.AppendInvoke(&err, multierr.Close(httpResp.Body))
+		defer func() {
+			err = errors.Join(err, httpResp.Body.Close())
+		}()
 	}
 
 	if httpResp.StatusCode != http.StatusOK {

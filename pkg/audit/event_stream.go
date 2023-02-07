@@ -2,13 +2,13 @@ package audit
 
 import (
 	"context"
+	"errors"
 	"io"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 
@@ -144,7 +144,7 @@ func (e *eventStream) Close() error {
 	var err error
 	for _, rs := range e.sinks {
 		if closer, ok := rs.Sink.(io.Closer); ok {
-			err = multierr.Append(err, closer.Close())
+			err = errors.Join(err, closer.Close())
 		}
 	}
 	return nil

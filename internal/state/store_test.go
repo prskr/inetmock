@@ -9,7 +9,6 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/maxatome/go-testdeep/td"
-	"go.uber.org/multierr"
 
 	"inetmock.icb4dc0.de/inetmock/internal/state"
 	"inetmock.icb4dc0.de/inetmock/internal/state/statetest"
@@ -171,7 +170,7 @@ func TestStore_GetAll(t *testing.T) {
 			},
 			setup: statetest.StoreSetupFunc(func(tb testing.TB, store state.KVStore) error {
 				tb.Helper()
-				return multierr.Append(
+				return errors.Join(
 					store.Set("ted.tester", ted),
 					store.Set("simon.sample", simon),
 				)
@@ -188,7 +187,7 @@ func TestStore_GetAll(t *testing.T) {
 			},
 			setup: statetest.StoreSetupFunc(func(tb testing.TB, store state.KVStore) error {
 				tb.Helper()
-				return multierr.Append(
+				return errors.Join(
 					store.Set(path.Join("teachers", "ted.tester"), ted),
 					store.Set(path.Join("pupils", "simon.sample"), simon),
 				)
@@ -205,7 +204,7 @@ func TestStore_GetAll(t *testing.T) {
 			},
 			setup: statetest.StoreSetupFunc(func(tb testing.TB, store state.KVStore) error {
 				tb.Helper()
-				return multierr.Combine(
+				return errors.Join(
 					store.Set(path.Join("teachers", "ted.tester"), ted),
 					store.Set(path.Join("teachers", "simon.sample"), simon),
 					store.Set(path.Join("pupils", "simon.sample"), simon),

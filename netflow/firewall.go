@@ -11,7 +11,6 @@ import (
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/features"
 	"github.com/cilium/ebpf/rlimit"
-	"go.uber.org/multierr"
 )
 
 var (
@@ -140,7 +139,7 @@ func (f *Firewall) AttachToInterface(interfaceName string, fwCfg FirewallInterfa
 
 	defer func() {
 		if err != nil {
-			err = multierr.Append(err, inst.mgr.Stop(manager.CleanAll))
+			err = errors.Join(err, inst.mgr.Stop(manager.CleanAll))
 		}
 	}()
 
@@ -163,7 +162,7 @@ func (f *Firewall) Close() error {
 
 	var err error
 	for k, mi := range f.managedInterfaces {
-		err = multierr.Append(err, mi.Close())
+		err = errors.Join(err, mi.Close())
 		delete(f.managedInterfaces, k)
 	}
 
@@ -282,7 +281,7 @@ func (i *FirewallInstance) Close() (err error) {
 		err = i.transport.Close()
 	}
 
-	return multierr.Append(err, i.mgr.Stop(manager.CleanAll))
+	return errors.Join(err, i.mgr.Stop(manager.CleanAll))
 }
 
 func (i *FirewallInstance) initPacketTransport(packetSink PacketSink, mode MonitorMode) error {

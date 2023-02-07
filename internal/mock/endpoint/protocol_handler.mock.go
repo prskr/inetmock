@@ -10,7 +10,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	cmux "github.com/soheilhy/cmux"
-
 	endpoint "inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 

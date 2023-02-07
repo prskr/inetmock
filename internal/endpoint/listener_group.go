@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"sort"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/soheilhy/cmux"
-	"go.uber.org/multierr"
 )
 
 const (
@@ -224,7 +224,7 @@ func (le ListenerEndpoint) Close(ctx context.Context) (err error) {
 		err = stoppable.Stop(ctx)
 	}
 
-	return multierr.Append(err, le.Uplink.Close())
+	return errors.Join(err, le.Uplink.Close())
 }
 
 func groupEndpoints(endpoints map[string]*ListenerEndpoint, predicate func(s *ListenerEndpoint) bool) (*Group, error) {

@@ -4,12 +4,12 @@
 package consumers
 
 import (
+	"errors"
 	"io"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
-	"go.uber.org/multierr"
 
 	"inetmock.icb4dc0.de/inetmock/internal/pcap"
 )
@@ -59,7 +59,7 @@ func (f *writerConsumer) Observe(pkg gopacket.Packet) {
 
 func (f *writerConsumer) Close() (err error) {
 	if closer, ok := f.origWriter.(io.Closer); ok {
-		multierr.AppendInvoke(&err, multierr.Close(closer))
+		err = errors.Join(err, closer.Close())
 	}
 	f.packageWriter = nil
 	return

@@ -10,7 +10,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	cobra "github.com/spf13/cobra"
-
 	logging "inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 

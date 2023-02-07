@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
 	"inetmock.icb4dc0.de/inetmock/internal/rules"
@@ -46,7 +45,7 @@ func NewDNSRuleCheck(name string, resolvers ResolverForModule, logger logging.Lo
 		const maxRetries = 10
 		defer func() {
 			if rec := recover(); rec != nil {
-				err = multierr.Append(err, fmt.Errorf("recovered panic during check: %v", rec))
+				err = errors.Join(err, fmt.Errorf("recovered panic during check: %v", rec))
 			}
 		}()
 

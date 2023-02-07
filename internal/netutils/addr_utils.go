@@ -3,8 +3,6 @@ package netutils
 import (
 	"errors"
 	"net"
-
-	"go.uber.org/multierr"
 )
 
 func IPPortFromAddress(addr net.Addr) (ip net.IP, port int, err error) {
@@ -32,7 +30,9 @@ func RandomPort() (port int, err error) {
 		return 0, err
 	} else {
 		listener = l
-		defer multierr.AppendInvoke(&err, multierr.Close(listener))
+		defer func() {
+			err = errors.Join(err, listener.Close())
+		}()
 	}
 
 	if addr, ok := listener.Addr().(*net.TCPAddr); !ok {

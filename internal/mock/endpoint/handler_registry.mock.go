@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	endpoint "inetmock.icb4dc0.de/inetmock/internal/endpoint"
 )
 

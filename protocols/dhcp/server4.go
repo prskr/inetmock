@@ -11,7 +11,6 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/insomniacslk/dhcp/dhcpv4"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/net/ipv4"
 
@@ -58,7 +57,7 @@ func (s *Server4) Serve() error {
 }
 
 func (s *Server4) Shutdown() error {
-	err := multierr.Combine(
+	err := errors.Join(
 		s.PacketConn.SetDeadline(time.Now()),
 		s.PacketConn.Close(),
 	)

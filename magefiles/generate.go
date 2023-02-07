@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"github.com/magefile/mage/target"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -104,7 +104,7 @@ func GenerateGo() error {
 }
 
 func CompileEBPF() error {
-	return multierr.Combine(
+	return errors.Join(
 		compileEBPFTarget("nat"),
 		compileEBPFTarget("firewall"),
 		compileEBPFTarget("tests"),

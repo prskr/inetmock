@@ -12,7 +12,6 @@ import (
 
 	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
 	"inetmock.icb4dc0.de/inetmock/internal/endpoint"
@@ -56,7 +55,7 @@ var (
 		},
 		PostRunE: func(*cobra.Command, []string) (err error) {
 			for idx := range toClose {
-				err = multierr.Append(err, toClose[idx].Close())
+				err = errors.Join(err, toClose[idx].Close())
 			}
 			return
 		},

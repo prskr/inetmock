@@ -2,10 +2,10 @@ package health
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	gohttp "net/http"
 
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
 	"inetmock.icb4dc0.de/inetmock/internal/rules"
@@ -37,7 +37,7 @@ func NewHTTPRuleCheck(name string, clients HTTPClientForModule, logger logging.L
 		const maxRetries = 10
 		defer func() {
 			if rec := recover(); rec != nil {
-				err = multierr.Append(err, fmt.Errorf("recovered panic in HTTP health check: %v", rec))
+				err = errors.Join(err, fmt.Errorf("recovered panic in HTTP health check: %v", rec))
 			}
 		}()
 

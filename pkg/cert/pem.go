@@ -4,12 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-
-	"go.uber.org/multierr"
 )
 
 const (
@@ -30,7 +29,11 @@ func (p PEMCert) Write(cn, outDir string) (err error) {
 	if certOut, err = os.Create(filepath.Join(outDir, fmt.Sprintf("%s.pem", cn))); err != nil {
 		return
 	}
-	defer multierr.AppendInvoke(&err, multierr.Close(certOut))
+
+	defer func() {
+		err = errors.Join(err, certOut.Close())
+	}()
+
 	if err = pem.Encode(certOut, &pem.Block{Type: certificateBlockType, Bytes: p.Certificate.Certificate[0]}); err != nil {
 		return
 	}

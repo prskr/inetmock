@@ -13,7 +13,6 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
-	"go.uber.org/multierr"
 )
 
 const (
@@ -79,7 +78,7 @@ func (o *deviceConsumer) Close() error {
 	}
 
 	if closer, ok := o.consumer.(io.Closer); ok {
-		return multierr.Append(err, closer.Close())
+		return errors.Join(err, closer.Close())
 	}
 	return err
 }

@@ -10,7 +10,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	audit "inetmock.icb4dc0.de/inetmock/pkg/audit"
 	auditv1 "inetmock.icb4dc0.de/inetmock/pkg/audit/v1"
 )

@@ -11,8 +11,6 @@ import (
 	"strings"
 	"sync"
 
-	"go.uber.org/multierr"
-
 	"inetmock.icb4dc0.de/inetmock/internal/rules"
 )
 
@@ -180,7 +178,9 @@ func ResponseBodyContainsFilter(args ...rules.Param) (Validator, error) {
 			searchBuffer = make([]byte, searchValueLength*windowSizeSearchBufferMultiplier)
 		}
 
-		defer multierr.AppendInvoke(&err, multierr.Close(resp.Body))
+		defer func() {
+			err = errors.Join(err, resp.Body.Close())
+		}()
 
 		var read, idx int
 		more := true
@@ -220,7 +220,10 @@ func ResponseBodyHashSHA256Filter(args ...rules.Param) (Validator, error) {
 		if resp == nil {
 			return ErrResponseEmpty
 		}
-		defer multierr.AppendInvoke(&err, multierr.Close(resp.Body))
+
+		defer func() {
+			err = errors.Join(err, resp.Body.Close())
+		}()
 
 		hash := sha256.New()
 		if _, err = io.Copy(hash, resp.Body); err != nil {

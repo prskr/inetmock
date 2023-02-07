@@ -12,7 +12,6 @@ import (
 	"time"
 
 	_ "github.com/google/gopacket/layers"
-	"go.uber.org/multierr"
 )
 
 const (
@@ -140,7 +139,7 @@ func (r *recorder) Close() (err error) {
 	defer r.locker.Unlock()
 
 	for key, consumer := range r.openDevices {
-		err = multierr.Append(err, consumer.Close())
+		err = errors.Join(err, consumer.Close())
 		delete(r.openDevices, key)
 	}
 	return

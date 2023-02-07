@@ -17,7 +17,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/valyala/bytebufferpool"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
@@ -246,7 +245,9 @@ func addCACertToPool(pool *x509.CertPool) (err error) {
 		return err
 	}
 
-	defer multierr.AppendInvoke(&err, multierr.Close(reader))
+	defer func() {
+		err = errors.Join(err, reader.Close())
+	}()
 
 	if _, err = io.Copy(buffer, reader); err != nil {
 		return err

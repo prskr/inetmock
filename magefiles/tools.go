@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 	"path/filepath"
 
 	"github.com/magefile/mage/sh"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -28,7 +28,9 @@ func ensureURLTool(ctx context.Context, toolName, downloadURL string) error {
 			return err
 		}
 
-		defer multierr.AppendInvoke(&err, multierr.Close(resp.Body))
+		defer func() {
+			err = errors.Join(err, resp.Body.Close())
+		}()
 
 		const ownerExecute = 0o755
 		outFile, err := os.OpenFile(filepath.Join("/", "usr", "local", "bin", toolName), os.O_RDWR|os.O_CREATE|os.O_TRUNC, ownerExecute)

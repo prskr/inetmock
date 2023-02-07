@@ -8,7 +8,6 @@ import (
 
 	manager "github.com/DataDog/ebpf-manager"
 	"github.com/cilium/ebpf"
-	"go.uber.org/multierr"
 	"golang.org/x/exp/maps"
 )
 
@@ -129,7 +128,7 @@ func (m *Map[K, V]) Sync(desired map[K]V, opts ...BatchOption) (err error) {
 		}
 	}
 
-	return multierr.Combine(
+	return errors.Join(
 		m.doDeleteAll(toDelete, opts),
 		m.doPutAll(toInsert, opts),
 	)

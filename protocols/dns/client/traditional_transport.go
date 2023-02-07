@@ -2,11 +2,11 @@ package client
 
 import (
 	"context"
+	"errors"
 	"net"
 	"sync"
 
 	mdns "github.com/miekg/dns"
-	"go.uber.org/multierr"
 )
 
 type TraditionalTransport struct {
@@ -21,7 +21,9 @@ func (t *TraditionalTransport) RoundTrip(ctx context.Context, question *mdns.Msg
 		return nil, err
 	}
 
-	defer multierr.AppendInvoke(&err, multierr.Close(conn))
+	defer func() {
+		err = errors.Join(err, conn.Close())
+	}()
 
 	if err := conn.WriteMsg(question); err != nil {
 		return nil, err

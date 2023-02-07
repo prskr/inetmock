@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
-	"go.uber.org/multierr"
 
 	"inetmock.icb4dc0.de/inetmock/internal/netutils"
 	"inetmock.icb4dc0.de/inetmock/internal/state"
@@ -51,7 +50,7 @@ func (h *RangeMessageHandler) Handle(req, resp *dhcpv4.DHCPv4) (err error) {
 	return h.Store.ReadWriteTransaction(func(rw state.TxnReaderWriter) error {
 		if err := rw.Get(macKey, lease); err == nil {
 			ipKey := path.Join(rangeHandlerStatePrefix, h.rangeKey, lease.IP.String())
-			return multierr.Combine(
+			return errors.Join(
 				rw.Set(macKey, lease, state.WithTTL(h.TTL)),
 				rw.Set(ipKey, lease, state.WithTTL(h.TTL)),
 			)
@@ -68,7 +67,7 @@ func (h *RangeMessageHandler) Handle(req, resp *dhcpv4.DHCPv4) (err error) {
 				lease.MAC = req.ClientHWAddr
 				lease.IP = netutils.Uint32ToIP(ipVal)
 				ipKey := path.Join(rangeHandlerStatePrefix, h.rangeKey, lease.IP.String())
-				return multierr.Combine(
+				return errors.Join(
 					rw.Set(macKey, lease, state.WithTTL(h.TTL)),
 					rw.Set(ipKey, lease, state.WithTTL(h.TTL)),
 				)

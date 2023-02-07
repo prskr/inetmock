@@ -2,6 +2,7 @@ package netflow
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
@@ -10,7 +11,6 @@ import (
 
 	manager "github.com/DataDog/ebpf-manager"
 	"github.com/google/uuid"
-	"go.uber.org/multierr"
 )
 
 //go:embed ebpf/nat.o
@@ -237,7 +237,7 @@ func (n *NAT) Close() error {
 
 	var err error
 	for key, inst := range n.managedInterfaces {
-		err = multierr.Append(err, inst.Close())
+		err = errors.Join(err, inst.Close())
 		delete(n.managedInterfaces, key)
 	}
 

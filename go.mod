@@ -1,6 +1,6 @@
 module inetmock.icb4dc0.de/inetmock
 
-go 1.19
+go 1.20
 
 require (
 	github.com/DataDog/ebpf-manager v0.1.0
@@ -32,7 +32,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/tcplisten v1.0.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
-	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230124195608-d38c7dcee874
 	golang.org/x/net v0.5.0
@@ -41,6 +40,14 @@ require (
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools/gotestsum v1.9.0
+)
+
+replace (
+	github.com/containerd/containerd => github.com/containerd/containerd v1.6.15
+	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
+	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20220314074627-3272f0ec1510
+	golang.org/x/text => golang.org/x/text v0.6.0
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -112,6 +119,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect
+	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.4.0 // indirect
@@ -124,10 +132,4 @@ require (
 	gotest.tools/v3 v3.4.0 // indirect
 )
 
-replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.6.15
-	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
-	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20220314074627-3272f0ec1510
-	golang.org/x/text => golang.org/x/text v0.6.0
-	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
-)
+

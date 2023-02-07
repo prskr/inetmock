@@ -1,10 +1,9 @@
 package endpoint
 
 import (
+	"errors"
 	"net"
 	"time"
-
-	"go.uber.org/multierr"
 )
 
 func NewUplink(conn any) (u Uplink) {
@@ -45,11 +44,11 @@ func (u *Uplink) Close() (err error) {
 		return nil
 	}
 	if u.Listener != nil {
-		multierr.AppendInvoke(&err, multierr.Close(u.Listener))
+		err = errors.Join(err, u.Listener.Close())
 		u.Listener = nil
 	}
 	if u.PacketConn != nil {
-		err = multierr.Combine(err, u.PacketConn.SetDeadline(time.Now()), u.PacketConn.Close())
+		err = errors.Join(err, u.PacketConn.SetDeadline(time.Now()), u.PacketConn.Close())
 		u.PacketConn = nil
 	}
 	return

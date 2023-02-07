@@ -9,7 +9,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	zap "go.uber.org/zap"
-
 	logging "inetmock.icb4dc0.de/inetmock/pkg/logging"
 )
 

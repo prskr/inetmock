@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	"github.com/magefile/mage/mg"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
@@ -62,7 +62,7 @@ func IntegrationTests(ctx context.Context) (err error) {
 	}
 
 	defer func() {
-		err = multierr.Append(err, inetmockCmd.Process.Signal(syscall.SIGTERM))
+		err = errors.Join(err, inetmockCmd.Process.Signal(syscall.SIGTERM))
 	}()
 
 	imctlCmd := exec.Command(
