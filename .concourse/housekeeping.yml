@@ -25,7 +25,6 @@ jobs:
           - get: daily
             trigger: true
       - task: renovate
-        tags: [ linux,vm ]
         file: templates.git/tasks/renovate.yml
         input_mapping: { repo: inetmock.git }
         vars:
