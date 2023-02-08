@@ -43,7 +43,7 @@ require (
 )
 
 replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.6.15
+	github.com/containerd/containerd => github.com/containerd/containerd v1.6.16
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
 	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20220314074627-3272f0ec1510
 	golang.org/x/text => golang.org/x/text v0.7.0
