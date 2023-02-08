@@ -8,13 +8,13 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 
+	"inetmock.icb4dc0.de/inetmock/internal/test"
 	"inetmock.icb4dc0.de/inetmock/internal/test/integration"
 )
 
@@ -27,7 +27,6 @@ const (
 var dnsEndpoint string
 
 func TestMain(m *testing.M) {
-	rand.Seed(time.Now().Unix())
 	var (
 		code              int
 		inetMockContainer testcontainers.Container
@@ -69,25 +68,18 @@ func TestMain(m *testing.M) {
 
 func Benchmark_dnsHandler(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
+		//nolint:gosec // pseudo-random is good enough for tests
+		random := rand.New(rand.NewSource(time.Now().Unix()))
 		resolv := resolver(dnsEndpoint)
 		for pb.Next() {
 			lookupCtx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			_, err := resolv.LookupHost(lookupCtx, fmt.Sprintf("www.%s.com", randomString(8)))
+			_, err := resolv.LookupHost(lookupCtx, fmt.Sprintf("www.%s.com", test.RandomString(random, 8)))
 			cancel()
 			if err != nil {
 				b.Errorf("LookupHost() error = %v", err)
 			}
 		}
 	})
-}
-
-func randomString(length int) (result string) {
-	buffer := strings.Builder{}
-	for i := 0; i < length; i++ {
-		//nolint:gosec
-		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
-	}
-	return buffer.String()
 }
 
 func resolver(endpoint string) net.Resolver {

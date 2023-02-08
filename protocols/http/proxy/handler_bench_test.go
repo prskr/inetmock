@@ -15,18 +15,17 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 
+	"inetmock.icb4dc0.de/inetmock/internal/test"
 	"inetmock.icb4dc0.de/inetmock/internal/test/integration"
 )
 
 const (
-	charSet         = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
 	startupTimeout  = 10 * time.Minute
 	shutdownTimeout = 5 * time.Second
 )
@@ -38,7 +37,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	rand.Seed(time.Now().Unix())
 	var (
 		inetMockContainer testcontainers.Container
 		httpPort          = nat.Port("3128/tcp")
@@ -98,6 +96,8 @@ func Benchmark_httpProxy(b *testing.B) {
 	}
 	for _, bm := range benchmarks {
 		b.Run(bm.name, func(b *testing.B) {
+			//nolint:gosec // pseudo-random is good enough for tests
+			random := rand.New(rand.NewSource(time.Now().Unix()))
 			var err error
 
 			var httpClient *http.Client
@@ -111,9 +111,8 @@ func Benchmark_httpProxy(b *testing.B) {
 
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					//nolint:gosec
-					extension := availableExtensions[rand.Intn(len(availableExtensions))]
-					reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", bm.endpoint, randomString(15), extension))
+					extension := availableExtensions[random.Intn(len(availableExtensions))]
+					reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", bm.endpoint, test.RandomString(random, 15), extension))
 					req := &http.Request{
 						Method: http.MethodGet,
 						URL:    reqURL,
@@ -129,15 +128,6 @@ func Benchmark_httpProxy(b *testing.B) {
 			})
 		})
 	}
-}
-
-func randomString(length int) (result string) {
-	buffer := strings.Builder{}
-	for i := 0; i < length; i++ {
-		//nolint:gosec
-		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
-	}
-	return buffer.String()
 }
 
 func setupHTTPClient(httpEndpoint, httpsEndpoint string) (*http.Client, error) {
@@ -160,6 +150,11 @@ func setupHTTPClient(httpEndpoint, httpsEndpoint string) (*http.Client, error) {
 		return nil, errors.New("failed to add CA key")
 	}
 
+	dialer := net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
 	client := &http.Client{
 		Transport: &http.Transport{
 			Proxy: func(req *http.Request) (*url.URL, error) {
@@ -172,10 +167,9 @@ func setupHTTPClient(httpEndpoint, httpsEndpoint string) (*http.Client, error) {
 					return nil, errors.New("unknown scheme")
 				}
 			},
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, network, addr)
+			},
 			//nolint:gosec
 			TLSClientConfig: &tls.Config{
 				RootCAs: rootCaPool,

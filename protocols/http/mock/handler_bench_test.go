@@ -15,18 +15,17 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 
+	"inetmock.icb4dc0.de/inetmock/internal/test"
 	"inetmock.icb4dc0.de/inetmock/internal/test/integration"
 )
 
 const (
-	charSet         = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
 	startupTimeout  = 5 * time.Minute
 	shutdownTimeout = 5 * time.Second
 )
@@ -35,16 +34,17 @@ var (
 	availableExtensions = []string{"gif", "html", "ico", "jpg", "png", "txt"}
 	httpEndpoint        string
 	httpsEndpoint       string
+	//nolint:gosec // pseudo-random is good enough for tests
+	random              = rand.New(rand.NewSource(time.Now().Unix()))
 	defaultURLGenerator = func(endpoint string) *url.URL {
 		//nolint:gosec
 		extension := availableExtensions[rand.Intn(len(availableExtensions))]
-		reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", endpoint, randomString(15), extension))
+		reqURL, _ := url.Parse(fmt.Sprintf("%s/%s.%s", endpoint, test.RandomString(random, 15), extension))
 		return reqURL
 	}
 )
 
 func TestMain(m *testing.M) {
-	rand.Seed(time.Now().Unix())
 	var (
 		code              int
 		inetMockContainer testcontainers.Container
@@ -146,15 +146,6 @@ func Benchmark_httpHandler(b *testing.B) {
 	}
 }
 
-func randomString(length int) (result string) {
-	buffer := strings.Builder{}
-	for i := 0; i < length; i++ {
-		//nolint:gosec
-		buffer.WriteByte(charSet[rand.Intn(len(charSet))])
-	}
-	return buffer.String()
-}
-
 func setupHTTPClient() (*http.Client, error) {
 	//nolint:dogsled
 	_, fileName, _, _ := runtime.Caller(0)
@@ -175,13 +166,17 @@ func setupHTTPClient() (*http.Client, error) {
 		return nil, errors.New("failed to add CA key")
 	}
 
+	dialer := net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
 	//nolint:gosec
 	client := &http.Client{
 		Transport: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, network, addr)
+			},
 			TLSClientConfig: &tls.Config{
 				RootCAs: rootCaPool,
 			},
