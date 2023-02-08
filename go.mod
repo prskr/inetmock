@@ -6,7 +6,7 @@ require (
 	github.com/DataDog/ebpf-manager v0.1.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/cilium/ebpf v0.9.3
+	github.com/cilium/ebpf v0.10.0
 	github.com/dgraph-io/badger/v3 v3.2103.5
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
