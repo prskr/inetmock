@@ -19,11 +19,11 @@ jobs:
   - name: renovate
     plan:
       - in_parallel:
-        - get: inetmock.git
-          trigger: true
-        - get: templates.git
-        - get: daily
-          trigger: true
+          - get: inetmock.git
+            trigger: true
+          - get: templates.git
+          - get: daily
+            trigger: true
       - task: renovate
         tags: [ linux,vm ]
         file: templates.git/tasks/renovate.yml

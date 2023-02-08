@@ -10,8 +10,8 @@ image_resource:
     password: ((gitea-credentials.token))
 
 inputs:
-- name: repo
-  path: .
+  - name: repo
+    path: .
 
 container_limits:
   memory: 1258291200 # 1200MB
@@ -19,7 +19,7 @@ container_limits:
 run:
   path: sh
   args:
-  - -ce
-  - |
-    mount -t debugfs debugfs /sys/kernel/debug
-    go run github.com/magefile/mage testAll
+    - -ce
+    - |
+      mount -t debugfs debugfs /sys/kernel/debug
+      go run github.com/magefile/mage testAll
