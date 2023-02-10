@@ -33,7 +33,7 @@ require (
 	github.com/valyala/tcplisten v1.0.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
+	golang.org/x/exp v0.0.0-20230210204819-062eb4c674ab
 	golang.org/x/net v0.6.0
 	golang.org/x/sync v0.1.0
 	google.golang.org/grpc v1.53.0
