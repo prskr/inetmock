@@ -40,8 +40,8 @@ github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 h1:UQHMgLO+TxOEl
 github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/DataDog/ebpf-manager v0.1.0 h1:IsyrQibXHXNfxicihzMJ4mEbursWuwn6fVEtQL1Bo28=
-github.com/DataDog/ebpf-manager v0.1.0/go.mod h1:oUCSIP1dv/SGMlSzJ8ZII3nCHdUqFQOjXD5QvQcdk+8=
+github.com/DataDog/ebpf-manager v0.2.3 h1:xzPnk1JoLU1zei0BsUXKiBeG5HJ5zOTL747cyU9R2RY=
+github.com/DataDog/ebpf-manager v0.2.3/go.mod h1:QNbbXqQdl1RDRDna/vSHzhpTNXTnqxxJRVXdeANgCUA=
 github.com/DataDog/gopsutil v1.2.2 h1:8lmthwyyCXa1NKiYcHlrtl9AAFdfbNI2gPcioCJcBPU=
 github.com/DataDog/gopsutil v1.2.2/go.mod h1:glkxNt/qRu9lnpmUEQwOIAXW+COWDTBOTEAHqbgBPts=
 github.com/Microsoft/go-winio v0.6.0 h1:slsWYD/zyx7lCXoZVlvQrj0hPTM1HI4+v1sIda2yDvg=
@@ -436,8 +436,8 @@ github.com/vishvananda/netlink v1.2.1-beta.2 h1:Llsql0lnQEbHj0I1OuKyp8otXp0r3q0m
 github.com/vishvananda/netlink v1.2.1-beta.2/go.mod h1:twkDnbuQxJYemMlGd4JFIcuhgX83tXhKS2B/PRMpOho=
 github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df/go.mod h1:JP3t17pCcGlemwknint6hfoeCVQrEMVwxRLRjXpq+BU=
 github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
-github.com/vishvananda/netns v0.0.1 h1:JDkWS7Axy5ziNM3svylLhpSgqjPDb+BgVUbXoDo+iPw=
-github.com/vishvananda/netns v0.0.1/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
+github.com/vishvananda/netns v0.0.4 h1:Oeaw1EM2JMxD51g9uhtC0D7erkIjgmj8+JZc26m1YX8=
+github.com/vishvananda/netns v0.0.4/go.mod h1:SpkAiCQRtJ6TvvxPnOSyH3BMl6unz3xZlaprSwhNNJM=
 github.com/vmihailenco/msgpack/v5 v5.3.5 h1:5gO0H1iULLWGhs2H5tbAHIZTV8/cYafcFOr9znI5mJU=
 github.com/vmihailenco/msgpack/v5 v5.3.5/go.mod h1:7xyJ9e+0+9SaZT0Wt1RGleJXzli6Q/V5KbhBonMG9jc=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=

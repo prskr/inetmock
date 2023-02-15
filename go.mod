@@ -3,7 +3,7 @@ module inetmock.icb4dc0.de/inetmock
 go 1.20
 
 require (
-	github.com/DataDog/ebpf-manager v0.1.0
+	github.com/DataDog/ebpf-manager v0.2.3
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cilium/ebpf v0.10.0
@@ -43,6 +43,7 @@ require (
 )
 
 replace (
+	github.com/DataDog/ebpf-manager => github.com/DataDog/ebpf-manager v0.2.3
 	github.com/containerd/containerd => github.com/containerd/containerd v1.6.17
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
 	github.com/gopacket/gopacket => github.com/baez90/gopacket v0.0.0-20230215181804-d4f7deafad0e
@@ -112,7 +113,7 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/u-root/uio v0.0.0-20221213070652-c3537552635f // indirect
 	github.com/vishvananda/netlink v1.2.1-beta.2 // indirect
-	github.com/vishvananda/netns v0.0.1 // indirect
+	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
