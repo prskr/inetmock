@@ -297,7 +297,6 @@ func (n *NAT) prepareInstance(interfaceName string, loader EBPFProgramLoader) (i
 		clonedProbe := manager.Probe{
 			ProbeIdentificationPair: manager.ProbeIdentificationPair{
 				UID:          uuid.NewString(),
-				EBPFSection:  probes[0].EBPFSection,
 				EBPFFuncName: probes[0].EBPFFuncName,
 			},
 			IfName:           interfaceName,
