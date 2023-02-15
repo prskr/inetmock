@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
+	"github.com/gopacket/gopacket/pcapgo"
 	"github.com/maxatome/go-testdeep/td"
 	"golang.org/x/net/context/ctxhttp"
 
@@ -79,7 +79,11 @@ func Test_recorder_CompleteWorkflow(t *testing.T) {
 
 	packetSource := gopacket.NewZeroCopyPacketSource(pcapReader, layers.LayerTypeEthernet, gopacket.WithLazy(true), gopacket.WithPool(true))
 
-	for pkg := range packetSource.Packets(context.Background()) {
+	ctx, cancel := context.WithCancelCause(context.Background())
+	t.Cleanup(func() {
+		cancel(errors.New("test complete"))
+	})
+	for pkg := range packetSource.PacketsCtx(ctx) {
 		ip4LayerRaw := pkg.Layer(layers.LayerTypeIPv4)
 		tcpLayerRaw := pkg.Layer(layers.LayerTypeTCP)
 		if tcpLayerRaw == nil || ip4LayerRaw == nil {

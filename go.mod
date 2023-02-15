@@ -11,8 +11,8 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/golang/mock v1.6.0
-	github.com/google/gopacket v1.1.19
 	github.com/google/uuid v1.3.0
+	github.com/gopacket/gopacket v0.1.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.13
@@ -45,9 +45,8 @@ require (
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.6.17
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
-	github.com/google/gopacket => github.com/baez90/gopacket v1.1.20-0.20220314074627-3272f0ec1510
+	github.com/gopacket/gopacket => github.com/baez90/gopacket v0.0.0-20230215181804-d4f7deafad0e
 	golang.org/x/text => golang.org/x/text v0.7.0
-	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 )
 
 require (

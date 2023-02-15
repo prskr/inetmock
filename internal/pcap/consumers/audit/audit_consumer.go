@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 
 	"inetmock.icb4dc0.de/inetmock/internal/pcap"
 	"inetmock.icb4dc0.de/inetmock/pkg/audit"

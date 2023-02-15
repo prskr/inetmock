@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package pcap
 
@@ -10,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
+	"github.com/gopacket/gopacket/pcapgo"
 )
 
 const (
@@ -92,7 +91,7 @@ func (o *deviceConsumer) StartTransport(ctx context.Context) {
 
 func (o *deviceConsumer) transportToConsumers(ctx context.Context) {
 	defer close(o.transportStat)
-	for pkg := range o.packetSource.Packets(ctx) {
+	for pkg := range o.packetSource.PacketsCtx(ctx) {
 		o.locker.Lock()
 		o.consumer.Observe(pkg)
 		o.locker.Unlock()

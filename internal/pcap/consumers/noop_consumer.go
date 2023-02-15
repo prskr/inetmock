@@ -1,11 +1,10 @@
 //go:build linux
-// +build linux
 
 package consumers
 
 import (
-	"github.com/google/gopacket"
 	"github.com/google/uuid"
+	"github.com/gopacket/gopacket"
 
 	"inetmock.icb4dc0.de/inetmock/internal/pcap"
 )

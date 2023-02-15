@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package pcap
 
@@ -9,7 +8,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 type Consumer interface {

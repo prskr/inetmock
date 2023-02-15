@@ -46,7 +46,7 @@ linters-settings:
       - github.com/containerd/containerd
       - github.com/docker/cli
       - github.com/docker/docker
-      - github.com/google/gopacket
+      - github.com/gopacket/gopacket
       - github.com/gorilla/mux
       - github.com/opencontainers/runc
       - golang.org/x/text

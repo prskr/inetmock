@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package pcap
 
@@ -11,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/google/gopacket/layers"
+	_ "github.com/gopacket/gopacket/layers"
 )
 
 const (
