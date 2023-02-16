@@ -44,7 +44,7 @@ require (
 
 replace (
 	github.com/DataDog/ebpf-manager => github.com/DataDog/ebpf-manager v0.2.3
-	github.com/containerd/containerd => github.com/containerd/containerd v1.6.17
+	github.com/containerd/containerd => github.com/containerd/containerd v1.6.18
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
 	github.com/gopacket/gopacket => github.com/baez90/gopacket v0.0.0-20230215181804-d4f7deafad0e
 )
