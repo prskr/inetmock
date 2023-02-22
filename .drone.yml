@@ -1,0 +1,57 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: Vulnerabilities
+  image: code.icb4dc0.de/inetmock/ci-images/go-ci
+  commands:
+    - "go run github.com/magefile/mage generate"
+    - 'go run golang.org/x/vuln/cmd/govulncheck@latest -tags "$${GO_BUILD_TAGS}" ./...'
+  environment:
+    GO_BUILD_TAGS: sudo,integration
+
+- name: Lint
+  image: code.icb4dc0.de/inetmock/ci-images/go-ci
+  commands:
+    - go run github.com/magefile/mage lint
+
+- name: Unit tests
+  image: code.icb4dc0.de/inetmock/ci-images/go-ci
+  privileged: true
+  network_mode: host
+  commands:
+    - mount -t debugfs debugfs /sys/kernel/debug
+    - go run github.com/magefile/mage testAll
+
+- name: Integration tests
+  image: code.icb4dc0.de/inetmock/ci-images/go-ci
+  commands:
+    - go run github.com/magefile/mage integrationTests
+
+---
+kind: pipeline
+type: docker
+name: housekeeping
+
+trigger:
+  event:
+  - cron
+  cron:
+  - nightly
+
+steps:
+  - name: Renovate
+    image: docker.io/renovate/renovate
+    commands:
+      - "renovate inetmock/inetmock"
+    environment:
+      RENOVATE_TOKEN:
+        from_secret: gitea_token
+      GITHUB_COM_TOKEN:
+        from_secret: github_token
+      RENOVATE_PLATFORM: gitea
+      RENOVATE_AUTODISCOVER: "false"
+      RENOVATE_ENDPOINT: https://code.icb4dc0.de/api/v1
+      LOG_LEVEL: info
