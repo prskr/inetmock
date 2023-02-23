@@ -3,6 +3,12 @@ kind: pipeline
 type: docker
 name: default
 
+trigger:
+  event:
+    - push
+    - pull_request
+    - tag
+
 steps:
 - name: Vulnerabilities
   image: code.icb4dc0.de/inetmock/ci-images/go-ci
@@ -30,6 +36,23 @@ steps:
   commands:
     - go run github.com/magefile/mage integrationTests
 
+- name: Snapshot release
+  image: code.icb4dc0.de/inetmock/ci-images/go-ci
+  when:
+    event:
+      - push
+      - pull_request
+  commands:
+    - goreleaser release --rm-dist --snapshot
+
+- name: Release
+  image: code.icb4dc0.de/inetmock/ci-images/go-ci
+  when:
+    event:
+      - tag
+  commands:
+    - goreleaser release --rm-dist
+
 ---
 kind: pipeline
 type: docker
@@ -39,7 +62,7 @@ trigger:
   event:
   - cron
   cron:
-  - nightly
+    - housekeeping
 
 steps:
   - name: Renovate
