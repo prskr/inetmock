@@ -39,6 +39,7 @@ steps:
     - go run github.com/magefile/mage -d build -w . integrationTests
   environment:
     DOCKER_HOST: tcp://localhost:2375
+    TC_DISABLE_REAPER: 'true'
   volumes:
     - name: go-cache
       path: /go

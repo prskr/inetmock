@@ -54,6 +54,7 @@ func IntegrationTests(ctx context.Context) (err error) {
 			},
 			Privileged: true,
 			WaitingFor: wait.ForLog("App startup completed"),
+			SkipReaper: DisableReaper,
 		},
 		Started: true,
 	}

@@ -25,6 +25,7 @@ var (
 	OutDir                 string
 	GenerateAlways         bool
 	IsReleaseBuild         bool
+	DisableReaper          bool
 	dirsToIgnore           = []string{
 		".git",
 		"magefiles",
@@ -44,6 +45,10 @@ func init() {
 		panic(err)
 	} else {
 		WorkingDir = wd
+	}
+
+	if b, err := strconv.ParseBool(os.Getenv("TC_DISABLE_REAPER")); err == nil {
+		DisableReaper = b
 	}
 
 	OutDir = filepath.Join(WorkingDir, "out")
