@@ -38,7 +38,7 @@ steps:
     - go run github.com/magefile/mage -d build -w . testAll
     - go run github.com/magefile/mage -d build -w . integrationTests
   environment:
-    KO_DOCKER_REPO: inetmock.icb4dc0.de/inetmock
+    DOCKER_HOST: tcp://localhost:2375
   volumes:
     - name: go-cache
       path: /go
