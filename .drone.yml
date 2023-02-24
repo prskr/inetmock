@@ -13,43 +13,37 @@ steps:
 - name: Vulnerabilities
   image: code.icb4dc0.de/inetmock/ci-images/go-ci
   commands:
-    - "go run github.com/magefile/mage generate"
-    - 'go run golang.org/x/vuln/cmd/govulncheck@latest -tags "$${GO_BUILD_TAGS}" ./...'
+    - go run github.com/magefile/mage -d build -w . generate
+    - go run golang.org/x/vuln/cmd/govulncheck@latest -tags "$${GO_BUILD_TAGS}" ./...
   environment:
     GO_BUILD_TAGS: sudo,integration
 
 - name: Lint
   image: code.icb4dc0.de/inetmock/ci-images/go-ci
   commands:
-    - go run github.com/magefile/mage lint
+    - go run github.com/magefile/mage -d build -w . lint
 
-- name: Unit tests
+- name: Tests
   image: code.icb4dc0.de/inetmock/ci-images/go-ci
   privileged: true
   network_mode: host
   commands:
     - mount -t debugfs debugfs /sys/kernel/debug
-    - go run github.com/magefile/mage testAll
-
-- name: Integration tests
-  image: code.icb4dc0.de/inetmock/ci-images/go-ci
-  commands:
-    - go run github.com/magefile/mage integrationTests
-
-- name: Snapshot release
-  image: code.icb4dc0.de/inetmock/ci-images/go-ci
-  when:
-    event:
-      - push
-      - pull_request
-  commands:
-    - goreleaser release --rm-dist --snapshot
+    - go run github.com/magefile/mage -d build -w . testAll
+    - go run github.com/magefile/mage -d build -w . integrationTests
+  environment:
+    KO_DOCKER_REPO: inetmock.icb4dc0.de/inetmock
+  depends_on:
+    - Vulnerabilities
+    - Lint
 
 - name: Release
   image: code.icb4dc0.de/inetmock/ci-images/go-ci
   when:
     event:
       - tag
+  depends_on:
+    - Tests
   commands:
     - goreleaser release --rm-dist
 
