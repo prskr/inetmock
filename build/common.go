@@ -24,6 +24,7 @@ var (
 	WorkingDir             string
 	OutDir                 string
 	GenerateAlways         bool
+	IsReleaseBuild         bool
 	dirsToIgnore           = []string{
 		".git",
 		"magefiles",
@@ -38,6 +39,7 @@ func init() {
 	if b, err := strconv.ParseBool(os.Getenv("GENERATE_ALWAYS")); err == nil {
 		GenerateAlways = b
 	}
+	IsReleaseBuild = strings.EqualFold(os.Getenv("DRONE_BUILD_EVENT"), "tag")
 	if wd, err := os.Getwd(); err != nil {
 		panic(err)
 	} else {

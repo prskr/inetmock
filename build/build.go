@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"path/filepath"
 	"strings"
@@ -43,7 +44,7 @@ func SnapshotBuild(ctx context.Context) error {
 func BuildImage(ctx context.Context) error {
 	mg.CtxDeps(ctx, Generate)
 
-	log.SetOutput(nil)
+	log.SetOutput(io.Discard)
 
 	ko, err := build.NewGo(
 		ctx,
