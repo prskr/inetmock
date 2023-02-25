@@ -13,6 +13,7 @@ x-response-rules: &httpResponseRules
     - Method("GET") -> PathPattern(".*\\.(?i)txt$") => File("default.txt")
     - Method("GET") -> Header("Accept", "text/html") => File("default.html")
     - Method("GET") -> PathPattern(".*\\.(?i)htm(l)?$") => File("default.html")
+    - 'Method("GET") -> Header("Accept", "application/json") => JSON(`{"name": "tester", "givenName": "ted"}`)'
     - Method("GET") => File("default.html")
     - => Status(204)
 
@@ -60,7 +61,7 @@ data:
   audit: /var/lib/inetmock/data/audit
   state: /var/lib/inetmock/data/state/inetmock.db
   # where to load fake files from
-  fakeFiles: ./assets/fakeFiles
+  fakeFiles: /var/lib/inetmock/fakeFiles
 
 caches:
   dns:
@@ -134,9 +135,9 @@ tls:
       NotBeforeRelative: 168h
       NotAfterRelative: 168h
   rootCaCert:
-    publicKeyPath: ./assets/demoCA/ca.pem
-    privateKeyPath: ./assets/demoCA/ca.key
-  certCachePath: /tmp/inetmock/
+    publicKeyPath: /var/lib/inetmock/ca/ca.pem
+    privateKeyPath: /var/lib/inetmock/ca/ca.key
+  certCachePath: /var/lib/inetmock/data/certs
 
 listeners:
   udp_1053:

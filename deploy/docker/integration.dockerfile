@@ -1,13 +1,13 @@
-FROM docker.io/alpine:3.14
+ARG BASE_IMAGE
 
-WORKDIR /app
+FROM ${BASE_IMAGE}
 
-COPY out/inetmock ./
 COPY assets/fakeFiles /var/lib/inetmock/fakeFiles/
 COPY assets/demoCA /var/lib/inetmock/ca
-COPY config-container.yaml /etc/inetmock/config.yaml
+COPY testdata/config-integration.yaml /etc/inetmock/config.yaml
 
-RUN mkdir -p /var/run/inetmock /var/lib/inetmock/ca /var/lib/inetmock/certs /var/lib/inetmock/data /usr/lib/inetmock
+VOLUME /var/lib/inetmock/data
 
-ENTRYPOINT ["/app/inetmock"]
-CMD ["serve"]
+USER root
+
+CMD ["serve", "--config=/etc/inetmock/config.yaml"]

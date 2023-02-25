@@ -19,40 +19,34 @@ import (
 func IntegrationTests(ctx context.Context) (err error) {
 	mg.CtxDeps(ctx, BuildImage)
 
+	baseImage := imageReference.Name()
+
+	var (
+		dns   = "1053/udp"
+		http  = "80/tcp"
+		https = "443/tcp"
+	)
+
 	containerRequest := tc.GenericContainerRequest{
 		ContainerRequest: tc.ContainerRequest{
-			Image: imageReference.Name(),
-			Cmd: []string{
-				"serve",
-				"--config",
-				"/etc/inetmock/config.yaml",
+			FromDockerfile: tc.FromDockerfile{
+				Context:    WorkingDir,
+				Dockerfile: filepath.Join("deploy", "docker", "integration.dockerfile"),
+				BuildArgs: map[string]*string{
+					"BASE_IMAGE": &baseImage,
+				},
 			},
-			User: "root",
 			Mounts: tc.Mounts(
-				tc.BindMount(
-					filepath.Join(WorkingDir, "config-container.yaml"),
-					"/etc/inetmock/config.yaml",
-				),
-				tc.BindMount(
-					filepath.Join(WorkingDir, "assets", "fakeFiles"),
-					"/var/lib/inetmock/fakeFiles",
-				),
-				tc.BindMount(
-					filepath.Join(WorkingDir, "assets", "demoCA"),
-					"/var/lib/inetmock/ca",
-				),
-				tc.BindMount("/sys/kernel/debug", "/sys/kernel/debug"),
 				tc.ContainerMount{
 					Target: "/var/lib/inetmock/data",
 					Source: tc.DockerTmpfsMountSource{},
 				},
 			),
 			ExposedPorts: []string{
-				"53/udp",
-				"80/tcp",
-				"443/tcp",
+				dns,
+				http,
+				https,
 			},
-			Privileged: true,
 			WaitingFor: wait.ForLog("App startup completed"),
 			SkipReaper: DisableReaper,
 		},
@@ -66,12 +60,6 @@ func IntegrationTests(ctx context.Context) (err error) {
 	defer func() {
 		_ = container.Terminate(context.Background())
 	}()
-
-	var (
-		dns   nat.Port = "53/udp"
-		http  nat.Port = "80/tcp"
-		https nat.Port = "443/tcp"
-	)
 
 	mapped, err := mappedPorts(ctx, container, dns, http, https)
 	if err != nil {
@@ -111,14 +99,14 @@ func IntegrationTests(ctx context.Context) (err error) {
 	return imctlCmd.Run()
 }
 
-func mappedPorts(ctx context.Context, container tc.Container, ports ...nat.Port) (mapped map[nat.Port]nat.Port, err error) {
-	mapped = make(map[nat.Port]nat.Port, len(ports))
+func mappedPorts(ctx context.Context, container tc.Container, ports ...string) (mapped map[string]nat.Port, err error) {
+	mapped = make(map[string]nat.Port, len(ports))
 	for i := range ports {
 		if err = ctx.Err(); err != nil {
 			return nil, err
 		}
 		p := ports[i]
-		if mapped[p], err = container.MappedPort(ctx, p); err != nil {
+		if mapped[p], err = container.MappedPort(ctx, nat.Port(p)); err != nil {
 			return nil, err
 		}
 	}
