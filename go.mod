@@ -12,7 +12,7 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
-	github.com/gopacket/gopacket v0.1.0
+	github.com/gopacket/gopacket v1.0.1-0.20230222023207-9860005f3c8d
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.13
@@ -27,7 +27,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.6-0.20210604193023-d5e0c0615ace
 	github.com/spf13/viper v1.15.0
-	github.com/testcontainers/testcontainers-go v0.17.0
+	github.com/testcontainers/testcontainers-go v0.18.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/tcplisten v1.0.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
@@ -40,15 +40,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace (
-	github.com/DataDog/ebpf-manager => github.com/DataDog/ebpf-manager v0.2.3
-	github.com/containerd/containerd => github.com/containerd/containerd v1.6.18
-	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
-	github.com/gopacket/gopacket => github.com/baez90/gopacket v0.0.0-20230215181804-d4f7deafad0e
-)
+replace github.com/DataDog/ebpf-manager => github.com/DataDog/ebpf-manager v0.2.3
 
 require (
-	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/DataDog/gopsutil v1.2.2 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
@@ -58,11 +53,11 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575 // indirect
-	github.com/containerd/containerd v1.6.13 // indirect
+	github.com/containerd/containerd v1.6.18 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v20.10.22+incompatible // indirect
+	github.com/docker/docker v23.0.1+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -78,7 +73,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
-	github.com/klauspost/compress v1.15.13 // indirect
+	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -111,12 +106,12 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/mod v0.7.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.4.0 // indirect
-	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
+	golang.org/x/tools v0.6.0 // indirect
+	google.golang.org/genproto v0.0.0-20230216225411-c8e22ba71e44 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 )

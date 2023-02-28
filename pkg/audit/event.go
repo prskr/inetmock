@@ -104,10 +104,11 @@ func (e *Event) SetDestinationIPFromAddr(localAddr net.Addr) error {
 }
 
 func (e *Event) Dispose() {
+	e.reset()
 	eventPool.Put(e)
 }
 
-func (e *Event) Reset() {
+func (e *Event) reset() {
 	e.ID = 0
 	e.Timestamp = time.Time{}
 	e.SourceIP = nil
@@ -144,6 +145,5 @@ func unwrapDetails(msg *auditv1.EventEntity) Details {
 
 func eventFromPool() *Event {
 	ev := eventPool.Get().(*Event)
-	ev.Reset()
 	return ev
 }

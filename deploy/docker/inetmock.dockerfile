@@ -1,4 +1,4 @@
-FROM docker.io/alpine:3.14 as builder
+FROM docker.io/alpine:3.17 as builder
 
 RUN touch /tmp/.keep
 

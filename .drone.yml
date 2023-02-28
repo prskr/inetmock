@@ -10,54 +10,54 @@ trigger:
     - tag
 
 steps:
-- name: Vulnerabilities
-  image: code.icb4dc0.de/inetmock/ci-images/go-ci
-  commands:
-    - go run github.com/magefile/mage -d build -w . generate
-    - go run golang.org/x/vuln/cmd/govulncheck@latest -tags "$${GO_BUILD_TAGS}" ./...
-  environment:
-    GO_BUILD_TAGS: sudo,integration
-  volumes:
-    - name: go-cache
-      path: /go
+  - name: Vulnerabilities
+    image: code.icb4dc0.de/inetmock/ci-images/go-ci
+    commands:
+      - go run github.com/magefile/mage -d build -w . generate
+      - go run golang.org/x/vuln/cmd/govulncheck@latest -tags "$${GO_BUILD_TAGS}" ./...
+    environment:
+      GO_BUILD_TAGS: sudo,integration
+    volumes:
+      - name: go-cache
+        path: /go
 
-- name: Lint
-  image: code.icb4dc0.de/inetmock/ci-images/go-ci
-  commands:
-    - go run github.com/magefile/mage -d build -w . lint
-  volumes:
-    - name: go-cache
-      path: /go
+  - name: Lint
+    image: code.icb4dc0.de/inetmock/ci-images/go-ci
+    commands:
+      - go run github.com/magefile/mage -d build -w . lint
+    volumes:
+      - name: go-cache
+        path: /go
 
-- name: Tests
-  image: code.icb4dc0.de/inetmock/ci-images/go-ci
-  privileged: true
-  network_mode: host
-  commands:
-    - mount -t debugfs debugfs /sys/kernel/debug
-    - go run github.com/magefile/mage -d build -w . testAll
-    - go run github.com/magefile/mage -d build -w . integrationTests
-  environment:
-    DOCKER_HOST: tcp://localhost:2375
-    TC_DISABLE_REAPER: 'true'
-  volumes:
-    - name: go-cache
-      path: /go
+  - name: Tests
+    image: code.icb4dc0.de/inetmock/ci-images/go-ci
+    privileged: true
+    network_mode: host
+    commands:
+      - mount -t debugfs debugfs /sys/kernel/debug
+      - go run github.com/magefile/mage -d build -w . testAll
+      - go run github.com/magefile/mage -d build -w . integrationTests
+    environment:
+      DOCKER_HOST: tcp://localhost:2375
+      TC_DISABLE_REAPER: 'true'
+    volumes:
+      - name: go-cache
+        path: /go
 
-- name: Release
-  image: code.icb4dc0.de/inetmock/ci-images/go-ci
-  when:
-    event:
-      - tag
-  volumes:
-    - name: go-cache
-      path: /go
-  commands:
-    - goreleaser release --rm-dist
+  - name: Release
+    image: code.icb4dc0.de/inetmock/ci-images/go-ci
+    when:
+      event:
+        - tag
+    volumes:
+      - name: go-cache
+        path: /go
+    commands:
+      - goreleaser release --rm-dist
 
 volumes:
   - name: go-cache
-    temp: {}
+    temp: { }
 
 ---
 kind: pipeline
@@ -66,7 +66,7 @@ name: housekeeping
 
 trigger:
   event:
-  - cron
+    - cron
   cron:
     - housekeeping
 

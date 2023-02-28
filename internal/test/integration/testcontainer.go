@@ -2,21 +2,24 @@ package integration
 
 import (
 	"context"
+	"os"
 	"path/filepath"
-	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+
+	"inetmock.icb4dc0.de/inetmock/internal/test"
 )
 
 func SetupINetMockContainer(ctx context.Context, exposedPorts ...string) (testcontainers.Container, error) {
-	//nolint:dogsled
-	_, fileName, _, _ := runtime.Caller(0)
+	var (
+		repoRoot string
+		err      error
+	)
 
-	var err error
-	var repoRoot string
-	if repoRoot, err = filepath.Abs(filepath.Join(filepath.Dir(fileName), "..", "..", "..")); err != nil {
+	if repoRoot, err = test.DiscoverRepoRoot(); err != nil {
 		return nil, err
 	}
 
@@ -31,15 +34,22 @@ func SetupINetMockContainer(ctx context.Context, exposedPorts ...string) (testco
 		exposedPorts = append(exposedPorts, "80/tcp")
 	}
 
+	printBuildLog, _ := strconv.ParseBool(os.Getenv("INETMOCK_PRINT_CONTAINER_BUILD_LOG"))
+
 	req := testcontainers.ContainerRequest{
 		FromDockerfile: testcontainers.FromDockerfile{
 			Context:       repoRoot,
 			Dockerfile:    filepath.Join(".", "testdata", "integration.dockerfile"),
-			PrintBuildLog: true,
+			PrintBuildLog: printBuildLog,
 		},
+		Privileged:   true,
 		ExposedPorts: exposedPorts,
-		SkipReaper:   true,
-		WaitingFor:   wait.ForLog("Startup of all endpoints completed"),
+		Mounts: testcontainers.Mounts(testcontainers.ContainerMount{
+			Source:   testcontainers.DockerBindMountSource{HostPath: "/sys"},
+			Target:   "/sys",
+			ReadOnly: true,
+		}),
+		WaitingFor: wait.ForLog("App startup completed"),
 	}
 
 	var imContainer testcontainers.Container

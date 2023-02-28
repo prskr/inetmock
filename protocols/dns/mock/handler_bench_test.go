@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	charSet         = "abcdedfghijklmnopqrstABCDEFGHIJKLMNOP"
 	startupTimeout  = 5 * time.Minute
 	shutdownTimeout = 5 * time.Second
 )

@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
@@ -147,12 +146,12 @@ func Benchmark_httpHandler(b *testing.B) {
 }
 
 func setupHTTPClient() (*http.Client, error) {
-	//nolint:dogsled
-	_, fileName, _, _ := runtime.Caller(0)
+	var (
+		repoRoot string
+		err      error
+	)
 
-	var err error
-	var repoRoot string
-	if repoRoot, err = filepath.Abs(filepath.Join(filepath.Dir(fileName), "..", "..", "..", "..", "..")); err != nil {
+	if repoRoot, err = test.DiscoverRepoRoot(); err != nil {
 		return nil, err
 	}
 
