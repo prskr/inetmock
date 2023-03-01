@@ -12,7 +12,7 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
-	github.com/gopacket/gopacket v1.0.1-0.20230222023207-9860005f3c8d
+	github.com/gopacket/gopacket v1.0.1-0.20230225095122-6457da64b08f
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.13
