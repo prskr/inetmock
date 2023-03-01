@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/badger/v3"
+	"github.com/dgraph-io/badger/v4"
 	"github.com/maxatome/go-testdeep/td"
 
 	"inetmock.icb4dc0.de/inetmock/internal/state"

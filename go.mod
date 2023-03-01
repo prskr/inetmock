@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cilium/ebpf v0.10.0
-	github.com/dgraph-io/badger/v3 v3.2103.5
+	github.com/dgraph-io/badger/v4 v4.0.1
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/golang/mock v1.6.0
