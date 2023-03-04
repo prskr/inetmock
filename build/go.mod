@@ -9,7 +9,7 @@ require (
 	github.com/magefile/mage v1.14.0
 	github.com/testcontainers/testcontainers-go v0.18.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
+	golang.org/x/exp v0.0.0-20230303215020-44a13b063f3e
 	golang.org/x/net v0.7.0
 	golang.org/x/sync v0.1.0
 	gotest.tools/gotestsum v1.9.0
