@@ -3,7 +3,7 @@ module inetmock.icb4dc0.de/inetmock
 go 1.20
 
 require (
-	github.com/DataDog/ebpf-manager v0.2.3
+	github.com/DataDog/ebpf-manager v0.2.4
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cilium/ebpf v0.10.0
@@ -40,7 +40,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/DataDog/ebpf-manager => github.com/DataDog/ebpf-manager v0.2.3
+replace github.com/DataDog/ebpf-manager => github.com/DataDog/ebpf-manager v0.2.4
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
