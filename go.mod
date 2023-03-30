@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/DataDog/ebpf-manager v0.2.4
-	github.com/alecthomas/participle/v2 v2.0.0-beta.5
+	github.com/alecthomas/participle/v2 v2.0.0
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cilium/ebpf v0.10.0
 	github.com/dgraph-io/badger/v4 v4.0.1
