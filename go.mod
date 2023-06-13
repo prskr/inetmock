@@ -16,7 +16,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.15
-	github.com/insomniacslk/dhcp v0.0.0-20230227183519-86f5cd589e46
+	github.com/insomniacslk/dhcp v0.0.0-20230612134759-b20c9ba983df
 	github.com/jinzhu/copier v0.3.5
 	github.com/maxatome/go-testdeep v1.12.0
 	github.com/miekg/dns v1.1.51
@@ -77,8 +77,8 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/mdlayher/ethernet v0.0.0-20190606142754-0394541c37b7 // indirect
-	github.com/mdlayher/raw v0.0.0-20191009151244-50f2db8cc065 // indirect
+	github.com/mdlayher/packet v1.1.1 // indirect
+	github.com/mdlayher/socket v0.4.0 // indirect
 	github.com/moby/patternmatcher v0.5.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/term v0.0.0-20221205130635-1aeaba878587 // indirect
