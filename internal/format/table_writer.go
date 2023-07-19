@@ -32,7 +32,7 @@ func (t *tblWriter) Write(in any) (err error) {
 	case reflect.Slice, reflect.Array:
 		length := v.Len()
 		if length < 1 {
-			return
+			return nil
 		}
 
 		vt = v.Index(0).Type()

@@ -49,7 +49,7 @@ func BuildImage(ctx context.Context) error {
 	ko, err := build.NewGo(
 		ctx,
 		WorkingDir,
-		build.WithPlatforms("linux/amd64"),
+		build.WithPlatforms("linux/amd64", "linux/arm64"),
 		build.WithBaseImages(getBaseImage("gcr.io/distroless/static:nonroot")),
 	)
 	if err != nil {

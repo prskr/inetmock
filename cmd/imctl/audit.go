@@ -67,7 +67,7 @@ var (
 )
 
 func init() {
-	currentUser := ""
+	var currentUser string
 	if usr, err := user.Current(); err == nil {
 		currentUser = usr.Username
 	} else {

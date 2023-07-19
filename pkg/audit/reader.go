@@ -56,7 +56,7 @@ type eventReader struct {
 func (e eventReader) Read() (ev *Event, err error) {
 	lengthBufRef := lengthPool.Get().(*[]byte)
 
-	//nolint:staticcheck // make sure slice size is still buffer size
+	//nolint:staticcheck,wastedassign // make sure slice size is still buffer size
 	defer func() {
 		b := *lengthBufRef
 		b = b[:lengthBufferSize]
@@ -65,7 +65,7 @@ func (e eventReader) Read() (ev *Event, err error) {
 
 	lengthBuf := *lengthBufRef
 	if _, err = e.source.Read(lengthBuf); err != nil {
-		return
+		return nil, err
 	}
 
 	length := binary.BigEndian.Uint32(lengthBuf)
@@ -73,7 +73,7 @@ func (e eventReader) Read() (ev *Event, err error) {
 	if length <= defaultPayloadBufferSize {
 		bufRef := payloadPool.Get().(*[]byte)
 
-		//nolint:staticcheck // make sure slice size is still buffer size
+		//nolint:staticcheck,wastedassign // make sure slice size is still buffer size
 		defer func() {
 			b := *bufRef
 			b = b[:defaultPayloadBufferSize]
@@ -86,13 +86,13 @@ func (e eventReader) Read() (ev *Event, err error) {
 	}
 
 	if _, err = e.source.Read(msgBuf); err != nil {
-		return
+		return nil, err
 	}
 
 	protoEv := new(auditv1.EventEntity)
 
 	if err = proto.Unmarshal(msgBuf, protoEv); err != nil {
-		return
+		return nil, err
 	}
 
 	return NewEventFromProto(protoEv), nil

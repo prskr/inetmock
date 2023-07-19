@@ -38,6 +38,7 @@ func TestContextErrorConverter(t *testing.T) {
 		{
 			name: "Not an error at all",
 			args: args{
+				//nolint:nilnil
 				handler: func(context.Context, any) (any, error) {
 					return nil, nil
 				},
