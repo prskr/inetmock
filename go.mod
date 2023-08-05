@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cilium/ebpf v0.10.0
-	github.com/dgraph-io/badger/v4 v4.0.1
+	github.com/dgraph-io/badger/v4 v4.2.0
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/golang/mock v1.6.0
@@ -50,7 +50,6 @@ require (
 	github.com/avast/retry-go/v4 v4.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
-	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575 // indirect
 	github.com/containerd/containerd v1.6.18 // indirect
